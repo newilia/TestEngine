@@ -1,7 +1,7 @@
 #pragma once
 #include "SFML/Graphics.hpp"
 
-class iUpdateable {
+class Updateable {
 public:
 	virtual void update(const sf::Time& dt) = 0;
 };

@@ -1,11 +1,12 @@
-
-////////////////////////////////////////////////////////////
-// Headers
-////////////////////////////////////////////////////////////
+#include <iostream>
 #include <SFML/Graphics.hpp>
 
 #include "Ball.h"
+#include "common.h"
+#include "Physics/PhysicsHandler.h"
 #include "PongPlatform.h"
+#include "Scene.h"
+#include "SceneLoader.h"
 #include "Utils.h"
 
 namespace
@@ -16,34 +17,34 @@ namespace
 }
 
 
-void handleCollisions(PongPlatform& platform, Ball& ball, sf::CircleShape& collisionPoint) {
-    const auto& platformBb = platform.getShape().getGlobalBounds();
-    const auto& ballBb = ball.getShape().getGlobalBounds();
-	if (!platformBb.intersects(ballBb)) {
-        return;
-	}
-    const sf::Vector2f& ballCenter = ball.getShape().getPosition();
-    sf::Vector2f nearestPlatformPoint;
-
-    if (ballCenter.x < platformBb.left) {
-        nearestPlatformPoint.x = platformBb.left;
-        nearestPlatformPoint.y = std::clamp(ballCenter.y, platformBb.top, platformBb.top + platformBb.height);
-    }
-    else if (ballCenter.x > platformBb.left + platformBb.width) {
-        nearestPlatformPoint.x = platformBb.left + platformBb.width;
-        nearestPlatformPoint.y = std::clamp(ballCenter.y, platformBb.top, platformBb.top + platformBb.height);
-    }
-    else {
-        nearestPlatformPoint.x = ballCenter.x;
-        nearestPlatformPoint.y = platformBb.top;
-    }
-    //collisionPoint.setPosition(nearestPlatformPoint);
-    auto ballToPlatformVector = nearestPlatformPoint - ballCenter;
-    if (utils::calcLength(ballToPlatformVector) < ball.getShape().getRadius()) {
-        auto reflSpeed = utils::reflect(ball.getSpeed(), ballToPlatformVector);
-        ball.setSpeed(reflSpeed);
-    }
-}
+//void handleCollisions(PongPlatform& platform, Ball& ball, sf::CircleShape& collisionPoint) {
+//    const auto& platformBb = platform.getShape().getGlobalBounds();
+//    const auto& ballBb = ball.getShape().getGlobalBounds();
+//	if (!platformBb.intersects(ballBb)) {
+//        return;
+//	}
+//    const sf::Vector2f& ballCenter = ball.getShape().getPosition();
+//    sf::Vector2f nearestPlatformPoint;
+//
+//    if (ballCenter.x < platformBb.left) {
+//        nearestPlatformPoint.x = platformBb.left;
+//        nearestPlatformPoint.y = std::clamp(ballCenter.y, platformBb.top, platformBb.top + platformBb.height);
+//    }
+//    else if (ballCenter.x > platformBb.left + platformBb.width) {
+//        nearestPlatformPoint.x = platformBb.left + platformBb.width;
+//        nearestPlatformPoint.y = std::clamp(ballCenter.y, platformBb.top, platformBb.top + platformBb.height);
+//    }
+//    else {
+//        nearestPlatformPoint.x = ballCenter.x;
+//        nearestPlatformPoint.y = platformBb.top;
+//    }
+//    //collisionPoint.setPosition(nearestPlatformPoint);
+//    auto ballToPlatformVector = nearestPlatformPoint - ballCenter;
+//    if (utils::calcLength(ballToPlatformVector) < ball.getShape().getRadius()) {
+//        auto reflSpeed = utils::reflect(ball.getSpeed(), ballToPlatformVector);
+//        ball.setSpeed(reflSpeed);
+//    }
+//}
 
 void handleGameSpeed(const sf::Event& event) {
 	if (event.type == sf::Event::KeyPressed) {
@@ -64,16 +65,22 @@ void handleGameSpeed(const sf::Event& event) {
 
 int main()
 {
+
     // Create the window of the application
     sf::RenderWindow window(sf::VideoMode(wndSize.x, wndSize.y), "Pong", sf::Style::Titlebar | sf::Style::Close);
     window.setVerticalSyncEnabled(true);
-    window.setFramerateLimit(60);
+    window.setFramerateLimit(60u);
 
     sf::Font font;
-    if (!font.loadFromFile("resources/sansation.ttf"))
+    if (!font.loadFromFile("resources/sansation.ttf")) {
         return EXIT_FAILURE;
+    }
+        
+    auto scene = make_shared<Scene>();
+    SceneLoader loader(scene.get());
+    loader.loadScene();
 
-    PongPlatform platform;
+    /*PongPlatform platform;
     {
         constexpr float airFriction = 30;
         constexpr float playerAccel = 50000.f;
@@ -104,14 +111,11 @@ int main()
     sf::CircleShape collisionPoint(4);
     collisionPoint.setFillColor(sf::Color::Red);
     collisionPoint.setOrigin(2, 2);
-    
+    */
 
     sf::Clock clock;
     while (window.isOpen())
     {
-        handleCollisions(platform, ball, collisionPoint);
-
-        // Handle events
         sf::Event event;
         while (window.pollEvent(event))
         {
@@ -122,7 +126,6 @@ int main()
                 window.close();
                 break;
             }
-            platform.handleInput(event);
             handleGameSpeed(event);
         }
 
@@ -130,14 +133,14 @@ int main()
         dt *= dtScale;
         clock.restart();
 
-        platform.update(dt);
-        ball.update(dt);
+        scene->updateRec(dt);
+        PhysicsHandler::getInstance()->update(dt);
 
         window.clear();
-        window.draw(platform.getShape());
-        window.draw(ball.getShape());
-        window.draw(collisionPoint);
+        window.draw(*scene);
         window.display();
+
+
     }
 
     return EXIT_SUCCESS;

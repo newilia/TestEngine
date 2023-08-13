@@ -1,6 +1,6 @@
 #pragma once
-#include "Node.h"
+#include "SceneNode.h"
 
-class Scene : public Node {
+class Scene : public SceneNode {
 	
 };

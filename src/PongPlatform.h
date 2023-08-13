@@ -1,8 +1,8 @@
 #pragma once
-#include "iUpdateable.h"
+#include "Updateable.h"
 #include "SFML/Graphics.hpp"
 
-class PongPlatform : public iUpdateable {
+class PongPlatform : public Updateable {
 public:
     PongPlatform();
     void update(const sf::Time& dt) override;
