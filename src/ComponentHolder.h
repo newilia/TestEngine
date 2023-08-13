@@ -1,11 +1,13 @@
 #pragma once
-#include "Component.h"
+#include <vector>
+
+#include "ComponentBase.h"
 
 using std::shared_ptr;
 
 class ComponentHolderBase {
 public:
-	virtual ~ComponentHolderBase();
+	virtual ~ComponentHolderBase() = default;
 
 	template<typename TComponent>
 	shared_ptr<TComponent> findComponent() const;
@@ -36,7 +38,7 @@ shared_ptr<TComponent> ComponentHolderBase::requireComponent() {
 	if (auto&& comp = findComponent<TComponent>()) {
 		return comp;
 	}
-	auto newComp = std::make_shared<TComponent>();
+	auto newComp = std::make_shared<TComponent>(this);
 	addComponent(newComp);
 	return newComp;
 }

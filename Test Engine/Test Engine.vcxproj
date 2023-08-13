@@ -21,24 +21,30 @@
   <ItemGroup>
     <ClCompile Include="..\src\Ball.cpp" />
     <ClCompile Include="..\src\ComponentHolder.cpp" />
+    <ClCompile Include="..\src\DebugComponent.cpp" />
     <ClCompile Include="..\src\main.cpp" />
-    <ClCompile Include="..\src\Node.cpp" />
-    <ClCompile Include="..\src\PhysicalComponent.cpp" />
-    <ClCompile Include="..\src\PhysicalObject.cpp" />
-    <ClCompile Include="..\src\PhysicsHandler.cpp" />
+    <ClCompile Include="..\src\SceneNode.cpp" />
+    <ClCompile Include="..\src\Physics\AbstractBody.cpp" />
+    <ClCompile Include="..\src\Physics\PhysicsHandler.cpp" />
+    <ClCompile Include="..\src\Physics\PolygonBody.cpp" />
     <ClCompile Include="..\src\PongPlatform.cpp" />
     <ClCompile Include="..\src\Scene.cpp" />
+    <ClCompile Include="..\src\SceneLoader.cpp" />
     <ClCompile Include="..\src\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\Ball.h" />
-    <ClInclude Include="..\src\Component.h" />
+    <ClInclude Include="..\src\ComponentBase.h" />
     <ClInclude Include="..\src\ComponentHolder.h" />
-    <ClInclude Include="..\src\iUpdateable.h" />
-    <ClInclude Include="..\src\Node.h" />
-    <ClInclude Include="..\src\PhysicalComponent.h" />
-    <ClInclude Include="..\src\PhysicalObject.h" />
-    <ClInclude Include="..\src\PhysicsHandler.h" />
+    <ClInclude Include="..\src\DebugComponent.h" />
+    <ClInclude Include="..\src\GameLoop.h" />
+    <ClInclude Include="..\src\SceneLoader.h" />
+    <ClInclude Include="..\src\Updateable.h" />
+    <ClInclude Include="..\src\SceneNode.h" />
+    <ClInclude Include="..\src\Physics\AbstractBody.h" />
+    <ClInclude Include="..\src\Physics\PhysicalComponent.h" />
+    <ClInclude Include="..\src\Physics\PhysicsHandler.h" />
+    <ClInclude Include="..\src\Physics\PolygonBody.h" />
     <ClInclude Include="..\src\PongPlatform.h" />
     <ClInclude Include="..\src\Scene.h" />
     <ClInclude Include="..\src\common.h" />
@@ -103,12 +109,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\newilia\Documents\! Личное\test_engine\project\common.h;C:\Users\newilia\Documents\! Личное\test_engine\project\third-party\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\newilia\Documents\! Личное\test_engine\project\src\Physics;C:\Users\newilia\Documents\! Личное\test_engine\project\src;C:\Users\newilia\Documents\! Личное\test_engine\project\third-party\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ShowProgress>LinkVerboseCLR</ShowProgress>
       <AdditionalLibraryDirectories>C:\Users\newilia\Documents\! Личное\test_engine\project\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -124,6 +130,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Users\newilia\Documents\! Личное\test_engine\project\src\Physics;C:\Users\newilia\Documents\! Личное\test_engine\project\src;C:\Users\newilia\Documents\! Личное\test_engine\project\third-party\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

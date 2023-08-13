@@ -27,22 +27,28 @@
     <ClCompile Include="..\src\Ball.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Node.cpp">
+    <ClCompile Include="..\src\SceneNode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\PhysicalObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ComponentHolder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\PhysicsHandler.cpp">
+    <ClCompile Include="..\src\Physics\AbstractBody.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\PhysicalComponent.cpp">
+    <ClCompile Include="..\src\Physics\PhysicsHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Physics\PolygonBody.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\DebugComponent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SceneLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -53,37 +59,49 @@
     <ClInclude Include="..\src\PongPlatform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\iUpdateable.h">
+    <ClInclude Include="..\src\Updateable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Ball.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Node.h">
+    <ClInclude Include="..\src\SceneNode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\PhysicalObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ComponentHolder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Component.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\PhysicsHandler.h">
+    <ClInclude Include="..\src\ComponentBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\PhysicalComponent.h">
+    <ClInclude Include="..\src\Singletone.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Singletone.h">
+    <ClInclude Include="..\src\Physics\AbstractBody.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Physics\PhysicalComponent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Physics\PhysicsHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Physics\PolygonBody.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\GameLoop.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\DebugComponent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SceneLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

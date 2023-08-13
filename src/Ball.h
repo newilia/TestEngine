@@ -1,9 +1,9 @@
 #pragma once
 #include "Ball.h"
-#include "iUpdateable.h"
+#include "Updateable.h"
 #include "SFML/Graphics.hpp"
 
-class Ball : public iUpdateable {
+class Ball : public Updateable {
 public:
 	Ball() = default;
 	void update(const sf::Time& dt) override;
