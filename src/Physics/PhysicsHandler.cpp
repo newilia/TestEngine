@@ -1,9 +1,9 @@
 #include "PhysicsHandler.h"
-
 #include <cassert>
-
 #include "AbstractBody.h"
+#include "CollisionDetails.h"
 #include "common.h"
+#include "UserPullComponent.h"
 #include "Utils.h"
 
 void PhysicsHandler::update(const sf::Time& dt) {
@@ -17,12 +17,21 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 	for (auto& wBody : mBodies) {
 		auto body = wBody.lock();
 		auto pc = body->findComponent<PhysicalComponent>();
-		if (mGravity != 0.f) {
-			pc->mForce += sf::Vector2f(0.f, mGravity * pc->mMass);
-		}
-		pc->mVelocity += pc->mForce / pc->mMass * dt.asSeconds();
+
+		sf::Vector2f forceSum = [&]() {
+			sf::Vector2f result;
+			if (mGravity != 0.f) {
+				result += sf::Vector2f(0.f, mGravity * pc->mMass);
+			}
+			if (auto pullComp = body->findComponent<UserPullComponent>()) {
+				result += pullComp->calcPullForce();
+			}
+			return result;
+		}();
+
+		pc->mVelocity += forceSum / pc->mMass * dt.asSeconds();
 		pc->mPos += pc->mVelocity * dt.asSeconds();
-		pc->mForce = sf::Vector2f();
+		forceSum = sf::Vector2f();
 	}
 
 	for (auto it1 = mBodies.begin(); it1 != mBodies.end(); ++it1) {
@@ -34,42 +43,64 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 	}
 }
 
-bool PhysicsHandler::checkBboxIntersection(const shared_ptr<AbstractBody>& obj1, const shared_ptr<AbstractBody>& obj2) {
-	return obj1->getBbox().intersects(obj2->getBbox());
+bool PhysicsHandler::checkBboxIntersection(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2) {
+	return body1->getBbox().intersects(body2->getBbox());
 }
 
-std::optional<sf::Vector2f> PhysicsHandler::findCollisionPoint(const shared_ptr<AbstractBody>& obj1, const shared_ptr<AbstractBody>& obj2) {
-	if (!checkBboxIntersection(obj1, obj1)) {
+std::optional<CollisionDetails> PhysicsHandler::findCollisionPoint(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2) {
+	if (!checkBboxIntersection(body1, body1)) {
 		return std::nullopt;
 	}
 
-	sf::Vector2f collisionPoint;
-	int intersectingEdgesCount = 0;
+	auto cmp = [](const sf::Vector2f& a, const sf::Vector2f& b) {
+		if (a.x == b.x)
+			return a.y < b.y;
+		return a.x < b.x;
+	};
+	std::set<sf::Vector2f, decltype(cmp)> intersectionPoints;
 
-	int pointsCount1 = obj1->getPointCount();
-	for (int i = 0; i < pointsCount1 - 1; ++i) {
-		Segment obj1Edge(obj1->getPoint(i), obj1->getPoint(i + 1));
+	std::list<Segment> edges1, edges2;
+	int pointsCount = body1->getPointCount();
+	for (int i = 0; i < pointsCount; ++i) {
+		edges1.emplace_back(body1->getPoint(i), body1->getPoint((i + 1) % pointsCount));
+	}
+	pointsCount = body2->getPointCount();
+	for (int i = 0; i < pointsCount; ++i) {
+		edges2.emplace_back(body2->getPoint(i), body2->getPoint((i + 1) % pointsCount));
+	}
 
-		int pointsCount2 = obj2->getPointCount();
-		for (int j = 0; j < pointsCount2 - 1; ++j) {
-			Segment obj2Edge(obj2->getPoint(j), obj2->getPoint(j + 1));
-
+	for (const auto& edge1 : edges1) {
+		for (const auto& edge2 : edges2) {
 			// todo handle circle bodies in other way
-			if (auto intersectionPoint = findSegmentsIntersectionPoint(obj1Edge, obj2Edge)) {
-				collisionPoint += *intersectionPoint;
-				++intersectingEdgesCount;
+			if (auto intersectionPoint = findSegmentsIntersectionPoint(edge1, edge2)) {
+				intersectionPoints.insert(intersectionPoint->p1);
+				if (intersectionPoint->p2) {
+					intersectionPoints.insert(*intersectionPoint->p2);
+				}
 			}
 		}
 	}
 
-	if (intersectingEdgesCount == 0) {
+	if (intersectionPoints.size() == 0) {
 		return std::nullopt;
 	}
-	collisionPoint /= static_cast<float>(intersectingEdgesCount);
-	return collisionPoint;
+
+	CollisionDetails result;
+	if (intersectionPoints.size() == 1) {
+		result.point = *intersectionPoints.begin();
+		auto objToObj = body2->getPhysicalComponent()->mPos - body1->getPhysicalComponent()->mPos;
+		result.normalizedTangent = utils::normalize({ -objToObj.y, objToObj.x });
+	}
+	else {
+		auto min = *intersectionPoints.begin();
+		auto max = *intersectionPoints.rbegin();
+		result.point = (min + max) * 0.5f;
+		result.normalizedTangent = utils::normalize(max - min);
+	}
+	return result;
 }
 
-std::optional<sf::Vector2f> PhysicsHandler::findSegmentsIntersectionPoint(const Segment& segA, const Segment& segB) {
+std::optional<SegmentIntersectionPoints> PhysicsHandler::findSegmentsIntersectionPoint(const Segment& segA, const Segment& segB) {
 	assert(segA.start != segA.end);
 	assert(segB.start != segB.end);
 
@@ -113,7 +144,7 @@ std::optional<sf::Vector2f> PhysicsHandler::findSegmentsIntersectionPoint(const 
 			intersectionSegment.start.x = k * intersectionSegment.start.y + b;
 			intersectionSegment.end.x = k * intersectionSegment.end.y + b;
 		}
-		return (intersectionSegment.start + intersectionSegment.end) / 2.f;
+		return SegmentIntersectionPoints{ intersectionSegment.start, intersectionSegment.end };
 	}
 
 	auto dot1 = x3 * y4 - y3 * x4;
@@ -136,26 +167,27 @@ std::optional<sf::Vector2f> PhysicsHandler::findSegmentsIntersectionPoint(const 
 	if (!isInsideSegment(segB)) {
 		return std::nullopt;
 	}
-	return linesIntersection;
+	return SegmentIntersectionPoints{ linesIntersection };
 }
 
-void PhysicsHandler::resolveCollision(shared_ptr<AbstractBody>&& body1, shared_ptr<AbstractBody>&& body2, sf::Vector2f collisionPoint) {
-	// todo: consider bounce
+void PhysicsHandler::resolveCollision(shared_ptr<AbstractBody>&& body1, shared_ptr<AbstractBody>&& body2, const CollisionDetails& collisionDetails) {
+	// todo: consider immovable objects
+	// todo remove overlapping
 	auto pc1 = body1->requireComponent<PhysicalComponent>();
 	auto pc2 = body2->requireComponent<PhysicalComponent>();
 
-	auto collisionNormal = pc2->mPos - pc1->mPos;
-	float massSum = pc1->mMass + pc2->mMass;
-	auto reflectedSpeed1 = utils::reflect(pc1->mVelocity, collisionNormal) * (pc1->mMass / massSum);
-	auto reflectedSpeed2 = utils::reflect(pc2->mVelocity, collisionNormal) * (pc2->mMass / massSum);
+	auto v1 = utils::project(pc1->mVelocity, collisionDetails.normalizedTangent);
+	auto v2 = utils::project(pc2->mVelocity, collisionDetails.normalizedTangent);
 
-	auto totalImpulse = pc1->mMass * pc1->mVelocity + pc2->mMass * pc2->mVelocity;
-	float body1massPart = pc1->mMass / massSum;
-	float body2massPart = pc2->mMass / massSum;
+	const auto m1 = pc1->mMass;
+	const auto m2 = pc2->mMass;
+	auto r = pc1->mRestitution * pc2->mRestitution;
 
-	float bounce = (pc1->mBounce + pc2->mBounce) / 2.f;/*
-	pc1->mVelocity = pc1->mVelocity * body1massPart + reflectedSpeed1 * body2massPart;
-	pc2->mVelocity = pc2->mVelocity * body2massPart + reflectedSpeed2 * body1massPart;*/
-	pc1->mVelocity = totalImpulse / massSum;
-	pc2->mVelocity = totalImpulse / massSum;
+	auto dv1 = -(1.f + r) * m2 / (m1 + m2) * (v1 - v2);
+	auto dv2 = (1.f + r) * m1 / (m1 + m2) * (v1 - v2);
+
+	auto normal = sf::Vector2f(-collisionDetails.normalizedTangent.y, collisionDetails.normalizedTangent.x);
+	pc1->mVelocity += normal * dv1;
+	pc2->mVelocity += normal * dv2;
+
 }

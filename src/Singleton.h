@@ -1,7 +1,7 @@
 #pragma once
 
 template <typename T>
-class Singletone {
+class Singleton {
 public:
 	static T* getInstance() {
 		if (!mInstance) {
@@ -19,6 +19,6 @@ public:
 		return mInstance != nullptr;
 	}
 
-private:
+protected:
 	inline static T* mInstance = nullptr;
 };

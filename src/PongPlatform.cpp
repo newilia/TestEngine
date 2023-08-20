@@ -16,7 +16,7 @@ void PongPlatform::update(const sf::Time& dt) {
 	mSpeed += totalAccel * dt.asSeconds();
 	mSpeed.x = std::clamp(mSpeed.x, -mMaxSpeed, mMaxSpeed);
 
-	if (utils::calcLength(mSpeed) < 10 && mPlayerAccel == sf::Vector2f()) {
+	if (utils::length(mSpeed) < 10 && mPlayerAccel == sf::Vector2f()) {
 		mSpeed = { 0, 0 };
 	}
 	

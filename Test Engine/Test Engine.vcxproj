@@ -20,6 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Ball.cpp" />
+    <ClCompile Include="..\src\BodyPullHandler.cpp" />
+    <ClCompile Include="..\src\UserInput.cpp" />
     <ClCompile Include="..\src\ComponentHolder.cpp" />
     <ClCompile Include="..\src\DebugComponent.cpp" />
     <ClCompile Include="..\src\main.cpp" />
@@ -30,14 +32,18 @@
     <ClCompile Include="..\src\PongPlatform.cpp" />
     <ClCompile Include="..\src\Scene.cpp" />
     <ClCompile Include="..\src\SceneLoader.cpp" />
+    <ClCompile Include="..\src\UserPullComponent.cpp" />
     <ClCompile Include="..\src\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\Ball.h" />
+    <ClInclude Include="..\src\BodyPullHandler.h" />
+    <ClInclude Include="..\src\UserInput.h" />
     <ClInclude Include="..\src\ComponentBase.h" />
     <ClInclude Include="..\src\ComponentHolder.h" />
     <ClInclude Include="..\src\DebugComponent.h" />
     <ClInclude Include="..\src\GameLoop.h" />
+    <ClInclude Include="..\src\Physics\CollisionDetails.h" />
     <ClInclude Include="..\src\SceneLoader.h" />
     <ClInclude Include="..\src\Updateable.h" />
     <ClInclude Include="..\src\SceneNode.h" />
@@ -48,7 +54,8 @@
     <ClInclude Include="..\src\PongPlatform.h" />
     <ClInclude Include="..\src\Scene.h" />
     <ClInclude Include="..\src\common.h" />
-    <ClInclude Include="..\src\Singletone.h" />
+    <ClInclude Include="..\src\Singleton.h" />
+    <ClInclude Include="..\src\UserPullComponent.h" />
     <ClInclude Include="..\src\Utils.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
