@@ -3,22 +3,27 @@
 
 #include "Updateable.h"
 #include "AbstractBody.h"
-#include "Singletone.h"
+#include "CollisionDetails.h"
+#include "Singleton.h"
 
-class PhysicsHandler : public Updateable, public Singletone<PhysicsHandler> {
+struct CollisionDetails;
+
+class PhysicsHandler : public Updateable, public Singleton<PhysicsHandler> {
 public:
 	virtual ~PhysicsHandler() = default;
 	void update(const sf::Time& dt) override;
 	void addBody(const shared_ptr<AbstractBody>& object) { mBodies.push_back(object); }
-
-	static bool checkBboxIntersection(const shared_ptr<AbstractBody>& obj1, const shared_ptr<AbstractBody>& obj2);
-	static std::optional<sf::Vector2f> findSegmentsIntersectionPoint(const Segment& E, const Segment& F);
+	const auto& getAllBodies() { return mBodies; }
 private:
-	static void resolveCollision(shared_ptr<AbstractBody>&& body1, shared_ptr<AbstractBody>&& body2, sf::Vector2f collisionPoint);
+	static bool checkBboxIntersection(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2);
+	static std::optional<CollisionDetails> findCollisionPoint(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2);
+	static std::optional<SegmentIntersectionPoints> findSegmentsIntersectionPoint(const Segment& E, const Segment& F);
+	static void resolveCollision(shared_ptr<AbstractBody>&& body1, shared_ptr<AbstractBody>&& body2, const CollisionDetails& collisionDetails);
+
 	void updateSubStep(const sf::Time& dt);
-	static std::optional<sf::Vector2f> findCollisionPoint(const shared_ptr<AbstractBody>& obj1, const shared_ptr<AbstractBody>& obj2);
 
 	std::list<weak_ptr<AbstractBody>> mBodies;
 	const int mSubStepsCount = 4;
 	float mGravity = 0.f;
+	bool mDebugDrawEnabled = true;
 };

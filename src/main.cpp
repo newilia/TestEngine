@@ -1,20 +1,19 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 
-#include "Ball.h"
+#include "BodyPullHandler.h"
 #include "common.h"
 #include "Physics/PhysicsHandler.h"
-#include "PongPlatform.h"
 #include "Scene.h"
 #include "SceneLoader.h"
-#include "Utils.h"
+#include "UserInput.h"
 
 namespace
 {
     const sf::Vector2u wndSize(800, 600);
-    float dtScale = 1.f;
-    bool pause = false;
 }
+float SIM_SPEED = 1.f;
+bool SIM_PAUSE = false;
 
 
 //void handleCollisions(PongPlatform& platform, Ball& ball, sf::CircleShape& collisionPoint) {
@@ -45,28 +44,8 @@ namespace
 //        ball.setSpeed(reflSpeed);
 //    }
 //}
-
-void handleGameSpeed(const sf::Event& event) {
-	if (event.type == sf::Event::KeyPressed) {
-		switch (event.key.code) {
-		case sf::Keyboard::Equal:
-            dtScale *= 2;
-            break;
-		case sf::Keyboard::Hyphen:
-            dtScale *= 0.5f;
-            break;
-		case sf::Keyboard::Num0:
-            pause = !pause;
-            break;
-        default: break;
-		}
-	}
-}
-
 int main()
 {
-
-    // Create the window of the application
     sf::RenderWindow window(sf::VideoMode(wndSize.x, wndSize.y), "Pong", sf::Style::Titlebar | sf::Style::Close);
     window.setVerticalSyncEnabled(true);
     window.setFramerateLimit(60u);
@@ -79,6 +58,8 @@ int main()
     auto scene = make_shared<Scene>();
     SceneLoader loader(scene.get());
     loader.loadScene();
+
+    UserInput userInput;
 
     /*PongPlatform platform;
     {
@@ -114,23 +95,14 @@ int main()
     */
 
     sf::Clock clock;
-    while (window.isOpen())
-    {
+    while (window.isOpen()) {
         sf::Event event;
-        while (window.pollEvent(event))
-        {
-            // Window closed or escape key pressed: exit
-            if ((event.type == sf::Event::Closed) ||
-                ((event.type == sf::Event::KeyPressed) && (event.key.code == sf::Keyboard::Escape)))
-            {
-                window.close();
-                break;
-            }
-            handleGameSpeed(event);
+        while (window.pollEvent(event)) {
+            userInput.handleEvent(event);
         }
 
-        auto dt = pause ? sf::Time() : clock.getElapsedTime();
-        dt *= dtScale;
+        auto dt = SIM_PAUSE ? sf::Time() : clock.getElapsedTime();
+        dt *= SIM_SPEED;
         clock.restart();
 
         scene->updateRec(dt);
@@ -138,8 +110,8 @@ int main()
 
         window.clear();
         window.draw(*scene);
+        window.draw(*BodyPullHandler::getInstance());
         window.display();
-
 
     }
 

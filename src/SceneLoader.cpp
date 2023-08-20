@@ -11,10 +11,9 @@ void SceneLoader::loadScene() {
 	auto rect = make_shared<RectangleBody>();
 	rect->setId("Rect");
 	rect->init();
-	sf::Vector2f size1(50, 50);
+	sf::Vector2f size1(100, 100);
 	rect->getShape()->setSize(size1);
 	rect->getShape()->setFillColor(sf::Color::Red);
-	rect->getPhysicalComponent()->mVelocity = { 100.f, 100.f };
 	rect->getPhysicalComponent()->mMass = size1.x * size1.y;
 	mScene->addChild(rect);
 
@@ -22,7 +21,7 @@ void SceneLoader::loadScene() {
 	auto rect2 = make_shared<RectangleBody>();
 	rect2->setId("Rect2");
 	rect2->init();
-	sf::Vector2f size2(150, 50);
+	sf::Vector2f size2(100, 100);
 	rect2->getShape()->setSize(size2);
 	rect2->getShape()->setFillColor(sf::Color::Blue);
 	rect2->getPhysicalComponent()->mPos = { 0, 150 };
