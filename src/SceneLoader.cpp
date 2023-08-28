@@ -1,4 +1,6 @@
 #include "SceneLoader.h"
+
+#include "DebugComponent.h"
 #include "PolygonBody.h"
 #include "Scene.h"
 
@@ -8,24 +10,52 @@ SceneLoader::SceneLoader(Scene* scene)
 }
 
 void SceneLoader::loadScene() {
-	auto rect = make_shared<RectangleBody>();
-	rect->setId("Rect");
-	rect->init();
-	sf::Vector2f size1(100, 100);
-	rect->getShape()->setSize(size1);
-	rect->getShape()->setFillColor(sf::Color::Red);
-	rect->getPhysicalComponent()->mMass = size1.x * size1.y;
-	mScene->addChild(rect);
+	{
+		auto rect = make_shared<RectangleBody>();
+		rect->setId("Rect");
+		rect->init();
+		sf::Vector2f size(100, 100);
+		rect->getShape()->setSize(size);
+		rect->getShape()->setFillColor(sf::Color::Red);
+		rect->getPhysicalComponent()->mMass = size.x * size.y;
+		rect->requireComponent<DebugComponent>();
+		mScene->addChild(rect);
+	}
+	
+	{
+		auto rect = make_shared<RectangleBody>();
+		rect->setId("Rect2");
+		rect->init();
+		sf::Vector2f size2(100, 100);
+		rect->getShape()->setSize(size2);
+		rect->getShape()->setFillColor(sf::Color::Blue);
+		rect->getPhysicalComponent()->mPos = { 50, 50 };
+		rect->getPhysicalComponent()->mMass = size2.x * size2.y;
+		rect->requireComponent<DebugComponent>();
+		mScene->addChild(rect);
+	}
 
+	/*{
+		auto circle = make_shared<CircleBody>();
+		circle->setId("Circle1");
+		circle->init();
+		float radius = 40.f;
+		circle->getShape()->setRadius(radius);
+		circle->getShape()->setFillColor(sf::Color(200, 100, 40));
+		circle->getPhysicalComponent()->mPos = { 300, 300 };
+		circle->getPhysicalComponent()->mMass = 3.14 * radius * radius;
+		mScene->addChild(circle);
+	}
 
-	auto rect2 = make_shared<RectangleBody>();
-	rect2->setId("Rect2");
-	rect2->init();
-	sf::Vector2f size2(100, 100);
-	rect2->getShape()->setSize(size2);
-	rect2->getShape()->setFillColor(sf::Color::Blue);
-	rect2->getPhysicalComponent()->mPos = { 0, 150 };
-	rect2->getPhysicalComponent()->mMass = size2.x * size2.y;
-	mScene->addChild(rect2);
-
+	{
+		auto circle = make_shared<CircleBody>();
+		circle->setId("Circle2");
+		circle->init();
+		float radius = 120.f;
+		circle->getShape()->setRadius(radius);
+		circle->getShape()->setFillColor(sf::Color(100, 50, 200));
+		circle->getPhysicalComponent()->mPos = { 500, 400 };
+		circle->getPhysicalComponent()->mMass = 3.14 * radius * radius;
+		mScene->addChild(circle);
+	}*/
 }

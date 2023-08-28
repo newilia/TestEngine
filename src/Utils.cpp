@@ -6,7 +6,7 @@ float utils::length(const sf::Vector2f& vec) {
 
 sf::Vector2f utils::normalize(const sf::Vector2f& vec) {
 	auto result = vec;
-	if (auto length = utils::length(vec)) {
+	if (auto length = utils::length(vec); length > std::numeric_limits<float>::epsilon()) {
 		result /= length;
 	}
 	return result;
@@ -22,7 +22,11 @@ sf::Vector2f utils::reflect(const sf::Vector2f& vector, const sf::Vector2f& rela
 }
 
 float utils::project(const sf::Vector2f& a, const sf::Vector2f& b) {
-	return dot(a, b) / length(b);
+	auto result = dot(a, b);
+	if (auto lengthB = length(b); lengthB > std::numeric_limits<float>::epsilon()) {
+		result /= length(b);
+	}
+	return result;
 }
 
 bool utils::arePointsCollinear(const sf::Vector2f& p1, const sf::Vector2f& p2, const sf::Vector2f& p3) {
@@ -50,4 +54,8 @@ bool utils::isPointInsideOfTriangle(sf::Vector2f p, sf::Vector2f t1, sf::Vector2
 		return true;
 	}
 	return false;
+}
+
+bool utils::isNan(const sf::Vector2f& point) {
+	return std::isnan(point.x) || std::isnan(point.y);
 }

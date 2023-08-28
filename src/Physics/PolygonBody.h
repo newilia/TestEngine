@@ -12,7 +12,7 @@ public:
 
 	sfShape* getShape() { return reinterpret_cast<sfShape*>(mShape); }
 	sf::FloatRect getBbox() const override { return mShape->getGlobalBounds(); }
-	int getPointCount() const override { return mShape->getPointCount(); }
+	size_t getPointCount() const override { return mShape->getPointCount(); }
 	sf::Vector2f getPoint(std::size_t index) const override { return mShape->getPoint(index) + getPhysicalComponent()->mPos; }
 	void update(const sf::Time& dt) override;
 

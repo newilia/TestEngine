@@ -8,7 +8,7 @@ class AbstractBody : public SceneNode {
 public:
 	AbstractBody();
 	virtual sf::FloatRect getBbox() const = 0 ;
-	virtual int getPointCount() const = 0;
+	virtual size_t getPointCount() const = 0;
 	virtual sf::Vector2f getPoint(std::size_t index) const = 0;
 	void init() override;
 

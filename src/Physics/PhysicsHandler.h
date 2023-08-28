@@ -16,9 +16,9 @@ public:
 	const auto& getAllBodies() { return mBodies; }
 private:
 	static bool checkBboxIntersection(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2);
-	static std::optional<CollisionDetails> findCollisionPoint(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2);
+	static std::optional<CollisionDetails> detectCollision(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2);
 	static std::optional<SegmentIntersectionPoints> findSegmentsIntersectionPoint(const Segment& E, const Segment& F);
-	static void resolveCollision(shared_ptr<AbstractBody>&& body1, shared_ptr<AbstractBody>&& body2, const CollisionDetails& collisionDetails);
+	static void resolveCollision(const CollisionDetails& collision);
 
 	void updateSubStep(const sf::Time& dt);
 
