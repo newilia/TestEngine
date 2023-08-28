@@ -1,9 +1,13 @@
 #pragma once
+#include <unordered_set>
 #include <SFML/System/Vector2.hpp>
 
 struct CollisionDetails {
-	sf::Vector2f point;
-	sf::Vector2f normalizedTangent;
+	weak_ptr<AbstractBody> wBody1;
+	weak_ptr<AbstractBody> wBody2;
+	std::unordered_set<size_t> body1penetratingPoints;
+	std::unordered_set<size_t> body2penetratingPoints;
+	Segment intersection;
 };
 
 struct SegmentIntersectionPoints {

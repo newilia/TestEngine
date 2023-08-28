@@ -16,87 +16,95 @@ void PhysicsHandler::update(const sf::Time& dt) {
 void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 	for (auto& wBody : mBodies) {
 		auto body = wBody.lock();
-		auto pc = body->findComponent<PhysicalComponent>();
+		auto physComp = body->findComponent<PhysicalComponent>();
+		auto pullComp = body->findComponent<UserPullComponent>();
 
 		sf::Vector2f forceSum = [&]() {
 			sf::Vector2f result;
 			if (mGravity != 0.f) {
-				result += sf::Vector2f(0.f, mGravity * pc->mMass);
+				result += sf::Vector2f(0.f, mGravity * physComp->mMass);
 			}
-			if (auto pullComp = body->findComponent<UserPullComponent>()) {
-				result += pullComp->calcPullForce();
+			if (pullComp && pullComp->mMode == UserPullComponent::PullMode::SOFT) {
+				result += pullComp->getPullVector() * pullComp->mPullingStrength;
 			}
 			return result;
 		}();
 
-		pc->mVelocity += forceSum / pc->mMass * dt.asSeconds();
-		pc->mPos += pc->mVelocity * dt.asSeconds();
-		forceSum = sf::Vector2f();
+		physComp->mVelocity += forceSum / physComp->mMass * dt.asSeconds();
+
+		physComp->mPos += physComp->mVelocity * dt.asSeconds();
+
+		if (pullComp && pullComp->mMode == UserPullComponent::PullMode::HARD) {
+			physComp->mPos += pullComp->getPullVector();
+			physComp->mVelocity = {};
+		}
 	}
 
 	for (auto it1 = mBodies.begin(); it1 != mBodies.end(); ++it1) {
 		for (auto it2 = std::next(it1); it2 != mBodies.end(); ++it2) {
-			if (auto collisionPoint = findCollisionPoint(it1->lock(), it2->lock())) {
-				resolveCollision(it1->lock(), it2->lock(), *collisionPoint);
+			if (auto collision = detectCollision(it1->lock(), it2->lock())) {
+				resolveCollision(*collision);
 			}
 		}
 	}
 }
+
 
 bool PhysicsHandler::checkBboxIntersection(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2) {
 	return body1->getBbox().intersects(body2->getBbox());
 }
 
-std::optional<CollisionDetails> PhysicsHandler::findCollisionPoint(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2) {
+std::optional<CollisionDetails> PhysicsHandler::detectCollision(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2) {
 	if (!checkBboxIntersection(body1, body1)) {
 		return std::nullopt;
 	}
 
-	auto cmp = [](const sf::Vector2f& a, const sf::Vector2f& b) {
-		if (a.x == b.x)
-			return a.y < b.y;
-		return a.x < b.x;
-	};
-	std::set<sf::Vector2f, decltype(cmp)> intersectionPoints;
+	std::vector<sf::Vector2f> edges_i_p;
+	
+	const auto pointsCount1 = body1->getPointCount();
+	const auto pointsCount2 = body2->getPointCount();
+	CollisionDetails result;
 
-	std::list<Segment> edges1, edges2;
-	int pointsCount = body1->getPointCount();
-	for (int i = 0; i < pointsCount; ++i) {
-		edges1.emplace_back(body1->getPoint(i), body1->getPoint((i + 1) % pointsCount));
-	}
-	pointsCount = body2->getPointCount();
-	for (int i = 0; i < pointsCount; ++i) {
-		edges2.emplace_back(body2->getPoint(i), body2->getPoint((i + 1) % pointsCount));
-	}
+	for (size_t i = 0; i < pointsCount1; ++i) {
+		const Segment edge1 = { body1->getPoint(i), body1->getPoint((i + 1) % pointsCount1) };
 
-	for (const auto& edge1 : edges1) {
-		for (const auto& edge2 : edges2) {
+		for (size_t j = 0; j < pointsCount2; ++j) {
+			const Segment edge2 = { body2->getPoint(j), body2->getPoint((j + 1) % pointsCount2) };
+
 			// todo handle circle bodies in other way
-			if (auto intersectionPoint = findSegmentsIntersectionPoint(edge1, edge2)) {
-				intersectionPoints.insert(intersectionPoint->p1);
-				if (intersectionPoint->p2) {
-					intersectionPoints.insert(*intersectionPoint->p2);
+			if (auto i_point = findSegmentsIntersectionPoint(edge1, edge2)) {
+				if (std::find(edges_i_p.begin(), edges_i_p.end(), i_point->p1) == edges_i_p.end()) {
+					edges_i_p.emplace_back(i_point->p1);
 				}
+				if (i_point->p2) {
+					if (std::find(edges_i_p.begin(), edges_i_p.end(), i_point->p2) == edges_i_p.end()) {
+						edges_i_p.emplace_back(*i_point->p2);
+					}
+				}
+
+				result.body1penetratingPoints.insert(i);
+				result.body1penetratingPoints.insert((i + 1) % pointsCount1);
+				result.body2penetratingPoints.insert(j);
+				result.body2penetratingPoints.insert((j + 1) % pointsCount2);
 			}
 		}
 	}
 
-	if (intersectionPoints.size() == 0) {
+	if (edges_i_p.size() == 0) {
 		return std::nullopt;
 	}
 
-	CollisionDetails result;
-	if (intersectionPoints.size() == 1) {
-		result.point = *intersectionPoints.begin();
-		auto objToObj = body2->getPhysicalComponent()->mPos - body1->getPhysicalComponent()->mPos;
-		result.normalizedTangent = utils::normalize({ -objToObj.y, objToObj.x });
+	if (edges_i_p.size() == 1) {
+		result.intersection.start = *edges_i_p.begin(); // I doubt that this is correct way to find start and end
+		result.intersection.end = *edges_i_p.begin();
 	}
 	else {
-		auto min = *intersectionPoints.begin();
-		auto max = *intersectionPoints.rbegin();
-		result.point = (min + max) * 0.5f;
-		result.normalizedTangent = utils::normalize(max - min);
+		result.intersection.start = *edges_i_p.begin();
+		result.intersection.end = *edges_i_p.rbegin();
 	}
+
+	result.wBody1 = body1;
+	result.wBody2 = body2;
 	return result;
 }
 
@@ -122,7 +130,7 @@ std::optional<SegmentIntersectionPoints> PhysicsHandler::findSegmentsIntersectio
 		}
 
 		Segment intersectionSegment;
-		if (abs(dxA) > abs(dxB)) {
+		if (abs(dxA) > abs(dyA)) {
 			intersectionSegment.start.x = std::max(segA.start.x, segB.start.x);
 			intersectionSegment.end.x = std::min(segA.end.x, segB.end.x);
 			if (intersectionSegment.start.x > intersectionSegment.end.x) {
@@ -132,6 +140,9 @@ std::optional<SegmentIntersectionPoints> PhysicsHandler::findSegmentsIntersectio
 			float b = y1 - x1 * k;
 			intersectionSegment.start.y = k * intersectionSegment.start.x + b;
 			intersectionSegment.end.y = k * intersectionSegment.end.x + b;
+
+			assert(!utils::isNan(intersectionSegment.start));
+			assert(!utils::isNan(intersectionSegment.end));
 		}
 		else {
 			intersectionSegment.start.y = std::max(segA.start.y, segB.start.y);
@@ -143,6 +154,9 @@ std::optional<SegmentIntersectionPoints> PhysicsHandler::findSegmentsIntersectio
 			float b = x1 - y1 * k;
 			intersectionSegment.start.x = k * intersectionSegment.start.y + b;
 			intersectionSegment.end.x = k * intersectionSegment.end.y + b;
+
+			assert(!utils::isNan(intersectionSegment.start));
+			assert(!utils::isNan(intersectionSegment.end));
 		}
 		return SegmentIntersectionPoints{ intersectionSegment.start, intersectionSegment.end };
 	}
@@ -170,14 +184,30 @@ std::optional<SegmentIntersectionPoints> PhysicsHandler::findSegmentsIntersectio
 	return SegmentIntersectionPoints{ linesIntersection };
 }
 
-void PhysicsHandler::resolveCollision(shared_ptr<AbstractBody>&& body1, shared_ptr<AbstractBody>&& body2, const CollisionDetails& collisionDetails) {
-	// todo: consider immovable objects
-	// todo remove overlapping
+// todo: consider immovable objects
+void PhysicsHandler::resolveCollision(const CollisionDetails& collision) {
+	auto body1 = collision.wBody1.lock();
+	auto body2 = collision.wBody2.lock();
+	if (!body1 || !body2) {
+		assert(false);
+		return;
+	}
+
+	//todo make it oriented in half plane
+	sf::Vector2f normalizedTangent = [&]() {
+		if (collision.intersection.start != collision.intersection.end) {
+			return utils::normalize(collision.intersection.start - collision.intersection.end);
+		}
+		auto objToObj = body2->getPhysicalComponent()->mPos - body1->getPhysicalComponent()->mPos;
+		return utils::normalize({ -objToObj.y, objToObj.x });
+	}();
+
+	/* velocities handling */
 	auto pc1 = body1->requireComponent<PhysicalComponent>();
 	auto pc2 = body2->requireComponent<PhysicalComponent>();
 
-	auto v1 = utils::project(pc1->mVelocity, collisionDetails.normalizedTangent);
-	auto v2 = utils::project(pc2->mVelocity, collisionDetails.normalizedTangent);
+	auto v1 = utils::project(pc1->mVelocity, normalizedTangent);
+	auto v2 = utils::project(pc2->mVelocity, normalizedTangent);
 
 	const auto m1 = pc1->mMass;
 	const auto m2 = pc2->mMass;
@@ -186,8 +216,14 @@ void PhysicsHandler::resolveCollision(shared_ptr<AbstractBody>&& body1, shared_p
 	auto dv1 = -(1.f + r) * m2 / (m1 + m2) * (v1 - v2);
 	auto dv2 = (1.f + r) * m1 / (m1 + m2) * (v1 - v2);
 
-	auto normal = sf::Vector2f(-collisionDetails.normalizedTangent.y, collisionDetails.normalizedTangent.x);
+	auto normal = sf::Vector2f(-normalizedTangent.y, normalizedTangent.x);
 	pc1->mVelocity += normal * dv1;
 	pc2->mVelocity += normal * dv2;
+
+	auto isNan = utils::isNan(pc1->mVelocity) || utils::isNan(pc2->mVelocity);
+	assert(!isNan);
+
+	/* penetration fixing */
+
 
 }

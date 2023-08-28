@@ -18,4 +18,6 @@ namespace utils {
 
 	bool isPointInsideOfBody(const sf::Vector2f& point, const shared_ptr<AbstractBody>& body);
 	bool isPointInsideOfTriangle(sf::Vector2f p, sf::Vector2f t1, sf::Vector2f t2, sf::Vector2f t3);
+
+	bool isNan(const sf::Vector2f& point);
 }

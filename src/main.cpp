@@ -1,3 +1,4 @@
+#define FMT_HEADER_ONLY
 #include <iostream>
 #include <SFML/Graphics.hpp>
 
@@ -50,11 +51,6 @@ int main()
     window.setVerticalSyncEnabled(true);
     window.setFramerateLimit(60u);
 
-    sf::Font font;
-    if (!font.loadFromFile("resources/sansation.ttf")) {
-        return EXIT_FAILURE;
-    }
-        
     auto scene = make_shared<Scene>();
     SceneLoader loader(scene.get());
     loader.loadScene();
@@ -105,13 +101,14 @@ int main()
         dt *= SIM_SPEED;
         clock.restart();
 
-        scene->updateRec(dt);
-        PhysicsHandler::getInstance()->update(dt);
 
+        scene->updateRec(dt);
         window.clear();
         window.draw(*scene);
         window.draw(*BodyPullHandler::getInstance());
         window.display();
+
+        PhysicsHandler::getInstance()->update(dt);
 
     }
 

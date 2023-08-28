@@ -2,19 +2,33 @@
 #include "UserPullComponent.h"
 
 void BodyPullHandler::onMouseButtonPress(const sf::Event::MouseButtonEvent& event) {
+	if (event.button != sf::Mouse::Left && event.button != sf::Mouse::Right) {
+		return;
+	}
 	sf::Vector2f pointerPos(event.x, event.y);
-
+	shared_ptr<AbstractBody> bodyUnderCursor;
 	auto bodies = PhysicsHandler::getInstance()->getAllBodies();
 	for (auto wBody : bodies) {
 		if (auto body = wBody.lock()) {
 			if (utils::isPointInsideOfBody(pointerPos, body)) {
+				bodyUnderCursor = body;
 				mPullingBody = body;
-				auto pullComponent = body->requireComponent<UserPullComponent>();
-				pullComponent->mSourcePoint = pointerPos - body->getPhysicalComponent()->mPos;
-				pullComponent->mDestPoint = pointerPos;
 				break;
 			}
 		}
+	}	
+	if (!bodyUnderCursor) {
+		return;
+	}
+	auto pullComponent = bodyUnderCursor->requireComponent<UserPullComponent>();
+	pullComponent->mSourcePoint = pointerPos - bodyUnderCursor->getPhysicalComponent()->mPos;
+	pullComponent->mDestPoint = pointerPos;
+
+	if (event.button == sf::Mouse::Left) {
+		pullComponent->mMode = UserPullComponent::PullMode::SOFT;
+	}
+	else if (event.button == sf::Mouse::Right) {
+		pullComponent->mMode = UserPullComponent::PullMode::HARD;
 	}
 }
 

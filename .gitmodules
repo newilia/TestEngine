@@ -1,0 +1,3 @@
+[submodule "third-party/fmtlib/fmt"]
+	path = third-party/fmtlib/fmt
+	url = https://github.com/fmtlib/fmt.git
