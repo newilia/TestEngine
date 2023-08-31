@@ -2,7 +2,7 @@
 
 #include "AbstractBody.h"
 #include "FontManager.h"
-#include <format>
+#include <fmt/format.h>
 
 void DebugComponent::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	if (auto body = dynamic_cast<AbstractBody*>(mHolder)) {
@@ -19,7 +19,7 @@ void DebugComponent::draw(sf::RenderTarget& target, sf::RenderStates states) con
 			}
 			text.setFillColor(sf::Color(160, 160, 160));
 			text.setPosition(physComp->mPos);
-			text.setString(std::format("{:.1f}, {:.1f}", physComp->mPos.x, physComp->mPos.y));
+			text.setString(fmt::format("{:.1f}, {:.1f}", physComp->mPos.x, physComp->mPos.y));
 			target.draw(text, states);
 		}
 	}
