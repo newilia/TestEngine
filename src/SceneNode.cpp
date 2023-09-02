@@ -71,8 +71,16 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	}
 }
 
-void SceneNode::removeChild(std::shared_ptr<SceneNode>&& child) {
-	auto it = std::find(mChildren.begin(), mChildren.end(), child);
+void SceneNode::removeFromParent() {
+	if (auto parent = getParent()) {
+		parent->removeChild(this);
+	}
+}
+
+void SceneNode::removeChild(SceneNode* child) {
+	auto it = std::find_if(mChildren.begin(), mChildren.end(), [child](const auto& ptr) {
+		return ptr.get() == child;
+	});
 	if (it != mChildren.end()) {
 		mChildren.erase(it);
 	}
