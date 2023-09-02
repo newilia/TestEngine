@@ -1,14 +1,12 @@
 #pragma once
 #include "common.h"
-
 #include "Updateable.h"
 #include "AbstractBody.h"
 #include "CollisionDetails.h"
-#include "Singleton.h"
 
 struct CollisionDetails;
 
-class PhysicsHandler : public Updateable, public Singleton<PhysicsHandler> {
+class PhysicsHandler : public Updateable {
 public:
 	virtual ~PhysicsHandler() = default;
 	void update(const sf::Time& dt) override;

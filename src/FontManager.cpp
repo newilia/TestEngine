@@ -4,8 +4,8 @@ FontManager::FontManager() {
 	initDefaultFont();
 }
 
-const sf::Font& FontManager::getDefaultFont() const {
-	return mDefaultFont;
+const sf::Font* FontManager::getDefaultFont() const {
+	return &mDefaultFont;
 }
 
 void FontManager::initDefaultFont() {

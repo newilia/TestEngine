@@ -1,13 +1,10 @@
 #pragma once
 #include <SFML/Graphics/Font.hpp>
 
-#include "Singleton.h"
-
-
-class FontManager : public Singleton<FontManager> {
+class FontManager {
 public:
 	FontManager();
-	const sf::Font& getDefaultFont() const;
+	const sf::Font* getDefaultFont() const;
 
 private:
 	void initDefaultFont();

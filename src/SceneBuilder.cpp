@@ -1,6 +1,7 @@
 #include "SceneBuilder.h"
 
 #include "DebugComponent.h"
+#include "FpsNode.h"
 #include "PolygonBody.h"
 #include "Scene.h"
 #include "UserInput.h"
@@ -57,5 +58,6 @@ std::shared_ptr<Scene> SceneBuilder::buildScene() {
 		circle->getPhysicalComponent()->mMass = 3.14 * radius * radius;
 		mScene->addChild(circle);
 	}*/
+	scene->addChild(make_shared<FpsNode>());
 	return scene;
 }

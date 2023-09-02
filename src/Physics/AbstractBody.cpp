@@ -1,4 +1,6 @@
 #include "AbstractBody.h"
+
+#include "GlobalInterface.h"
 #include "PhysicsHandler.h"
 
 AbstractBody::AbstractBody() {
@@ -6,5 +8,5 @@ AbstractBody::AbstractBody() {
 }
 
 void AbstractBody::init() {
-	PhysicsHandler::getInstance()->addBody(dynamic_pointer_cast<AbstractBody>(shared_from_this()));
+	GlobalInterface::getInstance()->getPhysicsHandler()->addBody(dynamic_pointer_cast<AbstractBody>(shared_from_this()));
 }
