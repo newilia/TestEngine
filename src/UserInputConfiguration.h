@@ -18,16 +18,25 @@ inline void initUserInputHandlers() {
 
 	userInput->attachCustomHandler(createDelegate<sf::Event>([interface](sf::Event event) {
 		switch (event.type) {
-		case sf::Event::MouseButtonPressed:
-			interface->getBodyPullHandler()->onMouseButtonPress(event.mouseButton);
+		case sf::Event::MouseButtonPressed: {
+			sf::Vector2f mousePos(event.mouseButton.x, event.mouseButton.y);
+			if (event.mouseButton.button == sf::Mouse::Button::Left) {
+				interface->getBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::SOFT);
+			}
+			else if (event.mouseButton.button == sf::Mouse::Button::Right) {
+				interface->getBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::HARD);
+			}
 			break;
+		}
 
 		case sf::Event::MouseButtonReleased:
-			interface->getBodyPullHandler()->onMouseButtonRelease(event.mouseButton);
+			interface->getBodyPullHandler()->stopPull();
 			break;
 
 		case sf::Event::MouseMoved:
-			interface->getBodyPullHandler()->onMouseMove(event.mouseMove);
+			interface->getBodyPullHandler()->setPullDestination(sf::Vector2f(event.mouseMove.x, event.mouseMove.y));
+			break;
+		default:
 			break;
 		}
 	}));

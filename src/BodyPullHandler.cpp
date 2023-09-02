@@ -3,48 +3,36 @@
 #include "GlobalInterface.h"
 #include "UserPullComponent.h"
 
-void BodyPullHandler::onMouseButtonPress(const sf::Event::MouseButtonEvent& event) {
-	if (event.button != sf::Mouse::Left && event.button != sf::Mouse::Right) {
-		return;
-	}
-	sf::Vector2f pointerPos(event.x, event.y);
-	shared_ptr<AbstractBody> bodyUnderCursor;
+void BodyPullHandler::startPull(sf::Vector2f mousePos, UserPullComponent::PullMode pullMode) {
 	auto bodies = GlobalInterface::getInstance()->getPhysicsHandler()->getAllBodies();
 	for (auto wBody : bodies) {
-		if (auto body = wBody.lock()) {
-			if (utils::isPointInsideOfBody(pointerPos, body)) {
-				bodyUnderCursor = body;
-				mPullingBody = body;
-				break;
-			}
+		auto body = wBody.lock();
+		if (!body) {
+			continue;
 		}
-	}	
-	if (!bodyUnderCursor) {
-		return;
-	}
-	auto pullComponent = bodyUnderCursor->requireComponent<UserPullComponent>();
-	pullComponent->mSourcePoint = pointerPos - bodyUnderCursor->getPhysicalComponent()->mPos;
-	pullComponent->mDestPoint = pointerPos;
-
-	if (event.button == sf::Mouse::Left) {
-		pullComponent->mMode = UserPullComponent::PullMode::SOFT;
-	}
-	else if (event.button == sf::Mouse::Right) {
-		pullComponent->mMode = UserPullComponent::PullMode::HARD;
+		if (!utils::isPointInsideOfBody(mousePos, body)) {
+			continue;
+		}
+		auto pullComponent = body->requireComponent<UserPullComponent>();
+		pullComponent->mSourcePoint = mousePos - body->getPhysicalComponent()->mPos;
+		pullComponent->mDestPoint = mousePos;
+		pullComponent->mMode = pullMode;
+		mPullingBody = body;
+		break;
 	}
 }
 
-void BodyPullHandler::onMouseButtonRelease(const sf::Event::MouseButtonEvent& event) {
+void BodyPullHandler::stopPull() {
 	if (auto pullingBody = mPullingBody.lock()) {
 		pullingBody->removeComponent<UserPullComponent>();
 	}
 	mPullingBody.reset();
 }
 
-void BodyPullHandler::onMouseMove(const sf::Event::MouseMoveEvent& event) {
+void BodyPullHandler::setPullDestination(sf::Vector2f dest) const {
 	if (auto pullingBody = mPullingBody.lock()) {
 		if (auto pullComp = pullingBody->findComponent<UserPullComponent>()) {
-			pullComp->mDestPoint = sf::Vector2f(event.x, event.y);
+			pullComp->mDestPoint = dest;
 		}
 	}
 }
