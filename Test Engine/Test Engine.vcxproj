@@ -22,6 +22,8 @@
     <ClCompile Include="..\src\Ball.cpp" />
     <ClCompile Include="..\src\BodyPullHandler.cpp" />
     <ClCompile Include="..\src\FontManager.cpp" />
+    <ClCompile Include="..\src\FpsNode.cpp" />
+    <ClCompile Include="..\src\GlobalInterface.cpp" />
     <ClCompile Include="..\src\UserInput.cpp" />
     <ClCompile Include="..\src\ComponentHolder.cpp" />
     <ClCompile Include="..\src\DebugComponent.cpp" />
@@ -41,6 +43,8 @@
     <ClInclude Include="..\src\BodyPullHandler.h" />
     <ClInclude Include="..\src\Delegates.h" />
     <ClInclude Include="..\src\FontManager.h" />
+    <ClInclude Include="..\src\FpsNode.h" />
+    <ClInclude Include="..\src\GlobalInterface.h" />
     <ClInclude Include="..\src\UserInput.h" />
     <ClInclude Include="..\src\ComponentBase.h" />
     <ClInclude Include="..\src\ComponentHolder.h" />
@@ -58,6 +62,7 @@
     <ClInclude Include="..\src\Scene.h" />
     <ClInclude Include="..\src\common.h" />
     <ClInclude Include="..\src\Singleton.h" />
+    <ClInclude Include="..\src\UserInputConfiguration.h" />
     <ClInclude Include="..\src\UserPullComponent.h" />
     <ClInclude Include="..\src\Utils.h" />
   </ItemGroup>

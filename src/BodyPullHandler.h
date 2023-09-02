@@ -2,9 +2,8 @@
 #include <memory>
 #include <SFML/Graphics/Drawable.hpp>
 #include "AbstractBody.h"
-#include "Singleton.h"
 
-class BodyPullHandler : public Singleton<BodyPullHandler>, public sf::Drawable {
+class BodyPullHandler : public sf::Drawable {
 public:
 	void enableDebugDraw(bool enable) { mIsDebugDrawEnabled = enable; }
 	void onMouseButtonPress(const sf::Event::MouseButtonEvent& event);

@@ -1,4 +1,6 @@
 #include "BodyPullHandler.h"
+
+#include "GlobalInterface.h"
 #include "UserPullComponent.h"
 
 void BodyPullHandler::onMouseButtonPress(const sf::Event::MouseButtonEvent& event) {
@@ -7,7 +9,7 @@ void BodyPullHandler::onMouseButtonPress(const sf::Event::MouseButtonEvent& even
 	}
 	sf::Vector2f pointerPos(event.x, event.y);
 	shared_ptr<AbstractBody> bodyUnderCursor;
-	auto bodies = PhysicsHandler::getInstance()->getAllBodies();
+	auto bodies = GlobalInterface::getInstance()->getPhysicsHandler()->getAllBodies();
 	for (auto wBody : bodies) {
 		if (auto body = wBody.lock()) {
 			if (utils::isPointInsideOfBody(pointerPos, body)) {
