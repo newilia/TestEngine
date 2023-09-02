@@ -20,6 +20,7 @@ public:
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 	virtual void drawSelf(sf::RenderTarget& target, sf::RenderStates states) const {}
 	virtual void init() {}
+	void removeFromParent();
 
 	void setId(const std::string& id) { mId = id; }
 	const std::string& getId() { return mId; }
@@ -27,7 +28,7 @@ public:
 	const auto& getChildren() { return mChildren; }
 	void addChild(std::shared_ptr<SceneNode>&& child);
 	void addChild(SceneNode&& child);
-	void removeChild(std::shared_ptr<SceneNode>&& child);
+	void removeChild(SceneNode* child);
 	shared_ptr<SceneNode> findChild(const std::string& id, bool recursively);
 	bool hasChild(std::shared_ptr<SceneNode>& child);
 	std::vector<shared_ptr<SceneNode>> findChildren(const std::string& id, bool recursively);

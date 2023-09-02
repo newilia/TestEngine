@@ -27,6 +27,18 @@ void UserInput::handleEvent(const sf::Event& event) {
 	default:
 		break;
 	}
+
+	for (auto it = mEventHandlers.begin(); it != mEventHandlers.end(); ) {
+		if (it->get()->expired()) {
+			it = mEventHandlers.erase(it);
+			continue;
+		}
+		it++->get()->operator()(event);
+	}
+}
+
+void UserInput::attachCustomHandler(std::unique_ptr<IDelegate<sf::Event>>&& delegatePtr) {
+	mEventHandlers.emplace(std::move(delegatePtr));
 }
 
 void UserInput::onMouseButtonPress(const sf::Event::MouseButtonEvent& event) {

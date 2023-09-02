@@ -48,7 +48,7 @@
     <ClCompile Include="..\src\DebugComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\SceneLoader.cpp">
+    <ClCompile Include="..\src\SceneBuilder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\UserInput.cpp">
@@ -113,7 +113,7 @@
     <ClInclude Include="..\src\DebugComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SceneLoader.h">
+    <ClInclude Include="..\src\SceneBuilder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Physics\CollisionDetails.h">
@@ -129,6 +129,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\FontManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Delegates.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

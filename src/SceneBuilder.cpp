@@ -1,15 +1,14 @@
-#include "SceneLoader.h"
+#include "SceneBuilder.h"
 
 #include "DebugComponent.h"
 #include "PolygonBody.h"
 #include "Scene.h"
+#include "UserInput.h"
 
-SceneLoader::SceneLoader(Scene* scene)
-	: mScene(scene)
-{
-}
 
-void SceneLoader::loadScene() {
+std::shared_ptr<Scene> SceneBuilder::buildScene() {
+	auto scene = make_shared<Scene>();
+	
 	{
 		auto rect = make_shared<RectangleBody>();
 		rect->setId("Rect");
@@ -19,7 +18,7 @@ void SceneLoader::loadScene() {
 		rect->getShape()->setFillColor(sf::Color::Red);
 		rect->getPhysicalComponent()->mMass = size.x * size.y;
 		rect->requireComponent<DebugComponent>();
-		mScene->addChild(rect);
+		scene->addChild(rect);
 	}
 	
 	{
@@ -32,7 +31,7 @@ void SceneLoader::loadScene() {
 		rect->getPhysicalComponent()->mPos = { 50, 50 };
 		rect->getPhysicalComponent()->mMass = size2.x * size2.y;
 		rect->requireComponent<DebugComponent>();
-		mScene->addChild(rect);
+		scene->addChild(rect);
 	}
 
 	/*{
@@ -58,4 +57,5 @@ void SceneLoader::loadScene() {
 		circle->getPhysicalComponent()->mMass = 3.14 * radius * radius;
 		mScene->addChild(circle);
 	}*/
+	return scene;
 }

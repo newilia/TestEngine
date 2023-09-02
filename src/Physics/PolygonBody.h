@@ -40,7 +40,5 @@ void PolygonBody<sfShape>::drawSelf(sf::RenderTarget& target, sf::RenderStates s
 	target.draw(*mShape, states);
 }
 
-//class RectangleBody : public PolygonBody<sf::RectangleShape> {};
-//class CircleBody : public PolygonBody<sf::CircleShape> {};
 using RectangleBody = PolygonBody<sf::RectangleShape>;
 using CircleBody = PolygonBody<sf::CircleShape>;

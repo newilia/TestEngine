@@ -10,7 +10,7 @@ public:
 		return mInstance;
 	}
 
-	static void cleanup() {
+	static void destroy() {
 		delete mInstance;
 		mInstance = nullptr;
 	}
@@ -20,5 +20,13 @@ public:
 	}
 
 protected:
+	Singleton() = default;
+
+private:
+	Singleton(const Singleton&) = delete;
+	Singleton& operator=(const Singleton&) = delete;
+	Singleton(Singleton&&) = delete;
+	Singleton& operator=(Singleton&&) = delete;
+
 	inline static T* mInstance = nullptr;
 };
