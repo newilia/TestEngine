@@ -15,7 +15,8 @@ public:
 	float mPullingStrength = 100000.f;
 
 	enum class PullMode {
-		HARD,
-		SOFT
-	} mMode = PullMode::SOFT;
+		POSITION,
+		FORCE,
+		VELOCITY,
+	} mMode = PullMode::FORCE;
 };

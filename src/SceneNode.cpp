@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "DebugComponent.h"
+#include "BodyDebugComponent.h"
 
 void SceneNode::addChild(std::shared_ptr<SceneNode>&& child) {
 	assert(!hasChild(child));
@@ -66,7 +66,7 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	for (auto& child : mChildren) {
 		child->draw(target, states);
 	}
-	if (auto debugComponent = findComponent<DebugComponent>()) {
+	if (auto debugComponent = findComponent<BodyDebugComponent>()) {
 		debugComponent->draw(target, states);
 	}
 }

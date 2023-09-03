@@ -2,6 +2,9 @@
 #include "Utils.h"
 
 void VectorArrow::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+	if (mStart == mEnd) {
+		return;
+	}
 	sf::Vertex vertices[2];
 	vertices[0].position = mStart;
 	vertices[1].position = mEnd;

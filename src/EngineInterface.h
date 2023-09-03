@@ -29,6 +29,8 @@ public:
 	void onStartFrame();
 	void setMainWindow(sf::RenderWindow& window) { mMainWindow = &window; }
 	sf::RenderWindow* getMainWindow() const { return mMainWindow; }
+	void setFixedFrameTime(const sf::Time& time) { mFrameTime = time; mIsFixedFrameTime = true; }
+	void resetFixedFrameTime() { mIsFixedFrameTime = false; }
 
 private:
 	sf::RenderWindow* mMainWindow;
@@ -38,8 +40,9 @@ private:
 	shared_ptr<PhysicsHandler> mPhysicsHandler;
 	shared_ptr<FontManager> mFontManager;
 	shared_ptr<BodyPullHandler> mBodyPullHandler;
-	sf::Time mFrameTime;
 	sf::Clock mFrameClock;
+	sf::Time mFrameTime;
+	bool mIsFixedFrameTime = false;
 	float mSimSpeedMultiplier = 1.f;
 	bool mIsSimPaused = false;
 };

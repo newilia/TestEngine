@@ -45,7 +45,7 @@
     <ClCompile Include="..\src\Physics\PolygonBody.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\DebugComponent.cpp">
+    <ClCompile Include="..\src\BodyDebugComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SceneBuilder.cpp">
@@ -113,10 +113,10 @@
     <ClInclude Include="..\src\Physics\PhysicsHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Physics\ShapeBodyBase.h">
+    <ClInclude Include="..\src\Physics\AbstractShapeBody.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\DebugComponent.h">
+    <ClInclude Include="..\src\BodyDebugComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SceneBuilder.h">

@@ -3,11 +3,11 @@
 
 #include "ComponentBase.h"
 
-class DebugComponent
+class BodyDebugComponent
 	: public sf::Drawable
 	, public ComponentBase
 {
 public:
-	DebugComponent(ComponentHolderBase* node) : ComponentBase(node) {}
+	BodyDebugComponent(ComponentHolderBase* node) : ComponentBase(node) {}
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 };
