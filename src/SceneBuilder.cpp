@@ -2,7 +2,7 @@
 
 #include "DebugComponent.h"
 #include "FpsNode.h"
-#include "PolygonBody.h"
+#include "ShapeBodyBase.h"
 #include "Scene.h"
 #include "UserInput.h"
 
@@ -16,7 +16,7 @@ std::shared_ptr<Scene> SceneBuilder::buildScene() {
 		rect->init();
 		sf::Vector2f size(100, 100);
 		rect->getShape()->setSize(size);
-		rect->getShape()->setFillColor(sf::Color::Red);
+		rect->getShape()->setFillColor(sf::Color(255, 30, 30, 127.f));
 		rect->getPhysicalComponent()->mMass = size.x * size.y;
 		rect->requireComponent<DebugComponent>();
 		scene->addChild(rect);
@@ -28,7 +28,7 @@ std::shared_ptr<Scene> SceneBuilder::buildScene() {
 		rect->init();
 		sf::Vector2f size2(100, 100);
 		rect->getShape()->setSize(size2);
-		rect->getShape()->setFillColor(sf::Color::Blue);
+		rect->getShape()->setFillColor(sf::Color(30, 255, 30, 127.f));
 		rect->getPhysicalComponent()->mPos = { 50, 50 };
 		rect->getPhysicalComponent()->mMass = size2.x * size2.y;
 		rect->requireComponent<DebugComponent>();

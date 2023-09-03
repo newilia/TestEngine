@@ -34,6 +34,13 @@ bool utils::arePointsCollinear(const sf::Vector2f& p1, const sf::Vector2f& p2, c
 	return std::abs(triangleArea) <= std::numeric_limits<float>::epsilon();
 }
 
+sf::Vector2f utils::rotate(const sf::Vector2f& v, float angle) {
+	sf::Vector2f result;
+	result.x = v.x * cos(angle) - v.y * sin(angle);
+	result.y = v.x * sin(angle) + v.y * cos(angle);
+	return result;
+}
+
 bool utils::isPointInsideOfBody(const sf::Vector2f& point, const shared_ptr<AbstractBody>& body) {
 	auto t1 = body->getPoint(0);
 	for (int i = 0; i < body->getPointCount() - 2; ++i) {

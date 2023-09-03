@@ -1,10 +1,11 @@
 #include "BodyPullHandler.h"
 
-#include "GlobalInterface.h"
+#include "EngineInterface.h"
 #include "UserPullComponent.h"
+#include "VectorArrow.h"
 
 void BodyPullHandler::startPull(sf::Vector2f mousePos, UserPullComponent::PullMode pullMode) {
-	auto bodies = GlobalInterface::getInstance()->getPhysicsHandler()->getAllBodies();
+	auto bodies = EI()->getPhysicsHandler()->getAllBodies();
 	for (auto wBody : bodies) {
 		auto body = wBody.lock();
 		if (!body) {
@@ -14,8 +15,8 @@ void BodyPullHandler::startPull(sf::Vector2f mousePos, UserPullComponent::PullMo
 			continue;
 		}
 		auto pullComponent = body->requireComponent<UserPullComponent>();
-		pullComponent->mSourcePoint = mousePos - body->getPhysicalComponent()->mPos;
-		pullComponent->mDestPoint = mousePos;
+		pullComponent->mLocalSourcePoint = mousePos - body->getPhysicalComponent()->mPos;
+		pullComponent->mGlobalDestPoint = mousePos;
 		pullComponent->mMode = pullMode;
 		mPullingBody = body;
 		break;
@@ -32,7 +33,7 @@ void BodyPullHandler::stopPull() {
 void BodyPullHandler::setPullDestination(sf::Vector2f dest) const {
 	if (auto pullingBody = mPullingBody.lock()) {
 		if (auto pullComp = pullingBody->findComponent<UserPullComponent>()) {
-			pullComp->mDestPoint = dest;
+			pullComp->mGlobalDestPoint = dest;
 		}
 	}
 }
@@ -44,12 +45,11 @@ void BodyPullHandler::draw(sf::RenderTarget& target, sf::RenderStates states) co
 	
 	if (auto body = mPullingBody.lock()) {
 		if (auto pullComp = body->findComponent<UserPullComponent>()) {
-			sf::Vertex vertices[2];
-			vertices[0].position = body->getPhysicalComponent()->mPos + pullComp->mSourcePoint;
-			vertices[1].position = pullComp->mDestPoint;
-			vertices[0].color = sf::Color::White;
-			vertices[1].color = sf::Color::White;
-			target.draw(vertices, 2, sf::PrimitiveType::LineStrip, states);
+			VectorArrow arrow;
+			arrow.setColor(sf::Color::Green);
+			arrow.setStartPos(body->getPhysicalComponent()->mPos + pullComp->mLocalSourcePoint);
+			arrow.setEndPos(pullComp->mGlobalDestPoint);
+			target.draw(arrow, states);
 		}
 	}
 }

@@ -63,10 +63,13 @@
     <ClCompile Include="..\src\FontManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\GlobalInterface.cpp">
+    <ClCompile Include="..\src\EngineInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\FpsNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\VectorArrow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -110,10 +113,7 @@
     <ClInclude Include="..\src\Physics\PhysicsHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Physics\PolygonBody.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\GameLoop.h">
+    <ClInclude Include="..\src\Physics\ShapeBodyBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\DebugComponent.h">
@@ -143,10 +143,13 @@
     <ClInclude Include="..\src\UserInputConfiguration.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\GlobalInterface.h">
+    <ClInclude Include="..\src\EngineInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\FpsNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\VectorArrow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

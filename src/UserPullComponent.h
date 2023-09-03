@@ -10,8 +10,8 @@ public:
 
 	sf::Vector2f getPullVector() const;
 
-	sf::Vector2f mSourcePoint; // local coordinate of body's pulling point
-	sf::Vector2f mDestPoint; // global coordinate of pointer
+	sf::Vector2f mLocalSourcePoint;
+	sf::Vector2f mGlobalDestPoint;
 	float mPullingStrength = 100000.f;
 
 	enum class PullMode {
