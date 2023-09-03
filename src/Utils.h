@@ -15,6 +15,7 @@ namespace utils {
 		});
 		containter.erase(first, last);
     }
+	sf::Vector2f rotate(const sf::Vector2f& v, float angle);
 
 	bool isPointInsideOfBody(const sf::Vector2f& point, const shared_ptr<AbstractBody>& body);
 	bool isPointInsideOfTriangle(sf::Vector2f p, sf::Vector2f t1, sf::Vector2f t2, sf::Vector2f t3);

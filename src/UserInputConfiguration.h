@@ -1,57 +1,59 @@
 #pragma once
-#include "GlobalInterface.h"
+#include "EngineInterface.h"
 #include "UserInput.h"
 
 inline void initUserInputHandlers() {
-	auto interface = GlobalInterface::getInstance();
-	auto userInput = interface->getUserInput();
-	auto scene = interface->getScene();
-	auto builder = interface->getSceneBuilder();
+	auto ei = EI();
+	auto userInput = ei->getUserInput();
+	auto scene = ei->getScene();
+	auto builder = ei->getSceneBuilder();
 
-	userInput->attachCustomHandler(createDelegate<sf::Event>([interface](sf::Event event) {
-		if (!(event.type == sf::Event::EventType::KeyPressed && event.key.code == sf::Keyboard::R)) {
-			return;
+	userInput->attachCustomHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+		if (event.type == sf::Event::EventType::KeyPressed && event.key.code == sf::Keyboard::R) {
+			auto scene = ei->getSceneBuilder()->buildScene();
+			ei->setScene(scene);
+			ei->setSimPaused(false);
+			ei->setSimSpeedMultiplier(1.f);
 		}
-		auto scene = interface->getSceneBuilder()->buildScene();
-		interface->setScene(scene);
+		
 	}));
 
-	userInput->attachCustomHandler(createDelegate<sf::Event>([interface](sf::Event event) {
+	userInput->attachCustomHandler(createDelegate<sf::Event>([ei](sf::Event event) {
 		switch (event.type) {
 		case sf::Event::MouseButtonPressed: {
 			sf::Vector2f mousePos(event.mouseButton.x, event.mouseButton.y);
 			if (event.mouseButton.button == sf::Mouse::Button::Left) {
-				interface->getBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::SOFT);
+				ei->getBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::SOFT);
 			}
 			else if (event.mouseButton.button == sf::Mouse::Button::Right) {
-				interface->getBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::HARD);
+				ei->getBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::HARD);
 			}
 			break;
 		}
 
 		case sf::Event::MouseButtonReleased:
-			interface->getBodyPullHandler()->stopPull();
+			ei->getBodyPullHandler()->stopPull();
 			break;
 
 		case sf::Event::MouseMoved:
-			interface->getBodyPullHandler()->setPullDestination(sf::Vector2f(event.mouseMove.x, event.mouseMove.y));
+			ei->getBodyPullHandler()->setPullDestination(sf::Vector2f(event.mouseMove.x, event.mouseMove.y));
 			break;
 		default:
 			break;
 		}
 	}));
 
-	userInput->attachCustomHandler(createDelegate<sf::Event>([interface](sf::Event event) {
+	userInput->attachCustomHandler(createDelegate<sf::Event>([ei](sf::Event event) {
 		if (event.type == sf::Event::KeyPressed) {
 			switch (event.key.code) {
 			case sf::Keyboard::Equal:
-				interface->setSimSpeedMultiplier(interface->getSimSpeedMultiplier() * 2);
+				ei->setSimSpeedMultiplier(ei->getSimSpeedMultiplier() * 2);
 				break;
 			case sf::Keyboard::Hyphen:
-				interface->setSimSpeedMultiplier(interface->getSimSpeedMultiplier() * 0.5f);
+				ei->setSimSpeedMultiplier(ei->getSimSpeedMultiplier() * 0.5f);
 				break;
 			case sf::Keyboard::Num0:
-				interface->setSimPaused(!interface->isSimPaused());
+				ei->setSimPaused(!ei->isSimPaused());
 				break;
 			default: break;
 			}

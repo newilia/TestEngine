@@ -12,5 +12,5 @@ struct CollisionDetails {
 
 struct SegmentIntersectionPoints {
 	sf::Vector2f p1;
-	std::optional<sf::Vector2f> p2 = std::nullopt; // only for collinear segments
+	std::optional<sf::Vector2f> p2 = std::nullopt; // Only for collinear segments. Needed for define collision tangent
 };

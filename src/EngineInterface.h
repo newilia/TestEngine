@@ -7,10 +7,10 @@
 #include "UserInput.h"
 #include "SceneBuilder.h"
 
-class GlobalInterface : public Singleton<GlobalInterface> {
+class EngineInterface : public Singleton<EngineInterface> {
 public:
-	GlobalInterface();
-	~GlobalInterface() override = default;
+	EngineInterface();
+	~EngineInterface() override = default;
 	void init();
 
 	auto getSceneBuilder() { return mSceneBuilder; }
@@ -24,19 +24,24 @@ public:
 	void setSimSpeedMultiplier(float val) { mSimSpeedMultiplier = val; }
 	bool isSimPaused() const { return mIsSimPaused; }
 	void setSimPaused(bool paused) { mIsSimPaused = paused; }
-	sf::Time getFrameDtAndReset();
-	void setMainWindow(const sf::RenderWindow& window) { mMainWindow = &window; }
-	sf::RenderWindow const* getMainWindow() const { return mMainWindow; }
+	sf::Time getSimDt() const;
+	sf::Time getFrameDt() const;
+	void onStartFrame();
+	void setMainWindow(sf::RenderWindow& window) { mMainWindow = &window; }
+	sf::RenderWindow* getMainWindow() const { return mMainWindow; }
 
 private:
-	sf::RenderWindow const* mMainWindow;
+	sf::RenderWindow* mMainWindow;
 	shared_ptr<SceneBuilder> mSceneBuilder;
 	shared_ptr<Scene> mScene;
 	shared_ptr<UserInput> mUserInput;
 	shared_ptr<PhysicsHandler> mPhysicsHandler;
 	shared_ptr<FontManager> mFontManager;
 	shared_ptr<BodyPullHandler> mBodyPullHandler;
+	sf::Time mFrameTime;
 	sf::Clock mFrameClock;
 	float mSimSpeedMultiplier = 1.f;
 	bool mIsSimPaused = false;
 };
+
+inline EngineInterface* EI() { return EngineInterface::getInstance(); }

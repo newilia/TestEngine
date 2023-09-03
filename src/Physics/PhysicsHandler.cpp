@@ -3,8 +3,13 @@
 #include "AbstractBody.h"
 #include "CollisionDetails.h"
 #include "common.h"
+#include "EngineInterface.h"
+#include "ShapeBodyBase.h"
 #include "UserPullComponent.h"
 #include "Utils.h"
+#include "VectorArrow.h"
+
+#define PHYSICS_DEBUG 1
 
 void PhysicsHandler::update(const sf::Time& dt) {
 	utils::removeExpiredPointers(mBodies);
@@ -60,6 +65,7 @@ std::optional<CollisionDetails> PhysicsHandler::detectCollision(const shared_ptr
 	}
 
 	std::vector<sf::Vector2f> edges_i_p;
+	edges_i_p.reserve(4u);
 	
 	const auto pointsCount1 = body1->getPointCount();
 	const auto pointsCount2 = body2->getPointCount();
@@ -73,13 +79,9 @@ std::optional<CollisionDetails> PhysicsHandler::detectCollision(const shared_ptr
 
 			// todo handle circle bodies in other way
 			if (auto i_point = findSegmentsIntersectionPoint(edge1, edge2)) {
-				if (std::find(edges_i_p.begin(), edges_i_p.end(), i_point->p1) == edges_i_p.end()) {
-					edges_i_p.emplace_back(i_point->p1);
-				}
+				edges_i_p.emplace_back(i_point->p1);
 				if (i_point->p2) {
-					if (std::find(edges_i_p.begin(), edges_i_p.end(), i_point->p2) == edges_i_p.end()) {
-						edges_i_p.emplace_back(*i_point->p2);
-					}
+					edges_i_p.emplace_back(*i_point->p2);
 				}
 
 				result.body1penetratingPoints.insert(i);
@@ -95,7 +97,7 @@ std::optional<CollisionDetails> PhysicsHandler::detectCollision(const shared_ptr
 	}
 
 	if (edges_i_p.size() == 1) {
-		result.intersection.start = *edges_i_p.begin(); // I doubt that this is correct way to find start and end
+		result.intersection.start = *edges_i_p.begin();
 		result.intersection.end = *edges_i_p.begin();
 	}
 	else {
@@ -195,11 +197,11 @@ void PhysicsHandler::resolveCollision(const CollisionDetails& collision) {
 
 	//todo make it oriented in half plane
 	sf::Vector2f normalizedTangent = [&]() {
-		if (collision.intersection.start != collision.intersection.end) {
-			return utils::normalize(collision.intersection.start - collision.intersection.end);
+		if (collision.intersection.start == collision.intersection.end) {
+			auto objToObj = body2->getPhysicalComponent()->mPos - body1->getPhysicalComponent()->mPos;
+			return utils::normalize({ -objToObj.y, objToObj.x });
 		}
-		auto objToObj = body2->getPhysicalComponent()->mPos - body1->getPhysicalComponent()->mPos;
-		return utils::normalize({ -objToObj.y, objToObj.x });
+		return utils::normalize(collision.intersection.end - collision.intersection.start);
 	}();
 
 	/* velocities handling */
@@ -213,17 +215,44 @@ void PhysicsHandler::resolveCollision(const CollisionDetails& collision) {
 	const auto m2 = pc2->mMass;
 	auto r = pc1->mRestitution * pc2->mRestitution;
 
-	auto dv1 = -(1.f + r) * m2 / (m1 + m2) * (v1 - v2);
-	auto dv2 = (1.f + r) * m1 / (m1 + m2) * (v1 - v2);
-
+	auto dv1magnitude = -(1.f + r) * m2 / (m1 + m2) * (v1 - v2);
+	auto dv2magnitude = (1.f + r) * m1 / (m1 + m2) * (v1 - v2);
 	auto normal = sf::Vector2f(-normalizedTangent.y, normalizedTangent.x);
-	pc1->mVelocity += normal * dv1;
-	pc2->mVelocity += normal * dv2;
+	auto dv1 = normal * dv1magnitude;
+	auto dv2 = normal * dv2magnitude;
+
+	pc1->mVelocity += dv1;
+	pc2->mVelocity += dv2;
 
 	auto isNan = utils::isNan(pc1->mVelocity) || utils::isNan(pc2->mVelocity);
 	assert(!isNan);
 
-	/* penetration fixing */
+#if PHYSICS_DEBUG
+	auto window = EI()->getMainWindow();
+	VectorArrow segment(collision.intersection.start, collision.intersection.end, sf::Color::White);
+	segment.enableArrowHead(true);
+	window->draw(segment);
 
+	const sf::Vector2f middlePoint((collision.intersection.start + collision.intersection.end) *0.5f);
+	const float radius = 2.f;
+	sf::CircleShape middlePointCircle(radius, 10);
+	middlePointCircle.setPosition(middlePoint - sf::Vector2f(radius, radius));
+	middlePointCircle.setFillColor(sf::Color::White);
+	window->draw(middlePointCircle);
+
+	VectorArrow force1(middlePoint, middlePoint + dv1);
+	if (auto shapedBody = dynamic_cast<ShapeBodyBase*>(body1.get())) {
+		force1.setColor(shapedBody->getBaseShape()->getFillColor());
+	}
+	window->draw(force1);
+
+	VectorArrow force2(middlePoint, middlePoint + dv2, sf::Color::Red);
+	if (auto shapedBody = dynamic_cast<ShapeBodyBase*>(body2.get())) {
+		force2.setColor(shapedBody->getBaseShape()->getFillColor());
+	}
+	window->draw(force2);
+
+#endif
+	/* penetration fixing */
 
 }
