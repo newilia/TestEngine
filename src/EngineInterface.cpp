@@ -24,6 +24,8 @@ sf::Time EngineInterface::getFrameDt() const {
 }
 
 void EngineInterface::onStartFrame() {
-	mFrameTime = mFrameClock.getElapsedTime();
+	if (!mIsFixedFrameTime) {
+		mFrameTime = mFrameClock.getElapsedTime();
+	}
 	mFrameClock.restart();
 }

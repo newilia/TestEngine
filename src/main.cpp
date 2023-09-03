@@ -1,6 +1,5 @@
 #include <SFML/Graphics.hpp>
 
-#define DEBUG true
 #include "BodyPullHandler.h"
 #include "Physics/PhysicsHandler.h"
 #include "Scene.h"
@@ -9,16 +8,19 @@
 #include <fmt/format.h>
 
 namespace {
-    const sf::Vector2u wndSize(800, 600);
+    auto mode = sf::VideoMode(800u, 600u);
+    auto windowStyle = sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize;
 }
 
 int main() {
-    auto ei = EI();
-    sf::RenderWindow window(sf::VideoMode(wndSize.x, wndSize.y), "Pong", sf::Style::Titlebar | sf::Style::Close);
+    sf::RenderWindow window(mode, "Pong", windowStyle);
     window.setVerticalSyncEnabled(true);
     window.setFramerateLimit(60u);
+
+    auto ei = EI();
     ei->setMainWindow(window);
     ei->setScene(ei->getSceneBuilder()->buildScene());
+    ei->setFixedFrameTime(sf::milliseconds(16));
 
     initUserInputHandlers();
 

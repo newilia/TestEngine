@@ -23,10 +23,13 @@ inline void initUserInputHandlers() {
 		case sf::Event::MouseButtonPressed: {
 			sf::Vector2f mousePos(event.mouseButton.x, event.mouseButton.y);
 			if (event.mouseButton.button == sf::Mouse::Button::Left) {
-				ei->getBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::SOFT);
+				ei->getBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::FORCE);
 			}
 			else if (event.mouseButton.button == sf::Mouse::Button::Right) {
-				ei->getBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::HARD);
+				ei->getBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::POSITION);
+			}
+			else if (event.mouseButton.button == sf::Mouse::Button::Middle) {
+				ei->getBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::VELOCITY);
 			}
 			break;
 		}

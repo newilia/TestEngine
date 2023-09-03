@@ -45,11 +45,13 @@ void BodyPullHandler::draw(sf::RenderTarget& target, sf::RenderStates states) co
 	
 	if (auto body = mPullingBody.lock()) {
 		if (auto pullComp = body->findComponent<UserPullComponent>()) {
-			VectorArrow arrow;
-			arrow.setColor(sf::Color::Green);
-			arrow.setStartPos(body->getPhysicalComponent()->mPos + pullComp->mLocalSourcePoint);
-			arrow.setEndPos(pullComp->mGlobalDestPoint);
-			target.draw(arrow, states);
+			if (pullComp->mMode == UserPullComponent::PullMode::FORCE) {
+				VectorArrow arrow;
+				arrow.setColor(sf::Color::Green);
+				arrow.setStartPos(body->getPhysicalComponent()->mPos + pullComp->mLocalSourcePoint);
+				arrow.setEndPos(pullComp->mGlobalDestPoint);
+				target.draw(arrow, states);
+			}
 		}
 	}
 }

@@ -16,12 +16,12 @@ private:
 	static bool checkBboxIntersection(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2);
 	static std::optional<CollisionDetails> detectCollision(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2);
 	static std::optional<SegmentIntersectionPoints> findSegmentsIntersectionPoint(const Segment& E, const Segment& F);
-	static void resolveCollision(const CollisionDetails& collision);
+	static void resolveCollision(const CollisionDetails& collision, const sf::Time& dt);
 
 	void updateSubStep(const sf::Time& dt);
 
 	std::list<weak_ptr<AbstractBody>> mBodies;
-	const int mSubStepsCount = 4;
+	const int mSubStepsCount = 1;
 	float mGravity = 0.f;
 	bool mDebugDrawEnabled = true;
 };

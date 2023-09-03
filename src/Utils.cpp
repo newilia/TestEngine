@@ -1,4 +1,5 @@
 #include "Utils.h"
+#include "fmt/format.h"
 
 float utils::length(const sf::Vector2f& vec) {
 	return std::sqrt(vec.x * vec.x + vec.y * vec.y);
@@ -42,10 +43,10 @@ sf::Vector2f utils::rotate(const sf::Vector2f& v, float angle) {
 }
 
 bool utils::isPointInsideOfBody(const sf::Vector2f& point, const shared_ptr<AbstractBody>& body) {
-	auto t1 = body->getPoint(0);
+	auto t1 = body->getPointGlobal(0);
 	for (int i = 0; i < body->getPointCount() - 2; ++i) {
-		auto t2 = body->getPoint(i + 1);
-		auto t3 = body->getPoint(i + 2);
+		auto t2 = body->getPointGlobal(i + 1);
+		auto t3 = body->getPointGlobal(i + 2);
 		if (isPointInsideOfTriangle(point, t1, t2, t3)) {
 			return true;
 		}
@@ -63,6 +64,10 @@ bool utils::isPointInsideOfTriangle(sf::Vector2f p, sf::Vector2f t1, sf::Vector2
 	return false;
 }
 
-bool utils::isNan(const sf::Vector2f& point) {
-	return std::isnan(point.x) || std::isnan(point.y);
+bool utils::isNan(const sf::Vector2f& v) {
+	return std::isnan(v.x) || std::isnan(v.y);
+}
+
+std::string utils::toString(const sf::Vector2f& v) {
+	return fmt::format("({:.1f}, {:.1f})", v.x, v.y);
 }

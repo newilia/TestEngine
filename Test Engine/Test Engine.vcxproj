@@ -26,7 +26,7 @@
     <ClCompile Include="..\src\EngineInterface.cpp" />
     <ClCompile Include="..\src\UserInput.cpp" />
     <ClCompile Include="..\src\ComponentHolder.cpp" />
-    <ClCompile Include="..\src\DebugComponent.cpp" />
+    <ClCompile Include="..\src\BodyDebugComponent.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\SceneNode.cpp" />
     <ClCompile Include="..\src\Physics\AbstractBody.cpp" />
@@ -49,7 +49,7 @@
     <ClInclude Include="..\src\UserInput.h" />
     <ClInclude Include="..\src\ComponentBase.h" />
     <ClInclude Include="..\src\ComponentHolder.h" />
-    <ClInclude Include="..\src\DebugComponent.h" />
+    <ClInclude Include="..\src\BodyDebugComponent.h" />
     <ClInclude Include="..\src\Physics\CollisionDetails.h" />
     <ClInclude Include="..\src\SceneBuilder.h" />
     <ClInclude Include="..\src\Updateable.h" />
@@ -57,7 +57,7 @@
     <ClInclude Include="..\src\Physics\AbstractBody.h" />
     <ClInclude Include="..\src\Physics\PhysicalComponent.h" />
     <ClInclude Include="..\src\Physics\PhysicsHandler.h" />
-    <ClInclude Include="..\src\Physics\ShapeBodyBase.h" />
+    <ClInclude Include="..\src\Physics\AbstractShapeBody.h" />
     <ClInclude Include="..\src\PongPlatform.h" />
     <ClInclude Include="..\src\Scene.h" />
     <ClInclude Include="..\src\common.h" />
