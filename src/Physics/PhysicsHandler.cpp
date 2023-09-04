@@ -28,8 +28,8 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 
 		sf::Vector2f forceSum = [&]() {
 			sf::Vector2f force;
-			if (mGravity != 0.f) {
-				force += sf::Vector2f(0.f, mGravity * physComp->mMass);
+			if (!physComp->isImmovable()) {
+				force += mGravity * physComp->mMass;
 			}
 			if (pullComp && pullComp->mMode == UserPullComponent::PullMode::FORCE) {
 				force += pullComp->getPullVector() * pullComp->mPullingStrength;
@@ -55,7 +55,7 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 	for (auto it1 = mBodies.begin(); it1 != mBodies.end(); ++it1) {
 		for (auto it2 = std::next(it1); it2 != mBodies.end(); ++it2) {
 			if (auto collision = detectCollision(it1->lock(), it2->lock())) {
-				resolveCollision(*collision, dt);
+				resolveCollision(*collision);
 			}
 		}
 	}
@@ -65,6 +65,9 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 	sf::Vector2f systemImpulse;
 	for (auto& wBody : mBodies) {
 		if (auto body = wBody.lock()) {
+			if (body->getPhysicalComponent()->isImmovable()) {
+				continue;
+			}
 			auto v = body->getPhysicalComponent()->mVelocity;
 			auto v_s = utils::length(v);
 			auto m = body->getPhysicalComponent()->mMass;
@@ -84,6 +87,10 @@ bool PhysicsHandler::checkBboxIntersection(const shared_ptr<AbstractBody>& body1
 std::optional<CollisionDetails> PhysicsHandler::detectCollision(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2) {
 	if (!body1 || !body2) {
 		assert(false);
+		return std::nullopt;
+	}
+
+	if (body1->getPhysicalComponent()->isImmovable() && body2->getPhysicalComponent()->isImmovable()) {
 		return std::nullopt;
 	}
 
@@ -214,7 +221,7 @@ std::optional<SegmentIntersectionPoints> PhysicsHandler::findSegmentsIntersectio
 }
 
 // todo: consider immovable objects
-void PhysicsHandler::resolveCollision(const CollisionDetails& collision, const sf::Time& dt) {
+void PhysicsHandler::resolveCollision(const CollisionDetails& collision) {
 	auto body1 = collision.wBody1.lock();
 	auto body2 = collision.wBody2.lock();
 	if (!body1 || !body2) {
@@ -224,87 +231,100 @@ void PhysicsHandler::resolveCollision(const CollisionDetails& collision, const s
 
 	auto pc1 = body1->requireComponent<PhysicalComponent>();
 	auto pc2 = body2->requireComponent<PhysicalComponent>();
-	auto v1_to_v2 = pc2->mVelocity - pc1->mVelocity;
-	auto pos1_to_pos2 = pc2->mPos - pc1->mPos; // assume this as collision normal
-	bool areMovingTowards = utils::dot(pos1_to_pos2, v1_to_v2) < 0.f;
+	
+	if (pc1->isImmovable()) { // fixed body must be second
+		std::swap(body1, body2);
+		std::swap(pc1, pc2);
+	}
 
-	/* TODO penetration fixing */ 
+	/* TODO penetration fixing */
 	/*if (areMovingTowards) {
 		pc1->mPos -= pc1->mVelocity * dt.asSeconds();
 		pc2->mPos -= pc2->mVelocity * dt.asSeconds();
 	}*/
 
+
 	/* velocities handling */
-	const sf::Vector2f tangent = [&]() {
-		if (collision.intersection.start == collision.intersection.end) {
-			return sf::Vector2f(-pos1_to_pos2.y, pos1_to_pos2.x);
+	auto v1_to_v2 = pc2->mVelocity - pc1->mVelocity;
+	auto pos1_to_pos2 = pc2->mPos - pc1->mPos; // assume this as collision normal // todo fix, I need real collision normal
+	bool areMovingTowards = utils::dot(pos1_to_pos2, v1_to_v2) < 0.f;
+
+	if (areMovingTowards) {
+		const sf::Vector2f tangent = [&]() {
+			if (collision.intersection.start == collision.intersection.end) {
+				return sf::Vector2f(-pos1_to_pos2.y, pos1_to_pos2.x);
+			}
+			return collision.intersection.end - collision.intersection.start;
+		}();
+
+		auto normal = utils::normalize({ -tangent.y, tangent.x });
+		const auto m1 = pc1->mMass;
+		const auto m2 = pc2->mMass;
+		const auto r = pc1->mRestitution * pc2->mRestitution;
+
+		auto norm_v1 = utils::project(pc1->mVelocity, normal);
+		auto norm_v2 = utils::project(pc2->mVelocity, normal);
+		auto norm_v_diff = norm_v1 - norm_v2;
+
+		float norm_dv1 = 0.f;
+		float norm_dv2 = 0.f;
+
+		if (pc2->isImmovable()) {
+			norm_dv1 = -(1.f + r) * norm_v_diff;
 		}
-		return collision.intersection.end - collision.intersection.start;
-	}();
+		else {
+			norm_dv1 = -(1.f + r) * m2 / (m1 + m2) * norm_v_diff;
+			norm_dv2 = (1.f + r) * m1 / (m1 + m2) * norm_v_diff;
+		}
 
-	auto normal = utils::normalize({ -tangent.y, tangent.x });
-	const auto m1 = pc1->mMass;
-	const auto m2 = pc2->mMass;
-
-	auto norm_v1 = utils::project(pc1->mVelocity, normal);
-	auto norm_v2 = utils::project(pc2->mVelocity, normal);
-	auto norm_v_diff = norm_v1 - norm_v2;
-
-	auto r = pc1->mRestitution * pc2->mRestitution;
-
-	auto norm_dv1 = -(1.f + r) * m2 / (m1 + m2) * norm_v_diff;
-	auto norm_dv2 = (1.f + r) * m1 / (m1 + m2) * norm_v_diff;
-	auto dv1 = normal * norm_dv1;
-	auto dv2 = normal * norm_dv2;
-
-	if (areMovingTowards) { // objects are moving towards each other
+		auto dv1 = normal * norm_dv1;
+		auto dv2 = normal * norm_dv2;
 		pc1->mVelocity += dv1;
 		pc2->mVelocity += dv2;
 
 		auto isNan = utils::isNan(pc1->mVelocity) || utils::isNan(pc2->mVelocity);
 		assert(!isNan);
-	}
-	
+
 #if PHYSICS_DEBUG
-	auto window = EI()->getMainWindow();
-	const sf::Vector2f middlePoint((collision.intersection.start + collision.intersection.end) * 0.5f);
+		auto window = EI()->getMainWindow();
+		const sf::Vector2f middlePoint((collision.intersection.start + collision.intersection.end) * 0.5f);
 
-	{	// collision segment
-		VectorArrow segment(collision.intersection.start, collision.intersection.end, sf::Color::White);
-		window->draw(segment);
-	}
-
-	{	// normal
-		VectorArrow tangentArrow(middlePoint, middlePoint + normal * 50.f, sf::Color::Yellow);
-		window->draw(tangentArrow);
-	}
-
-	{	// collision center
-		const float radius = 2.f;
-		sf::CircleShape middlePointCircle(radius, 10);
-		middlePointCircle.setPosition(middlePoint - sf::Vector2f(radius, radius));
-		middlePointCircle.setFillColor(sf::Color::White);
-		window->draw(middlePointCircle);
-	}
-	
-	{
-		VectorArrow force1(body1->getGlobalCenter(), body1->getGlobalCenter() + dv1);
-		if (auto shapedBody = dynamic_cast<AbstractShapeBody*>(body1.get())) {
-			auto color = shapedBody->getBaseShape()->getFillColor();
-			color.a = 255u;
-			force1.setColor(color);
+		{	// collision segment
+			VectorArrow segment(collision.intersection.start, collision.intersection.end, sf::Color::White);
+			window->draw(segment);
 		}
-		window->draw(force1);
-	}
-	{
-		VectorArrow force2(body2->getGlobalCenter(), body2->getGlobalCenter() + dv2);
-		if (auto shapedBody = dynamic_cast<AbstractShapeBody*>(body2.get())) {
-			auto color = shapedBody->getBaseShape()->getFillColor();
-			color.a = 255u;
-			force2.setColor(color);
+
+		{	// normal
+			VectorArrow tangentArrow(middlePoint, middlePoint + normal * 50.f, sf::Color::Yellow);
+			window->draw(tangentArrow);
 		}
-		window->draw(force2);
-	}
+
+		{	// collision center
+			const float radius = 2.f;
+			sf::CircleShape middlePointCircle(radius, 10);
+			middlePointCircle.setPosition(middlePoint - sf::Vector2f(radius, radius));
+			middlePointCircle.setFillColor(sf::Color::White);
+			window->draw(middlePointCircle);
+		}
+
+		{
+			VectorArrow force1(body1->getGlobalCenter(), body1->getGlobalCenter() + dv1);
+			if (auto shapedBody = dynamic_cast<AbstractShapeBody*>(body1.get())) {
+				auto color = shapedBody->getBaseShape()->getFillColor();
+				color.a = 255u;
+				force1.setColor(color);
+			}
+			window->draw(force1);
+		}
+		{
+			VectorArrow force2(body2->getGlobalCenter(), body2->getGlobalCenter() + dv2);
+			if (auto shapedBody = dynamic_cast<AbstractShapeBody*>(body2.get())) {
+				auto color = shapedBody->getBaseShape()->getFillColor();
+				color.a = 255u;
+				force2.setColor(color);
+			}
+			window->draw(force2);
+		}
 #endif
-
+	}
 }
