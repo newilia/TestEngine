@@ -21,6 +21,7 @@ int main() {
     ei->setMainWindow(window);
     ei->setScene(ei->getSceneBuilder()->buildScene());
     ei->setFixedFrameTime(sf::milliseconds(16));
+    ei->getPhysicsHandler()->setGravity({ 0.f, 100.f });
 
     initUserInputHandlers();
 
