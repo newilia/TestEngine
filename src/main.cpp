@@ -1,6 +1,5 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
-
 #include "BodyPullHandler.h"
 #include "Physics/PhysicsHandler.h"
 #include "Scene.h"
@@ -15,13 +14,12 @@ namespace {
 
 int main() {
     sf::RenderWindow window(mode, "Test Engine", windowStyle);
-    window.setVerticalSyncEnabled(true);
-    window.setFramerateLimit(60u);
 
     auto ei = EI();
     ei->setMainWindow(window);
     ei->setScene(ei->getSceneBuilder()->buildScene());
-    ei->getPhysicsHandler()->setSubstepCount(1);
+    ei->getPhysicsHandler()->setSubstepCount(2);
+    ei->getPhysicsHandler()->setGravity({ 0, 1000 });
 
     initUserInputHandlers();
 

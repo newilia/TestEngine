@@ -44,13 +44,15 @@ std::shared_ptr<Scene> SceneBuilder::buildScene() {
 		scene->addChild(wall);
 	}
 
-	for (int i = 0; i < 25; ++i) {
+	for (int i = 0; i < 30; ++i) {
 		auto body = make_shared<CircleBody>();
 		body->setName(fmt::format("circle_{}", i));
 
-		float radius = 10 + rand() % 30;
+		float radius = 10 + rand() % 40;
 		body->getShape()->setRadius(radius);
-		body->getShape()->setPointCount(7 + radius / 8);
+		constexpr float pointsCountConstant = 1.5f;
+		auto pointsCount = pointsCountConstant * (7 + radius / 8);
+		body->getShape()->setPointCount(pointsCount);
 
 		constexpr sf::Uint8 minBr = 100;
 		constexpr sf::Uint8 remainderBr = 255 - minBr;

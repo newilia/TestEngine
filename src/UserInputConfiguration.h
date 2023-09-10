@@ -70,13 +70,7 @@ inline void initUserInputHandlers() {
 
 	userInput->attachCustomHandler(createDelegate<sf::Event>([ei](sf::Event event) {
 		if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::G) {
-			auto g = ei->getPhysicsHandler()->getGravity();
-			if (g == sf::Vector2f()) {
-				ei->getPhysicsHandler()->setGravity({ 0, 200 });
-			}
-			else {
-				ei->getPhysicsHandler()->setGravity({ 0, 0 });
-			}
+			ei->getPhysicsHandler()->setGravityEnabled(!ei->getPhysicsHandler()->isGravityEnabled());
 		}
 	}));
 
