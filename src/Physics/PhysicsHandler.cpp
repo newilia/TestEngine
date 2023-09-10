@@ -1,6 +1,5 @@
 #include "PhysicsHandler.h"
 #include <cassert>
-#include <iostream>
 
 #include "AbstractBody.h"
 #include "CollisionDetails.h"
@@ -28,9 +27,6 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 
 		sf::Vector2f forceSum = [&]() {
 			sf::Vector2f force;
-			if (!physComp->isImmovable()) {
-				force += mGravity * physComp->mMass;
-			}
 			if (pullComp && pullComp->mMode == UserPullComponent::PullMode::FORCE) {
 				force += pullComp->getPullVector() * pullComp->mPullingStrength;
 			}
@@ -38,6 +34,10 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 		}();
 
 		physComp->mVelocity += forceSum / physComp->mMass * dt.asSeconds();
+		if (mIsGravityEnabled && !physComp->isImmovable()) {
+			physComp->mVelocity += mGravity * dt.asSeconds();
+		}
+
 		pos += physComp->mVelocity * dt.asSeconds();
 
 		if (pullComp) {

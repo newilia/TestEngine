@@ -1,5 +1,4 @@
 #pragma once
-#include <unordered_set>
 #include <SFML/System/Vector2.hpp>
 
 struct CollisionDetails {

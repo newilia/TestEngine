@@ -12,9 +12,11 @@ public:
 	void update(const sf::Time& dt) override;
 	void addBody(const shared_ptr<AbstractBody>& object) { mBodies.push_back(object); }
 	const auto& getAllBodies() { return mBodies; }
+	void setSubstepCount(int count) { mSubStepsCount = count; }
 	void setGravity(const sf::Vector2f v) { mGravity = v; }
 	sf::Vector2f getGravity() const { return mGravity; }
-	void setSubstepCount(int count) { mSubStepsCount = count; }
+	void setGravityEnabled(bool enabled) { mIsGravityEnabled = enabled; }
+	bool isGravityEnabled() const { return mIsGravityEnabled; }
 
 private:
 	static bool checkBboxIntersection(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2);
@@ -26,6 +28,7 @@ private:
 
 	std::list<weak_ptr<AbstractBody>> mBodies;
 	int mSubStepsCount = 1;
-	sf::Vector2f mGravity;
+	bool mIsGravityEnabled = false;
+	sf::Vector2f mGravity = {0, 400};
 	bool mDebugDrawEnabled = true;
 };

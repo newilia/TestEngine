@@ -15,12 +15,12 @@ FpsNode::FpsNode() {
 
 void FpsNode::update(const sf::Time& dt) {
     auto frameTime = EI()->getFrameDt(true);
-    float newFps = std::min(10000.f, 1000.f / frameTime.asMilliseconds());
+    float newFps = 1.f / frameTime.asSeconds();
     if (mFps == 0.f) {
         mFps = newFps;
     }
     else {
-        constexpr float smoothFactor = 0.95f;
+        constexpr float smoothFactor = 0.9f;
         mFps = mFps * smoothFactor + newFps * (1.f - smoothFactor);
     }
     mText.setString(fmt::format("{:.0f}", mFps));
