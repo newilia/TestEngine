@@ -1,3 +1,4 @@
+#include <iostream>
 #include <SFML/Graphics.hpp>
 
 #include "BodyPullHandler.h"
@@ -13,15 +14,14 @@ namespace {
 }
 
 int main() {
-    sf::RenderWindow window(mode, "Pong", windowStyle);
+    sf::RenderWindow window(mode, "Test Engine", windowStyle);
     window.setVerticalSyncEnabled(true);
     window.setFramerateLimit(60u);
 
     auto ei = EI();
     ei->setMainWindow(window);
     ei->setScene(ei->getSceneBuilder()->buildScene());
-    ei->setFixedFrameTime(sf::milliseconds(16));
-    ei->getPhysicsHandler()->setGravity({ 0.f, 100.f });
+    ei->getPhysicsHandler()->setSubstepCount(1);
 
     initUserInputHandlers();
 
@@ -41,7 +41,6 @@ int main() {
 
         window.draw(*scene);
         window.draw(*ei->getBodyPullHandler());
-
         window.display();
     }
 

@@ -10,21 +10,25 @@ void BodyDebugComponent::draw(sf::RenderTarget& target, sf::RenderStates states)
 	if (auto body = dynamic_cast<AbstractBody*>(mHolder)) {
 		if (auto physComp = body->findComponent<PhysicalComponent>()) {
 			sf::Text text;
-			for (size_t i = 0; i < body->getPointCount(); ++i) {
-				text.setString(fmt::to_string(i));
-				text.setCharacterSize(15);
-				text.setFillColor(sf::Color::White);
-				text.setPosition(body->getPointGlobal(i));
-				auto font = EI()->getFontManager()->getDefaultFont();
-				text.setFont(*font);
-				target.draw(text, states);
-			}
+			auto font = EI()->getFontManager()->getDefaultFont();
+			text.setFont(*font);
+			text.setCharacterSize(15);
 			text.setFillColor(sf::Color::White);
-			text.setPosition(body->getGlobalCenter());
-			text.setString(fmt::format("{:.1f}, {:.1f}", physComp->mPos.x, physComp->mPos.y));
+			text.setOutlineColor(sf::Color::Black);
+			text.setOutlineThickness(1.f);
+
+			/*for (size_t i = 0; i < body->getPointCount(); ++i) {
+				text.setString(fmt::to_string(i));
+				text.setPosition(body->getPointGlobal(i) - sf::Vector2f(3, 10));
+				target.draw(text, states);
+			}*/
+			
+			auto pos = body->getPosGlobal();
+			text.setPosition(pos);
+			text.setString(fmt::format("{}\n{:.1f}, {:.1f}", body->getName(), pos.x, pos.y));
 			target.draw(text, states);
 
-			VectorArrow velArrow(body->getGlobalCenter(), body->getGlobalCenter() + physComp->mVelocity);
+			VectorArrow velArrow(body->getPosGlobal(), body->getPosGlobal() + physComp->mVelocity);
 			target.draw(velArrow);
 		}
 	}

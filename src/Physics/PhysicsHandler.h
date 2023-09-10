@@ -13,6 +13,9 @@ public:
 	void addBody(const shared_ptr<AbstractBody>& object) { mBodies.push_back(object); }
 	const auto& getAllBodies() { return mBodies; }
 	void setGravity(const sf::Vector2f v) { mGravity = v; }
+	sf::Vector2f getGravity() const { return mGravity; }
+	void setSubstepCount(int count) { mSubStepsCount = count; }
+
 private:
 	static bool checkBboxIntersection(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2);
 	static std::optional<CollisionDetails> detectCollision(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2);
@@ -22,7 +25,7 @@ private:
 	void updateSubStep(const sf::Time& dt);
 
 	std::list<weak_ptr<AbstractBody>> mBodies;
-	const int mSubStepsCount = 1;
+	int mSubStepsCount = 1;
 	sf::Vector2f mGravity;
 	bool mDebugDrawEnabled = true;
 };

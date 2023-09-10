@@ -22,8 +22,8 @@ public:
 	virtual void init() {}
 	void removeFromParent();
 
-	void setId(const std::string& id) { mId = id; }
-	const std::string& getId() { return mId; }
+	void setName(const std::string& name) { mName = name; }
+	const std::string& getName() { return mName; }
 	shared_ptr<SceneNode> getParent() const { return mParent.lock(); }
 	const auto& getChildren() { return mChildren; }
 	void addChild(std::shared_ptr<SceneNode>&& child);
@@ -36,7 +36,7 @@ public:
 private:
 	void setParent(shared_ptr<SceneNode>&& parent) { mParent = parent; }
 
-	std::string mId;
+	std::string mName;
 	weak_ptr<SceneNode> mParent;
 	std::vector<shared_ptr<SceneNode>> mChildren;
 };
