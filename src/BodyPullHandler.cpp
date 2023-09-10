@@ -14,8 +14,13 @@ void BodyPullHandler::startPull(sf::Vector2f mousePos, UserPullComponent::PullMo
 		if (!utils::isPointInsideOfBody(mousePos, body)) {
 			continue;
 		}
+		if (body->getPhysicalComponent()->isImmovable()) {
+			if (pullMode == UserPullComponent::PullMode::FORCE || pullMode == UserPullComponent::PullMode::VELOCITY) {
+				continue;
+			}
+		}
 		auto pullComponent = body->requireComponent<UserPullComponent>();
-		pullComponent->mLocalSourcePoint = mousePos - body->getPhysicalComponent()->mPos;
+		pullComponent->mLocalSourcePoint = mousePos - body->getPosGlobal();
 		pullComponent->mGlobalDestPoint = mousePos;
 		pullComponent->mMode = pullMode;
 		mPullingBody = body;
@@ -48,7 +53,7 @@ void BodyPullHandler::draw(sf::RenderTarget& target, sf::RenderStates states) co
 			if (pullComp->mMode == UserPullComponent::PullMode::FORCE) {
 				VectorArrow arrow;
 				arrow.setColor(sf::Color::Green);
-				arrow.setStartPos(body->getPhysicalComponent()->mPos + pullComp->mLocalSourcePoint);
+				arrow.setStartPos(body->getPosGlobal() + pullComp->mLocalSourcePoint);
 				arrow.setEndPos(pullComp->mGlobalDestPoint);
 				target.draw(arrow, states);
 			}

@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include "BodyDebugComponent.h"
+#include "EngineInterface.h"
 
 void SceneNode::addChild(std::shared_ptr<SceneNode>&& child) {
 	assert(!hasChild(child));
@@ -18,7 +19,7 @@ void SceneNode::addChild(SceneNode&& child) {
 
 shared_ptr<SceneNode> SceneNode::findChild(const std::string& id, bool recursively) {
 	for (auto & child : mChildren) {
-		if (child->getId() == id) {
+		if (child->getName() == id) {
 			return child;
 		}
 	}
@@ -40,7 +41,7 @@ bool SceneNode::hasChild(std::shared_ptr<SceneNode>& child) {
 std::vector<shared_ptr<SceneNode>> SceneNode::findChildren(const std::string& id, bool recursively) {
 	std::vector<shared_ptr<SceneNode>> result;
 	for (auto& child : mChildren) {
-		if (child->getId() == id) {
+		if (child->getName() == id) {
 			result.emplace_back(child);
 		}
 	}
@@ -66,8 +67,11 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	for (auto& child : mChildren) {
 		child->draw(target, states);
 	}
-	if (auto debugComponent = findComponent<BodyDebugComponent>()) {
-		debugComponent->draw(target, states);
+
+	if (EI()->isDebugDrawEnabled()) {
+		if (auto debugComponent = findComponent<BodyDebugComponent>()) {
+			debugComponent->draw(target, states);
+		}
 	}
 }
 
@@ -78,7 +82,7 @@ void SceneNode::removeFromParent() {
 }
 
 void SceneNode::removeChild(SceneNode* child) {
-	auto it = std::find_if(mChildren.begin(), mChildren.end(), [child](const auto& ptr) {
+	auto it = std::ranges::find_if(mChildren.begin(), mChildren.end(), [child](const auto& ptr) {
 		return ptr.get() == child;
 	});
 	if (it != mChildren.end()) {

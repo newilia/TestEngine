@@ -46,6 +46,7 @@
     <ClInclude Include="..\src\FontManager.h" />
     <ClInclude Include="..\src\FpsNode.h" />
     <ClInclude Include="..\src\EngineInterface.h" />
+    <ClInclude Include="..\src\Physics\ShapeBody.h" />
     <ClInclude Include="..\src\UserInput.h" />
     <ClInclude Include="..\src\ComponentBase.h" />
     <ClInclude Include="..\src\ComponentHolder.h" />

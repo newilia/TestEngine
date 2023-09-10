@@ -15,17 +15,18 @@ sf::Time EngineInterface::getSimDt() const {
 	if (mIsSimPaused) {
 		return sf::Time();
 	}
-	auto dt = mFrameTime * mSimSpeedMultiplier;
+	auto dt = getFrameDt() * mSimSpeedMultiplier;
 	return dt;
 }
 
-sf::Time EngineInterface::getFrameDt() const {
+sf::Time EngineInterface::getFrameDt(bool ignoreFixed) const {
+	if (!ignoreFixed && mFixedFrameTime) {
+		return *mFixedFrameTime;
+	}
 	return mFrameTime;
 }
 
 void EngineInterface::onStartFrame() {
-	if (!mIsFixedFrameTime) {
-		mFrameTime = mFrameClock.getElapsedTime();
-	}
+	mFrameTime = mFrameClock.getElapsedTime();
 	mFrameClock.restart();
 }

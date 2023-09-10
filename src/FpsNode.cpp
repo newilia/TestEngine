@@ -14,8 +14,8 @@ FpsNode::FpsNode() {
 }
 
 void FpsNode::update(const sf::Time& dt) {
-    auto frameTime = EI()->getFrameDt();
-    float newFps =  1000000.f / frameTime.asMicroseconds();
+    auto frameTime = EI()->getFrameDt(true);
+    float newFps = std::min(10000.f, 1000.f / frameTime.asMilliseconds());
     if (mFps == 0.f) {
         mFps = newFps;
     }

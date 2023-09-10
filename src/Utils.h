@@ -4,6 +4,7 @@
 
 namespace utils {
     float length(const sf::Vector2f& vec);
+	float manhattan_dist(const sf::Vector2f& vec);
 	sf::Vector2f normalize(const sf::Vector2f& vec);
     float dot(const sf::Vector2f& a, const sf::Vector2f& b);
     sf::Vector2f reflect(const sf::Vector2f& vector, const sf::Vector2f& relativeVector);
@@ -23,4 +24,7 @@ namespace utils {
 	bool isNan(const sf::Vector2f& v);
 
 	std::string toString(const sf::Vector2f& v);
+
+	sf::Vector2f findCenterOfMass(const sf::Shape* shape);
+	float calcTriangleArea(float a, float b, float c); // Heron formula
 }

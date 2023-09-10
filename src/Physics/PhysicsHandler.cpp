@@ -10,8 +10,7 @@
 #include "UserPullComponent.h"
 #include "Utils.h"
 #include "VectorArrow.h"
-
-#define PHYSICS_DEBUG 1
+#include "fmt/format.h"
 
 void PhysicsHandler::update(const sf::Time& dt) {
 	utils::removeExpiredPointers(mBodies);
@@ -25,6 +24,7 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 		auto body = wBody.lock();
 		auto physComp = body->findComponent<PhysicalComponent>();
 		auto pullComp = body->findComponent<UserPullComponent>();
+		auto pos = body->getPosGlobal();
 
 		sf::Vector2f forceSum = [&]() {
 			sf::Vector2f force;
@@ -38,18 +38,18 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 		}();
 
 		physComp->mVelocity += forceSum / physComp->mMass * dt.asSeconds();
-		physComp->mPos += physComp->mVelocity * dt.asSeconds();
+		pos += physComp->mVelocity * dt.asSeconds();
 
 		if (pullComp) {
 			if (pullComp->mMode == UserPullComponent::PullMode::POSITION) {
-				physComp->mPos += pullComp->getPullVector();
+				pos += pullComp->getPullVector();
 				physComp->mVelocity = {};
 			}
 			else if (pullComp->mMode == UserPullComponent::PullMode::VELOCITY) {
 				physComp->mVelocity = pullComp->getPullVector();
 			}
 		}
-		
+		body->setPosGlobal(pos);
 	}
 
 	for (auto it1 = mBodies.begin(); it1 != mBodies.end(); ++it1) {
@@ -60,23 +60,23 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 		}
 	}
 
-#if PHYSICS_DEBUG
-	float systemEnergy = 0.f;
-	sf::Vector2f systemImpulse;
-	for (auto& wBody : mBodies) {
-		if (auto body = wBody.lock()) {
-			if (body->getPhysicalComponent()->isImmovable()) {
-				continue;
+	if (EI()->isDebugDrawEnabled()) {
+		float systemEnergy = 0.f;
+		sf::Vector2f systemImpulse;
+		for (auto& wBody : mBodies) {
+			if (auto body = wBody.lock()) {
+				if (body->getPhysicalComponent()->isImmovable()) {
+					continue;
+				}
+				auto v = body->getPhysicalComponent()->mVelocity;
+				auto v_s = utils::length(v);
+				auto m = body->getPhysicalComponent()->mMass;
+				systemImpulse += v * m;
+				systemEnergy += m * v_s * v_s;
 			}
-			auto v = body->getPhysicalComponent()->mVelocity;
-			auto v_s = utils::length(v);
-			auto m = body->getPhysicalComponent()->mMass;
-			systemImpulse += v * m;
-			systemEnergy += m * v_s * v_s;
 		}
+		fmt::println("E = {}, P = {}", systemEnergy, utils::toString(systemImpulse));
 	}
-	std::cout << "P = " << utils::toString(systemImpulse) << "; E = " << systemEnergy << std::endl;
-#endif
 }
 
 
@@ -99,7 +99,7 @@ std::optional<CollisionDetails> PhysicsHandler::detectCollision(const shared_ptr
 	}
 
 	std::vector<sf::Vector2f> edges_i_p;
-	edges_i_p.reserve(4u);
+	edges_i_p.reserve(2);
 	
 	const auto pointsCount1 = body1->getPointCount();
 	const auto pointsCount2 = body2->getPointCount();
@@ -117,11 +117,6 @@ std::optional<CollisionDetails> PhysicsHandler::detectCollision(const shared_ptr
 				if (i_point->p2) {
 					edges_i_p.emplace_back(*i_point->p2);
 				}
-
-				result.body1penetratingPoints.insert(i);
-				result.body1penetratingPoints.insert((i + 1) % pointsCount1);
-				result.body2penetratingPoints.insert(j);
-				result.body2penetratingPoints.insert((j + 1) % pointsCount2);
 			}
 		}
 	}
@@ -229,41 +224,54 @@ void PhysicsHandler::resolveCollision(const CollisionDetails& collision) {
 		return;
 	}
 
-	auto pc1 = body1->requireComponent<PhysicalComponent>();
-	auto pc2 = body2->requireComponent<PhysicalComponent>();
+	auto pc1 = body1->findComponent<PhysicalComponent>();
+	auto pc2 = body2->findComponent<PhysicalComponent>();
 	
 	if (pc1->isImmovable()) { // fixed body must be second
 		std::swap(body1, body2);
 		std::swap(pc1, pc2);
 	}
 
-	/* TODO penetration fixing */
-	/*if (areMovingTowards) {
-		pc1->mPos -= pc1->mVelocity * dt.asSeconds();
-		pc2->mPos -= pc2->mVelocity * dt.asSeconds();
-	}*/
+	const auto m1 = pc1->mMass;
+	const auto m2 = pc2->mMass;
+	auto v1_to_v2 = pc2->mVelocity - pc1->mVelocity;
+	auto b1_tangent = collision.intersection.getDirVector();
+	auto b1_normal = utils::normalize(sf::Vector2f(-b1_tangent.y, b1_tangent.x));
+	if (utils::dot(body2->getPosGlobal() - body1->getPosGlobal(), b1_normal) < 0.f) {
+		b1_tangent = -b1_tangent;
+		b1_normal = -b1_normal;
+	}
 
+	/* overlapping fixing */
+	auto getPenetrationDepth = [collisionPoint = collision.intersection.start](const AbstractBody* body, const sf::Vector2f& bodyNormal) {
+		float result = 0.f;
+		for (size_t i = 0; i < body->getPointCount(); ++i) {
+			auto point = body->getPointGlobal(i);
+			auto penetrationVec = body->getPointGlobal(i) - collisionPoint;
+			float depth = utils::project(penetrationVec, bodyNormal);
+			result = std::max(result, depth);
+		}
+		return result;
+	};
+	float penetrationDepthSum = getPenetrationDepth(body1.get(), b1_normal) + getPenetrationDepth(body2.get(), -b1_normal);
+
+	if (pc2->isImmovable()) {
+		auto b1_pos = body1->getPosGlobal() - b1_normal * penetrationDepthSum;
+		body1->setPosGlobal(b1_pos);
+	}
+	else {
+		auto b1_pos = body1->getPosGlobal() - b1_normal * penetrationDepthSum * (m1 / (m1 + m2));
+		body1->setPosGlobal(b1_pos);
+		auto b2_pos = body2->getPosGlobal() + b1_normal * penetrationDepthSum * (m2 / (m1 + m2));
+		body2->setPosGlobal(b2_pos);
+	}
 
 	/* velocities handling */
-	auto v1_to_v2 = pc2->mVelocity - pc1->mVelocity;
-	auto pos1_to_pos2 = pc2->mPos - pc1->mPos; // assume this as collision normal // todo fix, I need real collision normal
-	bool areMovingTowards = utils::dot(pos1_to_pos2, v1_to_v2) < 0.f;
-
-	if (areMovingTowards) {
-		const sf::Vector2f tangent = [&]() {
-			if (collision.intersection.start == collision.intersection.end) {
-				return sf::Vector2f(-pos1_to_pos2.y, pos1_to_pos2.x);
-			}
-			return collision.intersection.end - collision.intersection.start;
-		}();
-
-		auto normal = utils::normalize({ -tangent.y, tangent.x });
-		const auto m1 = pc1->mMass;
-		const auto m2 = pc2->mMass;
+	if (bool areMovingTowards = utils::dot(b1_normal, v1_to_v2) < 0.f) {
 		const auto r = pc1->mRestitution * pc2->mRestitution;
 
-		auto norm_v1 = utils::project(pc1->mVelocity, normal);
-		auto norm_v2 = utils::project(pc2->mVelocity, normal);
+		auto norm_v1 = utils::project(pc1->mVelocity, b1_normal);
+		auto norm_v2 = utils::project(pc2->mVelocity, b1_normal);
 		auto norm_v_diff = norm_v1 - norm_v2;
 
 		float norm_dv1 = 0.f;
@@ -277,25 +285,49 @@ void PhysicsHandler::resolveCollision(const CollisionDetails& collision) {
 			norm_dv2 = (1.f + r) * m1 / (m1 + m2) * norm_v_diff;
 		}
 
-		auto dv1 = normal * norm_dv1;
-		auto dv2 = normal * norm_dv2;
+		auto dv1 = b1_normal * norm_dv1;
+		auto dv2 = b1_normal * norm_dv2;
 		pc1->mVelocity += dv1;
 		pc2->mVelocity += dv2;
 
 		auto isNan = utils::isNan(pc1->mVelocity) || utils::isNan(pc2->mVelocity);
 		assert(!isNan);
 
-#if PHYSICS_DEBUG
+		if (EI()->isDebugDrawEnabled()) {
+			auto window = EI()->getMainWindow();
+			{
+				VectorArrow force1(body1->getPosGlobal(), body1->getPosGlobal() + dv1);
+				if (auto shapedBody = dynamic_cast<AbstractShapeBody*>(body1.get())) {
+					auto color = shapedBody->getBaseShape()->getFillColor();
+					color.a = 255u;
+					force1.setColor(color);
+				}
+				window->draw(force1);
+			}
+			{
+				VectorArrow force2(body2->getPosGlobal(), body2->getPosGlobal() + dv2);
+				if (auto shapedBody = dynamic_cast<AbstractShapeBody*>(body2.get())) {
+					auto color = shapedBody->getBaseShape()->getFillColor();
+					color.a = 255u;
+					force2.setColor(color);
+				}
+				window->draw(force2);
+			}
+		}
+		
+	}
+
+	if (EI()->isDebugDrawEnabled()) {
 		auto window = EI()->getMainWindow();
 		const sf::Vector2f middlePoint((collision.intersection.start + collision.intersection.end) * 0.5f);
 
 		{	// collision segment
-			VectorArrow segment(collision.intersection.start, collision.intersection.end, sf::Color::White);
+			VectorArrow segment(collision.intersection.start, collision.intersection.end, sf::Color::Magenta);
 			window->draw(segment);
 		}
 
 		{	// normal
-			VectorArrow tangentArrow(middlePoint, middlePoint + normal * 50.f, sf::Color::Yellow);
+			VectorArrow tangentArrow(middlePoint, middlePoint + b1_normal * 50.f, sf::Color::Yellow);
 			window->draw(tangentArrow);
 		}
 
@@ -306,25 +338,5 @@ void PhysicsHandler::resolveCollision(const CollisionDetails& collision) {
 			middlePointCircle.setFillColor(sf::Color::White);
 			window->draw(middlePointCircle);
 		}
-
-		{
-			VectorArrow force1(body1->getGlobalCenter(), body1->getGlobalCenter() + dv1);
-			if (auto shapedBody = dynamic_cast<AbstractShapeBody*>(body1.get())) {
-				auto color = shapedBody->getBaseShape()->getFillColor();
-				color.a = 255u;
-				force1.setColor(color);
-			}
-			window->draw(force1);
-		}
-		{
-			VectorArrow force2(body2->getGlobalCenter(), body2->getGlobalCenter() + dv2);
-			if (auto shapedBody = dynamic_cast<AbstractShapeBody*>(body2.get())) {
-				auto color = shapedBody->getBaseShape()->getFillColor();
-				color.a = 255u;
-				force2.setColor(color);
-			}
-			window->draw(force2);
-		}
-#endif
 	}
 }

@@ -152,5 +152,8 @@
     <ClInclude Include="..\src\VectorArrow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Physics\ShapeBody.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

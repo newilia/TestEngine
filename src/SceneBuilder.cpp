@@ -3,124 +3,69 @@
 #include "BodyDebugComponent.h"
 #include "FpsNode.h"
 #include "AbstractShapeBody.h"
+#include "EngineInterface.h"
 #include "Scene.h"
+#include "ShapeBody.h"
 #include "UserInput.h"
-
+#include "fmt/format.h"
 
 std::shared_ptr<Scene> SceneBuilder::buildScene() {
 	auto scene = make_shared<Scene>();
-	
-	{
-		auto body = make_shared<RectangleBody>();
-		body->setId("Rect");
-		body->init();
-		sf::Vector2f size(100, 100);
-		body->getShape()->setSize(size);
-		body->getShape()->setFillColor(sf::Color(255, 30, 30, 50));
-		body->getShape()->setOutlineColor(sf::Color(255, 30, 30, 120));
-		body->getShape()->setOutlineThickness(1.f);
-		body->getPhysicalComponent()->mPos = { 200, 200 };
-		body->getPhysicalComponent()->mMass = size.x * size.y;
-		body->getPhysicalComponent()->mRestitution = 0.5f;
-		body->requireComponent<BodyDebugComponent>();
-		scene->addChild(body);
-	}
-	
-	{
-		auto body = make_shared<RectangleBody>();
-		body->setId("Rect2");
-		body->init();
-		sf::Vector2f size2(100, 100);
-		body->getShape()->setSize(size2);
-		body->getShape()->setFillColor(sf::Color(30, 255, 30, 50));
-		body->getShape()->setOutlineColor(sf::Color(30, 255, 30, 120));
-		body->getShape()->setOutlineThickness(1.f);
-		body->getPhysicalComponent()->mPos = { 350, 200 };
-		body->getPhysicalComponent()->mMass = size2.x * size2.y;
-		body->requireComponent<BodyDebugComponent>();
-		scene->addChild(body);
+	sf::Vector2f screenSize(EI()->getMainWindow()->getSize());
+	constexpr float wallActualWidth = 200;
+	constexpr float wallVisibleWidth = 30;
+	constexpr float wallOffset = wallActualWidth / 2 - wallVisibleWidth;
+	float bodiesRestitution = 0.8f;
+
+	std::string wallNames[] = { "bottom", "top", "left", "right" };
+	sf::Vector2f wallSizes[] = {
+		{ screenSize.x, wallActualWidth },
+		{ screenSize.x, wallActualWidth },
+		{ wallActualWidth, screenSize.y },
+		{ wallActualWidth, screenSize.y }
+	};
+	sf::Vector2f wallPositions[] = {
+		{ screenSize.x / 2, screenSize.y + wallOffset },
+		{ screenSize.x / 2, -wallOffset },
+		{ -wallOffset, screenSize.y / 2 },
+		{ screenSize.x + wallOffset, screenSize.y / 2 }
+	};
+	for (int i = 0; i < 4; ++i) {
+		auto wall = make_shared<RectangleBody>();
+		wall->setName(wallNames[i]);
+		wall->getShape()->setPosition(wallPositions[i]);
+		wall->getShape()->setSize(wallSizes[i]);
+		wall->getShape()->setFillColor(sf::Color(30, 255, 30, 50));
+		wall->getShape()->setOutlineColor(sf::Color(30, 255, 30, 120));
+		wall->getShape()->setOutlineThickness(1.f);
+		wall->getPhysicalComponent()->setImmovable();
+		wall->getPhysicalComponent()->mRestitution = bodiesRestitution;
+		wall->init();
+		scene->addChild(wall);
 	}
 
-	{	// screen borders
-		{
-			auto body = make_shared<RectangleBody>();
-			body->setId("bottom");
-			body->init();
-			sf::Vector2f size2(800, 100);
-			body->getShape()->setSize(size2);
-			body->getShape()->setFillColor(sf::Color(30, 255, 30, 50));
-			body->getShape()->setOutlineColor(sf::Color(30, 255, 30, 120));
-			body->getShape()->setOutlineThickness(1.f);
-			body->getPhysicalComponent()->mPos = { 0, 550 };
-			body->getPhysicalComponent()->mMass = std::numeric_limits<float>::infinity();
-			scene->addChild(body);
-		}
-		{
-			auto body = make_shared<RectangleBody>();
-			body->setId("top");
-			body->init();
-			sf::Vector2f size(800, 100);
-			body->getShape()->setSize(size);
-			body->getShape()->setFillColor(sf::Color(30, 255, 30, 50));
-			body->getShape()->setOutlineColor(sf::Color(30, 255, 30, 120));
-			body->getShape()->setOutlineThickness(1.f);
-			body->getPhysicalComponent()->mPos = { 00, -50 };
-			body->getPhysicalComponent()->mMass = std::numeric_limits<float>::infinity();
-			scene->addChild(body);
-		}
-		{
-			auto body = make_shared<RectangleBody>();
-			body->setId("left");
-			body->init();
-			sf::Vector2f size2(100, 600);
-			body->getShape()->setSize(size2);
-			body->getShape()->setFillColor(sf::Color(30, 255, 30, 50));
-			body->getShape()->setOutlineColor(sf::Color(30, 255, 30, 120));
-			body->getShape()->setOutlineThickness(1.f);
-			body->getPhysicalComponent()->mPos = { -50, 0 };
-			body->getPhysicalComponent()->mMass = std::numeric_limits<float>::infinity();
-			scene->addChild(body);
-		}
-		{
-			auto body = make_shared<RectangleBody>();
-			body->setId("right");
-			body->init();
-			sf::Vector2f size2(100, 600);
-			body->getShape()->setSize(size2);
-			body->getShape()->setFillColor(sf::Color(30, 255, 30, 50));
-			body->getShape()->setOutlineColor(sf::Color(30, 255, 30, 120));
-			body->getShape()->setOutlineThickness(1.f);
-			body->getPhysicalComponent()->mPos = { 750, 0 };
-			body->getPhysicalComponent()->mMass = std::numeric_limits<float>::infinity();
-			scene->addChild(body);
-		}
-	}
-
-	{
+	for (int i = 0; i < 25; ++i) {
 		auto body = make_shared<CircleBody>();
-		body->setId("Circle1");
-		body->init();
-		float radius = 30.f;
-		body->getShape()->setRadius(radius);
-		body->getShape()->setFillColor(sf::Color(200, 100, 40, 50));
-		body->getShape()->setOutlineColor(sf::Color(200, 100, 40, 120));
-		body->getShape()->setOutlineThickness(1.f);
-		body->getPhysicalComponent()->mPos = { 300, 300 };
-		body->getPhysicalComponent()->mMass = 3.14 * radius * radius;
-		scene->addChild(body);
-	}
+		body->setName(fmt::format("circle_{}", i));
 
-	{
-		auto body = make_shared<CircleBody>();
-		body->setId("Circle2");
-		body->init();
-		float radius = 70.f;
+		float radius = 10 + rand() % 30;
 		body->getShape()->setRadius(radius);
-		body->getShape()->setFillColor(sf::Color(100, 50, 255, 50));
-		body->getShape()->setOutlineColor(sf::Color(100, 50, 255, 120));
+		body->getShape()->setPointCount(7 + radius / 8);
+
+		constexpr sf::Uint8 minBr = 100;
+		constexpr sf::Uint8 remainderBr = 255 - minBr;
+		sf::Color color(minBr + rand() % remainderBr, minBr + rand() % remainderBr, minBr + rand() % remainderBr, 150);
+		auto outlineColor = color;
+		outlineColor.a = 255;
+
+		body->getShape()->setFillColor(color);
+		body->getShape()->setOutlineColor(outlineColor);
 		body->getShape()->setOutlineThickness(1.f);
-		body->getPhysicalComponent()->mPos = { 500, 400 };
-		body->getPhysicalComponent()->mMass = 3.14 * radius * radius;
+		body->getShape()->setPosition(rand() % static_cast<int>(screenSize.x ),rand() % static_cast<int>(screenSize.y));
+		body->getPhysicalComponent()->mMass = 3.14f * radius * radius;
+		body->getPhysicalComponent()->mRestitution = bodiesRestitution;
+		body->requireComponent<BodyDebugComponent>();
+		body->init();
 		scene->addChild(body);
 	}
 	scene->addChild(make_shared<FpsNode>());

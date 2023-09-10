@@ -15,7 +15,6 @@ inline void initUserInputHandlers() {
 			ei->setSimPaused(false);
 			ei->setSimSpeedMultiplier(1.f);
 		}
-		
 	}));
 
 	userInput->attachCustomHandler(createDelegate<sf::Event>([ei](sf::Event event) {
@@ -68,5 +67,22 @@ inline void initUserInputHandlers() {
 			std::exit(EXIT_SUCCESS);
 		}
 	}));
-	
+
+	userInput->attachCustomHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+		if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::G) {
+			auto g = ei->getPhysicsHandler()->getGravity();
+			if (g == sf::Vector2f()) {
+				ei->getPhysicsHandler()->setGravity({ 0, 200 });
+			}
+			else {
+				ei->getPhysicsHandler()->setGravity({ 0, 0 });
+			}
+		}
+	}));
+
+	userInput->attachCustomHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+		if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::D) {
+			ei->setDebugDrawEnabled(!ei->isDebugDrawEnabled());
+		}
+	}));
 }

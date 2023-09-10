@@ -5,8 +5,6 @@
 struct CollisionDetails {
 	weak_ptr<AbstractBody> wBody1;
 	weak_ptr<AbstractBody> wBody2;
-	std::unordered_set<size_t> body1penetratingPoints;
-	std::unordered_set<size_t> body2penetratingPoints;
 	Segment intersection;
 };
 

@@ -1,8 +1,13 @@
 #include "Utils.h"
 #include "fmt/format.h"
+#include "SFML/Graphics.hpp"
 
 float utils::length(const sf::Vector2f& vec) {
 	return std::sqrt(vec.x * vec.x + vec.y * vec.y);
+}
+
+float utils::manhattan_dist(const sf::Vector2f& vec) {
+	return vec.x + vec.y;
 }
 
 sf::Vector2f utils::normalize(const sf::Vector2f& vec) {
@@ -44,7 +49,7 @@ sf::Vector2f utils::rotate(const sf::Vector2f& v, float angle) {
 
 bool utils::isPointInsideOfBody(const sf::Vector2f& point, const shared_ptr<AbstractBody>& body) {
 	auto t1 = body->getPointGlobal(0);
-	for (int i = 0; i < body->getPointCount() - 2; ++i) {
+	for (size_t i = 0; i < body->getPointCount() - 2; ++i) {
 		auto t2 = body->getPointGlobal(i + 1);
 		auto t3 = body->getPointGlobal(i + 2);
 		if (isPointInsideOfTriangle(point, t1, t2, t3)) {
@@ -70,4 +75,47 @@ bool utils::isNan(const sf::Vector2f& v) {
 
 std::string utils::toString(const sf::Vector2f& v) {
 	return fmt::format("({:.1f}, {:.1f})", v.x, v.y);
+}
+
+sf::Vector2f utils::findCenterOfMass(const sf::Shape* shape) {
+	if (auto circle = dynamic_cast<const sf::CircleShape*>(shape)) {
+		return sf::Vector2f(circle->getRadius(), circle->getRadius());
+	}
+
+	if (auto rect = dynamic_cast<const sf::RectangleShape*>(shape)) {
+		return sf::Vector2f(rect->getSize() * 0.5f);
+	}
+
+	auto pointCount = shape->getPointCount(); // single point and line
+	if (pointCount < 3) {
+		sf::Vector2f sum;
+		for (size_t i = 0; i < pointCount; ++i) {
+			sum += shape->getPoint(i);
+		}
+		return sum / static_cast<float>(pointCount);
+	}
+
+	{
+		float trianglesAreaSum = 0.f;
+		sf::Vector2f result;
+		sf::Vector2f p1 = shape->getPoint(0);
+		for (size_t i = 0; i < pointCount - 2; ++i) {
+			sf::Vector2f p2 = shape->getPoint(i + 1);
+			sf::Vector2f p3 = shape->getPoint(i + 2);
+			auto a = length(p1 - p2);
+			auto b = length(p2 - p3);
+			auto c = length(p3 - p1);
+			float triangleArea = calcTriangleArea(a, b, c);
+			auto triangleCenter = (p1 + p2 + p3) / 3.f;
+			trianglesAreaSum += triangleArea;
+			result += triangleCenter * triangleArea;
+		}
+		return result / trianglesAreaSum;
+	}
+	
+}
+
+float utils::calcTriangleArea(float a, float b, float c) {
+	float p = (a + b + c) * 0.5f; 
+	return sqrt(p * (p - a) * (p - b) * (p - c));
 }

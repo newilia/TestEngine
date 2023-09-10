@@ -25,12 +25,14 @@ public:
 	bool isSimPaused() const { return mIsSimPaused; }
 	void setSimPaused(bool paused) { mIsSimPaused = paused; }
 	sf::Time getSimDt() const;
-	sf::Time getFrameDt() const;
+	sf::Time getFrameDt(bool ignoreFixed = false) const;
 	void onStartFrame();
 	void setMainWindow(sf::RenderWindow& window) { mMainWindow = &window; }
 	sf::RenderWindow* getMainWindow() const { return mMainWindow; }
-	void setFixedFrameTime(const sf::Time& time) { mFrameTime = time; mIsFixedFrameTime = true; }
-	void resetFixedFrameTime() { mIsFixedFrameTime = false; }
+	void setFixedFrameTime(const sf::Time& time) { mFixedFrameTime = time; }
+	void resetFixedFrameTime() { mFixedFrameTime.reset(); }
+	bool isDebugDrawEnabled() const { return mIsDebugDrawEnabled; }
+	void setDebugDrawEnabled(bool enabled) { mIsDebugDrawEnabled = enabled; }
 
 private:
 	sf::RenderWindow* mMainWindow;
@@ -42,9 +44,10 @@ private:
 	shared_ptr<BodyPullHandler> mBodyPullHandler;
 	sf::Clock mFrameClock;
 	sf::Time mFrameTime;
-	bool mIsFixedFrameTime = false;
+	std::optional<sf::Time> mFixedFrameTime;
 	float mSimSpeedMultiplier = 1.f;
 	bool mIsSimPaused = false;
+	bool mIsDebugDrawEnabled = false;
 };
 
 inline EngineInterface* EI() { return EngineInterface::getInstance(); }
