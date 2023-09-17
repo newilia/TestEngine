@@ -76,7 +76,7 @@ inline void initUserInputHandlers() {
 
 	userInput->attachCustomHandler(createDelegate<sf::Event>([ei](sf::Event event) {
 		if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::D) {
-			ei->setDebugDrawEnabled(!ei->isDebugDrawEnabled());
+			ei->setDebugDrawEnabled(!ei->isDebugEnabled());
 		}
 	}));
 }

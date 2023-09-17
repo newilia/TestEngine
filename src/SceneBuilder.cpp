@@ -50,7 +50,7 @@ std::shared_ptr<Scene> SceneBuilder::buildScene() {
 
 		float radius = 10 + rand() % 40;
 		body->getShape()->setRadius(radius);
-		constexpr float pointsCountConstant = 1.5f;
+		constexpr float pointsCountConstant = 3.f;
 		auto pointsCount = pointsCountConstant * (7 + radius / 8);
 		body->getShape()->setPointCount(pointsCount);
 
@@ -63,7 +63,11 @@ std::shared_ptr<Scene> SceneBuilder::buildScene() {
 		body->getShape()->setFillColor(color);
 		body->getShape()->setOutlineColor(outlineColor);
 		body->getShape()->setOutlineThickness(1.f);
-		body->getShape()->setPosition(rand() % static_cast<int>(screenSize.x ),rand() % static_cast<int>(screenSize.y));
+		auto minX = static_cast<int>(wallVisibleWidth + radius);
+		auto maxX = static_cast<int>(screenSize.x - wallVisibleWidth - radius);
+		auto minY = static_cast<int>(wallVisibleWidth + radius);
+		auto maxY = static_cast<int>(screenSize.y - wallVisibleWidth - radius);
+		body->getShape()->setPosition(minX + rand() % (maxX - minX), minY +rand() % (maxY - minY));
 		body->getPhysicalComponent()->mMass = 3.14f * radius * radius;
 		body->getPhysicalComponent()->mRestitution = bodiesRestitution;
 		body->requireComponent<BodyDebugComponent>();

@@ -119,3 +119,25 @@ float utils::calcTriangleArea(float a, float b, float c) {
 	float p = (a + b + c) * 0.5f; 
 	return sqrt(p * (p - a) * (p - b) * (p - c));
 }
+
+std::optional<std::pair<float, std::optional<float>>> utils::solveQuadraticEquation(float a, float b, float c) {
+	float D = sq(b) - 4 * a * c;
+	if (D > std::numeric_limits<float>::epsilon()) {
+		float x1 = (-b + sqrt(D)) / (2 * a);
+		float x2 = (-b - sqrt(D)) / (2 * a);
+		return std::pair(x1, x2);
+	}
+	if (isZero(D)) {
+		return std::pair(-b / (2 * a), std::nullopt);
+	}
+	return std::nullopt;
+}
+
+sf::CircleShape utils::createCircle(const sf::Vector2f& pos, float radius, sf::Color color) {
+	sf::CircleShape circle;
+	circle.setPosition(pos);
+	circle.setRadius(radius);
+	circle.setOrigin({ radius, radius });
+	circle.setFillColor(color);
+	return circle;
+}

@@ -20,7 +20,7 @@ void FpsNode::update(const sf::Time& dt) {
         mFps = newFps;
     }
     else {
-        constexpr float smoothFactor = 0.9f;
+        constexpr float smoothFactor = 0.98f;
         mFps = mFps * smoothFactor + newFps * (1.f - smoothFactor);
     }
     mText.setString(fmt::format("{:.0f}", mFps));

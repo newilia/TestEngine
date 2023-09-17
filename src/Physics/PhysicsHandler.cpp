@@ -1,20 +1,31 @@
 #include "PhysicsHandler.h"
 #include <cassert>
+#include <iostream>
 
 #include "AbstractBody.h"
 #include "CollisionDetails.h"
 #include "common.h"
 #include "EngineInterface.h"
 #include "AbstractShapeBody.h"
+#include "ShapeBody.h"
 #include "UserPullComponent.h"
 #include "Utils.h"
 #include "VectorArrow.h"
 #include "fmt/format.h"
+#include <optional>
 
 void PhysicsHandler::update(const sf::Time& dt) {
-	utils::removeExpiredPointers(mBodies);
+	utils::removeExpiredPointers(mBodies); //todo: self removing pointers
 	for (int i = 0; i < mSubStepsCount; ++i) {
 		updateSubStep(dt / static_cast<float>(mSubStepsCount));
+	}
+}
+
+void PhysicsHandler::addBody(const shared_ptr<AbstractBody>& object) {
+	mBodies.push_back(object);
+	mDebugData.edgesCount += object->getPointCount();
+	if (EI()->isDebugEnabled()) {
+		std::cout << fmt::format("{} bodies, {} edges", mBodies.size(), mDebugData.edgesCount) << std::endl;
 	}
 }
 
@@ -60,28 +71,30 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 		}
 	}
 
-	if (EI()->isDebugDrawEnabled()) {
-		float systemEnergy = 0.f;
-		sf::Vector2f systemImpulse;
-		for (auto& wBody : mBodies) {
-			if (auto body = wBody.lock()) {
-				if (body->getPhysicalComponent()->isImmovable()) {
-					continue;
-				}
-				auto v = body->getPhysicalComponent()->mVelocity;
-				auto v_s = utils::length(v);
-				auto m = body->getPhysicalComponent()->mMass;
-				systemImpulse += v * m;
-				systemEnergy += m * v_s * v_s;
-			}
-		}
-		fmt::println("E = {}, P = {}", systemEnergy, utils::toString(systemImpulse));
+	if (EI()->isDebugEnabled()) {
+		//float systemEnergy = 0.f;
+		//sf::Vector2f systemImpulse;
+		//for (auto& wBody : mBodies) {
+		//	if (auto body = wBody.lock()) {
+		//		if (body->getPhysicalComponent()->isImmovable()) {
+		//			continue;
+		//		}
+		//		auto v = body->getPhysicalComponent()->mVelocity;
+		//		auto v_s = utils::length(v);
+		//		auto m = body->getPhysicalComponent()->mMass;
+		//		systemImpulse += v * m;
+		//		systemEnergy += m * v_s * v_s;
+		//	}
+		//}
+		//fmt::println("E = {}, P = {}", systemEnergy, utils::toString(systemImpulse));
 	}
 }
 
 
 bool PhysicsHandler::checkBboxIntersection(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2) {
-	return body1->getBbox().intersects(body2->getBbox());
+	auto&& bb1 = body1->getBbox();
+	auto&& bb2 = body2->getBbox();
+	return bb1.intersects(bb2);
 }
 
 std::optional<CollisionDetails> PhysicsHandler::detectCollision(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2) {
@@ -94,13 +107,27 @@ std::optional<CollisionDetails> PhysicsHandler::detectCollision(const shared_ptr
 		return std::nullopt;
 	}
 
-	if (!checkBboxIntersection(body1, body1)) {
+	if (!checkBboxIntersection(body1, body2)) {
 		return std::nullopt;
 	}
 
+	if (auto circle1 = dynamic_pointer_cast<CircleBody>(body1)) {
+		if (auto circle2 = dynamic_pointer_cast<CircleBody>(body2)) {
+			return detectCircleCircleCollision(circle1, circle2);
+		}
+		return detectCirclePolygonCollision(circle1, body2);
+	}
+	if (auto circle2 = dynamic_pointer_cast<CircleBody>(body2)) {
+		return detectCirclePolygonCollision(circle2, body1);
+	}
+	return detectPolygonPolygonCollision(body1, body2);
+}
+
+std::optional<CollisionDetails> PhysicsHandler::detectPolygonPolygonCollision(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2) {
+
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
-	
+
 	const auto pointsCount1 = body1->getPointCount();
 	const auto pointsCount2 = body2->getPointCount();
 	CollisionDetails result;
@@ -136,6 +163,82 @@ std::optional<CollisionDetails> PhysicsHandler::detectCollision(const shared_ptr
 
 	result.wBody1 = body1;
 	result.wBody2 = body2;
+	return result;
+}
+
+std::optional<CollisionDetails> PhysicsHandler::detectCirclePolygonCollision(const shared_ptr<CircleBody>& circle,	const shared_ptr<AbstractBody>& body) {
+
+	std::vector<sf::Vector2f> edges_i_p;
+	edges_i_p.reserve(2);
+	
+	const auto pointsCount = body->getPointCount();
+	CollisionDetails result;
+
+	for (size_t i = 0; i < pointsCount; ++i) {
+		const Segment edge = { body->getPointGlobal(i), body->getPointGlobal((i + 1) % pointsCount) };
+
+		// todo handle circle bodies in other way
+		if (auto i_point = findSegmentCircleIntersectionPoint(edge, circle->getShape()->getPosition(), circle->getShape()->getRadius())) {
+			edges_i_p.emplace_back(i_point->p1);
+			if (i_point->p2) {
+				edges_i_p.emplace_back(*i_point->p2);
+			}
+		}
+	}
+
+	if (edges_i_p.size() == 0) {
+		return std::nullopt;
+	}
+
+	if (edges_i_p.size() == 1) {
+		result.intersection.start = *edges_i_p.begin();
+		result.intersection.end = *edges_i_p.begin();
+	}
+	else {
+		result.intersection.start = *edges_i_p.begin();
+		result.intersection.end = *edges_i_p.rbegin();
+	}
+
+	result.wBody1 = circle;
+	result.wBody2 = body;
+	return result;
+}
+
+std::optional<CollisionDetails> PhysicsHandler::detectCircleCircleCollision(const shared_ptr<CircleBody>& circle1,	const shared_ptr<CircleBody>& circle2) {
+	using namespace utils;
+	auto r1 = circle1->getShape()->getRadius();
+	auto r2 = circle2->getShape()->getRadius();
+	auto pos1 = circle1->getShape()->getPosition();
+	auto pos2 = circle2->getShape()->getPosition() - circle1->getShape()->getPosition();
+	float a = -2 * pos2.x;
+	float b = -2 * pos2.y;
+	float c = sq(pos2.x) + sq(pos2.y) + sq(r1) - sq(r2);
+	auto p = sq(c) - sq(r1) * (sq(a) + sq(b));
+	if (p > std::numeric_limits<float>::epsilon()) {
+		return std::nullopt;
+	}
+	float x0 = -a * c / (sq(a) + sq(b)) + pos1.x;
+	float y0 = -b * c / (sq(a) + sq(b)) + pos1.y;
+	CollisionDetails result;
+	result.wBody1 = circle1;
+	result.wBody2 = circle2;
+	if (isZero(p)) {
+		result.intersection.start = sf::Vector2f(x0, y0);
+		result.intersection.end = result.intersection.start;
+	}
+	else {
+		float d = sq(r1) - sq(c) / (sq(a) + sq(b));
+		float mult = sqrt(d / (sq(a) + sq(b)));
+		result.intersection.start.x = x0 + b * mult;
+		result.intersection.start.y = y0 - a * mult;
+		result.intersection.end.x = x0 - b * mult;
+		result.intersection.end.y = y0 + a * mult;
+	}
+	if (EI()->isDebugEnabled()) {
+		auto wnd = EI()->getMainWindow();
+		wnd->draw(createCircle(result.intersection.start, 2, sf::Color::White));
+		wnd->draw(createCircle(result.intersection.end, 2, sf::Color::White));
+	}
 	return result;
 }
 
@@ -215,6 +318,80 @@ std::optional<SegmentIntersectionPoints> PhysicsHandler::findSegmentsIntersectio
 	return SegmentIntersectionPoints{ linesIntersection };
 }
 
+std::optional<SegmentIntersectionPoints> PhysicsHandler::findSegmentCircleIntersectionPoint(const Segment& seg, const sf::Vector2f& circleCenter, float radius) {
+	using namespace utils;
+	SegmentIntersectionPoints result;
+	auto s = seg;
+	s.start -= circleCenter;
+	s.end -= circleCenter;
+
+	auto v = seg.getDirVector();
+	bool is_xy_swapped = false;
+	if (isZero(v.x)) {
+		is_xy_swapped = true;
+		std::swap(v.x, v.y);
+		std::swap(s.start.x, s.start.y);
+		std::swap(s.end.x, s.end.y);
+	}
+
+	if (s.start.x > s.end.x) {
+		std::swap(s.start, s.end);
+	}
+
+	float slope = v.y / v.x;
+	float a = sq(slope) + 1;
+	float b = slope * s.start.y - sq(slope);
+	float c = sq(s.start.y) + sq(slope) * s.start.x - s.start.x * s.start.y * slope - sq(radius);
+
+	auto x_resolution = solveQuadraticEquation(a, b, c);
+	if (!x_resolution) {
+		return std::nullopt;
+	}
+
+	bool isFirstPointInSegment = x_resolution->first >= s.start.x && x_resolution->first <= s.end.x;
+	if (isFirstPointInSegment) {
+		result.p1.x = x_resolution->first;
+		result.p1.y = s.start.y + (x_resolution->first - s.start.x) * slope;
+		if (is_xy_swapped) {
+			std::swap(result.p1.x, result.p1.y);
+		}
+	}
+
+	bool isSecondPointInSegment = false;
+	if (x_resolution->second) {
+		if (*x_resolution->second >= s.start.x && *x_resolution->second <= s.end.x) {
+			isSecondPointInSegment = true;
+			sf::Vector2f* p = &result.p1;
+			if (isFirstPointInSegment) {
+				result.p2 = sf::Vector2f();
+				p = &result.p2.value();
+			}
+			p->x = *x_resolution->second;
+			p->y = s.start.y + (*x_resolution->second - s.start.x) * slope;
+			if (is_xy_swapped) {
+				std::swap(p->x, p->y);
+			}
+		}
+	}
+	if (!isFirstPointInSegment && !isSecondPointInSegment) {
+		return std::nullopt;
+	}
+
+	result.p1 += circleCenter;
+	if (result.p2) {
+		*result.p2 += circleCenter;
+	}
+
+	if (EI()->isDebugEnabled()) {
+		auto window = EI()->getMainWindow();
+		window->draw(createCircle(result.p1, 2.f, sf::Color::White));
+		if (result.p2) {
+			window->draw(createCircle(*result.p2, 2.f, sf::Color::White));
+		}
+	}
+	return result;
+}
+
 // todo: consider immovable objects
 void PhysicsHandler::resolveCollision(const CollisionDetails& collision) {
 	auto body1 = collision.wBody1.lock();
@@ -246,7 +423,6 @@ void PhysicsHandler::resolveCollision(const CollisionDetails& collision) {
 	auto getPenetrationDepth = [collisionPoint = collision.intersection.start](const AbstractBody* body, const sf::Vector2f& bodyNormal) {
 		float result = 0.f;
 		for (size_t i = 0; i < body->getPointCount(); ++i) {
-			auto point = body->getPointGlobal(i);
 			auto penetrationVec = body->getPointGlobal(i) - collisionPoint;
 			float depth = utils::project(penetrationVec, bodyNormal);
 			result = std::max(result, depth);
@@ -293,7 +469,7 @@ void PhysicsHandler::resolveCollision(const CollisionDetails& collision) {
 		auto isNan = utils::isNan(pc1->mVelocity) || utils::isNan(pc2->mVelocity);
 		assert(!isNan);
 
-		if (EI()->isDebugDrawEnabled()) {
+		if (EI()->isDebugEnabled()) {
 			auto window = EI()->getMainWindow();
 			{
 				VectorArrow force1(body1->getPosGlobal(), body1->getPosGlobal() + dv1);
@@ -317,7 +493,7 @@ void PhysicsHandler::resolveCollision(const CollisionDetails& collision) {
 		
 	}
 
-	if (EI()->isDebugDrawEnabled()) {
+	if (EI()->isDebugEnabled()) {
 		auto window = EI()->getMainWindow();
 		const sf::Vector2f middlePoint((collision.intersection.start + collision.intersection.end) * 0.5f);
 
@@ -331,12 +507,6 @@ void PhysicsHandler::resolveCollision(const CollisionDetails& collision) {
 			window->draw(tangentArrow);
 		}
 
-		{	// collision center
-			const float radius = 2.f;
-			sf::CircleShape middlePointCircle(radius, 10);
-			middlePointCircle.setPosition(middlePoint - sf::Vector2f(radius, radius));
-			middlePointCircle.setFillColor(sf::Color::White);
-			window->draw(middlePointCircle);
-		}
+		window->draw(utils::createCircle(middlePoint, 2, sf::Color::White));
 	}
 }

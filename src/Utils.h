@@ -1,5 +1,7 @@
 #pragma once
-#include "PhysicsHandler.h"
+#include <optional>
+
+#include "AbstractBody.h"
 #include "SFML/Graphics.hpp"
 
 namespace utils {
@@ -18,7 +20,7 @@ namespace utils {
     }
 	sf::Vector2f rotate(const sf::Vector2f& v, float angle);
 
-	bool isPointInsideOfBody(const sf::Vector2f& point, const shared_ptr<AbstractBody>& body);
+	bool isPointInsideOfBody(const sf::Vector2f& point, const std::shared_ptr<AbstractBody>& body);
 	bool isPointInsideOfTriangle(sf::Vector2f p, sf::Vector2f t1, sf::Vector2f t2, sf::Vector2f t3);
 
 	bool isNan(const sf::Vector2f& v);
@@ -27,4 +29,11 @@ namespace utils {
 
 	sf::Vector2f findCenterOfMass(const sf::Shape* shape);
 	float calcTriangleArea(float a, float b, float c); // Heron formula
+	inline bool isZero(float val) {
+		return std::abs(val) <= std::numeric_limits<float>::epsilon();
+	}
+	inline float sq(float val) { return val * val; }
+
+	std::optional<std::pair<float, std::optional<float>>> solveQuadraticEquation(float a, float b, float c);
+	sf::CircleShape createCircle(const sf::Vector2f& pos, float radius, sf::Color color);
 }
