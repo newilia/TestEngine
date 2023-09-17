@@ -33,7 +33,9 @@ int main() {
         }
 
         auto dt = ei->getSimDt();
-        ei->getPhysicsHandler()->update(dt);
+        if (!ei->isSimPaused()) {
+            ei->getPhysicsHandler()->update(dt);
+        }
         auto scene = ei->getScene();
         scene->updateRec(dt);
 

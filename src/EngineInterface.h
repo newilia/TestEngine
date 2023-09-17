@@ -31,7 +31,7 @@ public:
 	sf::RenderWindow* getMainWindow() const { return mMainWindow; }
 	void setFixedFrameTime(const sf::Time& time) { mFixedFrameTime = time; }
 	void resetFixedFrameTime() { mFixedFrameTime.reset(); }
-	bool isDebugDrawEnabled() const { return mIsDebugDrawEnabled; }
+	bool isDebugEnabled() const { return mIsDebugDrawEnabled; }
 	void setDebugDrawEnabled(bool enabled) { mIsDebugDrawEnabled = enabled; }
 
 private:
@@ -47,7 +47,7 @@ private:
 	std::optional<sf::Time> mFixedFrameTime;
 	float mSimSpeedMultiplier = 1.f;
 	bool mIsSimPaused = false;
-	bool mIsDebugDrawEnabled = false;
+	bool mIsDebugDrawEnabled = true;
 };
 
 inline EngineInterface* EI() { return EngineInterface::getInstance(); }
