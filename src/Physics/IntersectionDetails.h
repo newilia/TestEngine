@@ -1,7 +1,7 @@
 #pragma once
 #include <SFML/System/Vector2.hpp>
 
-struct CollisionDetails {
+struct IntersectionDetails {
 	weak_ptr<AbstractBody> wBody1;
 	weak_ptr<AbstractBody> wBody2;
 	Segment intersection;

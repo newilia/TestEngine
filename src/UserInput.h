@@ -10,7 +10,7 @@ class UserInput {
 public:
 	using EventHandler = std::function<void(const sf::Event&)>;
 	void handleEvent(const sf::Event& event);
-	void attachCustomHandler(std::unique_ptr<IDelegate<sf::Event>>&& delegatePtr);
+	void attachEventHandler(std::unique_ptr<IDelegate<sf::Event>>&& delegatePtr);
 
 private:
 	//void onMouseButtonPress(const sf::Event::MouseButtonEvent& event);

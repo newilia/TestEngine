@@ -19,14 +19,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\Ball.cpp" />
+    <ClCompile Include="..\src\PongBall.cpp" />
     <ClCompile Include="..\src\BodyPullHandler.cpp" />
     <ClCompile Include="..\src\FontManager.cpp" />
     <ClCompile Include="..\src\FpsNode.cpp" />
     <ClCompile Include="..\src\EngineInterface.cpp" />
+    <ClCompile Include="..\src\PongEnvironment.cpp" />
     <ClCompile Include="..\src\UserInput.cpp" />
     <ClCompile Include="..\src\ComponentHolder.cpp" />
-    <ClCompile Include="..\src\BodyDebugComponent.cpp" />
+    <ClCompile Include="..\src\PhysicsDebugComponent.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\SceneNode.cpp" />
     <ClCompile Include="..\src\Physics\AbstractBody.cpp" />
@@ -34,25 +35,29 @@
     <ClCompile Include="..\src\Physics\PolygonBody.cpp" />
     <ClCompile Include="..\src\PongPlatform.cpp" />
     <ClCompile Include="..\src\Scene.cpp" />
-    <ClCompile Include="..\src\SceneBuilder.cpp" />
+    <ClCompile Include="..\src\TestEnvironment.cpp" />
+    <ClCompile Include="..\src\UserPlatformContoller.cpp" />
     <ClCompile Include="..\src\UserPullComponent.cpp" />
     <ClCompile Include="..\src\Utils.cpp" />
     <ClCompile Include="..\src\VectorArrow.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\Ball.h" />
+    <ClInclude Include="..\src\PongBall.h" />
     <ClInclude Include="..\src\BodyPullHandler.h" />
+    <ClInclude Include="..\src\CollisionComponent.h" />
     <ClInclude Include="..\src\Delegates.h" />
     <ClInclude Include="..\src\FontManager.h" />
     <ClInclude Include="..\src\FpsNode.h" />
     <ClInclude Include="..\src\EngineInterface.h" />
+    <ClInclude Include="..\src\OverlappingComponent.h" />
     <ClInclude Include="..\src\Physics\ShapeBody.h" />
+    <ClInclude Include="..\src\PongEnvironment.h" />
     <ClInclude Include="..\src\UserInput.h" />
     <ClInclude Include="..\src\ComponentBase.h" />
     <ClInclude Include="..\src\ComponentHolder.h" />
-    <ClInclude Include="..\src\BodyDebugComponent.h" />
-    <ClInclude Include="..\src\Physics\CollisionDetails.h" />
-    <ClInclude Include="..\src\SceneBuilder.h" />
+    <ClInclude Include="..\src\PhysicsDebugComponent.h" />
+    <ClInclude Include="..\src\Physics\IntersectionDetails.h" />
+    <ClInclude Include="..\src\TestEnvironment.h" />
     <ClInclude Include="..\src\Updateable.h" />
     <ClInclude Include="..\src\SceneNode.h" />
     <ClInclude Include="..\src\Physics\AbstractBody.h" />
@@ -63,7 +68,7 @@
     <ClInclude Include="..\src\Scene.h" />
     <ClInclude Include="..\src\common.h" />
     <ClInclude Include="..\src\Singleton.h" />
-    <ClInclude Include="..\src\UserInputConfiguration.h" />
+    <ClInclude Include="..\src\UserPlatformContoller.h" />
     <ClInclude Include="..\src\UserPullComponent.h" />
     <ClInclude Include="..\src\Utils.h" />
     <ClInclude Include="..\src\VectorArrow.h" />

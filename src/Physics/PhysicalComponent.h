@@ -1,5 +1,9 @@
 #pragma once
 #include "ComponentBase.h"
+#include <bitset>
+
+struct IntersectionDetails;
+class AbstractBody;
 
 class PhysicalComponent : public ComponentBase {
 public:

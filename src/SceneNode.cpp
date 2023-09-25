@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "BodyDebugComponent.h"
+#include "PhysicsDebugComponent.h"
 #include "EngineInterface.h"
 
 void SceneNode::addChild(std::shared_ptr<SceneNode>&& child) {
@@ -69,7 +69,7 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	}
 
 	if (EI()->isDebugEnabled()) {
-		if (auto debugComponent = findComponent<BodyDebugComponent>()) {
+		if (auto debugComponent = findComponent<PhysicsDebugComponent>()) {
 			debugComponent->draw(target, states);
 		}
 	}

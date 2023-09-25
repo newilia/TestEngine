@@ -1,34 +1,40 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
-#include "BodyPullHandler.h"
-#include "Physics/PhysicsHandler.h"
-#include "Scene.h"
 #include "UserInput.h"
-#include "UserInputConfiguration.h"
 #include <fmt/format.h>
 
-namespace {
-    auto mode = sf::VideoMode(800u, 600u);
-    auto windowStyle = sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize;
-}
+#include "EngineInterface.h"
+#include "PongEnvironment.h"
+
 
 int main() {
-    sf::RenderWindow window(mode, "Test Engine", windowStyle);
+    _set_error_mode(_OUT_TO_MSGBOX);
+    //TestEnvironment env;
+    PongEnvironment env;
+    env.setup();
 
     auto ei = EI();
-    ei->setMainWindow(window);
-    ei->setScene(ei->getSceneBuilder()->buildScene());
-    ei->getPhysicsHandler()->setSubstepCount(2);
-    ei->getPhysicsHandler()->setGravity({ 0, 1000 });
+    while (true) {
+        auto window = EI()->getMainWindow();
+        if (!window) {
+            continue;
+        }
+        if (!window->isOpen()) {
+            break;
+        }
+        auto scene = ei->getScene();
+        if (!scene) {
+            continue;
+        }
 
-    initUserInputHandlers();
-
-    while (window.isOpen()) {
         ei->onStartFrame();
-        window.clear();
+        window->clear();
 
         sf::Event event;
-        while (window.pollEvent(event)) {
+        while (window->pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+                return EXIT_SUCCESS;
+            }
             ei->getUserInput()->handleEvent(event);
         }
 
@@ -36,12 +42,11 @@ int main() {
         if (!ei->isSimPaused()) {
             ei->getPhysicsHandler()->update(dt);
         }
-        auto scene = ei->getScene();
         scene->updateRec(dt);
 
-        window.draw(*scene);
-        window.draw(*ei->getBodyPullHandler());
-        window.display();
+        window->draw(*scene);
+        window->draw(*ei->getBodyPullHandler());
+        window->display();
     }
 
     return EXIT_SUCCESS;

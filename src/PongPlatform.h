@@ -1,25 +1,15 @@
 #pragma once
-#include "Updateable.h"
+#include "ShapeBody.h"
+#include "UserPlatformContoller.h"
 #include "SFML/Graphics.hpp"
 
-class PongPlatform : public Updateable {
+class PongPlatform : public ShapeBody<sf::ConvexShape> {
 public:
     PongPlatform();
+    void init() override;
+    void initShape(float width, float height, float angleDeg);
     void update(const sf::Time& dt) override;
-
-    sf::RectangleShape& getShape() { return mShape; }
-    void setAirFriction(float friction) { mAirFriction = friction; }
-    void setMaxSpeed(float maxSpeed) { mMaxSpeed = maxSpeed; }
-    void setMoveArea(const sf::FloatRect& moveArea) { mMoveArea = moveArea; }
-    void setPlayerAccelMagnitude(float val) { mPlayerAccelMagnitude = val; }
-    void handleInput(const sf::Event& event);
-
-protected:
-    float mMaxSpeed = std::numeric_limits<float>::max();
-    float mAirFriction = 0.f;
-    float mPlayerAccelMagnitude = 1000.f;
-    sf::Vector2f mPlayerAccel;
-    sf::Vector2f mSpeed;
-    sf::FloatRect mMoveArea;
-    sf::RectangleShape mShape;
+    UserPlatformController& getController() { return mController; }
+private:
+    UserPlatformController mController;
 };

@@ -3,7 +3,7 @@
 #include <iostream>
 
 #include "AbstractBody.h"
-#include "CollisionDetails.h"
+#include "IntersectionDetails.h"
 #include "common.h"
 #include "EngineInterface.h"
 #include "AbstractShapeBody.h"
@@ -14,14 +14,17 @@
 #include "fmt/format.h"
 #include <optional>
 
+#include "CollisionComponent.h"
+#include "OverlappingComponent.h"
+
 void PhysicsHandler::update(const sf::Time& dt) {
-	utils::removeExpiredPointers(mBodies); //todo: self removing pointers
+	utils::removeExpiredPointers(mBodies); //todo: self removing pointers?
 	for (int i = 0; i < mSubStepsCount; ++i) {
 		updateSubStep(dt / static_cast<float>(mSubStepsCount));
 	}
 }
 
-void PhysicsHandler::addBody(const shared_ptr<AbstractBody>& object) {
+void PhysicsHandler::registerBody(const shared_ptr<AbstractBody>& object) {
 	mBodies.push_back(object);
 	mDebugData.edgesCount += object->getPointCount();
 	if (EI()->isDebugEnabled()) {
@@ -30,6 +33,7 @@ void PhysicsHandler::addBody(const shared_ptr<AbstractBody>& object) {
 }
 
 void PhysicsHandler::updateSubStep(const sf::Time& dt) {
+	// motion step
 	for (auto& wBody : mBodies) {
 		auto body = wBody.lock();
 		auto physComp = body->findComponent<PhysicalComponent>();
@@ -63,10 +67,38 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 		body->setPosGlobal(pos);
 	}
 
+	// handle intersections
 	for (auto it1 = mBodies.begin(); it1 != mBodies.end(); ++it1) {
 		for (auto it2 = std::next(it1); it2 != mBodies.end(); ++it2) {
-			if (auto collision = detectCollision(it1->lock(), it2->lock())) {
-				resolveCollision(*collision);
+			auto b1 = it1->lock();
+			auto b2 = it2->lock();
+
+			if (auto intersection = detectIntersection(b1, b2)) {
+				{
+					auto cc1 = b1->findComponent<CollisionComponent>();
+					auto cc2 = b2->findComponent<CollisionComponent>();
+					if (cc1 && cc2 && (cc1->mCollisionGroups & cc2->mCollisionGroups).any()) {
+						if (!b1->getPhysicalComponent()->isImmovable() || !b2->getPhysicalComponent()->isImmovable()) {
+							resolveCollision(*intersection);
+							for (auto callback : cc1->mCollisionCallbacks) {
+								callback->operator()(*intersection);
+							}
+							for (auto callback : cc2->mCollisionCallbacks) {
+								callback->operator()(*intersection);
+							}
+						}
+					}
+				}
+
+				{
+					auto oc1 = b1->findComponent<OverlappingComponent>();
+					auto oc2 = b2->findComponent<OverlappingComponent>();
+					if (oc1 && oc2 && (oc1->mOverlappingGroups & oc2->mOverlappingGroups).any()) {
+						for (auto callback : oc1->mOverlappingCallbacks) {
+							callback->operator()(*intersection);
+						}
+					}
+				}
 			}
 		}
 	}
@@ -97,13 +129,9 @@ bool PhysicsHandler::checkBboxIntersection(const shared_ptr<AbstractBody>& body1
 	return bb1.intersects(bb2);
 }
 
-std::optional<CollisionDetails> PhysicsHandler::detectCollision(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2) {
+std::optional<IntersectionDetails> PhysicsHandler::detectIntersection(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2) {
 	if (!body1 || !body2) {
 		assert(false);
-		return std::nullopt;
-	}
-
-	if (body1->getPhysicalComponent()->isImmovable() && body2->getPhysicalComponent()->isImmovable()) {
 		return std::nullopt;
 	}
 
@@ -113,32 +141,31 @@ std::optional<CollisionDetails> PhysicsHandler::detectCollision(const shared_ptr
 
 	if (auto circle1 = dynamic_pointer_cast<CircleBody>(body1)) {
 		if (auto circle2 = dynamic_pointer_cast<CircleBody>(body2)) {
-			return detectCircleCircleCollision(circle1, circle2);
+			return detectCircleCircleIntersection(circle1, circle2);
 		}
-		return detectCirclePolygonCollision(circle1, body2);
+		return detectCirclePolygonIntersection(circle1, body2);
 	}
 	if (auto circle2 = dynamic_pointer_cast<CircleBody>(body2)) {
-		return detectCirclePolygonCollision(circle2, body1);
+		return detectCirclePolygonIntersection(circle2, body1);
 	}
-	return detectPolygonPolygonCollision(body1, body2);
+	return detectPolygonPolygonIntersection(body1, body2);
 }
 
-std::optional<CollisionDetails> PhysicsHandler::detectPolygonPolygonCollision(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2) {
+std::optional<IntersectionDetails> PhysicsHandler::detectPolygonPolygonIntersection(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2) {
 
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
 
 	const auto pointsCount1 = body1->getPointCount();
 	const auto pointsCount2 = body2->getPointCount();
-	CollisionDetails result;
+	IntersectionDetails result;
 
 	for (size_t i = 0; i < pointsCount1; ++i) {
 		const Segment edge1 = { body1->getPointGlobal(i), body1->getPointGlobal((i + 1) % pointsCount1) };
 
 		for (size_t j = 0; j < pointsCount2; ++j) {
 			const Segment edge2 = { body2->getPointGlobal(j), body2->getPointGlobal((j + 1) % pointsCount2) };
-
-			// todo handle circle bodies in other way
+			
 			if (auto i_point = findSegmentsIntersectionPoint(edge1, edge2)) {
 				edges_i_p.emplace_back(i_point->p1);
 				if (i_point->p2) {
@@ -166,18 +193,17 @@ std::optional<CollisionDetails> PhysicsHandler::detectPolygonPolygonCollision(co
 	return result;
 }
 
-std::optional<CollisionDetails> PhysicsHandler::detectCirclePolygonCollision(const shared_ptr<CircleBody>& circle,	const shared_ptr<AbstractBody>& body) {
+std::optional<IntersectionDetails> PhysicsHandler::detectCirclePolygonIntersection(const shared_ptr<CircleBody>& circle, const shared_ptr<AbstractBody>& body) {
 
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
 	
 	const auto pointsCount = body->getPointCount();
-	CollisionDetails result;
+	IntersectionDetails result;
 
 	for (size_t i = 0; i < pointsCount; ++i) {
 		const Segment edge = { body->getPointGlobal(i), body->getPointGlobal((i + 1) % pointsCount) };
-
-		// todo handle circle bodies in other way
+		
 		if (auto i_point = findSegmentCircleIntersectionPoint(edge, circle->getShape()->getPosition(), circle->getShape()->getRadius())) {
 			edges_i_p.emplace_back(i_point->p1);
 			if (i_point->p2) {
@@ -204,7 +230,7 @@ std::optional<CollisionDetails> PhysicsHandler::detectCirclePolygonCollision(con
 	return result;
 }
 
-std::optional<CollisionDetails> PhysicsHandler::detectCircleCircleCollision(const shared_ptr<CircleBody>& circle1,	const shared_ptr<CircleBody>& circle2) {
+std::optional<IntersectionDetails> PhysicsHandler::detectCircleCircleIntersection(const shared_ptr<CircleBody>& circle1, const shared_ptr<CircleBody>& circle2) {
 	using namespace utils;
 	auto r1 = circle1->getShape()->getRadius();
 	auto r2 = circle2->getShape()->getRadius();
@@ -219,7 +245,7 @@ std::optional<CollisionDetails> PhysicsHandler::detectCircleCircleCollision(cons
 	}
 	float x0 = -a * c / (sq(a) + sq(b)) + pos1.x;
 	float y0 = -b * c / (sq(a) + sq(b)) + pos1.y;
-	CollisionDetails result;
+	IntersectionDetails result;
 	result.wBody1 = circle1;
 	result.wBody2 = circle2;
 	if (isZero(p)) {
@@ -392,8 +418,7 @@ std::optional<SegmentIntersectionPoints> PhysicsHandler::findSegmentCircleInters
 	return result;
 }
 
-// todo: consider immovable objects
-void PhysicsHandler::resolveCollision(const CollisionDetails& collision) {
+void PhysicsHandler::resolveCollision(const IntersectionDetails& collision) {
 	auto body1 = collision.wBody1.lock();
 	auto body2 = collision.wBody2.lock();
 	if (!body1 || !body2) {
