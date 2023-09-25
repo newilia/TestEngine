@@ -33,7 +33,7 @@ void UserInput::handleEvent(const sf::Event& event) {
 	}
 }
 
-void UserInput::attachCustomHandler(std::unique_ptr<IDelegate<sf::Event>>&& delegatePtr) {
+void UserInput::attachEventHandler(std::unique_ptr<IDelegate<sf::Event>>&& delegatePtr) {
 	mEventHandlers.emplace(std::move(delegatePtr));
 }
 

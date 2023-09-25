@@ -4,12 +4,12 @@ template<class... TArgs>
 class IDelegate {
 public:
 	virtual ~IDelegate() {}
-	virtual void operator() (TArgs... arg) = 0;
+	virtual void operator() (TArgs... args) = 0;
 	virtual bool expired() { return false; }
 };
 
-template<class TOwner>
-class IWeakDelegate : public IDelegate<TOwner> {
+template<class TOwner, class... TArgs>
+class IWeakDelegate : public IDelegate<TArgs...> {
 public:
 	bool expired() override {
 		return mOwner.expired();
@@ -32,14 +32,14 @@ private:
 };
 
 template<class TOwner, class... TArgs>
-class WeakMethodDelegate : public IWeakDelegate<TOwner> {
+class WeakMethodDelegate : public IWeakDelegate<TOwner, TArgs...> {
 public:
 	WeakMethodDelegate(std::weak_ptr<TOwner> owner, void(TOwner::* method)(TArgs...)) {
-		IWeakDelegate<TOwner>::mOwner = owner;
+		IWeakDelegate<TOwner, TArgs...>::mOwner = owner;
 		mMethod = method;
 	}
 	void operator() (TArgs... args) override {
-		if (auto sharedOwner = IWeakDelegate<TOwner>::mOwner.lock()) {
+		if (auto sharedOwner = IWeakDelegate<TOwner, TArgs...>::mOwner.lock()) {
 			(sharedOwner.get()->*mMethod)(args...);
 		}
 	}
@@ -48,15 +48,15 @@ private:
 };
 
 template<class TOwner, class... TArgs>
-class WeakFunctionDelegate : public IWeakDelegate<TOwner> {
+class WeakFunctionDelegate : public IWeakDelegate<TOwner, TArgs...> {
 public:
 	WeakFunctionDelegate(std::weak_ptr<TOwner> owner, std::function<void(TArgs...)> func) {
-		IWeakDelegate<TOwner>::mOwner = owner;
+		IWeakDelegate<TOwner, TArgs...>::mOwner = owner;
 		mFunction = func;
 	}
 	void operator() (TArgs... args) override {
-		if (auto sharedOwner = IWeakDelegate<TOwner>::mOwner.lock()) {
-			func(args...);
+		if (!IWeakDelegate<TOwner, TArgs...>::mOwner.expired()) {
+			mFunction(args...);
 		}
 	}
 private:
@@ -71,11 +71,12 @@ std::unique_ptr<IDelegate<TArgs...>> createDelegate(auto func) {
 }
 
 template <class TOwner, class... TArgs>
-std::unique_ptr<IDelegate<TArgs...>> createDelegate(std::shared_ptr<TOwner> owner, void(TOwner::* method)(TArgs...)) {
+std::unique_ptr<IDelegate<TArgs...>> createDelegate(std::weak_ptr<TOwner> owner, void(TOwner::* method)(TArgs...)) {
 	return std::make_unique<WeakMethodDelegate<TOwner, TArgs...>>(owner, method);
 }
 
 template <class TOwner, class... TArgs>
-std::unique_ptr<IDelegate<TArgs...>> createDelegate(std::shared_ptr<TOwner> owner, std::function<void(TArgs...)> func) {
-	return std::make_unique<WeakFunctionDelegate<TOwner, TArgs...>>(owner, func);
+std::unique_ptr<IDelegate<TArgs...>> createDelegate(std::weak_ptr<TOwner> owner, std::function<void(TArgs...)> func) {
+	auto p = new WeakFunctionDelegate<TOwner, TArgs...>(owner, func);
+	return std::unique_ptr<IDelegate<TArgs...>>(p);
 }

@@ -7,7 +7,7 @@ float utils::length(const sf::Vector2f& vec) {
 }
 
 float utils::manhattan_dist(const sf::Vector2f& vec) {
-	return vec.x + vec.y;
+	return abs(vec.x) + abs(vec.y);
 }
 
 sf::Vector2f utils::normalize(const sf::Vector2f& vec) {

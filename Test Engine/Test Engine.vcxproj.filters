@@ -24,7 +24,7 @@
     <ClCompile Include="..\src\PongPlatform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Ball.cpp">
+    <ClCompile Include="..\src\PongBall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SceneNode.cpp">
@@ -45,10 +45,10 @@
     <ClCompile Include="..\src\Physics\PolygonBody.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\BodyDebugComponent.cpp">
+    <ClCompile Include="..\src\PhysicsDebugComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\SceneBuilder.cpp">
+    <ClCompile Include="..\src\TestEnvironment.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\UserInput.cpp">
@@ -72,6 +72,12 @@
     <ClCompile Include="..\src\VectorArrow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\PongEnvironment.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UserPlatformContoller.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\Utils.h">
@@ -83,7 +89,7 @@
     <ClInclude Include="..\src\Updateable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Ball.h">
+    <ClInclude Include="..\src\PongBall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SceneNode.h">
@@ -116,13 +122,13 @@
     <ClInclude Include="..\src\Physics\AbstractShapeBody.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\BodyDebugComponent.h">
+    <ClInclude Include="..\src\PhysicsDebugComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SceneBuilder.h">
+    <ClInclude Include="..\src\TestEnvironment.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Physics\CollisionDetails.h">
+    <ClInclude Include="..\src\Physics\IntersectionDetails.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\UserInput.h">
@@ -140,9 +146,6 @@
     <ClInclude Include="..\src\Delegates.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\UserInputConfiguration.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\EngineInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -153,6 +156,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Physics\ShapeBody.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\PongEnvironment.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\CollisionComponent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\OverlappingComponent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UserPlatformContoller.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,53 +1,29 @@
 #include "PongPlatform.h"
-#include "Utils.h"
 
-PongPlatform::PongPlatform() {
-	mMoveArea = {
-	   std::numeric_limits<float>::min(),
-	   std::numeric_limits<float>::min(),
-	   std::numeric_limits<float>::max(),
-	   std::numeric_limits<float>::max()
-	};
+PongPlatform::PongPlatform()
+	: mController(this)
+{
+}
+
+void PongPlatform::init() {
+	ShapeBody::init();
+	mController.init();
+}
+
+void PongPlatform::initShape(float width, float height, float angleDeg) {
+	constexpr int pointCount = 42;
+	auto shape = getShape();
+	shape->setPointCount(pointCount);
+	for (int i = 0; i < pointCount; ++i) {
+		float x = static_cast<float>(i * 2) / (pointCount - 1) - 1.f;
+		float y = sqrt(1 - x * x);
+		sf::Vector2f point(x * width * 0.5f, y * height);
+		shape->setPoint(i, point);
+	}
+	shape->setRotation(angleDeg);
 }
 
 void PongPlatform::update(const sf::Time& dt) {
-	sf::Vector2f frictionAccel = -mSpeed * mAirFriction;
-	auto totalAccel = mPlayerAccel + frictionAccel;
-	mSpeed += totalAccel * dt.asSeconds();
-	mSpeed.x = std::clamp(mSpeed.x, -mMaxSpeed, mMaxSpeed);
-
-	if (utils::length(mSpeed) < 10 && mPlayerAccel == sf::Vector2f()) {
-		mSpeed = { 0, 0 };
-	}
-	
-	auto pos = mShape.getPosition() + mSpeed * dt.asSeconds();
-	const auto& size = mShape.getSize();
-	pos.x = std::clamp(pos.x, mMoveArea.left, mMoveArea.left + mMoveArea.width - size.x);
-	pos.y = std::clamp(pos.y, mMoveArea.top, mMoveArea.top + mMoveArea.height - size.y);
-	mShape.setPosition(pos);
-}
-
-void PongPlatform::handleInput(const sf::Event& event) {
-	if (event.type == sf::Event::KeyPressed)
-	{
-		switch (event.key.code)
-		{
-		case sf::Keyboard::Left:
-			mPlayerAccel = { -mPlayerAccelMagnitude, 0 };
-			break;
-		case sf::Keyboard::Right:
-			mPlayerAccel = { mPlayerAccelMagnitude, 0 };
-			break;
-		default: break;
-		}
-	}
-	else if (event.type == sf::Event::KeyReleased) {
-		switch (event.key.code) {
-		case sf::Keyboard::Left:
-		case sf::Keyboard::Right:
-			mPlayerAccel = { 0, 0 };
-			break;
-		default: break;
-		}
-	}
+	ShapeBody<sf::ConvexShape>::update(dt);
+	mController.update(dt);
 }

@@ -8,5 +8,5 @@ AbstractBody::AbstractBody() {
 }
 
 void AbstractBody::init() {
-	EI()->getPhysicsHandler()->addBody(dynamic_pointer_cast<AbstractBody>(shared_from_this()));
+	EI()->getPhysicsHandler()->registerBody(dynamic_pointer_cast<AbstractBody>(shared_from_this()));
 }
