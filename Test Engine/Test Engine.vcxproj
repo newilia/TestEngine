@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\AiPlatformController.cpp" />
     <ClCompile Include="..\src\PongBall.cpp" />
     <ClCompile Include="..\src\BodyPullHandler.cpp" />
     <ClCompile Include="..\src\FontManager.cpp" />
@@ -42,6 +43,7 @@
     <ClCompile Include="..\src\VectorArrow.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\PlatformControllerBase.h" />
     <ClInclude Include="..\src\PongBall.h" />
     <ClInclude Include="..\src\BodyPullHandler.h" />
     <ClInclude Include="..\src\CollisionComponent.h" />
@@ -52,6 +54,7 @@
     <ClInclude Include="..\src\OverlappingComponent.h" />
     <ClInclude Include="..\src\Physics\ShapeBody.h" />
     <ClInclude Include="..\src\PongEnvironment.h" />
+    <ClInclude Include="..\src\AiPlatformController.h" />
     <ClInclude Include="..\src\UserInput.h" />
     <ClInclude Include="..\src\ComponentBase.h" />
     <ClInclude Include="..\src\ComponentHolder.h" />
@@ -151,13 +154,13 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(ProjectDir)\..\src\;$(ProjectDir)\..\src\Physics;$(ProjectDir)\..\third-party\fmtlib\fmt\include;$(ProjectDir)\..\third-party\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>

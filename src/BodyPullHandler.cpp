@@ -11,7 +11,7 @@ void BodyPullHandler::startPull(sf::Vector2f mousePos, UserPullComponent::PullMo
 		if (!body) {
 			continue;
 		}
-		if (!utils::isPointInsideOfBody(mousePos, body)) {
+		if (!utils::isPointInsideOfBody(mousePos, body.get())) {
 			continue;
 		}
 		if (body->getPhysicalComponent()->isImmovable()) {
@@ -23,7 +23,7 @@ void BodyPullHandler::startPull(sf::Vector2f mousePos, UserPullComponent::PullMo
 		pullComponent->mLocalSourcePoint = mousePos - body->getPosGlobal();
 		pullComponent->mGlobalDestPoint = mousePos;
 		pullComponent->mMode = pullMode;
-		mPullingBody = body;
+		mPullingBody = utils::sharedPtrCast<AbstractBody>(body.get());
 		break;
 	}
 }

@@ -1,6 +1,5 @@
 #include "PhysicsHandler.h"
 #include <cassert>
-#include <iostream>
 
 #include "AbstractBody.h"
 #include "IntersectionDetails.h"
@@ -18,24 +17,30 @@
 #include "OverlappingComponent.h"
 
 void PhysicsHandler::update(const sf::Time& dt) {
-	utils::removeExpiredPointers(mBodies); //todo: self removing pointers?
+	utils::removeExpiredPointers(mBodies);
 	for (int i = 0; i < mSubStepsCount; ++i) {
 		updateSubStep(dt / static_cast<float>(mSubStepsCount));
 	}
 }
 
-void PhysicsHandler::registerBody(const shared_ptr<AbstractBody>& object) {
-	mBodies.push_back(object);
-	mDebugData.edgesCount += object->getPointCount();
-	if (EI()->isDebugEnabled()) {
-		std::cout << fmt::format("{} bodies, {} edges", mBodies.size(), mDebugData.edgesCount) << std::endl;
-	}
+void PhysicsHandler::registerBody(shared_ptr<AbstractBody> body) {
+	mBodies.emplace_back(body);
+}
+
+void PhysicsHandler::unregisterBody(AbstractBody* body) {
+	/*auto it = std::find(mBodies.begin(), mBodies.end(), body);
+	if (it != mBodies.end()) {
+		mBodies.erase(it);
+	}*/
 }
 
 void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 	// motion step
 	for (auto& wBody : mBodies) {
 		auto body = wBody.lock();
+		if (!body) {
+			continue;
+		}
 		auto physComp = body->findComponent<PhysicalComponent>();
 		auto pullComp = body->findComponent<UserPullComponent>();
 		auto pos = body->getPosGlobal();
@@ -69,11 +74,18 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 
 	// handle intersections
 	for (auto it1 = mBodies.begin(); it1 != mBodies.end(); ++it1) {
-		for (auto it2 = std::next(it1); it2 != mBodies.end(); ++it2) {
-			auto b1 = it1->lock();
-			auto b2 = it2->lock();
+		auto b1 = it1->lock();
+		if (!b1) {
+			continue;
+		}
 
-			if (auto intersection = detectIntersection(b1, b2)) {
+		for (auto it2 = std::next(it1); it2 != mBodies.end(); ++it2) {
+			auto b2 = it2->lock();
+			if (!b2) {
+				continue;
+			}
+
+			if (auto intersection = detectIntersection(b1.get(), b2.get())) {
 				{
 					auto cc1 = b1->findComponent<CollisionComponent>();
 					auto cc2 = b2->findComponent<CollisionComponent>();
@@ -123,13 +135,13 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 }
 
 
-bool PhysicsHandler::checkBboxIntersection(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2) {
+bool PhysicsHandler::checkBboxIntersection(const AbstractBody* body1, const AbstractBody* body2) {
 	auto&& bb1 = body1->getBbox();
 	auto&& bb2 = body2->getBbox();
 	return bb1.intersects(bb2);
 }
 
-std::optional<IntersectionDetails> PhysicsHandler::detectIntersection(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2) {
+std::optional<IntersectionDetails> PhysicsHandler::detectIntersection(const AbstractBody* body1, const AbstractBody* body2) {
 	if (!body1 || !body2) {
 		assert(false);
 		return std::nullopt;
@@ -139,19 +151,19 @@ std::optional<IntersectionDetails> PhysicsHandler::detectIntersection(const shar
 		return std::nullopt;
 	}
 
-	if (auto circle1 = dynamic_pointer_cast<CircleBody>(body1)) {
-		if (auto circle2 = dynamic_pointer_cast<CircleBody>(body2)) {
+	if (auto circle1 = dynamic_cast<const CircleBody*>(body1)) {
+		if (auto circle2 = dynamic_cast<const CircleBody*>(body2)) {
 			return detectCircleCircleIntersection(circle1, circle2);
 		}
 		return detectCirclePolygonIntersection(circle1, body2);
 	}
-	if (auto circle2 = dynamic_pointer_cast<CircleBody>(body2)) {
+	if (auto circle2 = dynamic_cast<const CircleBody*>(body2)) {
 		return detectCirclePolygonIntersection(circle2, body1);
 	}
 	return detectPolygonPolygonIntersection(body1, body2);
 }
 
-std::optional<IntersectionDetails> PhysicsHandler::detectPolygonPolygonIntersection(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2) {
+std::optional<IntersectionDetails> PhysicsHandler::detectPolygonPolygonIntersection(const AbstractBody* body1, const AbstractBody* body2) {
 
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
@@ -188,12 +200,12 @@ std::optional<IntersectionDetails> PhysicsHandler::detectPolygonPolygonIntersect
 		result.intersection.end = *edges_i_p.rbegin();
 	}
 
-	result.wBody1 = body1;
-	result.wBody2 = body2;
+	result.wBody1 = utils::sharedPtrCast<AbstractBody>(body1);
+	result.wBody2 = utils::sharedPtrCast<AbstractBody>(body2);
 	return result;
 }
 
-std::optional<IntersectionDetails> PhysicsHandler::detectCirclePolygonIntersection(const shared_ptr<CircleBody>& circle, const shared_ptr<AbstractBody>& body) {
+std::optional<IntersectionDetails> PhysicsHandler::detectCirclePolygonIntersection(const CircleBody* circle, const AbstractBody* body) {
 
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
@@ -225,12 +237,12 @@ std::optional<IntersectionDetails> PhysicsHandler::detectCirclePolygonIntersecti
 		result.intersection.end = *edges_i_p.rbegin();
 	}
 
-	result.wBody1 = circle;
-	result.wBody2 = body;
+	result.wBody1 = utils::sharedPtrCast<AbstractBody>(circle);
+	result.wBody2 = utils::sharedPtrCast<AbstractBody>(body);
 	return result;
 }
 
-std::optional<IntersectionDetails> PhysicsHandler::detectCircleCircleIntersection(const shared_ptr<CircleBody>& circle1, const shared_ptr<CircleBody>& circle2) {
+std::optional<IntersectionDetails> PhysicsHandler::detectCircleCircleIntersection(const CircleBody* circle1, const CircleBody* circle2) {
 	using namespace utils;
 	auto r1 = circle1->getShape()->getRadius();
 	auto r2 = circle2->getShape()->getRadius();
@@ -245,9 +257,11 @@ std::optional<IntersectionDetails> PhysicsHandler::detectCircleCircleIntersectio
 	}
 	float x0 = -a * c / (sq(a) + sq(b)) + pos1.x;
 	float y0 = -b * c / (sq(a) + sq(b)) + pos1.y;
+
 	IntersectionDetails result;
-	result.wBody1 = circle1;
-	result.wBody2 = circle2;
+	result.wBody1 = utils::sharedPtrCast<AbstractBody>(circle1);
+	result.wBody2 = utils::sharedPtrCast<AbstractBody>(circle2);
+
 	if (isZero(p)) {
 		result.intersection.start = sf::Vector2f(x0, y0);
 		result.intersection.end = result.intersection.start;

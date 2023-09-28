@@ -2,7 +2,7 @@
 #include "AbstractBody.h"
 #include "SFML/Graphics.hpp"
 
-class AbstractShapeBody : public AbstractBody {
+class AbstractShapeBody : public AbstractBody { //todo: combine with Abstract body
 public:
 	AbstractShapeBody() {}
 	~AbstractShapeBody() override = default;

@@ -64,7 +64,7 @@ std::shared_ptr<Scene> TestEnvironment::buildScene() {
 		float radius = 5 * (1 + i % 3);
 		body->getShape()->setRadius(radius);
 		constexpr float pointsCountConstant = 3.f;
-		auto pointsCount = pointsCountConstant * (7 + radius / 8);
+		auto pointsCount = static_cast<size_t>(pointsCountConstant * (7 + radius / 8));
 		body->getShape()->setPointCount(pointsCount);
 		
 		sf::Color color(40, 170, 255, 200);
@@ -78,7 +78,9 @@ std::shared_ptr<Scene> TestEnvironment::buildScene() {
 		auto maxX = static_cast<int>(screenSize.x - wallVisibleWidth - radius);
 		auto minY = static_cast<int>(wallVisibleWidth + radius);
 		auto maxY = static_cast<int>(screenSize.y - wallVisibleWidth - radius);
-		body->getShape()->setPosition(minX + rand() % (maxX - minX), minY +rand() % (maxY - minY));
+		auto x = static_cast<float>(minX + rand() % (maxX - minX));
+		auto y = static_cast<float>(minY + rand() % (maxY - minY));
+		body->getShape()->setPosition(x, y);
 		body->getPhysicalComponent()->mMass = 3.14f * radius * radius;
 		body->getPhysicalComponent()->mRestitution = bodiesRestitution;
 		body->requireComponent<CollisionComponent>()->mCollisionGroups.set(0, true);
