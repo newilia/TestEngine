@@ -47,7 +47,7 @@ sf::Vector2f utils::rotate(const sf::Vector2f& v, float angle) {
 	return result;
 }
 
-bool utils::isPointInsideOfBody(const sf::Vector2f& point, const shared_ptr<AbstractBody>& body) {
+bool utils::isPointInsideOfBody(const sf::Vector2f& point, const AbstractBody* body) {
 	auto t1 = body->getPointGlobal(0);
 	for (size_t i = 0; i < body->getPointCount() - 2; ++i) {
 		auto t2 = body->getPointGlobal(i + 1);

@@ -1,4 +1,3 @@
-#include <iostream>
 #include <SFML/Graphics.hpp>
 #include "UserInput.h"
 #include <fmt/format.h>
@@ -6,8 +5,13 @@
 #include "EngineInterface.h"
 #include "PongEnvironment.h"
 
-
+#ifdef _CONSOLE
 int main() {
+#else
+#define NOMINMAX 
+#include <windows.h>
+int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
+#endif
     _set_error_mode(_OUT_TO_MSGBOX);
     //TestEnvironment env;
     PongEnvironment env;

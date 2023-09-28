@@ -11,7 +11,8 @@ class PhysicsHandler : public Updateable {
 public:
 	virtual ~PhysicsHandler() = default;
 	void update(const sf::Time& dt) override;
-	void registerBody(const shared_ptr<AbstractBody>& object);
+	void registerBody(shared_ptr<AbstractBody> body);
+	void unregisterBody(AbstractBody* body);
 	const auto& getAllBodies() { return mBodies; }
 	void setSubstepCount(int count) { mSubStepsCount = count; }
 	void setGravity(const sf::Vector2f v) { mGravity = v; }
@@ -20,23 +21,19 @@ public:
 	bool isGravityEnabled() const { return mIsGravityEnabled; }
 
 private:
-	static bool checkBboxIntersection(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2);
-	static std::optional<IntersectionDetails> detectIntersection(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2);
-	static std::optional<IntersectionDetails> detectPolygonPolygonIntersection(const shared_ptr<AbstractBody>& body1, const shared_ptr<AbstractBody>& body2);
-	static std::optional<IntersectionDetails> detectCirclePolygonIntersection(const shared_ptr<CircleBody>& circle, const shared_ptr<AbstractBody>& body);
-	static std::optional<IntersectionDetails> detectCircleCircleIntersection(const shared_ptr<CircleBody>& circle1, const shared_ptr<CircleBody>& circle2);
+	static bool checkBboxIntersection(const AbstractBody* body1, const AbstractBody* body2);
+	static std::optional<IntersectionDetails> detectIntersection(const AbstractBody* body1, const AbstractBody* body2);
+	static std::optional<IntersectionDetails> detectPolygonPolygonIntersection(const AbstractBody* body1, const AbstractBody* body2);
+	static std::optional<IntersectionDetails> detectCirclePolygonIntersection(const CircleBody* circle, const AbstractBody* body);
+	static std::optional<IntersectionDetails> detectCircleCircleIntersection(const CircleBody* circle1, const CircleBody* circle2);
 	static std::optional<SegmentIntersectionPoints> findSegmentsIntersectionPoint(const Segment& E, const Segment& F);
 	static std::optional<SegmentIntersectionPoints> findSegmentCircleIntersectionPoint(const Segment& seg, const sf::Vector2f& circleCenter, float radius);
 	static void resolveCollision(const IntersectionDetails& collision);
 
 	void updateSubStep(const sf::Time& dt);
 
-	std::list<weak_ptr<AbstractBody>> mBodies;
+	std::list<std::weak_ptr<AbstractBody>> mBodies;
 	int mSubStepsCount = 1;
 	bool mIsGravityEnabled = false;
 	sf::Vector2f mGravity = {0, 400};
-
-	struct {
-		int edgesCount = 0;
-	} mDebugData;
 };

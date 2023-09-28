@@ -1,16 +1,17 @@
 #include "PongPlatform.h"
 
 PongPlatform::PongPlatform()
-	: mController(this)
 {
 }
 
 void PongPlatform::init() {
 	ShapeBody::init();
-	mController.init();
+	if (mController) {
+		mController->init();
+	}
 }
 
-void PongPlatform::initShape(float width, float height, float angleDeg) {
+void PongPlatform::setShapeDimensions(float width, float height, float rotationDeg) {
 	constexpr int pointCount = 42;
 	auto shape = getShape();
 	shape->setPointCount(pointCount);
@@ -20,10 +21,12 @@ void PongPlatform::initShape(float width, float height, float angleDeg) {
 		sf::Vector2f point(x * width * 0.5f, y * height);
 		shape->setPoint(i, point);
 	}
-	shape->setRotation(angleDeg);
+	shape->setRotation(rotationDeg);
 }
 
 void PongPlatform::update(const sf::Time& dt) {
-	ShapeBody<sf::ConvexShape>::update(dt);
-	mController.update(dt);
+	ShapeBody::update(dt);
+	if (mController) {
+		mController->update(dt);
+	}
 }
