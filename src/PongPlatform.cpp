@@ -16,8 +16,9 @@ void PongPlatform::setShapeDimensions(float width, float height, float rotationD
 	auto shape = getShape();
 	shape->setPointCount(pointCount);
 	for (int i = 0; i < pointCount; ++i) {
-		float x = static_cast<float>(i * 2) / (pointCount - 1) - 1.f;
-		float y = sqrt(1 - x * x);
+		float x = (static_cast<float>(i) / (pointCount - 1) - 0.5f) * 2.0f;
+		float magicNumber = 0.7f;
+		float y = sqrt(1 - x * x * magicNumber);
 		sf::Vector2f point(x * width * 0.5f, y * height);
 		shape->setPoint(i, point);
 	}
