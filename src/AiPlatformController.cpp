@@ -2,14 +2,36 @@
 
 #include "PongPlatform.h"
 
-AiPlatformController::AiPlatformController(PongPlatform* platform) : PlatformControllerBase(platform) {
+AiPlatformController::AiPlatformController(PongPlatform* platform) : UserPlatformController(platform) {
 
 }
 
 void AiPlatformController::update(const sf::Time& dt) {
-	if (auto ball = mBall.lock()) {
-		auto pos = mPlatform->getShape()->getPosition();
-		pos.x = ball->getShape()->getPosition().x;
-		mPlatform->getShape()->setPosition(pos);
+	if (mObserveTimer.getElapsedTime() > mObservePeriod) {
+		mObserveTimer.restart();
+		if (auto ball = mBall.lock()) {
+			ObservedState state = {
+				.ballPos = ball->getShape()->getPosition()
+			} ;
+			mObservedStates.push(state);
+		}
 	}
+	if (!mObservedStates.empty()) {
+		auto& state = mObservedStates.front();
+		auto waitingTime = state.waitingTime.getElapsedTime();
+		if (waitingTime > mReactionDelay) {
+			auto ball = mBall.lock();
+			auto opponentPlatform = mOpponentPlatform.lock();
+			if (ball && opponentPlatform) {
+				float distanceToBall = abs(state.ballPos.y - mPlatform->getShape()->getPosition().y) - ball->getShape()->getRadius() - mPlatform->getBbox().height;
+				float distanceBetweenPlatforms = abs(mPlatform->getShape()->getPosition().y - opponentPlatform->getShape()->getPosition().y);
+				float steadyRatio = 0.2 * std::clamp(distanceToBall / distanceBetweenPlatforms, 0.f, 1.f);
+
+				mTargetPos.x = state.ballPos.x * (1.f - steadyRatio) + mDefaultPos.x * steadyRatio;
+			}
+
+			mObservedStates.pop();
+		}
+	}
+	UserPlatformController::update(dt);
 }

@@ -30,8 +30,8 @@ static sf::Vector2f getScreenSize() {
 
 void PongEnvironment::setup() {
 	auto ei = EI();
-	//auto videoMode = sf::VideoMode::getFullscreenModes()[0];
-	sf::VideoMode videoMode(800, 600);
+	auto videoMode = sf::VideoMode::getFullscreenModes()[0];
+	//sf::VideoMode videoMode(800, 600);
 	ei->createMainWindow(videoMode, "Pong", sf::Style::None);
 	ei->getMainWindow()->setMouseCursorVisible(false);
 	ei->getPhysicsHandler()->setSubstepCount(2);
@@ -48,6 +48,7 @@ void PongEnvironment::addBall(Scene* scene) {
 	constexpr float speedDampingFactor = 0.1f;
 	const sf::Color color(40, 170, 255, 200);
 	const sf::Vector2f vel = { 0, 500 };
+	const sf::Vector2f pos = getScreenSize() * 0.5f;
 
 	auto ball = make_shared<PongBall>();
 	ball->setMaxSpeed(400.f);
@@ -64,7 +65,7 @@ void PongEnvironment::addBall(Scene* scene) {
 	shape->setFillColor(color);
 	shape->setOutlineColor(outlineColor);
 	shape->setOutlineThickness(1);
-	shape->setPosition({ getScreenSize().x * 0.5f, radius + wallVisibleWidth});
+	shape->setPosition(pos);
 
 	auto pc = ball->getPhysicalComponent();
 	pc->mMass = 3.14f * radius * radius;
@@ -82,7 +83,6 @@ void PongEnvironment::addBall(Scene* scene) {
 
 shared_ptr<PongPlatform> PongEnvironment::createDefaultPlatform(sf::Vector2f size, sf::Vector2f pos, float rotationDeg, sf::Color color) const {
 	auto platform = make_shared<PongPlatform>();
-	platform->init();
 	platform->requireComponent<PhysicsDebugComponent>();
 	platform->setName("Platform");
 	platform->setShapeDimensions(size.x, size.y, rotationDeg);
@@ -95,6 +95,7 @@ shared_ptr<PongPlatform> PongEnvironment::createDefaultPlatform(sf::Vector2f siz
 	auto pc = platform->getPhysicalComponent();
 	pc->setImmovable();
 	pc->mRestitution = bodiesRestitution;
+	
 	return platform;
 }
 
@@ -122,7 +123,7 @@ void PongEnvironment::addWalls(Scene* scene) {
 		wall->getShape()->setSize(wallSizes[i]);
 		wall->getPhysicalComponent()->setImmovable();
 		wall->getPhysicalComponent()->mRestitution = bodiesRestitution;
-		if (i == 0) {
+		if (i < 2) {
 			wall->getShape()->setFillColor(sf::Color(200, 200, 200, 50));
 			wall->requireComponent<OverlappingComponent>()->mOverlappingGroups.set(0, true);
 			auto loseCallback = createDelegate<const IntersectionDetails&>([this, calledOnce = false](const IntersectionDetails&) mutable {
@@ -149,17 +150,19 @@ void PongEnvironment::addUserPlatform(Scene* scene) {
 	const sf::Color color(220, 220, 20);
 
 	auto platform = createDefaultPlatform(size, pos, 180.f, color);
+	platform->setName("User_platform");
 
-	constexpr float verticalMoveFactor = 0.99f;
-	constexpr float velFactor = 100.f;
-	const sf::Vector2f maxSpeed = { 15000.f, 100000.f };
+	constexpr float verticalMoveFactor = 0.95f;
+	constexpr float velFactor = 50.f;
+	const sf::Vector2f maxSpeed = { 15000.f, 1000.f };
 
 	auto controller = make_shared<UserPlatformController>(platform.get());
-	//platform->setController(controller);
+	platform->setController(controller);
 	controller->setVerticalFreedomFactor(verticalMoveFactor);
 	controller->setVelLimit(maxSpeed);
 	controller->setVelocityFactor(velFactor);
 
+	platform->init();
 	scene->addChild(platform);
 
 	EI()->getUserInput()->attachEventHandler(createDelegate<PongPlatform, sf::Event>(platform, [platform = std::weak_ptr(platform)](sf::Event event) {
@@ -177,11 +180,23 @@ void PongEnvironment::addAiPlatform(Scene* scene) {
 	const sf::Color color(220, 220, 20);
 
 	auto platform = createDefaultPlatform(size, pos, 0.f, color);;
+	platform->setName("AI_platform");
 
 	auto controller = make_shared<AiPlatformController>(platform.get());
 	controller->beginObserve(sUserPlatform, sBall);
 	platform->setController(controller);
 
+	constexpr float verticalMoveFactor = 0.99f;
+	constexpr float velFactor = 50.f;
+	const sf::Vector2f maxSpeed = { 3000.f, 1000.f };
+	
+	controller->setVerticalFreedomFactor(verticalMoveFactor);
+	controller->setVelLimit(maxSpeed);
+	controller->setVelocityFactor(velFactor);
+	controller->setObservePeriod(sf::milliseconds(10));
+	controller->setReactionDelay(sf::milliseconds(100));
+
+	platform->init();
 	scene->addChild(platform);
 }
 

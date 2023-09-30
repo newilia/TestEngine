@@ -20,7 +20,7 @@ public:
 	void setVelLimit(sf::Vector2f val) { mVelLimit = val; }
 	void update(const sf::Time& dt) override;
 
-private:
+protected:
 	sf::Vector2f mDefaultPos;
 	sf::Vector2f mTargetPos;
 	sf::Vector2f mLastPos;

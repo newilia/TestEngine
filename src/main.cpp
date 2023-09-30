@@ -46,6 +46,9 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
         if (!ei->isSimPaused()) {
             ei->getPhysicsHandler()->update(dt);
         }
+        if (dt.asSeconds() > 0.1f) {
+            dt = sf::seconds(0.1f);
+        }
         scene->updateRec(dt);
 
         window->draw(*scene);
