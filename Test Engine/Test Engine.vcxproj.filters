@@ -13,171 +13,192 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\Engine">
+      <UniqueIdentifier>{172a0ea4-aab6-43df-91ed-08c94b58bc9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine">
+      <UniqueIdentifier>{6c064c11-fc3f-4c80-af60-0318663ce2a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Pong">
+      <UniqueIdentifier>{b5c3c2ac-f2da-419a-b401-81677b2417fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Pong">
+      <UniqueIdentifier>{a7b84413-9bb4-43fc-ac38-896c5719a0ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Physics">
+      <UniqueIdentifier>{46f8859a-e02c-4655-a675-ef8f5ca8ab10}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Physics">
+      <UniqueIdentifier>{c79be64c-5d42-4427-9391-7e9905bccaf4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Test">
+      <UniqueIdentifier>{1776a8ca-1194-4ea9-8087-5c8faf3d43ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Test">
+      <UniqueIdentifier>{e6674d6f-9878-468d-b03c-74ad344de836}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\main.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Engine\ComponentHolder.cpp">
+      <Filter>Source Files\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Utils.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Engine\EngineInterface.cpp">
+      <Filter>Source Files\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\PongPlatform.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Engine\FontManager.cpp">
+      <Filter>Source Files\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\PongBall.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Engine\FpsNode.cpp">
+      <Filter>Source Files\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\SceneNode.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Engine\main.cpp">
+      <Filter>Source Files\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Scene.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Engine\SceneNode.cpp">
+      <Filter>Source Files\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ComponentHolder.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Engine\UserInput.cpp">
+      <Filter>Source Files\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Physics\AbstractBody.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Engine\Utils.cpp">
+      <Filter>Source Files\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Physics\PhysicsHandler.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Engine\VectorArrow.cpp">
+      <Filter>Source Files\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Physics\PolygonBody.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Engine\Physics\AbstractBody.cpp">
+      <Filter>Source Files\Engine\Physics</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\PhysicsDebugComponent.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Engine\Physics\PhysicsHandler.cpp">
+      <Filter>Source Files\Engine\Physics</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\TestEnvironment.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Pong\UserPlatformContoller.cpp">
+      <Filter>Source Files\Pong</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\UserInput.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Pong\AiPlatformController.cpp">
+      <Filter>Source Files\Pong</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\UserPullComponent.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Pong\PongBall.cpp">
+      <Filter>Source Files\Pong</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\BodyPullHandler.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Pong\PongEnvironment.cpp">
+      <Filter>Source Files\Pong</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\FontManager.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Pong\PongPlatform.cpp">
+      <Filter>Source Files\Pong</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\EngineInterface.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Test\TestEnvironment.cpp">
+      <Filter>Source Files\Test</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\FpsNode.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Engine\Physics\PhysicsDebugComponent.cpp">
+      <Filter>Source Files\Engine\Physics</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\VectorArrow.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Engine\Scene.cpp">
+      <Filter>Source Files\Engine\Physics</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\PongEnvironment.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Engine\Physics\BodyPullHandler.cpp">
+      <Filter>Source Files\Engine</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\UserPlatformContoller.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\AiPlatformController.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\Engine\Physics\UserPullComponent.cpp">
+      <Filter>Source Files\Engine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\Utils.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\common.h">
+      <Filter>Header Files\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\PongPlatform.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\ComponentBase.h">
+      <Filter>Header Files\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Updateable.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\ComponentHolder.h">
+      <Filter>Header Files\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\PongBall.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\Delegates.h">
+      <Filter>Header Files\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SceneNode.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\EngineInterface.h">
+      <Filter>Header Files\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Scene.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\FontManager.h">
+      <Filter>Header Files\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ComponentHolder.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\FpsNode.h">
+      <Filter>Header Files\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ComponentBase.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\Scene.h">
+      <Filter>Header Files\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\common.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\SceneNode.h">
+      <Filter>Header Files\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Singleton.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\Singleton.h">
+      <Filter>Header Files\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Physics\AbstractBody.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\Updateable.h">
+      <Filter>Header Files\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Physics\PhysicalComponent.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\UserInput.h">
+      <Filter>Header Files\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Physics\PhysicsHandler.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\Utils.h">
+      <Filter>Header Files\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Physics\AbstractShapeBody.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\VectorArrow.h">
+      <Filter>Header Files\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\PhysicsDebugComponent.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\Physics\AbstractBody.h">
+      <Filter>Header Files\Engine\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\TestEnvironment.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\Physics\AbstractShapeBody.h">
+      <Filter>Header Files\Engine\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Physics\IntersectionDetails.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\Physics\IntersectionDetails.h">
+      <Filter>Header Files\Engine\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\UserInput.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\Physics\PhysicalComponent.h">
+      <Filter>Header Files\Engine\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\UserPullComponent.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\Physics\PhysicsHandler.h">
+      <Filter>Header Files\Engine\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\BodyPullHandler.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\Physics\ShapeBody.h">
+      <Filter>Header Files\Engine\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\FontManager.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Pong\AiPlatformController.h">
+      <Filter>Header Files\Pong</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Delegates.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Pong\PongBall.h">
+      <Filter>Header Files\Pong</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\EngineInterface.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Pong\PongEnvironment.h">
+      <Filter>Header Files\Pong</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\FpsNode.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Pong\PongPlatform.h">
+      <Filter>Header Files\Pong</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\VectorArrow.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Pong\UserPlatformContoller.h">
+      <Filter>Header Files\Pong</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Physics\ShapeBody.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Pong\PlatformControllerBase.h">
+      <Filter>Header Files\Pong</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\PongEnvironment.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Test\TestEnvironment.h">
+      <Filter>Header Files\Test</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\CollisionComponent.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\Physics\PhysicsDebugComponent.h">
+      <Filter>Header Files\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\OverlappingComponent.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\Physics\UserPullComponent.h">
+      <Filter>Header Files\Engine\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\UserPlatformContoller.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\Physics\BodyPullHandler.h">
+      <Filter>Header Files\Engine\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\AiPlatformController.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\Physics\CollisionComponent.h">
+      <Filter>Header Files\Engine\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\PlatformControllerBase.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\Engine\Physics\OverlappingComponent.h">
+      <Filter>Header Files\Engine\Physics</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
