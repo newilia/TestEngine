@@ -30,6 +30,6 @@ void EngineInterface::onStartFrame() {
 	mFrameClock.restart();
 }
 
-void EngineInterface::createMainWindow(sf::VideoMode mode, const sf::String& title, sf::Uint32 style, const sf::ContextSettings& settings) {
-	mMainWindow = make_shared<sf::RenderWindow>(mode, title, style, settings);
+void EngineInterface::createMainWindow(sf::VideoMode mode, const sf::String& title, std::uint32_t /*style*/) {
+	mMainWindow = std::make_shared<sf::RenderWindow>(mode, title, sf::State::Windowed);
 }

@@ -25,7 +25,7 @@ void PongPlatform::setShapeDimensions(sf::Vector2f size, float curvature, float 
 		sf::Vector2f point(x * size.x * 0.5f, y * size.y);
 		shape->setPoint(i, point);
 	}
-	shape->setRotation(rotationDeg);
+	shape->setRotation(sf::degrees(rotationDeg));
 }
 
 void PongPlatform::update(const sf::Time& dt) {

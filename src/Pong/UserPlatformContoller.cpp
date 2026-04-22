@@ -9,13 +9,13 @@ void UserPlatformController::init() {
 }
 
 void UserPlatformController::handleEvent(const sf::Event& event) {
-	if (event.type == sf::Event::MouseMoved) {
-		float mouseYShift = event.mouseMove.y - mDefaultPos.y;
+	if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
+		float mouseYShift = static_cast<float>(moved->position.y) - mDefaultPos.y;
 		float platformYShift = 0.f;
-		for (int i = 0; i < abs(mouseYShift); ++i) {
+		for (int i = 0; i < std::abs(mouseYShift); ++i) {
 			platformYShift += powf(mVerticalMoveFactor, static_cast<float>(i));
 		}
-		mTargetPos.x = static_cast<float>(event.mouseMove.x);
+		mTargetPos.x = static_cast<float>(moved->position.x);
 		mTargetPos.y = mDefaultPos.y + copysignf(platformYShift, mouseYShift);
 	}
 }

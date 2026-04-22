@@ -9,5 +9,5 @@ const sf::Font* FontManager::getDefaultFont() const {
 }
 
 void FontManager::initDefaultFont() {
-	mDefaultFont.loadFromFile("resources/fonts/calibri.ttf");
+	mDefaultFont = sf::Font{"resources/fonts/calibri.ttf"};
 }

@@ -6,6 +6,8 @@
 #include "Physics/PhysicsHandler.h"
 #include "UserInput.h"
 
+#include <cstdint>
+
 class EngineInterface : public Singleton<EngineInterface> {
 public:
 	EngineInterface();
@@ -25,7 +27,7 @@ public:
 	sf::Time getSimDt() const;
 	sf::Time getFrameDt(bool ignoreFixed = false) const;
 	void onStartFrame();
-	void createMainWindow(sf::VideoMode mode, const sf::String& title, sf::Uint32 style = sf::Style::Default, const sf::ContextSettings& settings = sf::ContextSettings());
+	void createMainWindow(sf::VideoMode mode, const sf::String& title, std::uint32_t style = 0);
 	sf::RenderWindow* getMainWindow() const { return mMainWindow.get(); }
 	void setFixedFrameTime(const sf::Time& time) { mFixedFrameTime = time; }
 	void resetFixedFrameTime() { mFixedFrameTime.reset(); }

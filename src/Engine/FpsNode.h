@@ -1,5 +1,6 @@
 #pragma once
 #include "SceneNode.h"
+#include <optional>
 
 class FpsNode : public SceneNode {
 public:
@@ -9,5 +10,5 @@ public:
 	void drawSelf(sf::RenderTarget& target, sf::RenderStates states) const override;
 private:
 	float mFps = 0.f;
-	sf::Text mText;
+	std::optional<sf::Text> mText;
 };

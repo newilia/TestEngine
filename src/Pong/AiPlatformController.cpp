@@ -33,12 +33,12 @@ void AiPlatformController::react() {
 void AiPlatformController::movePlatformTowardsBall() {
 	float distanceToBall = 0.f;
 	if (auto ball = mBall.lock()) {
-		distanceToBall = abs(mCurExState.ballPos.y - mPlatform->getShape()->getPosition().y) - ball->getShape()->getRadius() - mPlatform->getBbox().height;
+		distanceToBall = std::abs(mCurExState.ballPos.y - mPlatform->getShape()->getPosition().y) - ball->getShape()->getRadius() - mPlatform->getBbox().size.y;
 	}
 
 	float steadyRatio = 0.f;
 	if (auto opponentPlatform = mOpponentPlatform.lock()) {
-		float distanceBetweenPlatforms = abs(mPlatform->getShape()->getPosition().y - opponentPlatform->getShape()->getPosition().y);
+		float distanceBetweenPlatforms = std::abs(mPlatform->getShape()->getPosition().y - opponentPlatform->getShape()->getPosition().y);
 		//this value affects on how much AI will move platform to center as the ball is far away from him
 		steadyRatio = 0.2f * std::clamp(distanceToBall / distanceBetweenPlatforms, 0.f, 1.f);
 	}
