@@ -13,7 +13,7 @@
 
 void TestEnvironment::setup() {
 	auto ei = EI();
-	ei->createMainWindow(sf::VideoMode(800u, 600u), "Test scene", sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize);
+	ei->createMainWindow(sf::VideoMode({800u, 600u}), "Test scene", sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize);
 	ei->getPhysicsHandler()->setSubstepCount(2);
 	ei->getPhysicsHandler()->setGravity({ 0, 1000 });
 	ei->setScene(buildScene());
@@ -79,7 +79,7 @@ std::shared_ptr<Scene> TestEnvironment::buildScene() {
 		auto maxY = static_cast<int>(screenSize.y - wallVisibleWidth - radius);
 		auto x = static_cast<float>(minX + rand() % (maxX - minX));
 		auto y = static_cast<float>(minY + rand() % (maxY - minY));
-		body->getShape()->setPosition(x, y);
+		body->getShape()->setPosition(sf::Vector2f{x, y});
 		body->getPhysicalComponent()->mMass = 3.14f * radius * radius;
 		body->getPhysicalComponent()->mRestitution = bodiesRestitution;
 		body->requireComponent<CollisionComponent>()->mCollisionGroups.set(0, true);
@@ -96,50 +96,44 @@ void TestEnvironment::configureInput() {
 	auto scene = ei->getScene();
 
 	userInput->attachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
-		if (event.type == sf::Event::EventType::KeyPressed && event.key.code == sf::Keyboard::R) {
-			ei->setScene(buildScene());
+		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
+			if (key->code == sf::Keyboard::Key::R) {
+				ei->setScene(buildScene());
+			}
 		}
 	}));
 
 	userInput->attachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
-		switch (event.type) {
-		case sf::Event::MouseButtonPressed: {
-			sf::Vector2f mousePos(static_cast<float>(event.mouseButton.x), static_cast<float>(event.mouseButton.y));
-			if (event.mouseButton.button == sf::Mouse::Button::Left) {
+		if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
+			sf::Vector2f mousePos(static_cast<float>(pressed->position.x), static_cast<float>(pressed->position.y));
+			if (pressed->button == sf::Mouse::Button::Left) {
 				ei->getBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::FORCE);
 			}
-			else if (event.mouseButton.button == sf::Mouse::Button::Right) {
+			else if (pressed->button == sf::Mouse::Button::Right) {
 				ei->getBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::POSITION);
 			}
-			else if (event.mouseButton.button == sf::Mouse::Button::Middle) {
+			else if (pressed->button == sf::Mouse::Button::Middle) {
 				ei->getBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::VELOCITY);
 			}
-			break;
-		}
-
-		case sf::Event::MouseButtonReleased:
+		} else if (event.is<sf::Event::MouseButtonReleased>()) {
 			ei->getBodyPullHandler()->stopPull();
-			break;
-
-		case sf::Event::MouseMoved:
-			ei->getBodyPullHandler()->setPullDestination(sf::Vector2f(static_cast<float>(event.mouseMove.x), 
-				static_cast<float>(event.mouseMove.y)));
-			break;
-		default:
-			break;
+		} else if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
+			ei->getBodyPullHandler()->setPullDestination(sf::Vector2f(
+				static_cast<float>(moved->position.x),
+				static_cast<float>(moved->position.y)));
 		}
 	}));
 
 	userInput->attachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
-		if (event.type == sf::Event::KeyPressed) {
-			switch (event.key.code) {
-			case sf::Keyboard::Equal:
+		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
+			switch (key->code) {
+			case sf::Keyboard::Key::Equal:
 				ei->setSimSpeedMultiplier(ei->getSimSpeedMultiplier() * 2);
 				break;
-			case sf::Keyboard::Hyphen:
+			case sf::Keyboard::Key::Hyphen:
 				ei->setSimSpeedMultiplier(ei->getSimSpeedMultiplier() * 0.5f);
 				break;
-			case sf::Keyboard::Num0:
+			case sf::Keyboard::Key::Num0:
 				ei->setSimPaused(!ei->isSimPaused());
 				break;
 			default: break;
@@ -148,20 +142,24 @@ void TestEnvironment::configureInput() {
 	}));
 
 	userInput->attachEventHandler(createDelegate<sf::Event>([](sf::Event event) {
-		if (event.type == sf::Event::Closed) {
+		if (event.is<sf::Event::Closed>()) {
 			std::exit(EXIT_SUCCESS);
 		}
 	}));
 
 	userInput->attachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
-		if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::G) {
-			ei->getPhysicsHandler()->setGravityEnabled(!ei->getPhysicsHandler()->isGravityEnabled());
+		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
+			if (key->code == sf::Keyboard::Key::G) {
+				ei->getPhysicsHandler()->setGravityEnabled(!ei->getPhysicsHandler()->isGravityEnabled());
+			}
 		}
 	}));
 
 	userInput->attachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
-		if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::D) {
-			ei->setDebugEnabled(!ei->isDebugEnabled());
+		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
+			if (key->code == sf::Keyboard::Key::D) {
+				ei->setDebugEnabled(!ei->isDebugEnabled());
+			}
 		}
 	}));
 }

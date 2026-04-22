@@ -34,9 +34,9 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
         ei->onStartFrame();
         window->clear();
 
-        sf::Event event;
-        while (window->pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
+        while (auto ev = window->pollEvent()) {
+            sf::Event event = *ev;
+            if (event.is<sf::Event::Closed>()) {
                 return EXIT_SUCCESS;
             }
             ei->getUserInput()->handleEvent(event);

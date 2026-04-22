@@ -66,8 +66,8 @@ private:
 
 
 template <class... TArgs>
-std::unique_ptr<IDelegate<TArgs...>> createDelegate(auto func) {
-	return std::make_unique<FunctionDelegate<TArgs...>>(func);
+std::unique_ptr<IDelegate<TArgs...>> createDelegate(std::function<void(TArgs...)> func) {
+	return std::make_unique<FunctionDelegate<TArgs...>>(std::move(func));
 }
 
 template <class TOwner, class... TArgs>

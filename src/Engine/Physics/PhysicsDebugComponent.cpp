@@ -19,10 +19,8 @@ void PhysicsDebugComponent::draw(sf::RenderTarget& target, sf::RenderStates stat
 		return;
 	}
 
-	sf::Text text;
 	auto font = EI()->getFontManager()->getDefaultFont();
-	text.setFont(*font);
-	text.setCharacterSize(15);
+	sf::Text text(*font, "", 15);
 	text.setFillColor(sf::Color::White);
 	text.setOutlineColor(sf::Color::Black);
 	text.setOutlineThickness(1.f);

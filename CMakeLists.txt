@@ -17,7 +17,7 @@ if(NOT ENGINE_SOURCES)
     message(FATAL_ERROR "No source files found in src/. Check project structure.")
 endif()
 
-add_executable(TestEngine ${ENGINE_SOURCES})
+add_executable(TestEngine WIN32 ${ENGINE_SOURCES})
 
 target_include_directories(TestEngine PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src

@@ -138,7 +138,7 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 bool PhysicsHandler::checkBboxIntersection(const AbstractBody* body1, const AbstractBody* body2) {
 	auto&& bb1 = body1->getBbox();
 	auto&& bb2 = body2->getBbox();
-	return bb1.intersects(bb2);
+	return bb1.findIntersection(bb2).has_value();
 }
 
 std::optional<IntersectionDetails> PhysicsHandler::detectIntersection(const AbstractBody* body1, const AbstractBody* body2) {

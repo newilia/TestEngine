@@ -214,14 +214,14 @@ void PongEnvironment::configureGlobalInput() {
 	auto scene = ei->getScene();
 	
 	userInput->attachEventHandler(createDelegate<sf::Event>([this, ei](sf::Event event) {
-		if (event.type == sf::Event::EventType::KeyPressed) {
-			if (event.key.code == sf::Keyboard::R) {
+		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
+			if (key->code == sf::Keyboard::Key::R) {
 				ei->setScene(buildScene());
 			}
-			else if (event.key.code == sf::Keyboard::D) {
+			else if (key->code == sf::Keyboard::Key::D) {
 				ei->setDebugEnabled(!ei->isDebugEnabled());
 			}
-			else if (event.key.code == sf::Keyboard::Escape) {
+			else if (key->code == sf::Keyboard::Key::Escape) {
 				std::exit(EXIT_SUCCESS);
 			}
 		}
