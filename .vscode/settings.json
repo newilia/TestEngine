@@ -1,0 +1,13 @@
+{
+	"editor.formatOnSave": true,
+	"editor.insertSpaces": false,
+	"editor.detectIndentation": false,
+	"[cpp]": {
+		"editor.insertSpaces": false,
+		"editor.defaultFormatter": "ms-vscode.cpptools"
+	},
+	"[c]": {
+		"editor.insertSpaces": false,
+		"editor.defaultFormatter": "ms-vscode.cpptools"
+	}
+}
