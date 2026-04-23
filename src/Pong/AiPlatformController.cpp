@@ -17,7 +17,7 @@ void AiPlatformController::setAggressivenessParams(float aggression, const sf::T
 
 void AiPlatformController::observeState() {
 	if (auto ball = _ball.lock()) {
-		ExternalState state = {.ballPos = ball->getShape()->getPosition()};
+		ExternalState state = {.ballPos = ball->GetShape()->getPosition()};
 		_externalStateTimers.push({sf::Clock(), state});
 	}
 }
@@ -29,14 +29,14 @@ void AiPlatformController::react() {
 void AiPlatformController::movePlatformTowardsBall() {
 	float distanceToBall = 0.f;
 	if (auto ball = _ball.lock()) {
-		distanceToBall = std::abs(_curExState.ballPos.y - _platform->getShape()->getPosition().y) -
-		                 ball->getShape()->getRadius() - _platform->getBbox().size.y;
+		distanceToBall = std::abs(_curExState.ballPos.y - _platform->GetShape()->getPosition().y) -
+		                 ball->GetShape()->getRadius() - _platform->getBbox().size.y;
 	}
 
 	float steadyRatio = 0.f;
 	if (auto opponentPlatform = _opponentPlatform.lock()) {
 		float distanceBetweenPlatforms =
-		    std::abs(_platform->getShape()->getPosition().y - opponentPlatform->getShape()->getPosition().y);
+		    std::abs(_platform->GetShape()->getPosition().y - opponentPlatform->GetShape()->getPosition().y);
 		// this value affects on how much AI will move platform to center as the ball is far away from him
 		steadyRatio = 0.2f * std::clamp(distanceToBall / distanceBetweenPlatforms, 0.f, 1.f);
 	}
@@ -44,7 +44,7 @@ void AiPlatformController::movePlatformTowardsBall() {
 	_targetPos.x = _curExState.ballPos.x * (1.f - steadyRatio) + _defaultPos.x * steadyRatio;
 }
 
-void AiPlatformController::update(const sf::Time& dt) {
+void AiPlatformController::Update(const sf::Time& dt) {
 	if (_observeTimer.getElapsedTime() > _observePeriod) {
 		_observeTimer.restart();
 		observeState();
@@ -68,5 +68,5 @@ void AiPlatformController::update(const sf::Time& dt) {
 		}
 	}
 
-	UserPlatformController::update(dt);
+	UserPlatformController::Update(dt);
 }

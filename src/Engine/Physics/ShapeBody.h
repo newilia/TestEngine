@@ -12,10 +12,10 @@ public:
 
 	~ShapeBody() override { delete _shape; }
 
-	TShape* getShape() const { return dynamic_cast<TShape*>(_shape); }
+	TShape* GetShape() const { return dynamic_cast<TShape*>(_shape); }
 
-	void init() override {
-		AbstractBody::init();
+	void Init() override {
+		AbstractBody::Init();
 		auto centerOfMass = utils::findCenterOfMass(_shape);
 		_shape->setOrigin(centerOfMass);
 	}

@@ -11,37 +11,37 @@ class PhysicsHandler : public Updateable
 {
 public:
 	virtual ~PhysicsHandler() = default;
-	void update(const sf::Time& dt) override;
-	void registerBody(shared_ptr<AbstractBody> body);
-	void unregisterBody(AbstractBody* body);
+	void Update(const sf::Time& dt) override;
+	void RegisterBody(shared_ptr<AbstractBody> body);
+	void UnregisterBody(AbstractBody* body);
 
-	const auto& getAllBodies() { return _bodies; }
+	const auto& GetAllBodies() { return _bodies; }
 
-	void setSubstepCount(int count) { _subStepsCount = count; }
+	void SetSubstepCount(int count) { _subStepsCount = count; }
 
-	void setGravity(const sf::Vector2f v) { _gravity = v; }
+	void SetGravity(const sf::Vector2f v) { _gravity = v; }
 
-	sf::Vector2f getGravity() const { return _gravity; }
+	sf::Vector2f GetGravity() const { return _gravity; }
 
-	void setGravityEnabled(bool enabled) { _isGravityEnabled = enabled; }
+	void SetGravityEnabled(bool enabled) { _isGravityEnabled = enabled; }
 
-	bool isGravityEnabled() const { return _isGravityEnabled; }
+	bool IsGravityEnabled() const { return _isGravityEnabled; }
 
 private:
-	static bool checkBboxIntersection(const AbstractBody* body1, const AbstractBody* body2);
-	static std::optional<IntersectionDetails> detectIntersection(const AbstractBody* body1, const AbstractBody* body2);
-	static std::optional<IntersectionDetails> detectPolygonPolygonIntersection(const AbstractBody* body1,
+	static bool CheckBboxIntersection(const AbstractBody* body1, const AbstractBody* body2);
+	static std::optional<IntersectionDetails> DetectIntersection(const AbstractBody* body1, const AbstractBody* body2);
+	static std::optional<IntersectionDetails> DetectPolygonPolygonIntersection(const AbstractBody* body1,
 	                                                                           const AbstractBody* body2);
-	static std::optional<IntersectionDetails> detectCirclePolygonIntersection(const CircleBody* circle,
+	static std::optional<IntersectionDetails> DetectCirclePolygonIntersection(const CircleBody* circle,
 	                                                                          const AbstractBody* body);
-	static std::optional<IntersectionDetails> detectCircleCircleIntersection(const CircleBody* circle1,
+	static std::optional<IntersectionDetails> DetectCircleCircleIntersection(const CircleBody* circle1,
 	                                                                         const CircleBody* circle2);
-	static std::optional<SegmentIntersectionPoints> findSegmentsIntersectionPoint(const Segment& E, const Segment& F);
+	static std::optional<SegmentIntersectionPoints> FindSegmentsIntersectionPoint(const Segment& e, const Segment& f);
 	static std::optional<SegmentIntersectionPoints>
-	findSegmentCircleIntersectionPoint(const Segment& seg, const sf::Vector2f& circleCenter, float radius);
-	static void resolveCollision(const IntersectionDetails& collision);
+	FindSegmentCircleIntersectionPoint(const Segment& seg, const sf::Vector2f& circleCenter, float radius);
+	static void ResolveCollision(const IntersectionDetails& collision);
 
-	void updateSubStep(const sf::Time& dt);
+	void UpdateSubStep(const sf::Time& dt);
 
 	std::list<std::weak_ptr<AbstractBody>> _bodies;
 	int _subStepsCount = 1;

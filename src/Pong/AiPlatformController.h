@@ -12,7 +12,7 @@ class AiPlatformController : public UserPlatformController
 {
 public:
 	explicit AiPlatformController(PongPlatform* platform);
-	void update(const sf::Time& dt) override;
+	void Update(const sf::Time& dt) override;
 
 	void setReactionDelay(const sf::Time& delay) { _reactionDelay = delay; }
 

@@ -55,7 +55,7 @@ std::vector<shared_ptr<SceneNode>> SceneNode::findChildren(const std::string& id
 }
 
 void SceneNode::updateRec(const sf::Time& dt) {
-	update(dt);
+	Update(dt);
 	for (auto& child : _children) {
 		child->updateRec(dt);
 	}
@@ -63,12 +63,12 @@ void SceneNode::updateRec(const sf::Time& dt) {
 
 void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	// states.transform *= getTransform();
-	drawSelf(target, states);
+	DrawSelf(target, states);
 	for (auto& child : _children) {
 		child->draw(target, states);
 	}
 
-	if (EngineContext::instance().isDebugEnabled()) {
+	if (EngineContext::Instance().IsDebugEnabled()) {
 		if (auto debugComponent = findComponent<PhysicsDebugComponent>()) {
 			debugComponent->draw(target, states);
 		}

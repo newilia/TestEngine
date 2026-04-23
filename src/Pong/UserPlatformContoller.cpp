@@ -4,7 +4,7 @@
 #include "PongPlatform.h"
 #include "SFML/Window/Event.hpp"
 
-void UserPlatformController::init() {
+void UserPlatformController::Init() {
 	_targetPos = _defaultPos = _platform->getPosGlobal();
 }
 
@@ -20,8 +20,8 @@ void UserPlatformController::handleEvent(const sf::Event& event) {
 	}
 }
 
-void UserPlatformController::update(const sf::Time& dt) {
-	auto vel = (_targetPos - _platform->getShape()->getPosition()) * _speedFactor;
+void UserPlatformController::Update(const sf::Time& dt) {
+	auto vel = (_targetPos - _platform->GetShape()->getPosition()) * _speedFactor;
 	vel.x = std::clamp(vel.x, -_velLimit.x, _velLimit.x);
 	vel.y = std::clamp(vel.y, -_velLimit.y, _velLimit.y);
 	_platform->getPhysicalComponent()->_velocity = vel;

@@ -8,7 +8,7 @@
 #include <fmt/format.h>
 
 void PhysicsDebugComponent::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-	if (!EngineContext::instance().isDebugEnabled()) {
+	if (!EngineContext::Instance().IsDebugEnabled()) {
 		return;
 	}
 	auto body = dynamic_cast<AbstractBody*>(_holder);
@@ -20,7 +20,7 @@ void PhysicsDebugComponent::draw(sf::RenderTarget& target, sf::RenderStates stat
 		return;
 	}
 
-	auto font = EngineContext::instance().getFontManager()->getDefaultFont();
+	auto font = EngineContext::Instance().GetFontManager()->getDefaultFont();
 	sf::Text text(*font, "", 15);
 	text.setFillColor(sf::Color::White);
 	text.setOutlineColor(sf::Color::Black);

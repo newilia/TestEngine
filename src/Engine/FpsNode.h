@@ -8,8 +8,8 @@ class FpsNode : public SceneNode
 public:
 	FpsNode();
 	~FpsNode() override = default;
-	void update(const sf::Time& dt) override;
-	void drawSelf(sf::RenderTarget& target, sf::RenderStates states) const override;
+	void Update(const sf::Time& dt) override;
+	void DrawSelf(sf::RenderTarget& target, sf::RenderStates states) const override;
 
 private:
 	float _fps = 0.f;

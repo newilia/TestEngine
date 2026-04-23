@@ -14,14 +14,14 @@ class SceneNode : public enable_shared_from_this<SceneNode>,
                   public ComponentHolderBase
 {
 public:
-	void update(const sf::Time& dt) override {}
+	void Update(const sf::Time& dt) override {}
 
 	void updateRec(const sf::Time& dt);
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
-	virtual void drawSelf(sf::RenderTarget& target, sf::RenderStates states) const {}
+	virtual void DrawSelf(sf::RenderTarget& target, sf::RenderStates states) const {}
 
-	virtual void init() {}
+	virtual void Init() {}
 
 	void removeFromParent();
 

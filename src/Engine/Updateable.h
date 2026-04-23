@@ -6,5 +6,5 @@ class Updateable
 public:
 	virtual ~Updateable() {}
 
-	virtual void update(const sf::Time& dt) = 0;
+	virtual void Update(const sf::Time& dt) = 0;
 };

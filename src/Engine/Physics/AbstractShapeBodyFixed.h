@@ -30,6 +30,6 @@ protected:
 	sf::Shape* _shape = nullptr;
 };
 
-inline void AbstractShapeBody::drawSelf(sf::RenderTarget& target, sf::RenderStates states) const {
+inline void AbstractShapeBody::DrawSelf(sf::RenderTarget& target, sf::RenderStates states) const {
 	target.draw(*_shape, states);
 }

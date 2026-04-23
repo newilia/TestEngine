@@ -4,19 +4,19 @@ template <typename T>
 class Singleton
 {
 public:
-	static T* getInstance() {
+	static T* GetInstance() {
 		if (!_instance) {
 			_instance = new T();
 		}
 		return _instance;
 	}
 
-	static void destroy() {
+	static void Destroy() {
 		delete _instance;
 		_instance = nullptr;
 	}
 
-	static bool isAlive() { return _instance != nullptr; }
+	static bool IsAlive() { return _instance != nullptr; }
 
 protected:
 	Singleton() = default;

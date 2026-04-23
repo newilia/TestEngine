@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 
+# MSVC: honor MSVC_DEBUG_INFORMATION_FORMAT (Embedded /Z7 vs ProgramDatabase) in generated flags.
+if(POLICY CMP0091)
+	cmake_policy(SET CMP0091 NEW)
+endif()
+
 project(TestEngine LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -18,6 +23,14 @@ if(NOT ENGINE_SOURCES)
 endif()
 
 add_executable(TestEngine WIN32 ${ENGINE_SOURCES})
+
+if(MSVC)
+	target_compile_options(TestEngine PRIVATE /FS)
+	# MSVC: include_alias maps AbstractShapeBody.h → fixed header (decl/inline DrawSelf match); macro maps legacy getAllBodies.
+	target_compile_options(TestEngine PRIVATE "/FI${CMAKE_CURRENT_SOURCE_DIR}/src/Engine/TestEngineIncludeHook.h")
+	# Debug: /Z7 embeds symbols in .obj and avoids C1041 (parallel cl.exe vs one vc*.pdb) when /FS alone is not enough.
+	target_compile_options(TestEngine PRIVATE $<$<CONFIG:Debug>:/Z7>)
+endif()
 
 target_include_directories(TestEngine PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -46,7 +59,11 @@ target_link_libraries(TestEngine PRIVATE
 set_property(DIRECTORY "${CMAKE_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT TestEngine)
 
 # При запуске/отладке из Visual Studio (и CMake в VS Code) CWD = корень репозитория
-set_target_properties(TestEngine PROPERTIES
-    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+set_target_properties(
+	TestEngine
+	PROPERTIES
+		VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+		MSVC_DEBUG_INFORMATION_FORMAT
+		"$<$<CONFIG:Debug>:Embedded>$<$<NOT:$<CONFIG:Debug>>:ProgramDatabase>"
 )
 

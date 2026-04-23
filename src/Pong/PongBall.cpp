@@ -2,8 +2,8 @@
 
 #include "Engine/Utils.h"
 
-void PongBall::update(const sf::Time& dt) {
-	ShapeBody::update(dt);
+void PongBall::Update(const sf::Time& dt) {
+	ShapeBody::Update(dt);
 
 	auto pc = getPhysicalComponent();
 	if (auto speedExcess = utils::length(pc->_velocity) / _targetSpeed; speedExcess > 1.f) {

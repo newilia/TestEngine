@@ -22,20 +22,20 @@ static weak_ptr<PongPlatform> sUserPlatform;
 static weak_ptr<PongBall> sBall;
 
 static sf::Vector2f getScreenSize() {
-	return sf::Vector2f(EngineContext::instance().getMainWindow()->getSize());
+	return sf::Vector2f(EngineContext::Instance().GetMainWindow()->getSize());
 }
 
 void PongEnvironment::setup() {
-	EngineContext& engine = EngineContext::instance();
+	EngineContext& engine = EngineContext::Instance();
 	auto videoMode = sf::VideoMode::getFullscreenModes()[0];
 	// sf::VideoMode videoMode(800, 600);
-	engine.createMainWindow(videoMode, "Pong", sf::Style::None);
-	engine.getMainWindow()->setMouseCursorVisible(false);
-	engine.getPhysicsHandler()->setSubstepCount(2);
-	engine.getPhysicsHandler()->setGravity({0, 1000});
-	engine.setDebugEnabled(false);
-	// engine.getMainWindow()->setFramerateLimit(40.f);
-	engine.setScene(buildScene());
+	engine.CreateMainWindow(videoMode, "Pong", sf::Style::None);
+	engine.GetMainWindow()->setMouseCursorVisible(false);
+	engine.GetPhysicsHandler()->SetSubstepCount(2);
+	engine.GetPhysicsHandler()->SetGravity({0, 1000});
+	engine.SetDebugEnabled(false);
+	// engine.GetMainWindow()->setFramerateLimit(40.f);
+	engine.SetScene(buildScene());
 	configureGlobalInput();
 }
 
@@ -50,7 +50,7 @@ void PongEnvironment::addBall(Scene* scene) {
 	auto ball = make_shared<PongBall>();
 	ball->setMaxSpeed(400.f);
 	ball->setSpeedDampingFactor(speedDampingFactor);
-	auto shape = ball->getShape();
+	auto shape = ball->GetShape();
 	ball->setName("Ball");
 
 	shape->setRadius(radius);
@@ -72,7 +72,7 @@ void PongEnvironment::addBall(Scene* scene) {
 	ball->requireComponent<CollisionComponent>()->_collisionGroups.set(0, true);
 	ball->requireComponent<CollisionComponent>()->_collisionGroups.set(1, true);
 	ball->requireComponent<OverlappingComponent>()->_overlappingGroups.set(0, true);
-	ball->init();
+	ball->Init();
 	scene->addChild(ball);
 
 	sBall = ball;
@@ -85,8 +85,8 @@ shared_ptr<PongPlatform> PongEnvironment::createDefaultPlatform(sf::Vector2f siz
 	platform->setName("Platform");
 	platform->setShapeDimensions(size, 0.9f, rotationDeg);
 	// todo platform->setMoveArea(...);
-	platform->getShape()->setPosition(pos);
-	platform->getShape()->setFillColor(color);
+	platform->GetShape()->setPosition(pos);
+	platform->GetShape()->setFillColor(color);
 
 	platform->requireComponent<CollisionComponent>()->_collisionGroups.set(1, true);
 
@@ -113,12 +113,12 @@ void PongEnvironment::addWalls(Scene* scene) {
 	for (int i = 0; i < 4; ++i) {
 		auto wall = make_shared<RectangleBody>();
 		wall->setName(wallNames[i]);
-		wall->getShape()->setPosition(wallPositions[i]);
-		wall->getShape()->setSize(wallSizes[i]);
+		wall->GetShape()->setPosition(wallPositions[i]);
+		wall->GetShape()->setSize(wallSizes[i]);
 		wall->getPhysicalComponent()->setImmovable();
 		wall->getPhysicalComponent()->_restitution = bodiesRestitution;
 		if (i < 2) {
-			wall->getShape()->setFillColor(sf::Color(200, 200, 200, 50));
+			wall->GetShape()->setFillColor(sf::Color(200, 200, 200, 50));
 			wall->requireComponent<OverlappingComponent>()->_overlappingGroups.set(0, true);
 			auto loseCallback = createDelegate<const IntersectionDetails&>(
 			    [this, calledOnce = false](const IntersectionDetails&) mutable {
@@ -130,10 +130,10 @@ void PongEnvironment::addWalls(Scene* scene) {
 			wall->findComponent<OverlappingComponent>()->_overlappingCallbacks.push_back(std::move(loseCallback));
 		}
 		else {
-			wall->getShape()->setFillColor(sf::Color(200, 200, 200, 255));
+			wall->GetShape()->setFillColor(sf::Color(200, 200, 200, 255));
 			wall->requireComponent<CollisionComponent>()->_collisionGroups.set(0, true);
 		}
-		wall->init();
+		wall->Init();
 		scene->addChild(wall);
 	}
 }
@@ -157,10 +157,10 @@ void PongEnvironment::addUserPlatform(Scene* scene) {
 	controller->setVelLimit(maxSpeed);
 	controller->setVelocityFactor(velFactor);
 
-	platform->init();
+	platform->Init();
 	scene->addChild(platform);
 
-	EngineContext::instance().getUserInput()->attachEventHandler(
+	EngineContext::Instance().GetUserInput()->attachEventHandler(
 	    createDelegate<PongPlatform, sf::Event>(platform, [platform = std::weak_ptr(platform)](sf::Event event) {
 		    if (auto controller = dynamic_pointer_cast<UserPlatformController>(platform.lock()->getController())) {
 			    controller->handleEvent(event);
@@ -193,7 +193,7 @@ void PongEnvironment::addAiPlatform(Scene* scene) {
 	controller->setObservePeriod(sf::milliseconds(10));
 	controller->setReactionDelay(sf::milliseconds(100));
 
-	platform->init();
+	platform->Init();
 	scene->addChild(platform);
 }
 
@@ -209,17 +209,17 @@ std::shared_ptr<Scene> PongEnvironment::buildScene() {
 }
 
 void PongEnvironment::configureGlobalInput() {
-	auto ei = &EngineContext::instance();
-	auto userInput = ei->getUserInput();
-	auto scene = ei->getScene();
+	auto ei = &EngineContext::Instance();
+	auto userInput = ei->GetUserInput();
+	auto scene = ei->GetScene();
 
 	userInput->attachEventHandler(createDelegate<sf::Event>([this, ei](sf::Event event) {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			if (key->code == sf::Keyboard::Key::R) {
-				ei->setScene(buildScene());
+				ei->SetScene(buildScene());
 			}
 			else if (key->code == sf::Keyboard::Key::D) {
-				ei->setDebugEnabled(!ei->isDebugEnabled());
+				ei->SetDebugEnabled(!ei->IsDebugEnabled());
 			}
 			else if (key->code == sf::Keyboard::Key::Escape) {
 				std::exit(EXIT_SUCCESS);
@@ -229,5 +229,5 @@ void PongEnvironment::configureGlobalInput() {
 }
 
 void PongEnvironment::onLose() {
-	EngineContext::instance().setScene(buildScene());
+	EngineContext::Instance().SetScene(buildScene());
 }

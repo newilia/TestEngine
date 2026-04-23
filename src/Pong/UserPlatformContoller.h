@@ -14,7 +14,7 @@ class UserPlatformController : public PlatformControllerBase
 {
 public:
 	UserPlatformController(PongPlatform* platform) : PlatformControllerBase(platform) {};
-	void init() override;
+	void Init() override;
 	void handleEvent(const sf::Event& event);
 
 	void setVerticalFreedomFactor(float val) { _verticalMoveFactor = val; }
@@ -23,7 +23,7 @@ public:
 
 	void setVelLimit(sf::Vector2f val) { _velLimit = val; }
 
-	void update(const sf::Time& dt) override;
+	void Update(const sf::Time& dt) override;
 
 protected:
 	sf::Vector2f _defaultPos;
