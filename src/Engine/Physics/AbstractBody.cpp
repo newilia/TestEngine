@@ -4,7 +4,7 @@
 #include "PhysicsHandler.h"
 
 AbstractBody::AbstractBody() {
-	requireComponent<PhysicalComponent>();
+	RequireComponent<PhysicalComponent>();
 }
 
 AbstractBody::~AbstractBody() {

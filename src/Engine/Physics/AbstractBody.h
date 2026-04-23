@@ -16,5 +16,5 @@ public:
 	virtual void SetPosGlobal(sf::Vector2f pos) = 0;
 	void Init() override;
 
-	shared_ptr<PhysicalComponent> GetPhysicalComponent() const { return findComponent<PhysicalComponent>(); }
+	shared_ptr<PhysicalComponent> GetPhysicalComponent() const { return FindComponent<PhysicalComponent>(); }
 };

@@ -47,7 +47,7 @@ std::shared_ptr<Scene> TestEnvironment::buildScene() {
 		body->GetShape()->setOutlineThickness(1.f);
 		body->GetPhysicalComponent()->setImmovable();
 		body->GetPhysicalComponent()->_restitution = bodiesRestitution;
-		body->requireComponent<CollisionComponent>()->_collisionGroups.set(0, true);
+		body->RequireComponent<CollisionComponent>()->_collisionGroups.set(0, true);
 		body->Init();
 		scene->addChild(body);
 	}
@@ -78,7 +78,7 @@ std::shared_ptr<Scene> TestEnvironment::buildScene() {
 		body->GetShape()->setPosition(sf::Vector2f{x, y});
 		body->GetPhysicalComponent()->_mass = 3.14f * radius * radius;
 		body->GetPhysicalComponent()->_restitution = bodiesRestitution;
-		body->requireComponent<CollisionComponent>()->_collisionGroups.set(0, true);
+		body->RequireComponent<CollisionComponent>()->_collisionGroups.set(0, true);
 		body->Init();
 		scene->addChild(body);
 	}
