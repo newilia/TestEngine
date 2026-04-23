@@ -6,7 +6,7 @@
 #include "Engine/VectorArrow.h"
 
 void BodyPullHandler::startPull(sf::Vector2f mousePos, UserPullComponent::PullMode pullMode) {
-	auto bodies = EI()->getPhysicsHandler()->getAllBodies();
+	auto bodies = EngineContext::instance().getPhysicsHandler()->getAllBodies();
 	for (auto wBody : bodies) {
 		auto body = wBody.lock();
 		if (!body) {

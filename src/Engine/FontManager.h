@@ -8,5 +8,7 @@ public:
 
 private:
 	void initDefaultFont();
-	sf::Font mDefaultFont;
+
+private:
+	sf::Font* mDefaultFont = nullptr;
 };

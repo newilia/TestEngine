@@ -68,7 +68,7 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 		child->draw(target, states);
 	}
 
-	if (EI()->isDebugEnabled()) {
+	if (EngineContext::instance().isDebugEnabled()) {
 		if (auto debugComponent = findComponent<PhysicsDebugComponent>()) {
 			debugComponent->draw(target, states);
 		}

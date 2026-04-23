@@ -1,16 +1,16 @@
 #include "EngineInterface.h"
 
-EngineInterface::EngineInterface() {
+EngineContext::EngineContext() {
 	mUserInput = make_shared<UserInput>();
 	mPhysicsHandler = make_shared<PhysicsHandler>();
 	mFontManager = make_shared<FontManager>();
 	mBodyPullHandler = make_shared<BodyPullHandler>();
 }
 
-void EngineInterface::init() {
+void EngineContext::init() {
 }
 
-sf::Time EngineInterface::getSimDt() const {
+sf::Time EngineContext::getSimDt() const {
 	if (mIsSimPaused) {
 		return sf::Time();
 	}
@@ -18,18 +18,18 @@ sf::Time EngineInterface::getSimDt() const {
 	return dt;
 }
 
-sf::Time EngineInterface::getFrameDt(bool ignoreFixed) const {
+sf::Time EngineContext::getFrameDt(bool ignoreFixed) const {
 	if (!ignoreFixed && mFixedFrameTime) {
 		return *mFixedFrameTime;
 	}
 	return mFrameTime;
 }
 
-void EngineInterface::onStartFrame() {
+void EngineContext::onStartFrame() {
 	mFrameTime = mFrameClock.getElapsedTime();
 	mFrameClock.restart();
 }
 
-void EngineInterface::createMainWindow(sf::VideoMode mode, const sf::String& title, std::uint32_t /*style*/) {
+void EngineContext::createMainWindow(sf::VideoMode mode, const sf::String& title, std::uint32_t /*style*/) {
 	mMainWindow = std::make_shared<sf::RenderWindow>(mode, title, sf::State::Windowed);
 }

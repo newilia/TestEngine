@@ -7,7 +7,7 @@
 #include "Engine/VectorArrow.h"
 
 void PhysicsDebugComponent::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-	if (!EI()->isDebugEnabled()) {
+	if (!EngineContext::instance().isDebugEnabled()) {
 		return;
 	}
 	auto body = dynamic_cast<AbstractBody*>(mHolder);
@@ -19,7 +19,7 @@ void PhysicsDebugComponent::draw(sf::RenderTarget& target, sf::RenderStates stat
 		return;
 	}
 
-	auto font = EI()->getFontManager()->getDefaultFont();
+	auto font = EngineContext::instance().getFontManager()->getDefaultFont();
 	sf::Text text(*font, "", 15);
 	text.setFillColor(sf::Color::White);
 	text.setOutlineColor(sf::Color::Black);

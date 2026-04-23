@@ -4,16 +4,20 @@
 #include "fmt/format.h"
 
 FpsNode::FpsNode() {
-    auto ei = EI();
-    auto font = ei->getFontManager()->getDefaultFont();
-    sf::Vector2f pos = { ei->getMainWindow()->getSize().x - 50.f, 0.f };
-    mText.emplace(*font, "", 15);
+    EngineContext& engine = EngineContext::instance();
+    auto* font = engine.getFontManager()->getDefaultFont();
+	if (!font) {
+		assert(font);
+		return;
+    }
+    sf::Vector2f pos = { engine.getMainWindow()->getSize().x - 50.f, 0.f };
+    mText = sf::Text(*font, "", 15);
     mText->setFillColor(sf::Color::White);
     mText->setPosition(pos);
 }
 
 void FpsNode::update(const sf::Time& dt) {
-    auto frameTime = EI()->getFrameDt(true);
+    auto frameTime = EngineContext::instance().getFrameDt(true);
     float newFps = 1.f / frameTime.asSeconds();
     if (mFps == 0.f) {
         mFps = newFps;
