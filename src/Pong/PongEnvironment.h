@@ -1,13 +1,15 @@
 #pragma once
-#include <memory>
-
 #include "Engine/Scene.h"
+
+#include <memory>
 
 class PongPlatform;
 
-class PongEnvironment {
+class PongEnvironment
+{
 public:
 	void setup();
+
 private:
 	// scene building
 	std::shared_ptr<Scene> buildScene();
@@ -17,7 +19,8 @@ private:
 	void addAiPlatform(Scene* scene);
 
 	// helpers
-	shared_ptr<PongPlatform> createDefaultPlatform(sf::Vector2f size, sf::Vector2f pos, float rotationDeg, sf::Color color) const;
+	shared_ptr<PongPlatform> createDefaultPlatform(sf::Vector2f size, sf::Vector2f pos, float rotationDeg,
+	                                               sf::Color color) const;
 	void configureGlobalInput();
 
 	// game interactions

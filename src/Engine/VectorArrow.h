@@ -1,22 +1,31 @@
 #pragma once
 #include "SFML/Graphics.hpp"
 
-class VectorArrow : public sf::Drawable {
+class VectorArrow : public sf::Drawable
+{
 public:
 	VectorArrow() {}
-	VectorArrow(const sf::Vector2f& start, const sf::Vector2f& end, const sf::Color& color = sf::Color::White) : mStart(start), mEnd(end), mColor(color) {}
+
+	VectorArrow(const sf::Vector2f& start, const sf::Vector2f& end, const sf::Color& color = sf::Color::White)
+	    : _start(start), _end(end), _color(color) {}
+
 	~VectorArrow() override = default;
 
-	void setStartPos(const sf::Vector2f& start) { mStart = start; }
-	void setEndPos(const sf::Vector2f& end) { mEnd = end; }
-	void setColor(const sf::Color& color) { mColor = color; }
+	void setStartPos(const sf::Vector2f& start) { _start = start; }
+
+	void setEndPos(const sf::Vector2f& end) { _end = end; }
+
+	void setColor(const sf::Color& color) { _color = color; }
+
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
-	void enableArrowHead(bool enable) { mArrowHeadEnabled = enable; }
+
+	void enableArrowHead(bool enable) { _arrowHeadEnabled = enable; }
+
 private:
-	sf::Vector2f mStart;
-	sf::Vector2f mEnd;
-	sf::Color mColor = sf::Color::White;
-	bool mArrowHeadEnabled = true;
-	const float mArrowHeadAngle = 0.5f;
-	const float mArrowHeadSize = 15;
+	sf::Vector2f _start;
+	sf::Vector2f _end;
+	sf::Color _color = sf::Color::White;
+	bool _arrowHeadEnabled = true;
+	const float _arrowHeadAngle = 0.5f;
+	const float _arrowHeadSize = 15;
 };

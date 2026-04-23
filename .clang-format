@@ -1,4 +1,87 @@
+# C++ formatting for TestEngine (clang-format).
+# Naming (_ prefix on members, PascalCase methods) is enforced by .clang-tidy, not clang-format.
+
 BasedOnStyle: LLVM
+Language: Cpp
+
+# Indentation: tab characters for leading indent.
 UseTab: ForIndentation
-IndentWidth: 4
 TabWidth: 4
+IndentWidth: 4
+ContinuationIndentWidth: 4
+
+ColumnLimit: 120
+
+# Match existing headers: opening brace on its own line after class/struct/enum,
+# attached brace for control statements and functions.
+# else / catch / do-while: keyword on a new line after the closing brace (Stroustrup/Whitesmiths-style tail).
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: false
+  AfterClass: true
+  AfterControlStatement: Never
+  AfterEnum: true
+  AfterFunction: false
+  AfterNamespace: false
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse: true
+  BeforeLambdaBody: false
+  BeforeWhile: true
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+
+AccessModifierOffset: -4
+IndentAccessModifiers: false
+EmptyLineBeforeAccessModifier: LogicalBlock
+SeparateDefinitionBlocks: Always
+
+AlignAfterOpenBracket: Align
+AlignOperands: true
+AlignTrailingComments: true
+
+PointerAlignment: Left
+ReferenceAlignment: Pointer
+
+SortIncludes: true
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^".*"$'
+    Priority: 1
+  - Regex: '^<SFML/'
+    Priority: 2
+  - Regex: '^<.*\.(h|hh|hpp|hxx)>$'
+    Priority: 3
+  - Regex: '^<'
+    Priority: 4
+
+AllowShortBlocksOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: Inline
+AllowShortLoopsOnASingleLine: false
+
+AlwaysBreakTemplateDeclarations: Yes
+BreakConstructorInitializers: BeforeColon
+BreakInheritanceList: BeforeColon
+ConstructorInitializerIndentWidth: 4
+PackConstructorInitializers: BinPack
+
+Cpp11BracedListStyle: true
+SpaceBeforeCpp11BracedList: false
+SpacesInAngles: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+
+BinPackArguments: true
+BinPackParameters: true
+
+FixNamespaceComments: true
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+
+InsertBraces: false
+InsertNewlineAtEOF: true

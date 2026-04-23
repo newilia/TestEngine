@@ -1,22 +1,25 @@
 #pragma once
 
-#include <memory>
-#include <set>
-#include <vector>
-#include <list>
-#include <algorithm>
-#include <optional>
 #include <SFML/Graphics.hpp>
 
-using std::shared_ptr;
-using std::weak_ptr;
+#include <algorithm>
+#include <list>
+#include <memory>
+#include <optional>
+#include <set>
+#include <vector>
+
+using std::dynamic_pointer_cast;
 using std::enable_shared_from_this;
 using std::make_shared;
-using std::dynamic_pointer_cast;
+using std::shared_ptr;
+using std::weak_ptr;
 
-struct Segment {
+struct Segment
+{
 	Segment() = default;
 	Segment(sf::Vector2f start, sf::Vector2f end) : start(start), end(end) {};
 	sf::Vector2f start, end;
+
 	sf::Vector2f getDirVector() const { return end - start; }
 };

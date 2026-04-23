@@ -1,16 +1,17 @@
 #include "PhysicsDebugComponent.h"
 
-#include <fmt/format.h>
 #include "AbstractBody.h"
-#include "Engine/FontManager.h"
 #include "Engine/EngineInterface.h"
+#include "Engine/FontManager.h"
 #include "Engine/VectorArrow.h"
+
+#include <fmt/format.h>
 
 void PhysicsDebugComponent::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	if (!EngineContext::instance().isDebugEnabled()) {
 		return;
 	}
-	auto body = dynamic_cast<AbstractBody*>(mHolder);
+	auto body = dynamic_cast<AbstractBody*>(_holder);
 	if (!body) {
 		return;
 	}
@@ -26,9 +27,9 @@ void PhysicsDebugComponent::draw(sf::RenderTarget& target, sf::RenderStates stat
 	text.setOutlineThickness(1.f);
 
 	/*for (size_t i = 0; i < body->getPointCount(); ++i) {
-		text.setString(fmt::to_string(i));
-		text.setPosition(body->getPointGlobal(i) - sf::Vector2f(3, 10));
-		target.draw(text, states);
+	    text.setString(fmt::to_string(i));
+	    text.setPosition(body->getPointGlobal(i) - sf::Vector2f(3, 10));
+	    target.draw(text, states);
 	}*/
 
 	auto pos = body->getPosGlobal();
@@ -36,6 +37,6 @@ void PhysicsDebugComponent::draw(sf::RenderTarget& target, sf::RenderStates stat
 	text.setString(fmt::format("{}\n{:.1f}, {:.1f}", body->getName(), pos.x, pos.y));
 	target.draw(text, states);
 
-	VectorArrow velArrow(body->getPosGlobal(), body->getPosGlobal() + physComp->mVelocity);
+	VectorArrow velArrow(body->getPosGlobal(), body->getPosGlobal() + physComp->_velocity);
 	target.draw(velArrow);
 }

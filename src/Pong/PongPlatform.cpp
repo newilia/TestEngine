@@ -2,14 +2,12 @@
 
 #include <cassert>
 
-PongPlatform::PongPlatform()
-{
-}
+PongPlatform::PongPlatform() {}
 
 void PongPlatform::init() {
 	ShapeBody::init();
-	if (mController) {
-		mController->init();
+	if (_controller) {
+		_controller->init();
 	}
 }
 
@@ -30,7 +28,7 @@ void PongPlatform::setShapeDimensions(sf::Vector2f size, float curvature, float 
 
 void PongPlatform::update(const sf::Time& dt) {
 	ShapeBody::update(dt);
-	if (mController) {
-		mController->update(dt);
+	if (_controller) {
+		_controller->update(dt);
 	}
 }

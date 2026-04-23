@@ -2,27 +2,23 @@
 
 #include "PongPlatform.h"
 
-AiPlatformController::AiPlatformController(PongPlatform* platform) : UserPlatformController(platform) {
-}
+AiPlatformController::AiPlatformController(PongPlatform* platform) : UserPlatformController(platform) {}
 
 void AiPlatformController::beginObserve(const std::weak_ptr<PongPlatform>& opponentPlatform,
-	const std::weak_ptr<PongBall>& ball)
-{
-	mOpponentPlatform = opponentPlatform;
-	mBall = ball;
+                                        const std::weak_ptr<PongBall>& ball) {
+	_opponentPlatform = opponentPlatform;
+	_ball = ball;
 }
 
 void AiPlatformController::setAggressivenessParams(float aggression, const sf::Time& changePeriod) {
-	mAggression = aggression;
-	mAggressionChangePeriod = changePeriod;
+	_aggression = aggression;
+	_aggressionChangePeriod = changePeriod;
 }
 
 void AiPlatformController::observeState() {
-	if (auto ball = mBall.lock()) {
-		ExternalState state = {
-			.ballPos = ball->getShape()->getPosition()
-		};
-		mExternalStateTimers.push({ sf::Clock(), state });
+	if (auto ball = _ball.lock()) {
+		ExternalState state = {.ballPos = ball->getShape()->getPosition()};
+		_externalStateTimers.push({sf::Clock(), state});
 	}
 }
 
@@ -32,44 +28,45 @@ void AiPlatformController::react() {
 
 void AiPlatformController::movePlatformTowardsBall() {
 	float distanceToBall = 0.f;
-	if (auto ball = mBall.lock()) {
-		distanceToBall = std::abs(mCurExState.ballPos.y - mPlatform->getShape()->getPosition().y) - ball->getShape()->getRadius() - mPlatform->getBbox().size.y;
+	if (auto ball = _ball.lock()) {
+		distanceToBall = std::abs(_curExState.ballPos.y - _platform->getShape()->getPosition().y) -
+		                 ball->getShape()->getRadius() - _platform->getBbox().size.y;
 	}
 
 	float steadyRatio = 0.f;
-	if (auto opponentPlatform = mOpponentPlatform.lock()) {
-		float distanceBetweenPlatforms = std::abs(mPlatform->getShape()->getPosition().y - opponentPlatform->getShape()->getPosition().y);
-		//this value affects on how much AI will move platform to center as the ball is far away from him
+	if (auto opponentPlatform = _opponentPlatform.lock()) {
+		float distanceBetweenPlatforms =
+		    std::abs(_platform->getShape()->getPosition().y - opponentPlatform->getShape()->getPosition().y);
+		// this value affects on how much AI will move platform to center as the ball is far away from him
 		steadyRatio = 0.2f * std::clamp(distanceToBall / distanceBetweenPlatforms, 0.f, 1.f);
 	}
 
-	mTargetPos.x = mCurExState.ballPos.x * (1.f - steadyRatio) + mDefaultPos.x * steadyRatio;
+	_targetPos.x = _curExState.ballPos.x * (1.f - steadyRatio) + _defaultPos.x * steadyRatio;
 }
 
 void AiPlatformController::update(const sf::Time& dt) {
-	if (mObserveTimer.getElapsedTime() > mObservePeriod) {
-		mObserveTimer.restart();
+	if (_observeTimer.getElapsedTime() > _observePeriod) {
+		_observeTimer.restart();
 		observeState();
 	}
 
-	if (mAggressionChangeTimer.getElapsedTime() > mAggressionChangePeriod) {
-		mAggressionChangeTimer.restart();
+	if (_aggressionChangeTimer.getElapsedTime() > _aggressionChangePeriod) {
+		_aggressionChangeTimer.restart();
 		constexpr float aggressionVariability = 0.5f;
-		mAggression = mAggression * (1.f - aggressionVariability) + 
-			static_cast<float>(std::rand() % 256) / 255.f * aggressionVariability;
+		_aggression = _aggression * (1.f - aggressionVariability) +
+		              static_cast<float>(std::rand() % 256) / 255.f * aggressionVariability;
 	}
 
-	if (!mExternalStateTimers.empty()) {
-		auto& stateTimer = mExternalStateTimers.front();
+	if (!_externalStateTimers.empty()) {
+		auto& stateTimer = _externalStateTimers.front();
 		;
-		if (auto waitingTime = stateTimer.timePassed.getElapsedTime();  waitingTime > mReactionDelay) {
-			mPrevExState = mCurExState;
-			mCurExState = stateTimer.state;
-			mExternalStateTimers.pop();
+		if (auto waitingTime = stateTimer.timePassed.getElapsedTime(); waitingTime > _reactionDelay) {
+			_prevExState = _curExState;
+			_curExState = stateTimer.state;
+			_externalStateTimers.pop();
 			react();
 		}
 	}
-
 
 	UserPlatformController::update(dt);
 }

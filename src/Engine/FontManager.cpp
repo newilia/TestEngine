@@ -1,4 +1,5 @@
 #include "FontManager.h"
+
 #include <iostream>
 
 FontManager::FontManager() {
@@ -7,16 +8,16 @@ FontManager::FontManager() {
 
 void FontManager::initDefaultFont() {
 	try {
-		mDefaultFont = new sf::Font{"resources/fonts/calibri.ttf"};
-	} 
+		_defaultFont = new sf::Font{"resources/fonts/calibri.ttf"};
+	}
 	catch (const std::exception& e) {
 		std::cerr << e.what();
-	} 
+	}
 	catch (...) {
 		throw;
 	}
 }
 
 const sf::Font* FontManager::getDefaultFont() const {
-	return mDefaultFont;
+	return _defaultFont;
 }

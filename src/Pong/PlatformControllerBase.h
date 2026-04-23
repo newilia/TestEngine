@@ -4,13 +4,16 @@
 class PongPlatform;
 
 namespace sf {
-	class Event;
+class Event;
 }
 
-class PlatformControllerBase : public Updateable {
+class PlatformControllerBase : public Updateable
+{
 public:
-	explicit PlatformControllerBase(PongPlatform* platform) : mPlatform(platform) {}
+	explicit PlatformControllerBase(PongPlatform* platform) : _platform(platform) {}
+
 	virtual void init() {}
+
 protected:
-	PongPlatform* mPlatform = nullptr;
+	PongPlatform* _platform = nullptr;
 };
