@@ -25,7 +25,11 @@ BodyPullSetup CreateBodyPullOverlay() {
 }
 
 void BodyPullHandler::StartPull(sf::Vector2f mousePos, UserPullBehaviour::PullMode pullMode) {
-	auto bodies = EngineContext::Instance().GetPhysicsHandler()->GetAllBodies();
+	auto physicsHandler = EngineContext::Instance().GetPhysicsHandler();
+	if (!physicsHandler) {
+		return;
+	}
+	auto bodies = physicsHandler->GetAllBodies();
 	for (auto wBody : bodies) {
 		auto body = wBody.lock();
 		if (!body) {
@@ -35,7 +39,8 @@ void BodyPullHandler::StartPull(sf::Vector2f mousePos, UserPullBehaviour::PullMo
 		if (!collider || !utils::isPointInsideOfBody(mousePos, collider)) {
 			continue;
 		}
-		if (body->GetPhysicalComponent()->isImmovable()) {
+		auto physComp = body->GetPhysicalComponent();
+		if (physComp && physComp->isImmovable()) {
 			if (pullMode == UserPullBehaviour::PullMode::FORCE || pullMode == UserPullBehaviour::PullMode::VELOCITY) {
 				continue;
 			}
