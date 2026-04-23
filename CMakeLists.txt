@@ -26,8 +26,6 @@ add_executable(TestEngine WIN32 ${ENGINE_SOURCES})
 
 if(MSVC)
 	target_compile_options(TestEngine PRIVATE /FS)
-	# MSVC: include_alias maps AbstractShapeBody.h → fixed header (decl/inline DrawSelf match); macro maps legacy getAllBodies.
-	target_compile_options(TestEngine PRIVATE "/FI${CMAKE_CURRENT_SOURCE_DIR}/src/Engine/TestEngineIncludeHook.h")
 	# Debug: /Z7 embeds symbols in .obj and avoids C1041 (parallel cl.exe vs one vc*.pdb) when /FS alone is not enough.
 	target_compile_options(TestEngine PRIVATE $<$<CONFIG:Debug>:/Z7>)
 endif()

@@ -26,17 +26,17 @@ void PhysicsDebugComponent::draw(sf::RenderTarget& target, sf::RenderStates stat
 	text.setOutlineColor(sf::Color::Black);
 	text.setOutlineThickness(1.f);
 
-	/*for (size_t i = 0; i < body->getPointCount(); ++i) {
+	/*for (size_t i = 0; i < body->GetPointCount(); ++i) {
 	    text.setString(fmt::to_string(i));
-	    text.setPosition(body->getPointGlobal(i) - sf::Vector2f(3, 10));
+	    text.setPosition(body->GetPointGlobal(i) - sf::Vector2f(3, 10));
 	    target.draw(text, states);
 	}*/
 
-	auto pos = body->getPosGlobal();
+	auto pos = body->GetPosGlobal();
 	text.setPosition(pos);
 	text.setString(fmt::format("{}\n{:.1f}, {:.1f}", body->getName(), pos.x, pos.y));
 	target.draw(text, states);
 
-	VectorArrow velArrow(body->getPosGlobal(), body->getPosGlobal() + physComp->_velocity);
+	VectorArrow velArrow(body->GetPosGlobal(), body->GetPosGlobal() + physComp->_velocity);
 	target.draw(velArrow);
 }

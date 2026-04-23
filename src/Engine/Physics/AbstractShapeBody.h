@@ -11,25 +11,25 @@ public:
 
 	sf::Shape* GetBaseShape() const { return _shape; }
 
-	sf::FloatRect getBbox() const override { return _shape->getGlobalBounds(); }
+	sf::FloatRect GetBbox() const override { return _shape->getGlobalBounds(); }
 
-	size_t getPointCount() const override { return _shape->getPointCount(); }
+	size_t GetPointCount() const override { return _shape->getPointCount(); }
 
-	sf::Vector2f getPointGlobal(std::size_t index) const override {
+	sf::Vector2f GetPointGlobal(std::size_t index) const override {
 		return _shape->getTransform().transformPoint(_shape->getPoint(index));
 	}
 
 	// void update(const sf::Time& dt) override;
 	void DrawSelf(sf::RenderTarget& target, sf::RenderStates states) const override;
 
-	sf::Vector2f getPosGlobal() const override { return _shape->getPosition(); }
+	sf::Vector2f GetPosGlobal() const override { return _shape->getPosition(); }
 
-	void setPosGlobal(sf::Vector2f pos) override { return _shape->setPosition(pos); }
+	void SetPosGlobal(sf::Vector2f pos) override { return _shape->setPosition(pos); }
 
 protected:
 	sf::Shape* _shape = nullptr;
 };
 
-inline void AbstractShapeBody::drawSelf(sf::RenderTarget& target, sf::RenderStates states) const {
+inline void AbstractShapeBody::DrawSelf(sf::RenderTarget& target, sf::RenderStates states) const {
 	target.draw(*_shape, states);
 }

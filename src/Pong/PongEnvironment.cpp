@@ -64,7 +64,7 @@ void PongEnvironment::addBall(Scene* scene) {
 	shape->setOutlineThickness(1);
 	shape->setPosition(pos);
 
-	auto pc = ball->getPhysicalComponent();
+	auto pc = ball->GetPhysicalComponent();
 	pc->_mass = 3.14f * radius * radius;
 	pc->_restitution = bodiesRestitution;
 	pc->_velocity = vel;
@@ -90,7 +90,7 @@ shared_ptr<PongPlatform> PongEnvironment::createDefaultPlatform(sf::Vector2f siz
 
 	platform->requireComponent<CollisionComponent>()->_collisionGroups.set(1, true);
 
-	auto pc = platform->getPhysicalComponent();
+	auto pc = platform->GetPhysicalComponent();
 	pc->setImmovable();
 	pc->_restitution = bodiesRestitution;
 
@@ -115,8 +115,8 @@ void PongEnvironment::addWalls(Scene* scene) {
 		wall->setName(wallNames[i]);
 		wall->GetShape()->setPosition(wallPositions[i]);
 		wall->GetShape()->setSize(wallSizes[i]);
-		wall->getPhysicalComponent()->setImmovable();
-		wall->getPhysicalComponent()->_restitution = bodiesRestitution;
+		wall->GetPhysicalComponent()->setImmovable();
+		wall->GetPhysicalComponent()->_restitution = bodiesRestitution;
 		if (i < 2) {
 			wall->GetShape()->setFillColor(sf::Color(200, 200, 200, 50));
 			wall->requireComponent<OverlappingComponent>()->_overlappingGroups.set(0, true);
