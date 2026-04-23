@@ -9,5 +9,8 @@
 	"[c]": {
 		"editor.insertSpaces": false,
 		"editor.defaultFormatter": "ms-vscode.cpptools"
+	},
+	"files.exclude": {
+		"**/build": true
 	}
 }
