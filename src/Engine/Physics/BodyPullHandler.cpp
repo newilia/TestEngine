@@ -3,9 +3,8 @@
 #include "Engine/EngineInterface.h"
 #include "Engine/Utils.h"
 #include "Engine/VectorArrow.h"
-#include "UserPullComponent.h"
 
-void BodyPullHandler::startPull(sf::Vector2f mousePos, UserPullComponent::PullMode pullMode) {
+void BodyPullHandler::StartPull(sf::Vector2f mousePos, UserPullBehaviour::PullMode pullMode) {
 	auto bodies = EngineContext::Instance().GetPhysicsHandler()->GetAllBodies();
 	for (auto wBody : bodies) {
 		auto body = wBody.lock();
@@ -16,11 +15,11 @@ void BodyPullHandler::startPull(sf::Vector2f mousePos, UserPullComponent::PullMo
 			continue;
 		}
 		if (body->GetPhysicalComponent()->isImmovable()) {
-			if (pullMode == UserPullComponent::PullMode::FORCE || pullMode == UserPullComponent::PullMode::VELOCITY) {
+			if (pullMode == UserPullBehaviour::PullMode::FORCE || pullMode == UserPullBehaviour::PullMode::VELOCITY) {
 				continue;
 			}
 		}
-		auto pullComponent = body->RequireComponent<UserPullComponent>();
+		auto pullComponent = body->RequireEntity<UserPullBehaviour>();
 		pullComponent->_localSourcePoint = mousePos - body->GetPosGlobal();
 		pullComponent->_globalDestPoint = mousePos;
 		pullComponent->_mode = pullMode;
@@ -29,16 +28,16 @@ void BodyPullHandler::startPull(sf::Vector2f mousePos, UserPullComponent::PullMo
 	}
 }
 
-void BodyPullHandler::stopPull() {
+void BodyPullHandler::StopPull() {
 	if (auto pullingBody = _pullingBody.lock()) {
-		pullingBody->RemoveComponent<UserPullComponent>();
+		pullingBody->RemoveBehaviour<UserPullBehaviour>();
 	}
 	_pullingBody.reset();
 }
 
-void BodyPullHandler::setPullDestination(sf::Vector2f dest) const {
+void BodyPullHandler::SetPullDestination(sf::Vector2f dest) const {
 	if (auto pullingBody = _pullingBody.lock()) {
-		if (auto pullComp = pullingBody->FindComponent<UserPullComponent>()) {
+		if (auto pullComp = pullingBody->FindEntity<UserPullBehaviour>()) {
 			pullComp->_globalDestPoint = dest;
 		}
 	}
@@ -50,8 +49,8 @@ void BodyPullHandler::draw(sf::RenderTarget& target, sf::RenderStates states) co
 	}
 
 	if (auto body = _pullingBody.lock()) {
-		if (auto pullComp = body->FindComponent<UserPullComponent>()) {
-			if (pullComp->_mode == UserPullComponent::PullMode::FORCE) {
+		if (auto pullComp = body->FindEntity<UserPullBehaviour>()) {
+			if (pullComp->_mode == UserPullBehaviour::PullMode::FORCE) {
 				VectorArrow arrow;
 				arrow.setColor(sf::Color::Green);
 				arrow.setStartPos(body->GetPosGlobal() + pullComp->_localSourcePoint);

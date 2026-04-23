@@ -1,5 +1,6 @@
 #include "EngineInterface.h"
 #include "Pong/PongEnvironment.h"
+#include "Test/TestEnvironment.h"
 #include "UserInput.h"
 
 #include <SFML/Graphics.hpp>
@@ -14,8 +15,8 @@ int main() {
 int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
 #endif
 	_set_error_mode(_OUT_TO_MSGBOX);
-	// TestEnvironment env;
-	PongEnvironment env;
+	TestEnvironment env;
+	// PongEnvironment env;
 	env.setup();
 
 	EngineContext& engine = EngineContext::Instance();

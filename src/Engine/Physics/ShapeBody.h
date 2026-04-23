@@ -15,7 +15,7 @@ public:
 	TShape* GetShape() const { return dynamic_cast<TShape*>(_shape); }
 
 	void Init() override {
-		AbstractBody::Init();
+		AbstractShapeBody::Init();
 		auto centerOfMass = utils::findCenterOfMass(_shape);
 		_shape->setOrigin(centerOfMass);
 	}

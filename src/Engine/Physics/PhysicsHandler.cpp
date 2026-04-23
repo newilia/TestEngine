@@ -3,9 +3,9 @@
 #include "AbstractBody.h"
 #include "AbstractShapeBody.h"
 #include "Engine/EngineInterface.h"
-#include "Engine/Physics/CollisionComponent.h"
-#include "Engine/Physics/OverlappingComponent.h"
-#include "Engine/Physics/UserPullComponent.h"
+#include "Engine/Physics/CollisionBehaviour.h"
+#include "Engine/Physics/OverlappingBehaviour.h"
+#include "Engine/Physics/UserPullBehaviour.h"
 #include "Engine/Utils.h"
 #include "Engine/VectorArrow.h"
 #include "Engine/common.h"
@@ -41,13 +41,16 @@ void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 		if (!body) {
 			continue;
 		}
-		auto physComp = body->FindComponent<PhysicalComponent>();
-		auto pullComp = body->FindComponent<UserPullComponent>();
+		auto physComp = body->GetPhysicalComponent();
+		auto pullComp = body->FindEntity<UserPullBehaviour>();
+		if (!physComp) {
+			continue;
+		}
 		auto pos = body->GetPosGlobal();
 
 		sf::Vector2f forceSum = [&]() {
 			sf::Vector2f force;
-			if (pullComp && pullComp->_mode == UserPullComponent::PullMode::FORCE) {
+			if (pullComp && pullComp->_mode == UserPullBehaviour::PullMode::FORCE) {
 				force += pullComp->getPullVector() * pullComp->_pullingStrength;
 			}
 			return force;
@@ -61,11 +64,11 @@ void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 		pos += physComp->_velocity * dt.asSeconds();
 
 		if (pullComp) {
-			if (pullComp->_mode == UserPullComponent::PullMode::POSITION) {
+			if (pullComp->_mode == UserPullBehaviour::PullMode::POSITION) {
 				pos += pullComp->getPullVector();
 				physComp->_velocity = {};
 			}
-			else if (pullComp->_mode == UserPullComponent::PullMode::VELOCITY) {
+			else if (pullComp->_mode == UserPullBehaviour::PullMode::VELOCITY) {
 				physComp->_velocity = pullComp->getPullVector();
 			}
 		}
@@ -87,8 +90,8 @@ void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 
 			if (auto intersection = DetectIntersection(b1.get(), b2.get())) {
 				{
-					auto cc1 = b1->FindComponent<CollisionComponent>();
-					auto cc2 = b2->FindComponent<CollisionComponent>();
+					auto cc1 = b1->FindEntity<CollisionBehaviour>();
+					auto cc2 = b2->FindEntity<CollisionBehaviour>();
 					if (cc1 && cc2 && (cc1->_collisionGroups & cc2->_collisionGroups).any()) {
 						if (!b1->GetPhysicalComponent()->isImmovable() || !b2->GetPhysicalComponent()->isImmovable()) {
 							ResolveCollision(*intersection);
@@ -103,8 +106,8 @@ void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 				}
 
 				{
-					auto oc1 = b1->FindComponent<OverlappingComponent>();
-					auto oc2 = b2->FindComponent<OverlappingComponent>();
+					auto oc1 = b1->FindEntity<OverlappingBehaviour>();
+					auto oc2 = b2->FindEntity<OverlappingBehaviour>();
 					if (oc1 && oc2 && (oc1->_overlappingGroups & oc2->_overlappingGroups).any()) {
 						for (auto callback : oc1->_overlappingCallbacks) {
 							callback->operator()(*intersection);
@@ -446,8 +449,8 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 		return;
 	}
 
-	auto pc1 = body1->FindComponent<PhysicalComponent>();
-	auto pc2 = body2->FindComponent<PhysicalComponent>();
+	auto pc1 = body1->GetPhysicalComponent();
+	auto pc2 = body2->GetPhysicalComponent();
 
 	if (pc1->isImmovable()) { // fixed body must be second
 		std::swap(body1, body2);

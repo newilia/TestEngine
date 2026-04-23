@@ -2,10 +2,10 @@
 
 #include "AiPlatformController.h"
 #include "Engine/EngineInterface.h"
-#include "Engine/FpsNode.h"
-#include "Engine/Physics/CollisionComponent.h"
-#include "Engine/Physics/OverlappingComponent.h"
-#include "Engine/Physics/PhysicsDebugComponent.h"
+#include "Engine/FpsCounterBehaviour.h"
+#include "Engine/Physics/CollisionBehaviour.h"
+#include "Engine/Physics/OverlappingBehaviour.h"
+#include "Engine/Physics/PhysicsDebugBehaviour.h"
 #include "Engine/Physics/PhysicsHandler.h"
 #include "Engine/Physics/ShapeBody.h"
 #include "Engine/Scene.h"
@@ -69,9 +69,9 @@ void PongEnvironment::addBall(Scene* scene) {
 	pc->_restitution = bodiesRestitution;
 	pc->_velocity = vel;
 
-	ball->RequireComponent<CollisionComponent>()->_collisionGroups.set(0, true);
-	ball->RequireComponent<CollisionComponent>()->_collisionGroups.set(1, true);
-	ball->RequireComponent<OverlappingComponent>()->_overlappingGroups.set(0, true);
+	ball->RequireEntity<CollisionBehaviour>()->_collisionGroups.set(0, true);
+	ball->RequireEntity<CollisionBehaviour>()->_collisionGroups.set(1, true);
+	ball->RequireEntity<OverlappingBehaviour>()->_overlappingGroups.set(0, true);
 	ball->Init();
 	scene->addChild(ball);
 
@@ -81,14 +81,14 @@ void PongEnvironment::addBall(Scene* scene) {
 shared_ptr<PongPlatform> PongEnvironment::createDefaultPlatform(sf::Vector2f size, sf::Vector2f pos, float rotationDeg,
                                                                 sf::Color color) const {
 	auto platform = make_shared<PongPlatform>();
-	platform->RequireComponent<PhysicsDebugComponent>();
+	platform->RequireEntity<PhysicsDebugBehaviour>();
 	platform->setName("Platform");
 	platform->setShapeDimensions(size, 0.9f, rotationDeg);
 	// todo platform->setMoveArea(...);
 	platform->GetShape()->setPosition(pos);
 	platform->GetShape()->setFillColor(color);
 
-	platform->RequireComponent<CollisionComponent>()->_collisionGroups.set(1, true);
+	platform->RequireEntity<CollisionBehaviour>()->_collisionGroups.set(1, true);
 
 	auto pc = platform->GetPhysicalComponent();
 	pc->setImmovable();
@@ -119,7 +119,7 @@ void PongEnvironment::addWalls(Scene* scene) {
 		wall->GetPhysicalComponent()->_restitution = bodiesRestitution;
 		if (i < 2) {
 			wall->GetShape()->setFillColor(sf::Color(200, 200, 200, 50));
-			wall->RequireComponent<OverlappingComponent>()->_overlappingGroups.set(0, true);
+			wall->RequireEntity<OverlappingBehaviour>()->_overlappingGroups.set(0, true);
 			auto loseCallback = createDelegate<const IntersectionDetails&>(
 			    [this, calledOnce = false](const IntersectionDetails&) mutable {
 				    if (!calledOnce) {
@@ -127,11 +127,11 @@ void PongEnvironment::addWalls(Scene* scene) {
 					    calledOnce = true;
 				    }
 			    });
-			wall->FindComponent<OverlappingComponent>()->_overlappingCallbacks.push_back(std::move(loseCallback));
+			wall->FindEntity<OverlappingBehaviour>()->_overlappingCallbacks.push_back(std::move(loseCallback));
 		}
 		else {
 			wall->GetShape()->setFillColor(sf::Color(200, 200, 200, 255));
-			wall->RequireComponent<CollisionComponent>()->_collisionGroups.set(0, true);
+			wall->RequireEntity<CollisionBehaviour>()->_collisionGroups.set(0, true);
 		}
 		wall->Init();
 		scene->addChild(wall);
@@ -204,7 +204,7 @@ std::shared_ptr<Scene> PongEnvironment::buildScene() {
 	addBall(scene.get());
 	addUserPlatform(scene.get());
 	addAiPlatform(scene.get());
-	scene->addChild(make_shared<FpsNode>());
+	scene->addChild(CreateFpsCounterNode());
 	return scene;
 }
 

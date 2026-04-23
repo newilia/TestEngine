@@ -1,9 +1,31 @@
 #include "SceneNode.h"
 
+#include <algorithm>
+
 #include "EngineInterface.h"
-#include "Physics/PhysicsDebugComponent.h"
+#include "Physics/PhysicsDebugBehaviour.h"
 
 #include <cassert>
+
+void SceneNode::SetVisual(shared_ptr<NodeVisual>&& visual) {
+	_visual = std::move(visual);
+	if (_visual) {
+		_visual->AttachTo(shared_from_this());
+	}
+}
+
+void SceneNode::SetSortingStrategy(shared_ptr<SortingStrategyEntity>&& sorting) {
+	_sortingStrategy = std::move(sorting);
+	if (_sortingStrategy) {
+		_sortingStrategy->AttachTo(shared_from_this());
+	}
+}
+
+void SceneNode::AddBehaviour(shared_ptr<Behaviour>&& behaviour) {
+	behaviour->AttachTo(shared_from_this());
+	_behaviours.push_back(std::move(behaviour));
+	_behaviours.back()->OnAttached();
+}
 
 void SceneNode::addChild(std::shared_ptr<SceneNode>&& child) {
 	assert(!hasChild(child));
@@ -56,6 +78,9 @@ std::vector<shared_ptr<SceneNode>> SceneNode::findChildren(const std::string& id
 
 void SceneNode::updateRec(const sf::Time& dt) {
 	Update(dt);
+	for (auto& b : _behaviours) {
+		b->OnUpdate(dt);
+	}
 	for (auto& child : _children) {
 		child->updateRec(dt);
 	}
@@ -64,13 +89,30 @@ void SceneNode::updateRec(const sf::Time& dt) {
 void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	// states.transform *= getTransform();
 	DrawSelf(target, states);
-	for (auto& child : _children) {
+	if (_visual) {
+		_visual->Draw(target, states);
+	}
+
+	std::vector<shared_ptr<SceneNode>> sorted = _children;
+	std::stable_sort(sorted.begin(), sorted.end(), [](const shared_ptr<SceneNode>& a, const shared_ptr<SceneNode>& b) {
+		int la = 0;
+		int lb = 0;
+		if (auto sa = a->FindEntity<SortingStrategyEntity>()) {
+			la = sa->GetSortLayer();
+		}
+		if (auto sb = b->FindEntity<SortingStrategyEntity>()) {
+			lb = sb->GetSortLayer();
+		}
+		return la < lb;
+	});
+
+	for (auto& child : sorted) {
 		child->draw(target, states);
 	}
 
 	if (EngineContext::Instance().IsDebugEnabled()) {
-		if (auto debugComponent = FindComponent<PhysicsDebugComponent>()) {
-			debugComponent->draw(target, states);
+		if (auto debugBehaviour = FindEntity<PhysicsDebugBehaviour>()) {
+			debugBehaviour->DrawDebug(target, states);
 		}
 	}
 }
@@ -83,7 +125,7 @@ void SceneNode::removeFromParent() {
 
 void SceneNode::removeChild(SceneNode* child) {
 	auto it = std::ranges::find_if(_children.begin(), _children.end(),
-	                               [child](const auto& ptr) { return ptr.get() == child; });
+	                              [child](const auto& ptr) { return ptr.get() == child; });
 	if (it != _children.end()) {
 		_children.erase(it);
 	}

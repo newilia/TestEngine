@@ -1,8 +1,7 @@
 #pragma once
 
-#include "Engine/ComponentHolder.h"
 #include "Engine/SceneNode.h"
-#include "PhysicalComponent.h"
+#include "PhysicalBehaviour.h"
 
 class AbstractBody : public SceneNode
 {
@@ -16,5 +15,11 @@ public:
 	virtual void SetPosGlobal(sf::Vector2f pos) = 0;
 	void Init() override;
 
-	shared_ptr<PhysicalComponent> GetPhysicalComponent() const { return FindComponent<PhysicalComponent>(); }
+	shared_ptr<PhysicalBehaviour> GetPhysicalComponent() const {
+		auto* self = const_cast<AbstractBody*>(this);
+		if (!self->FindEntity<PhysicalBehaviour>()) {
+			self->RequireEntity<PhysicalBehaviour>();
+		}
+		return FindEntity<PhysicalBehaviour>();
+	}
 };
