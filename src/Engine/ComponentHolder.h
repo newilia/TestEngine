@@ -11,21 +11,21 @@ public:
 	virtual ~ComponentHolderBase() = default;
 
 	template <typename TComponent>
-	shared_ptr<TComponent> findComponent() const;
+	shared_ptr<TComponent> FindComponent() const;
 
 	template <typename TComponent>
-	shared_ptr<TComponent> requireComponent();
+	shared_ptr<TComponent> RequireComponent();
 
 	template <typename TComponent>
-	void removeComponent();
+	void RemoveComponent();
 
 private:
-	void addComponent(shared_ptr<ComponentBase>&& component);
+	void AddComponent(shared_ptr<ComponentBase>&& component);
 	std::vector<shared_ptr<ComponentBase>> _components;
 };
 
 template <typename TComponent>
-shared_ptr<TComponent> ComponentHolderBase::findComponent() const {
+shared_ptr<TComponent> ComponentHolderBase::FindComponent() const {
 	for (auto& comp : _components) {
 		if (auto typedComp = std::dynamic_pointer_cast<TComponent>(comp)) {
 			return typedComp;
@@ -35,17 +35,17 @@ shared_ptr<TComponent> ComponentHolderBase::findComponent() const {
 }
 
 template <typename TComponent>
-shared_ptr<TComponent> ComponentHolderBase::requireComponent() {
-	if (auto&& comp = findComponent<TComponent>()) {
+shared_ptr<TComponent> ComponentHolderBase::RequireComponent() {
+	if (auto&& comp = FindComponent<TComponent>()) {
 		return comp;
 	}
 	auto newComp = std::make_shared<TComponent>(this);
-	addComponent(newComp);
+	AddComponent(newComp);
 	return newComp;
 }
 
 template <typename TComponent>
-void ComponentHolderBase::removeComponent() {
+void ComponentHolderBase::RemoveComponent() {
 	auto it = std::find_if(_components.begin(), _components.end(),
 	                       [](auto comp) { return std::dynamic_pointer_cast<TComponent>(comp) != nullptr; });
 	if (it != _components.end()) {
@@ -57,5 +57,5 @@ template <typename TComponent>
 class ComponentHolder : public ComponentHolderBase
 {
 public:
-	ComponentHolder() : ComponentHolderBase() { requireComponent<TComponent>(); }
+	ComponentHolder() : ComponentHolderBase() { RequireComponent<TComponent>(); }
 };

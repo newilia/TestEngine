@@ -15,7 +15,7 @@ void PhysicsDebugComponent::draw(sf::RenderTarget& target, sf::RenderStates stat
 	if (!body) {
 		return;
 	}
-	auto physComp = body->findComponent<PhysicalComponent>();
+	auto physComp = body->FindComponent<PhysicalComponent>();
 	if (!physComp) {
 		return;
 	}

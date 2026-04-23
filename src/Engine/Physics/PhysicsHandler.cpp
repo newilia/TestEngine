@@ -41,8 +41,8 @@ void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 		if (!body) {
 			continue;
 		}
-		auto physComp = body->findComponent<PhysicalComponent>();
-		auto pullComp = body->findComponent<UserPullComponent>();
+		auto physComp = body->FindComponent<PhysicalComponent>();
+		auto pullComp = body->FindComponent<UserPullComponent>();
 		auto pos = body->GetPosGlobal();
 
 		sf::Vector2f forceSum = [&]() {
@@ -87,8 +87,8 @@ void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 
 			if (auto intersection = DetectIntersection(b1.get(), b2.get())) {
 				{
-					auto cc1 = b1->findComponent<CollisionComponent>();
-					auto cc2 = b2->findComponent<CollisionComponent>();
+					auto cc1 = b1->FindComponent<CollisionComponent>();
+					auto cc2 = b2->FindComponent<CollisionComponent>();
 					if (cc1 && cc2 && (cc1->_collisionGroups & cc2->_collisionGroups).any()) {
 						if (!b1->GetPhysicalComponent()->isImmovable() || !b2->GetPhysicalComponent()->isImmovable()) {
 							ResolveCollision(*intersection);
@@ -103,8 +103,8 @@ void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 				}
 
 				{
-					auto oc1 = b1->findComponent<OverlappingComponent>();
-					auto oc2 = b2->findComponent<OverlappingComponent>();
+					auto oc1 = b1->FindComponent<OverlappingComponent>();
+					auto oc2 = b2->FindComponent<OverlappingComponent>();
 					if (oc1 && oc2 && (oc1->_overlappingGroups & oc2->_overlappingGroups).any()) {
 						for (auto callback : oc1->_overlappingCallbacks) {
 							callback->operator()(*intersection);
@@ -446,8 +446,8 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 		return;
 	}
 
-	auto pc1 = body1->findComponent<PhysicalComponent>();
-	auto pc2 = body2->findComponent<PhysicalComponent>();
+	auto pc1 = body1->FindComponent<PhysicalComponent>();
+	auto pc2 = body2->FindComponent<PhysicalComponent>();
 
 	if (pc1->isImmovable()) { // fixed body must be second
 		std::swap(body1, body2);

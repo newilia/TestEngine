@@ -20,7 +20,7 @@ void BodyPullHandler::startPull(sf::Vector2f mousePos, UserPullComponent::PullMo
 				continue;
 			}
 		}
-		auto pullComponent = body->requireComponent<UserPullComponent>();
+		auto pullComponent = body->RequireComponent<UserPullComponent>();
 		pullComponent->_localSourcePoint = mousePos - body->GetPosGlobal();
 		pullComponent->_globalDestPoint = mousePos;
 		pullComponent->_mode = pullMode;
@@ -31,14 +31,14 @@ void BodyPullHandler::startPull(sf::Vector2f mousePos, UserPullComponent::PullMo
 
 void BodyPullHandler::stopPull() {
 	if (auto pullingBody = _pullingBody.lock()) {
-		pullingBody->removeComponent<UserPullComponent>();
+		pullingBody->RemoveComponent<UserPullComponent>();
 	}
 	_pullingBody.reset();
 }
 
 void BodyPullHandler::setPullDestination(sf::Vector2f dest) const {
 	if (auto pullingBody = _pullingBody.lock()) {
-		if (auto pullComp = pullingBody->findComponent<UserPullComponent>()) {
+		if (auto pullComp = pullingBody->FindComponent<UserPullComponent>()) {
 			pullComp->_globalDestPoint = dest;
 		}
 	}
@@ -50,7 +50,7 @@ void BodyPullHandler::draw(sf::RenderTarget& target, sf::RenderStates states) co
 	}
 
 	if (auto body = _pullingBody.lock()) {
-		if (auto pullComp = body->findComponent<UserPullComponent>()) {
+		if (auto pullComp = body->FindComponent<UserPullComponent>()) {
 			if (pullComp->_mode == UserPullComponent::PullMode::FORCE) {
 				VectorArrow arrow;
 				arrow.setColor(sf::Color::Green);

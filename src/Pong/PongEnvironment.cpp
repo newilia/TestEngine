@@ -69,9 +69,9 @@ void PongEnvironment::addBall(Scene* scene) {
 	pc->_restitution = bodiesRestitution;
 	pc->_velocity = vel;
 
-	ball->requireComponent<CollisionComponent>()->_collisionGroups.set(0, true);
-	ball->requireComponent<CollisionComponent>()->_collisionGroups.set(1, true);
-	ball->requireComponent<OverlappingComponent>()->_overlappingGroups.set(0, true);
+	ball->RequireComponent<CollisionComponent>()->_collisionGroups.set(0, true);
+	ball->RequireComponent<CollisionComponent>()->_collisionGroups.set(1, true);
+	ball->RequireComponent<OverlappingComponent>()->_overlappingGroups.set(0, true);
 	ball->Init();
 	scene->addChild(ball);
 
@@ -81,14 +81,14 @@ void PongEnvironment::addBall(Scene* scene) {
 shared_ptr<PongPlatform> PongEnvironment::createDefaultPlatform(sf::Vector2f size, sf::Vector2f pos, float rotationDeg,
                                                                 sf::Color color) const {
 	auto platform = make_shared<PongPlatform>();
-	platform->requireComponent<PhysicsDebugComponent>();
+	platform->RequireComponent<PhysicsDebugComponent>();
 	platform->setName("Platform");
 	platform->setShapeDimensions(size, 0.9f, rotationDeg);
 	// todo platform->setMoveArea(...);
 	platform->GetShape()->setPosition(pos);
 	platform->GetShape()->setFillColor(color);
 
-	platform->requireComponent<CollisionComponent>()->_collisionGroups.set(1, true);
+	platform->RequireComponent<CollisionComponent>()->_collisionGroups.set(1, true);
 
 	auto pc = platform->GetPhysicalComponent();
 	pc->setImmovable();
@@ -119,7 +119,7 @@ void PongEnvironment::addWalls(Scene* scene) {
 		wall->GetPhysicalComponent()->_restitution = bodiesRestitution;
 		if (i < 2) {
 			wall->GetShape()->setFillColor(sf::Color(200, 200, 200, 50));
-			wall->requireComponent<OverlappingComponent>()->_overlappingGroups.set(0, true);
+			wall->RequireComponent<OverlappingComponent>()->_overlappingGroups.set(0, true);
 			auto loseCallback = createDelegate<const IntersectionDetails&>(
 			    [this, calledOnce = false](const IntersectionDetails&) mutable {
 				    if (!calledOnce) {
@@ -127,11 +127,11 @@ void PongEnvironment::addWalls(Scene* scene) {
 					    calledOnce = true;
 				    }
 			    });
-			wall->findComponent<OverlappingComponent>()->_overlappingCallbacks.push_back(std::move(loseCallback));
+			wall->FindComponent<OverlappingComponent>()->_overlappingCallbacks.push_back(std::move(loseCallback));
 		}
 		else {
 			wall->GetShape()->setFillColor(sf::Color(200, 200, 200, 255));
-			wall->requireComponent<CollisionComponent>()->_collisionGroups.set(0, true);
+			wall->RequireComponent<CollisionComponent>()->_collisionGroups.set(0, true);
 		}
 		wall->Init();
 		scene->addChild(wall);
