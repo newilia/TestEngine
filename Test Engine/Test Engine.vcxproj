@@ -19,16 +19,18 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\Engine\ComponentHolder.cpp" />
     <ClCompile Include="..\src\Engine\EngineInterface.cpp" />
     <ClCompile Include="..\src\Engine\FontManager.cpp" />
-    <ClCompile Include="..\src\Engine\FpsNode.cpp" />
+    <ClCompile Include="..\src\Engine\FpsCounterBehaviour.cpp" />
+    <ClCompile Include="..\src\Engine\FpsNodeVisual.cpp" />
     <ClCompile Include="..\src\Engine\main.cpp" />
     <ClCompile Include="..\src\Engine\Physics\AbstractBody.cpp" />
+    <ClCompile Include="..\src\Engine\Physics\AbstractShapeBody.cpp" />
     <ClCompile Include="..\src\Engine\Physics\BodyPullHandler.cpp" />
-    <ClCompile Include="..\src\Engine\Physics\PhysicsDebugComponent.cpp" />
+    <ClCompile Include="..\src\Engine\Physics\PhysicsDebugBehaviour.cpp" />
     <ClCompile Include="..\src\Engine\Physics\PhysicsHandler.cpp" />
-    <ClCompile Include="..\src\Engine\Physics\UserPullComponent.cpp" />
+    <ClCompile Include="..\src\Engine\Physics\ShapeVisualBehaviour.cpp" />
+    <ClCompile Include="..\src\Engine\Physics\UserPullBehaviour.cpp" />
     <ClCompile Include="..\src\Engine\Scene.cpp" />
     <ClCompile Include="..\src\Engine\SceneNode.cpp" />
     <ClCompile Include="..\src\Engine\UserInput.cpp" />
@@ -42,26 +44,31 @@
     <ClCompile Include="..\src\Test\TestEnvironment.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\Engine\Behaviour.h" />
     <ClInclude Include="..\src\Engine\common.h" />
-    <ClInclude Include="..\src\Engine\ComponentBase.h" />
-    <ClInclude Include="..\src\Engine\ComponentHolder.h" />
     <ClInclude Include="..\src\Engine\Delegates.h" />
+    <ClInclude Include="..\src\Engine\EntityOnNode.h" />
     <ClInclude Include="..\src\Engine\EngineInterface.h" />
     <ClInclude Include="..\src\Engine\FontManager.h" />
-    <ClInclude Include="..\src\Engine\FpsNode.h" />
+    <ClInclude Include="..\src\Engine\FpsCounterBehaviour.h" />
+    <ClInclude Include="..\src\Engine\FpsNodeVisual.h" />
     <ClInclude Include="..\src\Engine\Physics\AbstractBody.h" />
     <ClInclude Include="..\src\Engine\Physics\AbstractShapeBody.h" />
     <ClInclude Include="..\src\Engine\Physics\BodyPullHandler.h" />
-    <ClInclude Include="..\src\Engine\Physics\CollisionComponent.h" />
+    <ClInclude Include="..\src\Engine\Physics\CollisionBehaviour.h" />
     <ClInclude Include="..\src\Engine\Physics\IntersectionDetails.h" />
-    <ClInclude Include="..\src\Engine\Physics\OverlappingComponent.h" />
-    <ClInclude Include="..\src\Engine\Physics\PhysicalComponent.h" />
-    <ClInclude Include="..\src\Engine\Physics\PhysicsDebugComponent.h" />
+    <ClInclude Include="..\src\Engine\Physics\OverlappingBehaviour.h" />
+    <ClInclude Include="..\src\Engine\Physics\PhysicalBehaviour.h" />
+    <ClInclude Include="..\src\Engine\Physics\PhysicsDebugBehaviour.h" />
     <ClInclude Include="..\src\Engine\Physics\PhysicsHandler.h" />
     <ClInclude Include="..\src\Engine\Physics\ShapeBody.h" />
-    <ClInclude Include="..\src\Engine\Physics\UserPullComponent.h" />
+    <ClInclude Include="..\src\Engine\Physics\ShapeNodeVisual.h" />
+    <ClInclude Include="..\src\Engine\Physics\ShapeVisualBehaviour.h" />
+    <ClInclude Include="..\src\Engine\Physics\UserPullBehaviour.h" />
     <ClInclude Include="..\src\Engine\Scene.h" />
+    <ClInclude Include="..\src\Engine\NodeVisual.h" />
     <ClInclude Include="..\src\Engine\SceneNode.h" />
+    <ClInclude Include="..\src\Engine\SortingStrategyEntity.h" />
     <ClInclude Include="..\src\Engine\Singleton.h" />
     <ClInclude Include="..\src\Engine\Updateable.h" />
     <ClInclude Include="..\src\Engine\UserInput.h" />

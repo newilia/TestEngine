@@ -1,21 +1,26 @@
-#include "PhysicsDebugComponent.h"
+#include "PhysicsDebugBehaviour.h"
 
 #include "AbstractBody.h"
+#include "PhysicalBehaviour.h"
 #include "Engine/EngineInterface.h"
 #include "Engine/FontManager.h"
 #include "Engine/VectorArrow.h"
 
 #include <fmt/format.h>
 
-void PhysicsDebugComponent::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+void PhysicsDebugBehaviour::DrawDebug(sf::RenderTarget& target, sf::RenderStates states) const {
 	if (!EngineContext::Instance().IsDebugEnabled()) {
 		return;
 	}
-	auto body = dynamic_cast<AbstractBody*>(_holder);
+	auto node = GetNode();
+	if (!node) {
+		return;
+	}
+	auto body = std::dynamic_pointer_cast<AbstractBody>(node);
 	if (!body) {
 		return;
 	}
-	auto physComp = body->FindComponent<PhysicalComponent>();
+	auto physComp = body->FindEntity<PhysicalBehaviour>();
 	if (!physComp) {
 		return;
 	}
@@ -26,17 +31,11 @@ void PhysicsDebugComponent::draw(sf::RenderTarget& target, sf::RenderStates stat
 	text.setOutlineColor(sf::Color::Black);
 	text.setOutlineThickness(1.f);
 
-	/*for (size_t i = 0; i < body->GetPointCount(); ++i) {
-	    text.setString(fmt::to_string(i));
-	    text.setPosition(body->GetPointGlobal(i) - sf::Vector2f(3, 10));
-	    target.draw(text, states);
-	}*/
-
 	auto pos = body->GetPosGlobal();
 	text.setPosition(pos);
 	text.setString(fmt::format("{}\n{:.1f}, {:.1f}", body->getName(), pos.x, pos.y));
 	target.draw(text, states);
 
 	VectorArrow velArrow(body->GetPosGlobal(), body->GetPosGlobal() + physComp->_velocity);
-	target.draw(velArrow);
+	target.draw(velArrow, states);
 }

@@ -3,7 +3,7 @@
 #include "SFML/Graphics.hpp"
 
 class AbstractShapeBody : public AbstractBody
-{ // todo: combine with Abstract body
+{
 public:
 	AbstractShapeBody() {}
 
@@ -19,8 +19,7 @@ public:
 		return _shape->getTransform().transformPoint(_shape->getPoint(index));
 	}
 
-	// void update(const sf::Time& dt) override;
-	void DrawSelf(sf::RenderTarget& target, sf::RenderStates states) const override;
+	void Init() override;
 
 	sf::Vector2f GetPosGlobal() const override { return _shape->getPosition(); }
 
@@ -29,7 +28,3 @@ public:
 protected:
 	sf::Shape* _shape = nullptr;
 };
-
-inline void AbstractShapeBody::DrawSelf(sf::RenderTarget& target, sf::RenderStates states) const {
-	target.draw(*_shape, states);
-}

@@ -1,9 +1,10 @@
 #include "TestEnvironment.h"
 
 #include "Engine/EngineInterface.h"
-#include "Engine/FpsNode.h"
+#include "Engine/FpsCounterBehaviour.h"
 #include "Engine/Physics/BodyPullHandler.h"
-#include "Engine/Physics/CollisionComponent.h"
+#include "Engine/Physics/CollisionBehaviour.h"
+#include "Engine/Physics/UserPullBehaviour.h"
 #include "Engine/Physics/PhysicsHandler.h"
 #include "Engine/Physics/ShapeBody.h"
 #include "Engine/Scene.h"
@@ -47,7 +48,7 @@ std::shared_ptr<Scene> TestEnvironment::buildScene() {
 		body->GetShape()->setOutlineThickness(1.f);
 		body->GetPhysicalComponent()->setImmovable();
 		body->GetPhysicalComponent()->_restitution = bodiesRestitution;
-		body->RequireComponent<CollisionComponent>()->_collisionGroups.set(0, true);
+		body->RequireEntity<CollisionBehaviour>()->_collisionGroups.set(0, true);
 		body->Init();
 		scene->addChild(body);
 	}
@@ -78,11 +79,11 @@ std::shared_ptr<Scene> TestEnvironment::buildScene() {
 		body->GetShape()->setPosition(sf::Vector2f{x, y});
 		body->GetPhysicalComponent()->_mass = 3.14f * radius * radius;
 		body->GetPhysicalComponent()->_restitution = bodiesRestitution;
-		body->RequireComponent<CollisionComponent>()->_collisionGroups.set(0, true);
+		body->RequireEntity<CollisionBehaviour>()->_collisionGroups.set(0, true);
 		body->Init();
 		scene->addChild(body);
 	}
-	scene->addChild(make_shared<FpsNode>());
+	scene->addChild(CreateFpsCounterNode());
 	return scene;
 }
 
@@ -103,20 +104,20 @@ void TestEnvironment::configureInput() {
 		if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
 			sf::Vector2f mousePos(static_cast<float>(pressed->position.x), static_cast<float>(pressed->position.y));
 			if (pressed->button == sf::Mouse::Button::Left) {
-				ei->GetBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::FORCE);
+				ei->GetBodyPullHandler()->StartPull(mousePos, UserPullBehaviour::PullMode::FORCE);
 			}
 			else if (pressed->button == sf::Mouse::Button::Right) {
-				ei->GetBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::POSITION);
+				ei->GetBodyPullHandler()->StartPull(mousePos, UserPullBehaviour::PullMode::POSITION);
 			}
 			else if (pressed->button == sf::Mouse::Button::Middle) {
-				ei->GetBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::VELOCITY);
+				ei->GetBodyPullHandler()->StartPull(mousePos, UserPullBehaviour::PullMode::VELOCITY);
 			}
 		}
 		else if (event.is<sf::Event::MouseButtonReleased>()) {
-			ei->GetBodyPullHandler()->stopPull();
+			ei->GetBodyPullHandler()->StopPull();
 		}
 		else if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
-			ei->GetBodyPullHandler()->setPullDestination(
+			ei->GetBodyPullHandler()->SetPullDestination(
 			    sf::Vector2f(static_cast<float>(moved->position.x), static_cast<float>(moved->position.y)));
 		}
 	}));

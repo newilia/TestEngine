@@ -1,14 +1,15 @@
 #pragma once
-#include "Engine/ComponentBase.h"
+
+#include "Engine/Behaviour.h"
 
 #include <SFML/System/Vector2.hpp>
 
-class UserPullComponent : public ComponentBase
+class UserPullBehaviour : public Behaviour
 {
 public:
-	UserPullComponent(ComponentHolderBase* holder) : ComponentBase(holder) {}
+	void OnAttached() override {}
 
-	~UserPullComponent() override = default;
+	~UserPullBehaviour() override = default;
 
 	sf::Vector2f getPullVector() const;
 
