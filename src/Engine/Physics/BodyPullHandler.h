@@ -1,10 +1,12 @@
 #pragma once
-#include "Engine/Physics/AbstractBody.h"
-#include "UserPullBehaviour.h"
+
+#include "Engine/Physics/UserPullBehaviour.h"
 
 #include <SFML/Graphics/Drawable.hpp>
 
 #include <memory>
+
+class SceneNode;
 
 class BodyPullHandler : public sf::Drawable
 {
@@ -18,6 +20,6 @@ public:
 
 private:
 	bool _isDebugDrawEnabled = true;
-	std::weak_ptr<AbstractBody> _pullingBody;
+	std::weak_ptr<SceneNode> _pullingBody;
 	std::shared_ptr<sf::Vector2f> _draggingForce;
 };

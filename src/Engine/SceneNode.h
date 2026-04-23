@@ -2,6 +2,8 @@
 
 #include "Behaviour.h"
 #include "NodeVisual.h"
+#include "Physics/PhysicalBehaviour.h"
+#include "Physics/ShapeColliderBehaviourBase.h"
 #include "SortingStrategyEntity.h"
 #include "Updateable.h"
 
@@ -18,10 +20,10 @@ using std::make_shared;
 using std::shared_ptr;
 using std::weak_ptr;
 
-class SceneNode : public enable_shared_from_this<SceneNode>,
-                  public Updateable,
-                  public sf::Drawable,
-                  public sf::Transformable
+class SceneNode final : public enable_shared_from_this<SceneNode>,
+                        public Updateable,
+                        public sf::Drawable,
+                        public sf::Transformable
 {
 public:
 	void Update(const sf::Time& dt) override {}
@@ -29,9 +31,9 @@ public:
 	void updateRec(const sf::Time& dt);
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
-	virtual void DrawSelf(sf::RenderTarget& target, sf::RenderStates states) const {}
+	void DrawSelf(sf::RenderTarget& target, sf::RenderStates states) const {}
 
-	virtual void Init() {}
+	void Init() {}
 
 	void removeFromParent();
 
@@ -54,6 +56,13 @@ public:
 	void SetSortingStrategy(shared_ptr<SortingStrategyEntity>&& sorting);
 
 	void AddBehaviour(shared_ptr<Behaviour>&& behaviour);
+
+	ShapeColliderBehaviourBase* FindShapeCollider() const;
+
+	sf::Vector2f GetPosGlobal() const;
+	void SetPosGlobal(sf::Vector2f pos);
+
+	shared_ptr<PhysicalBehaviour> GetPhysicalComponent() const;
 
 	template <typename T>
 	void RemoveBehaviour() {
@@ -100,6 +109,39 @@ protected:
 	weak_ptr<SceneNode> _parent;
 	std::vector<shared_ptr<SceneNode>> _children;
 };
+
+inline ShapeColliderBehaviourBase* SceneNode::FindShapeCollider() const {
+	for (auto& b : _behaviours) {
+		if (auto s = std::dynamic_pointer_cast<ShapeColliderBehaviourBase>(b)) {
+			return s.get();
+		}
+	}
+	return nullptr;
+}
+
+inline sf::Vector2f SceneNode::GetPosGlobal() const {
+	if (auto* c = FindShapeCollider()) {
+		return c->GetPosGlobal();
+	}
+	return getPosition();
+}
+
+inline void SceneNode::SetPosGlobal(sf::Vector2f pos) {
+	if (auto* c = FindShapeCollider()) {
+		c->SetPosGlobal(pos);
+	}
+	else {
+		setPosition(pos);
+	}
+}
+
+inline shared_ptr<PhysicalBehaviour> SceneNode::GetPhysicalComponent() const {
+	auto* self = const_cast<SceneNode*>(this);
+	if (!self->FindEntity<PhysicalBehaviour>()) {
+		self->RequireEntity<PhysicalBehaviour>();
+	}
+	return FindEntity<PhysicalBehaviour>();
+}
 
 using NodePtr = shared_ptr<SceneNode>;
 using NodeWeakPtr = weak_ptr<SceneNode>;

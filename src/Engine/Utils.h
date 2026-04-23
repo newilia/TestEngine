@@ -2,6 +2,7 @@
 #include "Physics/AbstractBody.h"
 #include "SFML/Graphics.hpp"
 
+#include <memory>
 #include <optional>
 
 namespace utils {
@@ -42,7 +43,7 @@ std::optional<std::pair<float, std::optional<float>>> solveQuadraticEquation(flo
 sf::CircleShape createCircle(const sf::Vector2f& pos, float radius, sf::Color color);
 
 template <typename T, typename U>
-shared_ptr<T> sharedPtrCast(const U* ptr) {
-	return dynamic_pointer_cast<T>((const_cast<U*>(ptr))->shared_from_this());
+std::shared_ptr<T> sharedPtrCast(const U* ptr) {
+	return std::dynamic_pointer_cast<T>((const_cast<U*>(ptr))->shared_from_this());
 }
 } // namespace utils

@@ -1,14 +1,18 @@
 #include "ShapeVisualBehaviour.h"
 
-#include "AbstractShapeBody.h"
+#include "ShapeColliderBehaviourBase.h"
 #include "ShapeNodeVisual.h"
 #include "Engine/SceneNode.h"
 
 void ShapeVisualBehaviour::OnAttached() {
 	auto node = GetNode();
-	if (!node || !_body) {
+	if (!node) {
 		return;
 	}
-	auto visual = std::make_shared<ShapeNodeVisual>(_body->GetBaseShape());
+	auto* collider = node->FindShapeCollider();
+	if (!collider) {
+		return;
+	}
+	auto visual = std::make_shared<ShapeNodeVisual>(collider->GetBaseShape());
 	node->SetVisual(std::move(visual));
 }
