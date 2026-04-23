@@ -2,15 +2,9 @@
 
 #include "Engine/Behaviour.h"
 
-class AbstractShapeBody;
-
+/// Регистрирует единственный визуал ноды по sf::Shape из ShapeColliderBehaviourBase на той же ноде.
 class ShapeVisualBehaviour : public Behaviour
 {
 public:
-	explicit ShapeVisualBehaviour(AbstractShapeBody* body) : _body(body) {}
-
 	void OnAttached() override;
-
-private:
-	AbstractShapeBody* _body = nullptr;
 };

@@ -1,6 +1,7 @@
 #include "BodyPullHandler.h"
 
 #include "Engine/EngineInterface.h"
+#include "Engine/SceneNode.h"
 #include "Engine/Utils.h"
 #include "Engine/VectorArrow.h"
 
@@ -11,7 +12,8 @@ void BodyPullHandler::StartPull(sf::Vector2f mousePos, UserPullBehaviour::PullMo
 		if (!body) {
 			continue;
 		}
-		if (!utils::isPointInsideOfBody(mousePos, body.get())) {
+		auto* collider = body->FindShapeCollider();
+		if (!collider || !utils::isPointInsideOfBody(mousePos, collider)) {
 			continue;
 		}
 		if (body->GetPhysicalComponent()->isImmovable()) {
@@ -23,7 +25,7 @@ void BodyPullHandler::StartPull(sf::Vector2f mousePos, UserPullBehaviour::PullMo
 		pullComponent->_localSourcePoint = mousePos - body->GetPosGlobal();
 		pullComponent->_globalDestPoint = mousePos;
 		pullComponent->_mode = pullMode;
-		_pullingBody = utils::sharedPtrCast<AbstractBody>(body.get());
+		_pullingBody = body;
 		break;
 	}
 }

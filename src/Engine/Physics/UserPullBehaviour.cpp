@@ -1,11 +1,11 @@
 #include "UserPullBehaviour.h"
 
-#include "AbstractBody.h"
+#include "Engine/SceneNode.h"
 
 sf::Vector2f UserPullBehaviour::getPullVector() const {
 	if (auto node = GetNode()) {
-		if (auto abstractBody = std::dynamic_pointer_cast<AbstractBody>(node)) {
-			return _globalDestPoint - abstractBody->GetPosGlobal() - _localSourcePoint;
+		if (auto* collider = node->FindShapeCollider()) {
+			return _globalDestPoint - collider->GetPosGlobal() - _localSourcePoint;
 		}
 	}
 	return {};

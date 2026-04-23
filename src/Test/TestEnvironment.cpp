@@ -6,10 +6,13 @@
 #include "Engine/Physics/CollisionBehaviour.h"
 #include "Engine/Physics/UserPullBehaviour.h"
 #include "Engine/Physics/PhysicsHandler.h"
-#include "Engine/Physics/ShapeBody.h"
+#include "Engine/Physics/ShapeColliderBehaviour.h"
 #include "Engine/Scene.h"
 #include "Engine/UserInput.h"
+#include "Engine/Utils.h"
 #include "fmt/format.h"
+
+#include <utility>
 
 void TestEnvironment::setup() {
 	EngineContext& engine = EngineContext::Instance();
@@ -39,49 +42,51 @@ std::shared_ptr<Scene> TestEnvironment::buildScene() {
 	                                {-wallOffset, screenSize.y / 2},
 	                                {screenSize.x + wallOffset, screenSize.y / 2}};
 	for (int i = 0; i < 4; ++i) {
-		auto body = make_shared<RectangleBody>();
+		auto body = CreateShapeBodyNode<sf::RectangleShape>();
 		body->setName(wallNames[i]);
-		body->GetShape()->setPosition(wallPositions[i]);
-		body->GetShape()->setSize(wallSizes[i]);
-		body->GetShape()->setFillColor(sf::Color(30, 255, 30, 50));
-		body->GetShape()->setOutlineColor(sf::Color(30, 255, 30, 120));
-		body->GetShape()->setOutlineThickness(1.f);
+		auto* rect = dynamic_cast<sf::RectangleShape*>(body->FindShapeCollider()->GetBaseShape());
+		rect->setSize(wallSizes[i]);
+		rect->setOrigin(utils::findCenterOfMass(rect));
+		rect->setPosition(wallPositions[i]);
+		rect->setFillColor(sf::Color(30, 255, 30, 50));
+		rect->setOutlineColor(sf::Color(30, 255, 30, 120));
+		rect->setOutlineThickness(1.f);
 		body->GetPhysicalComponent()->setImmovable();
 		body->GetPhysicalComponent()->_restitution = bodiesRestitution;
 		body->RequireEntity<CollisionBehaviour>()->_collisionGroups.set(0, true);
-		body->Init();
-		scene->addChild(body);
+		scene->addChild(std::move(body));
 	}
 
 	for (int i = 0; i < 300; ++i) {
-		auto body = make_shared<CircleBody>();
+		auto body = CreateShapeBodyNode<sf::CircleShape>();
 		body->setName(fmt::format("circle_{}", i));
 
 		float radius = 5.f * (1 + i % 3);
-		body->GetShape()->setRadius(radius);
+		auto* circle = dynamic_cast<sf::CircleShape*>(body->FindShapeCollider()->GetBaseShape());
+		circle->setRadius(radius);
 		constexpr float pointsCountConstant = 3.f;
 		auto pointsCount = static_cast<size_t>(pointsCountConstant * (7 + radius / 8));
-		body->GetShape()->setPointCount(pointsCount);
+		circle->setPointCount(pointsCount);
 
 		sf::Color color(40, 170, 255, 200);
 		auto outlineColor = color;
 		outlineColor.a = 255;
 
-		body->GetShape()->setFillColor(color);
-		body->GetShape()->setOutlineColor(outlineColor);
-		body->GetShape()->setOutlineThickness(1);
+		circle->setFillColor(color);
+		circle->setOutlineColor(outlineColor);
+		circle->setOutlineThickness(1);
+		circle->setOrigin(utils::findCenterOfMass(circle));
 		auto minX = static_cast<int>(wallVisibleWidth + radius);
 		auto maxX = static_cast<int>(screenSize.x - wallVisibleWidth - radius);
 		auto minY = static_cast<int>(wallVisibleWidth + radius);
 		auto maxY = static_cast<int>(screenSize.y - wallVisibleWidth - radius);
 		auto x = static_cast<float>(minX + rand() % (maxX - minX));
 		auto y = static_cast<float>(minY + rand() % (maxY - minY));
-		body->GetShape()->setPosition(sf::Vector2f{x, y});
+		circle->setPosition(sf::Vector2f{x, y});
 		body->GetPhysicalComponent()->_mass = 3.14f * radius * radius;
 		body->GetPhysicalComponent()->_restitution = bodiesRestitution;
 		body->RequireEntity<CollisionBehaviour>()->_collisionGroups.set(0, true);
-		body->Init();
-		scene->addChild(body);
+		scene->addChild(std::move(body));
 	}
 	scene->addChild(CreateFpsCounterNode());
 	return scene;

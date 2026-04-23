@@ -1,17 +1,19 @@
 #include "PhysicsHandler.h"
 
 #include "AbstractBody.h"
-#include "AbstractShapeBody.h"
 #include "Engine/EngineInterface.h"
 #include "Engine/Physics/CollisionBehaviour.h"
 #include "Engine/Physics/OverlappingBehaviour.h"
 #include "Engine/Physics/UserPullBehaviour.h"
+#include "Engine/SceneNode.h"
 #include "Engine/Utils.h"
 #include "Engine/VectorArrow.h"
 #include "Engine/common.h"
 #include "IntersectionDetails.h"
-#include "ShapeBody.h"
+#include "ShapeColliderBehaviourBase.h"
 #include "fmt/format.h"
+
+#include <SFML/Graphics/CircleShape.hpp>
 
 #include <cassert>
 #include <optional>
@@ -23,15 +25,15 @@ void PhysicsHandler::Update(const sf::Time& dt) {
 	}
 }
 
-void PhysicsHandler::RegisterBody(shared_ptr<AbstractBody> body) {
+void PhysicsHandler::RegisterBody(shared_ptr<SceneNode> body) {
 	_bodies.emplace_back(body);
 }
 
-void PhysicsHandler::UnregisterBody(AbstractBody* body) {
-	/*auto it = std::find(_bodies.begin(), _bodies.end(), body);
-	if (it != _bodies.end()) {
-	    _bodies.erase(it);
-	}*/
+void PhysicsHandler::UnregisterBody(SceneNode* body) {
+	_bodies.remove_if([body](const std::weak_ptr<SceneNode>& w) {
+		auto locked = w.lock();
+		return !locked || locked.get() == body;
+	});
 }
 
 void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
@@ -88,7 +90,7 @@ void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 				continue;
 			}
 
-			if (auto intersection = DetectIntersection(b1.get(), b2.get())) {
+			if (auto intersection = DetectIntersection(b1, b2)) {
 				{
 					auto cc1 = b1->FindEntity<CollisionBehaviour>();
 					auto cc2 = b2->FindEntity<CollisionBehaviour>();
@@ -143,27 +145,53 @@ bool PhysicsHandler::CheckBboxIntersection(const AbstractBody* body1, const Abst
 	return bb1.findIntersection(bb2).has_value();
 }
 
-std::optional<IntersectionDetails> PhysicsHandler::DetectIntersection(const AbstractBody* body1,
-                                                                      const AbstractBody* body2) {
-	if (!body1 || !body2) {
+std::optional<IntersectionDetails> PhysicsHandler::DetectIntersection(const shared_ptr<SceneNode>& n1,
+                                                                      const shared_ptr<SceneNode>& n2) {
+	if (!n1 || !n2) {
 		assert(false);
 		return std::nullopt;
 	}
-
-	if (!CheckBboxIntersection(body1, body2)) {
+	auto* c1 = n1->FindShapeCollider();
+	auto* c2 = n2->FindShapeCollider();
+	if (!c1 || !c2) {
 		return std::nullopt;
 	}
 
-	if (auto circle1 = dynamic_cast<const CircleBody*>(body1)) {
-		if (auto circle2 = dynamic_cast<const CircleBody*>(body2)) {
-			return DetectCircleCircleIntersection(circle1, circle2);
+	if (!CheckBboxIntersection(c1, c2)) {
+		return std::nullopt;
+	}
+
+	auto assignNodes = [&](IntersectionDetails& r) {
+		r.wNode1 = n1;
+		r.wNode2 = n2;
+	};
+
+	if (auto* circ1 = dynamic_cast<sf::CircleShape*>(c1->GetBaseShape())) {
+		if (auto* circ2 = dynamic_cast<sf::CircleShape*>(c2->GetBaseShape())) {
+			if (auto r = DetectCircleCircleIntersection(circ1, circ2)) {
+				assignNodes(*r);
+				return r;
+			}
+			return std::nullopt;
 		}
-		return DetectCirclePolygonIntersection(circle1, body2);
+		if (auto r = DetectCirclePolygonIntersection(circ1, c2)) {
+			assignNodes(*r);
+			return r;
+		}
+		return std::nullopt;
 	}
-	if (auto circle2 = dynamic_cast<const CircleBody*>(body2)) {
-		return DetectCirclePolygonIntersection(circle2, body1);
+	if (auto* circ2 = dynamic_cast<sf::CircleShape*>(c2->GetBaseShape())) {
+		if (auto r = DetectCirclePolygonIntersection(circ2, c1)) {
+			assignNodes(*r);
+			return r;
+		}
+		return std::nullopt;
 	}
-	return DetectPolygonPolygonIntersection(body1, body2);
+	if (auto r = DetectPolygonPolygonIntersection(c1, c2)) {
+		assignNodes(*r);
+		return r;
+	}
+	return std::nullopt;
 }
 
 std::optional<IntersectionDetails> PhysicsHandler::DetectPolygonPolygonIntersection(const AbstractBody* body1,
@@ -203,13 +231,11 @@ std::optional<IntersectionDetails> PhysicsHandler::DetectPolygonPolygonIntersect
 		result.intersection.end = *edges_i_p.rbegin();
 	}
 
-	result.wBody1 = utils::sharedPtrCast<AbstractBody>(body1);
-	result.wBody2 = utils::sharedPtrCast<AbstractBody>(body2);
 	return result;
 }
 
-std::optional<IntersectionDetails> PhysicsHandler::DetectCirclePolygonIntersection(const CircleBody* circle,
-                                                                                   const AbstractBody* body) {
+std::optional<IntersectionDetails> PhysicsHandler::DetectCirclePolygonIntersection(const sf::CircleShape* circle,
+                                                                                 const AbstractBody* body) {
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
 
@@ -219,8 +245,8 @@ std::optional<IntersectionDetails> PhysicsHandler::DetectCirclePolygonIntersecti
 	for (size_t i = 0; i < pointsCount; ++i) {
 		const Segment edge = {body->GetPointGlobal(i), body->GetPointGlobal((i + 1) % pointsCount)};
 
-		if (auto i_point = FindSegmentCircleIntersectionPoint(edge, circle->GetShape()->getPosition(),
-		                                                      circle->GetShape()->getRadius())) {
+		if (auto i_point =
+		        FindSegmentCircleIntersectionPoint(edge, circle->getPosition(), circle->getRadius())) {
 			edges_i_p.emplace_back(i_point->p1);
 			if (i_point->p2) {
 				edges_i_p.emplace_back(*i_point->p2);
@@ -241,18 +267,16 @@ std::optional<IntersectionDetails> PhysicsHandler::DetectCirclePolygonIntersecti
 		result.intersection.end = *edges_i_p.rbegin();
 	}
 
-	result.wBody1 = utils::sharedPtrCast<AbstractBody>(circle);
-	result.wBody2 = utils::sharedPtrCast<AbstractBody>(body);
 	return result;
 }
 
-std::optional<IntersectionDetails> PhysicsHandler::DetectCircleCircleIntersection(const CircleBody* circle1,
-                                                                                  const CircleBody* circle2) {
+std::optional<IntersectionDetails> PhysicsHandler::DetectCircleCircleIntersection(const sf::CircleShape* circle1,
+                                                                                  const sf::CircleShape* circle2) {
 	using namespace utils;
-	auto r1 = circle1->GetShape()->getRadius();
-	auto r2 = circle2->GetShape()->getRadius();
-	auto pos1 = circle1->GetShape()->getPosition();
-	auto pos2 = circle2->GetShape()->getPosition() - circle1->GetShape()->getPosition();
+	auto r1 = circle1->getRadius();
+	auto r2 = circle2->getRadius();
+	auto pos1 = circle1->getPosition();
+	auto pos2 = circle2->getPosition() - circle1->getPosition();
 	float a = -2 * pos2.x;
 	float b = -2 * pos2.y;
 	float c = sq(pos2.x) + sq(pos2.y) + sq(r1) - sq(r2);
@@ -264,9 +288,6 @@ std::optional<IntersectionDetails> PhysicsHandler::DetectCircleCircleIntersectio
 	float y0 = -b * c / (sq(a) + sq(b)) + pos1.y;
 
 	IntersectionDetails result;
-	result.wBody1 = utils::sharedPtrCast<AbstractBody>(circle1);
-	result.wBody2 = utils::sharedPtrCast<AbstractBody>(circle2);
-
 	if (isZero(p)) {
 		result.intersection.start = sf::Vector2f(x0, y0);
 		result.intersection.end = result.intersection.start;
@@ -442,8 +463,8 @@ PhysicsHandler::FindSegmentCircleIntersectionPoint(const Segment& seg, const sf:
 }
 
 void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
-	auto body1 = collision.wBody1.lock();
-	auto body2 = collision.wBody2.lock();
+	auto body1 = collision.wNode1.lock();
+	auto body2 = collision.wNode2.lock();
 	if (!body1 || !body2) {
 		assert(false);
 		return;
@@ -468,9 +489,13 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 	}
 
 	/* overlapping fixing */
-	auto getPenetrationDepth = [collisionPoint = collision.intersection.start](const AbstractBody* body,
+	auto getPenetrationDepth = [collisionPoint = collision.intersection.start](SceneNode* node,
 	                                                                           const sf::Vector2f& bodyNormal) {
 		float result = 0.f;
+		auto* body = node->FindShapeCollider();
+		if (!body) {
+			return 0.f;
+		}
 		for (size_t i = 0; i < body->GetPointCount(); ++i) {
 			auto penetrationVec = body->GetPointGlobal(i) - collisionPoint;
 			float depth = utils::project(penetrationVec, bodyNormal);
@@ -523,19 +548,23 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 			auto window = EngineContext::Instance().GetMainWindow();
 			{
 				VectorArrow force1(body1->GetPosGlobal(), body1->GetPosGlobal() + dv1);
-				if (auto shapedBody = dynamic_cast<AbstractShapeBody*>(body1.get())) {
-					auto color = shapedBody->GetBaseShape()->getFillColor();
-					color.a = 255u;
-					force1.setColor(color);
+				if (auto* collider = body1->FindShapeCollider()) {
+					if (auto* shape = collider->GetBaseShape()) {
+						auto color = shape->getFillColor();
+						color.a = 255u;
+						force1.setColor(color);
+					}
 				}
 				window->draw(force1);
 			}
 			{
 				VectorArrow force2(body2->GetPosGlobal(), body2->GetPosGlobal() + dv2);
-				if (auto shapedBody = dynamic_cast<AbstractShapeBody*>(body2.get())) {
-					auto color = shapedBody->GetBaseShape()->getFillColor();
-					color.a = 255u;
-					force2.setColor(color);
+				if (auto* collider = body2->FindShapeCollider()) {
+					if (auto* shape = collider->GetBaseShape()) {
+						auto color = shape->getFillColor();
+						color.a = 255u;
+						force2.setColor(color);
+					}
 				}
 				window->draw(force2);
 			}

@@ -1,25 +1,19 @@
 #pragma once
 
-#include "Engine/SceneNode.h"
-#include "PhysicalBehaviour.h"
+#include <SFML/Graphics/Rect.hpp>
+#include <SFML/System/Vector2.hpp>
 
-class AbstractBody : public SceneNode
+#include <cstddef>
+
+/// Геометрия и позиция физического тела (реализуется коллайдером-поведением на ноде).
+class AbstractBody
 {
 public:
-	AbstractBody();
-	~AbstractBody() override;
+	virtual ~AbstractBody() = default;
+
 	virtual sf::FloatRect GetBbox() const = 0;
 	virtual size_t GetPointCount() const = 0;
 	virtual sf::Vector2f GetPointGlobal(std::size_t index) const = 0;
 	virtual sf::Vector2f GetPosGlobal() const = 0;
 	virtual void SetPosGlobal(sf::Vector2f pos) = 0;
-	void Init() override;
-
-	shared_ptr<PhysicalBehaviour> GetPhysicalComponent() const {
-		auto* self = const_cast<AbstractBody*>(this);
-		if (!self->FindEntity<PhysicalBehaviour>()) {
-			self->RequireEntity<PhysicalBehaviour>();
-		}
-		return FindEntity<PhysicalBehaviour>();
-	}
 };

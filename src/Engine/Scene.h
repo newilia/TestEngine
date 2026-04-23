@@ -1,5 +1,6 @@
 #pragma once
+
 #include "SceneNode.h"
 
-class Scene final : public SceneNode
-{};
+/// Корень сцены; совпадает с финальным SceneNode.
+using Scene = SceneNode;

@@ -1,14 +1,51 @@
 #include "PongPlatform.h"
 
+#include "Engine/Behaviour.h"
+#include "Engine/Physics/ShapeColliderBehaviourBase.h"
+
 #include <cassert>
 
-PongPlatform::PongPlatform() {}
+namespace {
+
+class PongPlatformTickBehaviour : public Behaviour
+{
+	std::weak_ptr<PongPlatform> _platform;
+
+public:
+	explicit PongPlatformTickBehaviour(std::weak_ptr<PongPlatform> platform) : _platform(std::move(platform)) {}
+
+	void OnUpdate(const sf::Time& dt) override {
+		if (auto p = _platform.lock()) {
+			p->Update(dt);
+		}
+	}
+};
+
+} // namespace
+
+PongPlatform::PongPlatform(std::shared_ptr<SceneNode> node) : _node(std::move(node)) {}
+
+void PongPlatform::registerTickBehaviour() {
+	_node->AddBehaviour(std::make_shared<PongPlatformTickBehaviour>(weak_from_this()));
+}
 
 void PongPlatform::Init() {
-	ShapeBody::Init();
 	if (_controller) {
 		_controller->Init();
 	}
+}
+
+sf::ConvexShape* PongPlatform::GetShape() const {
+	auto* c = _node->FindShapeCollider();
+	if (!c) {
+		return nullptr;
+	}
+	return dynamic_cast<sf::ConvexShape*>(c->GetBaseShape());
+}
+
+sf::FloatRect PongPlatform::GetBbox() const {
+	auto* c = _node->FindShapeCollider();
+	return c ? c->GetBbox() : sf::FloatRect{};
 }
 
 void PongPlatform::setShapeDimensions(sf::Vector2f size, float curvature, float rotationDeg) {
@@ -27,7 +64,6 @@ void PongPlatform::setShapeDimensions(sf::Vector2f size, float curvature, float 
 }
 
 void PongPlatform::Update(const sf::Time& dt) {
-	ShapeBody::Update(dt);
 	if (_controller) {
 		_controller->Update(dt);
 	}
