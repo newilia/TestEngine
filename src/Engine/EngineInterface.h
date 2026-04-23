@@ -8,10 +8,14 @@
 
 #include <cstdint>
 
-class EngineInterface : public Singleton<EngineInterface> {
+class EngineContext : public Singleton<EngineContext> {
 public:
-	EngineInterface();
-	~EngineInterface() override = default;
+	[[nodiscard]] static EngineContext& instance() {
+		return *getInstance();
+	}
+
+	EngineContext();
+	~EngineContext() override = default;
 	void init();
 	
 	auto getScene() { return mScene; }
@@ -48,5 +52,3 @@ private:
 	bool mIsSimPaused = false;
 	bool mIsDebugDrawEnabled = true;
 };
-
-inline EngineInterface* EI() { return EngineInterface::getInstance(); }

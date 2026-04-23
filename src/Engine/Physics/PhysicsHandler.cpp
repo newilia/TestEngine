@@ -115,7 +115,7 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 		}
 	}
 
-	if (EI()->isDebugEnabled()) {
+	if (EngineContext::instance().isDebugEnabled()) {
 		//float systemEnergy = 0.f;
 		//sf::Vector2f systemImpulse;
 		//for (auto& wBody : mBodies) {
@@ -274,8 +274,8 @@ std::optional<IntersectionDetails> PhysicsHandler::detectCircleCircleIntersectio
 		result.intersection.end.x = x0 - b * mult;
 		result.intersection.end.y = y0 + a * mult;
 	}
-	if (EI()->isDebugEnabled()) {
-		auto wnd = EI()->getMainWindow();
+	if (EngineContext::instance().isDebugEnabled()) {
+		auto wnd = EngineContext::instance().getMainWindow();
 		wnd->draw(createCircle(result.intersection.start, 2, sf::Color::White));
 		wnd->draw(createCircle(result.intersection.end, 2, sf::Color::White));
 	}
@@ -422,8 +422,8 @@ std::optional<SegmentIntersectionPoints> PhysicsHandler::findSegmentCircleInters
 		*result.p2 += circleCenter;
 	}
 
-	if (EI()->isDebugEnabled()) {
-		auto window = EI()->getMainWindow();
+	if (EngineContext::instance().isDebugEnabled()) {
+		auto window = EngineContext::instance().getMainWindow();
 		window->draw(createCircle(result.p1, 2.f, sf::Color::White));
 		if (result.p2) {
 			window->draw(createCircle(*result.p2, 2.f, sf::Color::White));
@@ -508,8 +508,8 @@ void PhysicsHandler::resolveCollision(const IntersectionDetails& collision) {
 		auto isNan = utils::isNan(pc1->mVelocity) || utils::isNan(pc2->mVelocity);
 		assert(!isNan);
 
-		if (EI()->isDebugEnabled()) {
-			auto window = EI()->getMainWindow();
+		if (EngineContext::instance().isDebugEnabled()) {
+			auto window = EngineContext::instance().getMainWindow();
 			{
 				VectorArrow force1(body1->getPosGlobal(), body1->getPosGlobal() + dv1);
 				if (auto shapedBody = dynamic_cast<AbstractShapeBody*>(body1.get())) {
@@ -532,8 +532,8 @@ void PhysicsHandler::resolveCollision(const IntersectionDetails& collision) {
 		
 	}
 
-	if (EI()->isDebugEnabled()) {
-		auto window = EI()->getMainWindow();
+	if (EngineContext::instance().isDebugEnabled()) {
+		auto window = EngineContext::instance().getMainWindow();
 		const sf::Vector2f middlePoint((collision.intersection.start + collision.intersection.end) * 0.5f);
 
 		{	// collision segment

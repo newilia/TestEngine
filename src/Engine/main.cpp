@@ -17,21 +17,21 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
     PongEnvironment env;
     env.setup();
 
-    auto ei = EI();
+    EngineContext& engine = EngineContext::instance();
     while (true) {
-        auto window = EI()->getMainWindow();
+        auto window = engine.getMainWindow();
         if (!window) {
             continue;
         }
         if (!window->isOpen()) {
             break;
         }
-        auto scene = ei->getScene();
+        auto scene = engine.getScene();
         if (!scene) {
             continue;
         }
 
-        ei->onStartFrame();
+        engine.onStartFrame();
         window->clear();
 
         while (auto ev = window->pollEvent()) {
@@ -39,12 +39,12 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
             if (event.is<sf::Event::Closed>()) {
                 return EXIT_SUCCESS;
             }
-            ei->getUserInput()->handleEvent(event);
+            engine.getUserInput()->handleEvent(event);
         }
 
-        auto dt = ei->getSimDt();
-        if (!ei->isSimPaused()) {
-            ei->getPhysicsHandler()->update(dt);
+        auto dt = engine.getSimDt();
+        if (!engine.isSimPaused()) {
+            engine.getPhysicsHandler()->update(dt);
         }
         if (dt.asSeconds() > 0.1f) {
             dt = sf::seconds(0.1f);
@@ -52,7 +52,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
         scene->updateRec(dt);
 
         window->draw(*scene);
-        window->draw(*ei->getBodyPullHandler());
+        window->draw(*engine.getBodyPullHandler());
         window->display();
     }
 

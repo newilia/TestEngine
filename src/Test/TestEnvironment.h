@@ -4,9 +4,10 @@
 #include "Engine/Scene.h"
 
 class TestEnvironment {
-public:
+  public:
 	static void setup();
-private:
+
+  private:
 	static std::shared_ptr<Scene> buildScene();
 	static void configureInput();
 };

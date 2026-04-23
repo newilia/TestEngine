@@ -1,13 +1,22 @@
 #include "FontManager.h"
+#include <iostream>
 
 FontManager::FontManager() {
 	initDefaultFont();
 }
 
-const sf::Font* FontManager::getDefaultFont() const {
-	return &mDefaultFont;
+void FontManager::initDefaultFont() {
+	try {
+		mDefaultFont = new sf::Font{"resources/fonts/calibri.ttf"};
+	} 
+	catch (const std::exception& e) {
+		std::cerr << e.what();
+	} 
+	catch (...) {
+		throw;
+	}
 }
 
-void FontManager::initDefaultFont() {
-	mDefaultFont = sf::Font{"resources/fonts/calibri.ttf"};
+const sf::Font* FontManager::getDefaultFont() const {
+	return mDefaultFont;
 }

@@ -22,20 +22,20 @@ static weak_ptr<PongPlatform> sUserPlatform;
 static weak_ptr<PongBall> sBall;
 
 static sf::Vector2f getScreenSize() {
-	return sf::Vector2f(EI()->getMainWindow()->getSize());
+	return sf::Vector2f(EngineContext::instance().getMainWindow()->getSize());
 }
 
 void PongEnvironment::setup() {
-	auto ei = EI();
+	EngineContext& engine = EngineContext::instance();
 	auto videoMode = sf::VideoMode::getFullscreenModes()[0];
 	//sf::VideoMode videoMode(800, 600);
-	ei->createMainWindow(videoMode, "Pong", sf::Style::None);
-	ei->getMainWindow()->setMouseCursorVisible(false);
-	ei->getPhysicsHandler()->setSubstepCount(2);
-	ei->getPhysicsHandler()->setGravity({ 0, 1000 });
-	ei->setDebugEnabled(false);
-	//ei->getMainWindow()->setFramerateLimit(40.f);
-	ei->setScene(buildScene());
+	engine.createMainWindow(videoMode, "Pong", sf::Style::None);
+	engine.getMainWindow()->setMouseCursorVisible(false);
+	engine.getPhysicsHandler()->setSubstepCount(2);
+	engine.getPhysicsHandler()->setGravity({ 0, 1000 });
+	engine.setDebugEnabled(false);
+	//engine.getMainWindow()->setFramerateLimit(40.f);
+	engine.setScene(buildScene());
 	configureGlobalInput();
 }
 
@@ -162,7 +162,7 @@ void PongEnvironment::addUserPlatform(Scene* scene) {
 	platform->init();
 	scene->addChild(platform);
 
-	EI()->getUserInput()->attachEventHandler(createDelegate<PongPlatform, sf::Event>(platform, [platform = std::weak_ptr(platform)](sf::Event event) {
+	EngineContext::instance().getUserInput()->attachEventHandler(createDelegate<PongPlatform, sf::Event>(platform, [platform = std::weak_ptr(platform)](sf::Event event) {
 		if (auto controller = dynamic_pointer_cast<UserPlatformController>(platform.lock()->getController())) {
 			controller->handleEvent(event);
 		}
@@ -209,7 +209,7 @@ std::shared_ptr<Scene> PongEnvironment::buildScene() {
 }
 
 void PongEnvironment::configureGlobalInput() {
-	auto ei = EI();
+	auto ei = &EngineContext::instance();
 	auto userInput = ei->getUserInput();
 	auto scene = ei->getScene();
 	
@@ -229,5 +229,5 @@ void PongEnvironment::configureGlobalInput() {
 }
 
 void PongEnvironment::onLose() {
-	EI()->setScene(buildScene());
+	EngineContext::instance().setScene(buildScene());
 }
