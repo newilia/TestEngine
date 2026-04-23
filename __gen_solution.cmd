@@ -7,7 +7,12 @@ cd /d "%~dp0"
 if not exist "build" mkdir "build"
 
 cmake -S . -B build -A x64
-if errorlevel 1 exit /b %errorlevel%
+if errorlevel 1 goto :cmake_fail
 
 exit /b 0
+
+:cmake_fail
+set "EC=%errorlevel%"
+pause
+exit /b %EC%
 
