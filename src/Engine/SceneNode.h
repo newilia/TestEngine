@@ -55,7 +55,7 @@ public:
 	void SetVisual(shared_ptr<NodeVisual>&& visual);
 	void SetSortingStrategy(shared_ptr<SortingStrategyEntity>&& sorting);
 
-	void AddBehaviour(shared_ptr<Behaviour>&& behaviour);
+	void AddBehaviour(shared_ptr<Behaviour> behaviour);
 
 	ShapeColliderBehaviourBase* FindShapeCollider() const;
 
@@ -93,8 +93,7 @@ public:
 			return existing;
 		}
 		auto created = std::make_shared<T>();
-		shared_ptr<Behaviour> asBase = created;
-		AddBehaviour(std::move(asBase));
+		AddBehaviour(created);
 		return created;
 	}
 

@@ -89,6 +89,9 @@ std::shared_ptr<Scene> TestEnvironment::buildScene() {
 		scene->addChild(std::move(body));
 	}
 	scene->addChild(CreateFpsCounterNode());
+	auto bodyPull = CreateBodyPullOverlay();
+	scene->addChild(std::move(bodyPull.node));
+	EngineContext::Instance().SetBodyPullHandler(bodyPull.handler);
 	return scene;
 }
 

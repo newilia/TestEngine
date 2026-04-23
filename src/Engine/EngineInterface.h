@@ -1,12 +1,14 @@
 #pragma once
 #include "FontManager.h"
-#include "Physics/BodyPullHandler.h"
 #include "Physics/PhysicsHandler.h"
 #include "Scene.h"
 #include "Singleton.h"
 #include "UserInput.h"
 
 #include <cstdint>
+#include <memory>
+
+class BodyPullHandler;
 
 class EngineContext : public Singleton<EngineContext>
 {
@@ -14,7 +16,7 @@ public:
 	[[nodiscard]] static EngineContext& Instance() { return *GetInstance(); }
 
 	EngineContext();
-	~EngineContext() override = default;
+	~EngineContext() override;
 	void Init();
 
 	auto GetScene() { return _scene; }
@@ -51,6 +53,8 @@ public:
 	bool IsDebugEnabled() const { return _isDebugDrawEnabled; }
 
 	void SetDebugEnabled(bool enabled) { _isDebugDrawEnabled = enabled; }
+
+	void SetBodyPullHandler(const shared_ptr<BodyPullHandler>& handler) { _bodyPullHandler = handler; }
 
 private:
 	shared_ptr<sf::RenderWindow> _mainWindow;
