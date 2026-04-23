@@ -6,15 +6,19 @@
 ShapeColliderBehaviourBase::~ShapeColliderBehaviourBase() {
 	if (_registered) {
 		if (auto n = GetNode()) {
-			EngineContext::Instance().GetPhysicsHandler()->UnregisterBody(n.get());
+			if (auto ph = EngineContext::Instance().GetPhysicsHandler()) {
+				ph->UnregisterBody(n.get());
+			}
 		}
 	}
 }
 
 void ShapeColliderBehaviourBase::OnAttached() {
 	if (auto n = GetNode()) {
-		EngineContext::Instance().GetPhysicsHandler()->RegisterBody(n);
-		_registered = true;
+		if (auto ph = EngineContext::Instance().GetPhysicsHandler()) {
+			ph->RegisterBody(n);
+			_registered = true;
+		}
 	}
 }
 

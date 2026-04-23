@@ -94,14 +94,20 @@ void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 				{
 					auto cc1 = b1->FindEntity<CollisionBehaviour>();
 					auto cc2 = b2->FindEntity<CollisionBehaviour>();
-					if (cc1 && cc2 && (cc1->_collisionGroups & cc2->_collisionGroups).any()) {
-						if (!b1->GetPhysicalComponent()->isImmovable() || !b2->GetPhysicalComponent()->isImmovable()) {
+					auto pc1 = b1->GetPhysicalComponent();
+					auto pc2 = b2->GetPhysicalComponent();
+					if (cc1 && cc2 && pc1 && pc2 && (cc1->_collisionGroups & cc2->_collisionGroups).any()) {
+						if (!pc1->isImmovable() || !pc2->isImmovable()) {
 							ResolveCollision(*intersection);
 							for (auto callback : cc1->_collisionCallbacks) {
-								callback->operator()(*intersection);
+								if (callback) {
+									callback->operator()(*intersection);
+								}
 							}
 							for (auto callback : cc2->_collisionCallbacks) {
-								callback->operator()(*intersection);
+								if (callback) {
+									callback->operator()(*intersection);
+								}
 							}
 						}
 					}
@@ -112,7 +118,9 @@ void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 					auto oc2 = b2->FindEntity<OverlappingBehaviour>();
 					if (oc1 && oc2 && (oc1->_overlappingGroups & oc2->_overlappingGroups).any()) {
 						for (auto callback : oc1->_overlappingCallbacks) {
-							callback->operator()(*intersection);
+							if (callback) {
+								callback->operator()(*intersection);
+							}
 						}
 					}
 				}
@@ -301,9 +309,10 @@ std::optional<IntersectionDetails> PhysicsHandler::DetectCircleCircleIntersectio
 		result.intersection.end.y = y0 + a * mult;
 	}
 	if (EngineContext::Instance().IsDebugEnabled()) {
-		auto wnd = EngineContext::Instance().GetMainWindow();
-		wnd->draw(createCircle(result.intersection.start, 2, sf::Color::White));
-		wnd->draw(createCircle(result.intersection.end, 2, sf::Color::White));
+		if (auto wnd = EngineContext::Instance().GetMainWindow()) {
+			wnd->draw(createCircle(result.intersection.start, 2, sf::Color::White));
+			wnd->draw(createCircle(result.intersection.end, 2, sf::Color::White));
+		}
 	}
 	return result;
 }
@@ -453,10 +462,11 @@ PhysicsHandler::FindSegmentCircleIntersectionPoint(const Segment& seg, const sf:
 	}
 
 	if (EngineContext::Instance().IsDebugEnabled()) {
-		auto window = EngineContext::Instance().GetMainWindow();
-		window->draw(createCircle(result.p1, 2.f, sf::Color::White));
-		if (result.p2) {
-			window->draw(createCircle(*result.p2, 2.f, sf::Color::White));
+		if (auto window = EngineContext::Instance().GetMainWindow()) {
+			window->draw(createCircle(result.p1, 2.f, sf::Color::White));
+			if (result.p2) {
+				window->draw(createCircle(*result.p2, 2.f, sf::Color::White));
+			}
 		}
 	}
 	return result;
@@ -472,6 +482,10 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 
 	auto pc1 = body1->GetPhysicalComponent();
 	auto pc2 = body2->GetPhysicalComponent();
+	if (!pc1 || !pc2) {
+		assert(false);
+		return;
+	}
 
 	if (pc1->isImmovable()) { // fixed body must be second
 		std::swap(body1, body2);
@@ -545,46 +559,48 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 		assert(!isNan);
 
 		if (EngineContext::Instance().IsDebugEnabled()) {
-			auto window = EngineContext::Instance().GetMainWindow();
-			{
-				VectorArrow force1(body1->GetPosGlobal(), body1->GetPosGlobal() + dv1);
-				if (auto* collider = body1->FindShapeCollider()) {
-					if (auto* shape = collider->GetBaseShape()) {
-						auto color = shape->getFillColor();
-						color.a = 255u;
-						force1.setColor(color);
+			if (auto window = EngineContext::Instance().GetMainWindow()) {
+				{
+					VectorArrow force1(body1->GetPosGlobal(), body1->GetPosGlobal() + dv1);
+					if (auto* collider = body1->FindShapeCollider()) {
+						if (auto* shape = collider->GetBaseShape()) {
+							auto color = shape->getFillColor();
+							color.a = 255u;
+							force1.setColor(color);
+						}
 					}
+					window->draw(force1);
 				}
-				window->draw(force1);
-			}
-			{
-				VectorArrow force2(body2->GetPosGlobal(), body2->GetPosGlobal() + dv2);
-				if (auto* collider = body2->FindShapeCollider()) {
-					if (auto* shape = collider->GetBaseShape()) {
-						auto color = shape->getFillColor();
-						color.a = 255u;
-						force2.setColor(color);
+				{
+					VectorArrow force2(body2->GetPosGlobal(), body2->GetPosGlobal() + dv2);
+					if (auto* collider = body2->FindShapeCollider()) {
+						if (auto* shape = collider->GetBaseShape()) {
+							auto color = shape->getFillColor();
+							color.a = 255u;
+							force2.setColor(color);
+						}
 					}
+					window->draw(force2);
 				}
-				window->draw(force2);
 			}
 		}
 	}
 
 	if (EngineContext::Instance().IsDebugEnabled()) {
-		auto window = EngineContext::Instance().GetMainWindow();
-		const sf::Vector2f middlePoint((collision.intersection.start + collision.intersection.end) * 0.5f);
+		if (auto window = EngineContext::Instance().GetMainWindow()) {
+			const sf::Vector2f middlePoint((collision.intersection.start + collision.intersection.end) * 0.5f);
 
-		{ // collision segment
-			VectorArrow segment(collision.intersection.start, collision.intersection.end, sf::Color::Magenta);
-			window->draw(segment);
+			{ // collision segment
+				VectorArrow segment(collision.intersection.start, collision.intersection.end, sf::Color::Magenta);
+				window->draw(segment);
+			}
+
+			{ // normal
+				VectorArrow tangentArrow(middlePoint, middlePoint + b1_normal * 50.f, sf::Color::Yellow);
+				window->draw(tangentArrow);
+			}
+
+			window->draw(utils::createCircle(middlePoint, 2, sf::Color::White));
 		}
-
-		{ // normal
-			VectorArrow tangentArrow(middlePoint, middlePoint + b1_normal * 50.f, sf::Color::Yellow);
-			window->draw(tangentArrow);
-		}
-
-		window->draw(utils::createCircle(middlePoint, 2, sf::Color::White));
 	}
 }
