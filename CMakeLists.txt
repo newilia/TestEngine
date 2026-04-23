@@ -42,4 +42,11 @@ target_link_libraries(TestEngine PRIVATE
     sfml-network
 )
 
+# Стартовый проект в Visual Studio (F5) — иначе часто остаётся ALL_BUILD / таргет из third-party
+set_property(DIRECTORY "${CMAKE_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT TestEngine)
+
+# При запуске/отладке из Visual Studio (и CMake в VS Code) CWD = корень репозитория
+set_target_properties(TestEngine PROPERTIES
+    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
 

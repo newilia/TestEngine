@@ -1,0 +1,10 @@
+---
+description: Verify C++/CMake changes with a Debug build
+alwaysApply: true
+---
+
+# Debug build check
+
+After non-trivial edits to `src/`, `CMakeLists.txt`, or build-related files, run a **Debug** build yourself (e.g. `cmake --build <build-dir> --config Debug`) and fix failures. Use an existing build tree (`out/vs18`, `build`, …) or configure once per `BUILD.md`.
+
+Skip if the change is docs-only and cannot affect compilation.
