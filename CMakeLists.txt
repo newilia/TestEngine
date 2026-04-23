@@ -13,9 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 file(GLOB_RECURSE ENGINE_SOURCES
-    "src/Engine/*.cpp"
-    "src/Pong/*.cpp"
-    "src/Test/*.cpp"
+    "src/**.cpp"
 )
 
 if(NOT ENGINE_SOURCES)
