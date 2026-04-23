@@ -1,11 +1,13 @@
 #include "EngineInterface.h"
+#include "Physics/BodyPullHandler.h"
 
 EngineContext::EngineContext() {
 	_userInput = make_shared<UserInput>();
 	_physicsHandler = make_shared<PhysicsHandler>();
 	_fontManager = make_shared<FontManager>();
-	_bodyPullHandler = make_shared<BodyPullHandler>();
 }
+
+EngineContext::~EngineContext() = default;
 
 void EngineContext::Init() {}
 

@@ -1,8 +1,5 @@
 #include "UserInput.h"
 
-#include "Physics/BodyPullHandler.h"
-#include "Physics/PhysicsHandler.h"
-
 void UserInput::handleEvent(const sf::Event& event) {
 	// switch (event.type) {
 	// case sf::Event::MouseButtonPressed:

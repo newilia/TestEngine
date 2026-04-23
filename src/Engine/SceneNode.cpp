@@ -21,7 +21,7 @@ void SceneNode::SetSortingStrategy(shared_ptr<SortingStrategyEntity>&& sorting) 
 	}
 }
 
-void SceneNode::AddBehaviour(shared_ptr<Behaviour>&& behaviour) {
+void SceneNode::AddBehaviour(shared_ptr<Behaviour> behaviour) {
 	behaviour->AttachTo(shared_from_this());
 	_behaviours.push_back(std::move(behaviour));
 	_behaviours.back()->OnAttached();
