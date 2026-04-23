@@ -49,10 +49,10 @@ sf::Vector2f utils::rotate(const sf::Vector2f& v, float angle) {
 }
 
 bool utils::isPointInsideOfBody(const sf::Vector2f& point, const AbstractBody* body) {
-	auto t1 = body->getPointGlobal(0);
-	for (size_t i = 0; i < body->getPointCount() - 2; ++i) {
-		auto t2 = body->getPointGlobal(i + 1);
-		auto t3 = body->getPointGlobal(i + 2);
+	auto t1 = body->GetPointGlobal(0);
+	for (size_t i = 0; i < body->GetPointCount() - 2; ++i) {
+		auto t2 = body->GetPointGlobal(i + 1);
+		auto t3 = body->GetPointGlobal(i + 2);
 		if (isPointInsideOfTriangle(point, t1, t2, t3)) {
 			return true;
 		}

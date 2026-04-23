@@ -5,7 +5,7 @@
 void PongBall::Update(const sf::Time& dt) {
 	ShapeBody::Update(dt);
 
-	auto pc = getPhysicalComponent();
+	auto pc = GetPhysicalComponent();
 	if (auto speedExcess = utils::length(pc->_velocity) / _targetSpeed; speedExcess > 1.f) {
 		float dampingMultiplier = 1 - speedExcess * dt.asSeconds() * _speedDampingFactor;
 		pc->_velocity *= dampingMultiplier;

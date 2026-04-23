@@ -2,7 +2,6 @@
 
 #include "Engine/EngineInterface.h"
 #include "Engine/FpsNode.h"
-#include "Engine/Physics/AbstractShapeBodyFixed.h"
 #include "Engine/Physics/BodyPullHandler.h"
 #include "Engine/Physics/CollisionComponent.h"
 #include "Engine/Physics/PhysicsHandler.h"
@@ -46,8 +45,8 @@ std::shared_ptr<Scene> TestEnvironment::buildScene() {
 		body->GetShape()->setFillColor(sf::Color(30, 255, 30, 50));
 		body->GetShape()->setOutlineColor(sf::Color(30, 255, 30, 120));
 		body->GetShape()->setOutlineThickness(1.f);
-		body->getPhysicalComponent()->setImmovable();
-		body->getPhysicalComponent()->_restitution = bodiesRestitution;
+		body->GetPhysicalComponent()->setImmovable();
+		body->GetPhysicalComponent()->_restitution = bodiesRestitution;
 		body->requireComponent<CollisionComponent>()->_collisionGroups.set(0, true);
 		body->Init();
 		scene->addChild(body);
@@ -77,8 +76,8 @@ std::shared_ptr<Scene> TestEnvironment::buildScene() {
 		auto x = static_cast<float>(minX + rand() % (maxX - minX));
 		auto y = static_cast<float>(minY + rand() % (maxY - minY));
 		body->GetShape()->setPosition(sf::Vector2f{x, y});
-		body->getPhysicalComponent()->_mass = 3.14f * radius * radius;
-		body->getPhysicalComponent()->_restitution = bodiesRestitution;
+		body->GetPhysicalComponent()->_mass = 3.14f * radius * radius;
+		body->GetPhysicalComponent()->_restitution = bodiesRestitution;
 		body->requireComponent<CollisionComponent>()->_collisionGroups.set(0, true);
 		body->Init();
 		scene->addChild(body);

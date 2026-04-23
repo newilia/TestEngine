@@ -30,7 +30,7 @@ void AiPlatformController::movePlatformTowardsBall() {
 	float distanceToBall = 0.f;
 	if (auto ball = _ball.lock()) {
 		distanceToBall = std::abs(_curExState.ballPos.y - _platform->GetShape()->getPosition().y) -
-		                 ball->GetShape()->getRadius() - _platform->getBbox().size.y;
+		                 ball->GetShape()->getRadius() - _platform->GetBbox().size.y;
 	}
 
 	float steadyRatio = 0.f;

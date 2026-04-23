@@ -1,7 +1,7 @@
 #include "PhysicsHandler.h"
 
 #include "AbstractBody.h"
-#include "AbstractShapeBodyFixed.h"
+#include "AbstractShapeBody.h"
 #include "Engine/EngineInterface.h"
 #include "Engine/Physics/CollisionComponent.h"
 #include "Engine/Physics/OverlappingComponent.h"
@@ -43,7 +43,7 @@ void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 		}
 		auto physComp = body->findComponent<PhysicalComponent>();
 		auto pullComp = body->findComponent<UserPullComponent>();
-		auto pos = body->getPosGlobal();
+		auto pos = body->GetPosGlobal();
 
 		sf::Vector2f forceSum = [&]() {
 			sf::Vector2f force;
@@ -69,7 +69,7 @@ void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 				physComp->_velocity = pullComp->getPullVector();
 			}
 		}
-		body->setPosGlobal(pos);
+		body->SetPosGlobal(pos);
 	}
 
 	// handle intersections
@@ -90,7 +90,7 @@ void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 					auto cc1 = b1->findComponent<CollisionComponent>();
 					auto cc2 = b2->findComponent<CollisionComponent>();
 					if (cc1 && cc2 && (cc1->_collisionGroups & cc2->_collisionGroups).any()) {
-						if (!b1->getPhysicalComponent()->isImmovable() || !b2->getPhysicalComponent()->isImmovable()) {
+						if (!b1->GetPhysicalComponent()->isImmovable() || !b2->GetPhysicalComponent()->isImmovable()) {
 							ResolveCollision(*intersection);
 							for (auto callback : cc1->_collisionCallbacks) {
 								callback->operator()(*intersection);
@@ -135,8 +135,8 @@ void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 }
 
 bool PhysicsHandler::CheckBboxIntersection(const AbstractBody* body1, const AbstractBody* body2) {
-	auto&& bb1 = body1->getBbox();
-	auto&& bb2 = body2->getBbox();
+	auto&& bb1 = body1->GetBbox();
+	auto&& bb2 = body2->GetBbox();
 	return bb1.findIntersection(bb2).has_value();
 }
 
@@ -168,15 +168,15 @@ std::optional<IntersectionDetails> PhysicsHandler::DetectPolygonPolygonIntersect
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
 
-	const auto pointsCount1 = body1->getPointCount();
-	const auto pointsCount2 = body2->getPointCount();
+	const auto pointsCount1 = body1->GetPointCount();
+	const auto pointsCount2 = body2->GetPointCount();
 	IntersectionDetails result;
 
 	for (size_t i = 0; i < pointsCount1; ++i) {
-		const Segment edge1 = {body1->getPointGlobal(i), body1->getPointGlobal((i + 1) % pointsCount1)};
+		const Segment edge1 = {body1->GetPointGlobal(i), body1->GetPointGlobal((i + 1) % pointsCount1)};
 
 		for (size_t j = 0; j < pointsCount2; ++j) {
-			const Segment edge2 = {body2->getPointGlobal(j), body2->getPointGlobal((j + 1) % pointsCount2)};
+			const Segment edge2 = {body2->GetPointGlobal(j), body2->GetPointGlobal((j + 1) % pointsCount2)};
 
 			if (auto i_point = FindSegmentsIntersectionPoint(edge1, edge2)) {
 				edges_i_p.emplace_back(i_point->p1);
@@ -210,11 +210,11 @@ std::optional<IntersectionDetails> PhysicsHandler::DetectCirclePolygonIntersecti
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
 
-	const auto pointsCount = body->getPointCount();
+	const auto pointsCount = body->GetPointCount();
 	IntersectionDetails result;
 
 	for (size_t i = 0; i < pointsCount; ++i) {
-		const Segment edge = {body->getPointGlobal(i), body->getPointGlobal((i + 1) % pointsCount)};
+		const Segment edge = {body->GetPointGlobal(i), body->GetPointGlobal((i + 1) % pointsCount)};
 
 		if (auto i_point = FindSegmentCircleIntersectionPoint(edge, circle->GetShape()->getPosition(),
 		                                                      circle->GetShape()->getRadius())) {
@@ -459,7 +459,7 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 	auto v1_to_v2 = pc2->_velocity - pc1->_velocity;
 	auto b1_tangent = collision.intersection.getDirVector();
 	auto b1_normal = utils::normalize(sf::Vector2f(-b1_tangent.y, b1_tangent.x));
-	if (utils::dot(body2->getPosGlobal() - body1->getPosGlobal(), b1_normal) < 0.f) {
+	if (utils::dot(body2->GetPosGlobal() - body1->GetPosGlobal(), b1_normal) < 0.f) {
 		b1_tangent = -b1_tangent;
 		b1_normal = -b1_normal;
 	}
@@ -468,8 +468,8 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 	auto getPenetrationDepth = [collisionPoint = collision.intersection.start](const AbstractBody* body,
 	                                                                           const sf::Vector2f& bodyNormal) {
 		float result = 0.f;
-		for (size_t i = 0; i < body->getPointCount(); ++i) {
-			auto penetrationVec = body->getPointGlobal(i) - collisionPoint;
+		for (size_t i = 0; i < body->GetPointCount(); ++i) {
+			auto penetrationVec = body->GetPointGlobal(i) - collisionPoint;
 			float depth = utils::project(penetrationVec, bodyNormal);
 			result = std::max(result, depth);
 		}
@@ -479,14 +479,14 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 	    getPenetrationDepth(body1.get(), b1_normal) + getPenetrationDepth(body2.get(), -b1_normal);
 
 	if (pc2->isImmovable()) {
-		auto b1_pos = body1->getPosGlobal() - b1_normal * penetrationDepthSum;
-		body1->setPosGlobal(b1_pos);
+		auto b1_pos = body1->GetPosGlobal() - b1_normal * penetrationDepthSum;
+		body1->SetPosGlobal(b1_pos);
 	}
 	else {
-		auto b1_pos = body1->getPosGlobal() - b1_normal * penetrationDepthSum * (m1 / (m1 + m2));
-		body1->setPosGlobal(b1_pos);
-		auto b2_pos = body2->getPosGlobal() + b1_normal * penetrationDepthSum * (m2 / (m1 + m2));
-		body2->setPosGlobal(b2_pos);
+		auto b1_pos = body1->GetPosGlobal() - b1_normal * penetrationDepthSum * (m1 / (m1 + m2));
+		body1->SetPosGlobal(b1_pos);
+		auto b2_pos = body2->GetPosGlobal() + b1_normal * penetrationDepthSum * (m2 / (m1 + m2));
+		body2->SetPosGlobal(b2_pos);
 	}
 
 	/* velocities handling */
@@ -519,7 +519,7 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 		if (EngineContext::Instance().IsDebugEnabled()) {
 			auto window = EngineContext::Instance().GetMainWindow();
 			{
-				VectorArrow force1(body1->getPosGlobal(), body1->getPosGlobal() + dv1);
+				VectorArrow force1(body1->GetPosGlobal(), body1->GetPosGlobal() + dv1);
 				if (auto shapedBody = dynamic_cast<AbstractShapeBody*>(body1.get())) {
 					auto color = shapedBody->GetBaseShape()->getFillColor();
 					color.a = 255u;
@@ -528,7 +528,7 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 				window->draw(force1);
 			}
 			{
-				VectorArrow force2(body2->getPosGlobal(), body2->getPosGlobal() + dv2);
+				VectorArrow force2(body2->GetPosGlobal(), body2->GetPosGlobal() + dv2);
 				if (auto shapedBody = dynamic_cast<AbstractShapeBody*>(body2.get())) {
 					auto color = shapedBody->GetBaseShape()->getFillColor();
 					color.a = 255u;
