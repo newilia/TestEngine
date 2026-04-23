@@ -7,6 +7,24 @@
 
 #include <cassert>
 
+namespace {
+
+void sortChildrenByDrawOrder(std::vector<shared_ptr<SceneNode>>& nodes) {
+	std::stable_sort(nodes.begin(), nodes.end(), [](const shared_ptr<SceneNode>& a, const shared_ptr<SceneNode>& b) {
+		int la = 0;
+		int lb = 0;
+		if (auto sa = a->FindEntity<SortingStrategyEntity>()) {
+			la = sa->GetSortLayer();
+		}
+		if (auto sb = b->FindEntity<SortingStrategyEntity>()) {
+			lb = sb->GetSortLayer();
+		}
+		return la < lb;
+	});
+}
+
+} // namespace
+
 void SceneNode::SetVisual(shared_ptr<NodeVisual>&& visual) {
 	_visual = std::move(visual);
 	if (_visual) {
@@ -94,17 +112,7 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	}
 
 	std::vector<shared_ptr<SceneNode>> sorted = _children;
-	std::stable_sort(sorted.begin(), sorted.end(), [](const shared_ptr<SceneNode>& a, const shared_ptr<SceneNode>& b) {
-		int la = 0;
-		int lb = 0;
-		if (auto sa = a->FindEntity<SortingStrategyEntity>()) {
-			la = sa->GetSortLayer();
-		}
-		if (auto sb = b->FindEntity<SortingStrategyEntity>()) {
-			lb = sb->GetSortLayer();
-		}
-		return la < lb;
-	});
+	sortChildrenByDrawOrder(sorted);
 
 	for (auto& child : sorted) {
 		child->draw(target, states);
@@ -115,6 +123,32 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 			debugBehaviour->DrawDebug(target, states);
 		}
 	}
+}
+
+shared_ptr<SceneNode> SceneNode::FindTopMostTapTarget(sf::Vector2f windowPosition) {
+	std::vector<shared_ptr<SceneNode>> sorted = _children;
+	sortChildrenByDrawOrder(sorted);
+	for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
+		if (auto hit = (*it)->FindTopMostTapTarget(windowPosition)) {
+			return hit;
+		}
+	}
+	if (_visual && _visual->IsTapHandlingEnabled() && _visual->HitTest(windowPosition)) {
+		if (!_visual->IsTransparentToTap()) {
+			return shared_from_this();
+		}
+	}
+	return nullptr;
+}
+
+bool SceneNode::DispatchTapAt(sf::Vector2f windowPosition) {
+	if (auto hit = FindTopMostTapTarget(windowPosition)) {
+		if (auto v = hit->GetVisual()) {
+			v->OnTap(windowPosition);
+			return true;
+		}
+	}
+	return false;
 }
 
 void SceneNode::removeFromParent() {

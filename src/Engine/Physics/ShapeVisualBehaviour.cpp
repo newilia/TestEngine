@@ -13,6 +13,8 @@ void ShapeVisualBehaviour::OnAttached() {
 	if (!collider) {
 		return;
 	}
-	auto visual = std::make_shared<ShapeNodeVisual>(collider->GetBaseShape());
-	node->SetVisual(std::move(visual));
+	auto visual = MakeShapeNodeVisual(collider->GetBaseShape());
+	if (visual) {
+		node->SetVisual(std::move(visual));
+	}
 }

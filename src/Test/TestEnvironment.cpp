@@ -109,10 +109,23 @@ void TestEnvironment::configureInput() {
 	}));
 
 	userInput->attachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+		if (const auto* touch = event.getIf<sf::Event::TouchBegan>()) {
+			sf::Vector2f pos(static_cast<float>(touch->position.x), static_cast<float>(touch->position.y));
+			if (auto scene = ei->GetScene()) {
+				scene->DispatchTapAt(pos);
+			}
+			return;
+		}
 		if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
 			sf::Vector2f mousePos(static_cast<float>(pressed->position.x), static_cast<float>(pressed->position.y));
 			if (pressed->button == sf::Mouse::Button::Left) {
-				ei->GetBodyPullHandler()->StartPull(mousePos, UserPullBehaviour::PullMode::FORCE);
+				bool tapConsumed = false;
+				if (auto scene = ei->GetScene()) {
+					tapConsumed = scene->DispatchTapAt(mousePos);
+				}
+				if (!tapConsumed) {
+					ei->GetBodyPullHandler()->StartPull(mousePos, UserPullBehaviour::PullMode::FORCE);
+				}
 			}
 			else if (pressed->button == sf::Mouse::Button::Right) {
 				ei->GetBodyPullHandler()->StartPull(mousePos, UserPullBehaviour::PullMode::POSITION);

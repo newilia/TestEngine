@@ -11,6 +11,8 @@ class VectorArrowNodeVisual : public NodeVisual
 public:
 	void Draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
+	bool HitTest(sf::Vector2f windowPosition) const override;
+
 	void setStartPos(const sf::Vector2f& start);
 
 	void setEndPos(const sf::Vector2f& end);
