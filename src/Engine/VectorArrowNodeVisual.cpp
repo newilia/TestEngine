@@ -24,3 +24,7 @@ void VectorArrowNodeVisual::Draw(sf::RenderTarget& target, sf::RenderStates stat
 	}
 	target.draw(_arrow, states);
 }
+
+bool VectorArrowNodeVisual::HitTest(sf::Vector2f /*windowPosition*/) const {
+	return false;
+}

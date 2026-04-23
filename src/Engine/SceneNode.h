@@ -55,6 +55,12 @@ public:
 	void SetVisual(shared_ptr<NodeVisual>&& visual);
 	void SetSortingStrategy(shared_ptr<SortingStrategyEntity>&& sorting);
 
+	shared_ptr<NodeVisual> GetVisual() const { return _visual; }
+
+	shared_ptr<SceneNode> FindTopMostTapTarget(sf::Vector2f windowPosition);
+
+	bool DispatchTapAt(sf::Vector2f windowPosition);
+
 	void AddBehaviour(shared_ptr<Behaviour> behaviour);
 
 	ShapeColliderBehaviourBase* FindShapeCollider() const;

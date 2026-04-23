@@ -5,6 +5,8 @@
 #include <memory>
 #include <optional>
 
+class NodeVisual;
+
 namespace utils {
 float length(const sf::Vector2f& vec);
 float manhattan_dist(const sf::Vector2f& vec);
@@ -23,6 +25,14 @@ sf::Vector2f rotate(const sf::Vector2f& v, float angle);
 
 bool isPointInsideOfBody(const sf::Vector2f& point, const AbstractBody* body);
 bool isPointInsideOfTriangle(sf::Vector2f p, sf::Vector2f t1, sf::Vector2f t2, sf::Vector2f t3);
+
+/// Веерная триангуляция от первой вершины в мировых координатах (как у тела). Не вызывать для круга — см. `isPointInsideOfShape`.
+bool isPointInsideShapeByFan(const sf::Vector2f& point, const sf::Shape* shape);
+
+/// Круг — только формула; прямоугольник — inverse transform + локальный rect; иначе веер.
+bool isPointInsideOfShape(const sf::Vector2f& point, const sf::Shape* shape);
+
+bool isPointInsideOfNodeVisual(const sf::Vector2f& point, const NodeVisual* visual);
 
 bool isNan(const sf::Vector2f& v);
 
