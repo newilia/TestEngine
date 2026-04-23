@@ -7,28 +7,28 @@ EngineContext::EngineContext() {
 	_bodyPullHandler = make_shared<BodyPullHandler>();
 }
 
-void EngineContext::init() {}
+void EngineContext::Init() {}
 
-sf::Time EngineContext::getSimDt() const {
+sf::Time EngineContext::GetSimDt() const {
 	if (_isSimPaused) {
 		return sf::Time();
 	}
-	auto dt = getFrameDt() * _simSpeedMultiplier;
+	auto dt = GetFrameDt() * _simSpeedMultiplier;
 	return dt;
 }
 
-sf::Time EngineContext::getFrameDt(bool ignoreFixed) const {
+sf::Time EngineContext::GetFrameDt(bool ignoreFixed) const {
 	if (!ignoreFixed && _fixedFrameTime) {
 		return *_fixedFrameTime;
 	}
 	return _frameTime;
 }
 
-void EngineContext::onStartFrame() {
+void EngineContext::OnStartFrame() {
 	_frameTime = _frameClock.getElapsedTime();
 	_frameClock.restart();
 }
 
-void EngineContext::createMainWindow(sf::VideoMode mode, const sf::String& title, std::uint32_t /*style*/) {
+void EngineContext::CreateMainWindow(sf::VideoMode mode, const sf::String& title, std::uint32_t /*style*/) {
 	_mainWindow = std::make_shared<sf::RenderWindow>(mode, title, sf::State::Windowed);
 }

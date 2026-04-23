@@ -14,7 +14,7 @@ public:
 	virtual sf::Vector2f getPointGlobal(std::size_t index) const = 0;
 	virtual sf::Vector2f getPosGlobal() const = 0;
 	virtual void setPosGlobal(sf::Vector2f pos) = 0;
-	void init() override;
+	void Init() override;
 
 	shared_ptr<PhysicalComponent> getPhysicalComponent() const { return findComponent<PhysicalComponent>(); }
 };

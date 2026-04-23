@@ -6,7 +6,7 @@
 #include "UserPullComponent.h"
 
 void BodyPullHandler::startPull(sf::Vector2f mousePos, UserPullComponent::PullMode pullMode) {
-	auto bodies = EngineContext::instance().getPhysicsHandler()->getAllBodies();
+	auto bodies = EngineContext::Instance().GetPhysicsHandler()->getAllBodies();
 	for (auto wBody : bodies) {
 		auto body = wBody.lock();
 		if (!body) {

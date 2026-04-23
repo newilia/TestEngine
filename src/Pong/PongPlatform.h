@@ -7,9 +7,9 @@ class PongPlatform : public ShapeBody<sf::ConvexShape>
 {
 public:
 	PongPlatform();
-	void init() override;
+	void Init() override;
 	void setShapeDimensions(sf::Vector2f size, float curveness, float rotationDeg);
-	void update(const sf::Time& dt) override;
+	void Update(const sf::Time& dt) override;
 
 	shared_ptr<PlatformControllerBase> getController() const { return _controller; }
 

@@ -8,9 +8,9 @@ AbstractBody::AbstractBody() {
 }
 
 AbstractBody::~AbstractBody() {
-	EngineContext::instance().getPhysicsHandler()->unregisterBody(this);
+	EngineContext::Instance().GetPhysicsHandler()->UnregisterBody(this);
 }
 
-void AbstractBody::init() {
-	EngineContext::instance().getPhysicsHandler()->registerBody(dynamic_pointer_cast<AbstractBody>(shared_from_this()));
+void AbstractBody::Init() {
+	EngineContext::Instance().GetPhysicsHandler()->RegisterBody(dynamic_pointer_cast<AbstractBody>(shared_from_this()));
 }

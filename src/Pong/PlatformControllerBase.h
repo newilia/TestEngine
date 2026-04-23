@@ -12,7 +12,7 @@ class PlatformControllerBase : public Updateable
 public:
 	explicit PlatformControllerBase(PongPlatform* platform) : _platform(platform) {}
 
-	virtual void init() {}
+	virtual void Init() {}
 
 protected:
 	PongPlatform* _platform = nullptr;

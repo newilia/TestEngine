@@ -4,7 +4,7 @@
 class PongBall final : public CircleBody
 {
 public:
-	void update(const sf::Time& dt) override;
+	void Update(const sf::Time& dt) override;
 
 	float getMaxSpeed() const { return _targetSpeed; }
 

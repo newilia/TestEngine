@@ -4,10 +4,10 @@
 
 PongPlatform::PongPlatform() {}
 
-void PongPlatform::init() {
-	ShapeBody::init();
+void PongPlatform::Init() {
+	ShapeBody::Init();
 	if (_controller) {
-		_controller->init();
+		_controller->Init();
 	}
 }
 
@@ -15,7 +15,7 @@ void PongPlatform::setShapeDimensions(sf::Vector2f size, float curvature, float 
 	assert(curvature >= 0.f && curvature <= 1.f);
 
 	constexpr int pointCount = 42;
-	auto shape = getShape();
+	auto shape = GetShape();
 	shape->setPointCount(pointCount);
 	for (int i = 0; i < pointCount; ++i) {
 		float x = (static_cast<float>(i) / (pointCount - 1) - 0.5f) * 2.0f;
@@ -26,9 +26,9 @@ void PongPlatform::setShapeDimensions(sf::Vector2f size, float curvature, float 
 	shape->setRotation(sf::degrees(rotationDeg));
 }
 
-void PongPlatform::update(const sf::Time& dt) {
-	ShapeBody::update(dt);
+void PongPlatform::Update(const sf::Time& dt) {
+	ShapeBody::Update(dt);
 	if (_controller) {
-		_controller->update(dt);
+		_controller->Update(dt);
 	}
 }

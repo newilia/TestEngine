@@ -11,46 +11,46 @@
 class EngineContext : public Singleton<EngineContext>
 {
 public:
-	[[nodiscard]] static EngineContext& instance() { return *getInstance(); }
+	[[nodiscard]] static EngineContext& Instance() { return *GetInstance(); }
 
 	EngineContext();
 	~EngineContext() override = default;
-	void init();
+	void Init();
 
-	auto getScene() { return _scene; }
+	auto GetScene() { return _scene; }
 
-	void setScene(const shared_ptr<Scene>& scene) { _scene = scene; }
+	void SetScene(const shared_ptr<Scene>& scene) { _scene = scene; }
 
-	auto getUserInput() { return _userInput; }
+	auto GetUserInput() { return _userInput; }
 
-	auto getPhysicsHandler() { return _physicsHandler; }
+	auto GetPhysicsHandler() { return _physicsHandler; }
 
-	auto getFontManager() { return _fontManager; }
+	auto GetFontManager() { return _fontManager; }
 
-	auto getBodyPullHandler() { return _bodyPullHandler; }
+	auto GetBodyPullHandler() { return _bodyPullHandler; }
 
-	float getSimSpeedMultiplier() const { return _simSpeedMultiplier; }
+	float GetSimSpeedMultiplier() const { return _simSpeedMultiplier; }
 
-	void setSimSpeedMultiplier(float val) { _simSpeedMultiplier = val; }
+	void SetSimSpeedMultiplier(float val) { _simSpeedMultiplier = val; }
 
-	bool isSimPaused() const { return _isSimPaused; }
+	bool IsSimPaused() const { return _isSimPaused; }
 
-	void setSimPaused(bool paused) { _isSimPaused = paused; }
+	void SetSimPaused(bool paused) { _isSimPaused = paused; }
 
-	sf::Time getSimDt() const;
-	sf::Time getFrameDt(bool ignoreFixed = false) const;
-	void onStartFrame();
-	void createMainWindow(sf::VideoMode mode, const sf::String& title, std::uint32_t style = 0);
+	sf::Time GetSimDt() const;
+	sf::Time GetFrameDt(bool ignoreFixed = false) const;
+	void OnStartFrame();
+	void CreateMainWindow(sf::VideoMode mode, const sf::String& title, std::uint32_t style = 0);
 
-	sf::RenderWindow* getMainWindow() const { return _mainWindow.get(); }
+	sf::RenderWindow* GetMainWindow() const { return _mainWindow.get(); }
 
-	void setFixedFrameTime(const sf::Time& time) { _fixedFrameTime = time; }
+	void SetFixedFrameTime(const sf::Time& time) { _fixedFrameTime = time; }
 
-	void resetFixedFrameTime() { _fixedFrameTime.reset(); }
+	void ResetFixedFrameTime() { _fixedFrameTime.reset(); }
 
-	bool isDebugEnabled() const { return _isDebugDrawEnabled; }
+	bool IsDebugEnabled() const { return _isDebugDrawEnabled; }
 
-	void setDebugEnabled(bool enabled) { _isDebugDrawEnabled = enabled; }
+	void SetDebugEnabled(bool enabled) { _isDebugDrawEnabled = enabled; }
 
 private:
 	shared_ptr<sf::RenderWindow> _mainWindow;
