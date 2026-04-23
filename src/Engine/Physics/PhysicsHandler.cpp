@@ -1,42 +1,42 @@
 #include "PhysicsHandler.h"
-#include <cassert>
 
 #include "AbstractBody.h"
-#include "IntersectionDetails.h"
-#include "Engine/common.h"
-#include "Engine/EngineInterface.h"
 #include "AbstractShapeBody.h"
-#include "ShapeBody.h"
+#include "Engine/EngineInterface.h"
+#include "Engine/Physics/CollisionComponent.h"
+#include "Engine/Physics/OverlappingComponent.h"
 #include "Engine/Physics/UserPullComponent.h"
 #include "Engine/Utils.h"
 #include "Engine/VectorArrow.h"
+#include "Engine/common.h"
+#include "IntersectionDetails.h"
+#include "ShapeBody.h"
 #include "fmt/format.h"
+
+#include <cassert>
 #include <optional>
 
-#include "Engine/Physics/CollisionComponent.h"
-#include "Engine/Physics/OverlappingComponent.h"
-
 void PhysicsHandler::update(const sf::Time& dt) {
-	utils::removeExpiredPointers(mBodies);
-	for (int i = 0; i < mSubStepsCount; ++i) {
-		updateSubStep(dt / static_cast<float>(mSubStepsCount));
+	utils::removeExpiredPointers(_bodies);
+	for (int i = 0; i < _subStepsCount; ++i) {
+		updateSubStep(dt / static_cast<float>(_subStepsCount));
 	}
 }
 
 void PhysicsHandler::registerBody(shared_ptr<AbstractBody> body) {
-	mBodies.emplace_back(body);
+	_bodies.emplace_back(body);
 }
 
 void PhysicsHandler::unregisterBody(AbstractBody* body) {
-	/*auto it = std::find(mBodies.begin(), mBodies.end(), body);
-	if (it != mBodies.end()) {
-		mBodies.erase(it);
+	/*auto it = std::find(_bodies.begin(), _bodies.end(), body);
+	if (it != _bodies.end()) {
+	    _bodies.erase(it);
 	}*/
 }
 
 void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 	// motion step
-	for (auto& wBody : mBodies) {
+	for (auto& wBody : _bodies) {
 		auto body = wBody.lock();
 		if (!body) {
 			continue;
@@ -47,39 +47,39 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 
 		sf::Vector2f forceSum = [&]() {
 			sf::Vector2f force;
-			if (pullComp && pullComp->mMode == UserPullComponent::PullMode::FORCE) {
-				force += pullComp->getPullVector() * pullComp->mPullingStrength;
+			if (pullComp && pullComp->_mode == UserPullComponent::PullMode::FORCE) {
+				force += pullComp->getPullVector() * pullComp->_pullingStrength;
 			}
 			return force;
 		}();
 
-		physComp->mVelocity += forceSum / physComp->mMass * dt.asSeconds();
-		if (mIsGravityEnabled && !physComp->isImmovable()) {
-			physComp->mVelocity += mGravity * dt.asSeconds();
+		physComp->_velocity += forceSum / physComp->_mass * dt.asSeconds();
+		if (_isGravityEnabled && !physComp->isImmovable()) {
+			physComp->_velocity += _gravity * dt.asSeconds();
 		}
 
-		pos += physComp->mVelocity * dt.asSeconds();
+		pos += physComp->_velocity * dt.asSeconds();
 
 		if (pullComp) {
-			if (pullComp->mMode == UserPullComponent::PullMode::POSITION) {
+			if (pullComp->_mode == UserPullComponent::PullMode::POSITION) {
 				pos += pullComp->getPullVector();
-				physComp->mVelocity = {};
+				physComp->_velocity = {};
 			}
-			else if (pullComp->mMode == UserPullComponent::PullMode::VELOCITY) {
-				physComp->mVelocity = pullComp->getPullVector();
+			else if (pullComp->_mode == UserPullComponent::PullMode::VELOCITY) {
+				physComp->_velocity = pullComp->getPullVector();
 			}
 		}
 		body->setPosGlobal(pos);
 	}
 
 	// handle intersections
-	for (auto it1 = mBodies.begin(); it1 != mBodies.end(); ++it1) {
+	for (auto it1 = _bodies.begin(); it1 != _bodies.end(); ++it1) {
 		auto b1 = it1->lock();
 		if (!b1) {
 			continue;
 		}
 
-		for (auto it2 = std::next(it1); it2 != mBodies.end(); ++it2) {
+		for (auto it2 = std::next(it1); it2 != _bodies.end(); ++it2) {
 			auto b2 = it2->lock();
 			if (!b2) {
 				continue;
@@ -89,13 +89,13 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 				{
 					auto cc1 = b1->findComponent<CollisionComponent>();
 					auto cc2 = b2->findComponent<CollisionComponent>();
-					if (cc1 && cc2 && (cc1->mCollisionGroups & cc2->mCollisionGroups).any()) {
+					if (cc1 && cc2 && (cc1->_collisionGroups & cc2->_collisionGroups).any()) {
 						if (!b1->getPhysicalComponent()->isImmovable() || !b2->getPhysicalComponent()->isImmovable()) {
 							resolveCollision(*intersection);
-							for (auto callback : cc1->mCollisionCallbacks) {
+							for (auto callback : cc1->_collisionCallbacks) {
 								callback->operator()(*intersection);
 							}
-							for (auto callback : cc2->mCollisionCallbacks) {
+							for (auto callback : cc2->_collisionCallbacks) {
 								callback->operator()(*intersection);
 							}
 						}
@@ -105,8 +105,8 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 				{
 					auto oc1 = b1->findComponent<OverlappingComponent>();
 					auto oc2 = b2->findComponent<OverlappingComponent>();
-					if (oc1 && oc2 && (oc1->mOverlappingGroups & oc2->mOverlappingGroups).any()) {
-						for (auto callback : oc1->mOverlappingCallbacks) {
+					if (oc1 && oc2 && (oc1->_overlappingGroups & oc2->_overlappingGroups).any()) {
+						for (auto callback : oc1->_overlappingCallbacks) {
 							callback->operator()(*intersection);
 						}
 					}
@@ -116,24 +116,23 @@ void PhysicsHandler::updateSubStep(const sf::Time& dt) {
 	}
 
 	if (EngineContext::instance().isDebugEnabled()) {
-		//float systemEnergy = 0.f;
-		//sf::Vector2f systemImpulse;
-		//for (auto& wBody : mBodies) {
+		// float systemEnergy = 0.f;
+		// sf::Vector2f systemImpulse;
+		// for (auto& wBody : _bodies) {
 		//	if (auto body = wBody.lock()) {
 		//		if (body->getPhysicalComponent()->isImmovable()) {
 		//			continue;
 		//		}
-		//		auto v = body->getPhysicalComponent()->mVelocity;
+		//		auto v = body->getPhysicalComponent()->_velocity;
 		//		auto v_s = utils::length(v);
-		//		auto m = body->getPhysicalComponent()->mMass;
+		//		auto m = body->getPhysicalComponent()->_mass;
 		//		systemImpulse += v * m;
 		//		systemEnergy += m * v_s * v_s;
 		//	}
-		//}
-		//fmt::println("E = {}, P = {}", systemEnergy, utils::toString(systemImpulse));
+		// }
+		// fmt::println("E = {}, P = {}", systemEnergy, utils::toString(systemImpulse));
 	}
 }
-
 
 bool PhysicsHandler::checkBboxIntersection(const AbstractBody* body1, const AbstractBody* body2) {
 	auto&& bb1 = body1->getBbox();
@@ -141,7 +140,8 @@ bool PhysicsHandler::checkBboxIntersection(const AbstractBody* body1, const Abst
 	return bb1.findIntersection(bb2).has_value();
 }
 
-std::optional<IntersectionDetails> PhysicsHandler::detectIntersection(const AbstractBody* body1, const AbstractBody* body2) {
+std::optional<IntersectionDetails> PhysicsHandler::detectIntersection(const AbstractBody* body1,
+                                                                      const AbstractBody* body2) {
 	if (!body1 || !body2) {
 		assert(false);
 		return std::nullopt;
@@ -163,8 +163,8 @@ std::optional<IntersectionDetails> PhysicsHandler::detectIntersection(const Abst
 	return detectPolygonPolygonIntersection(body1, body2);
 }
 
-std::optional<IntersectionDetails> PhysicsHandler::detectPolygonPolygonIntersection(const AbstractBody* body1, const AbstractBody* body2) {
-
+std::optional<IntersectionDetails> PhysicsHandler::detectPolygonPolygonIntersection(const AbstractBody* body1,
+                                                                                    const AbstractBody* body2) {
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
 
@@ -173,11 +173,11 @@ std::optional<IntersectionDetails> PhysicsHandler::detectPolygonPolygonIntersect
 	IntersectionDetails result;
 
 	for (size_t i = 0; i < pointsCount1; ++i) {
-		const Segment edge1 = { body1->getPointGlobal(i), body1->getPointGlobal((i + 1) % pointsCount1) };
+		const Segment edge1 = {body1->getPointGlobal(i), body1->getPointGlobal((i + 1) % pointsCount1)};
 
 		for (size_t j = 0; j < pointsCount2; ++j) {
-			const Segment edge2 = { body2->getPointGlobal(j), body2->getPointGlobal((j + 1) % pointsCount2) };
-			
+			const Segment edge2 = {body2->getPointGlobal(j), body2->getPointGlobal((j + 1) % pointsCount2)};
+
 			if (auto i_point = findSegmentsIntersectionPoint(edge1, edge2)) {
 				edges_i_p.emplace_back(i_point->p1);
 				if (i_point->p2) {
@@ -205,18 +205,19 @@ std::optional<IntersectionDetails> PhysicsHandler::detectPolygonPolygonIntersect
 	return result;
 }
 
-std::optional<IntersectionDetails> PhysicsHandler::detectCirclePolygonIntersection(const CircleBody* circle, const AbstractBody* body) {
-
+std::optional<IntersectionDetails> PhysicsHandler::detectCirclePolygonIntersection(const CircleBody* circle,
+                                                                                   const AbstractBody* body) {
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
-	
+
 	const auto pointsCount = body->getPointCount();
 	IntersectionDetails result;
 
 	for (size_t i = 0; i < pointsCount; ++i) {
-		const Segment edge = { body->getPointGlobal(i), body->getPointGlobal((i + 1) % pointsCount) };
-		
-		if (auto i_point = findSegmentCircleIntersectionPoint(edge, circle->getShape()->getPosition(), circle->getShape()->getRadius())) {
+		const Segment edge = {body->getPointGlobal(i), body->getPointGlobal((i + 1) % pointsCount)};
+
+		if (auto i_point = findSegmentCircleIntersectionPoint(edge, circle->getShape()->getPosition(),
+		                                                      circle->getShape()->getRadius())) {
 			edges_i_p.emplace_back(i_point->p1);
 			if (i_point->p2) {
 				edges_i_p.emplace_back(*i_point->p2);
@@ -242,7 +243,8 @@ std::optional<IntersectionDetails> PhysicsHandler::detectCirclePolygonIntersecti
 	return result;
 }
 
-std::optional<IntersectionDetails> PhysicsHandler::detectCircleCircleIntersection(const CircleBody* circle1, const CircleBody* circle2) {
+std::optional<IntersectionDetails> PhysicsHandler::detectCircleCircleIntersection(const CircleBody* circle1,
+                                                                                  const CircleBody* circle2) {
 	using namespace utils;
 	auto r1 = circle1->getShape()->getRadius();
 	auto r2 = circle2->getShape()->getRadius();
@@ -282,7 +284,8 @@ std::optional<IntersectionDetails> PhysicsHandler::detectCircleCircleIntersectio
 	return result;
 }
 
-std::optional<SegmentIntersectionPoints> PhysicsHandler::findSegmentsIntersectionPoint(const Segment& segA, const Segment& segB) {
+std::optional<SegmentIntersectionPoints> PhysicsHandler::findSegmentsIntersectionPoint(const Segment& segA,
+                                                                                       const Segment& segB) {
 	assert(segA.start != segA.end);
 	assert(segB.start != segB.end);
 
@@ -332,7 +335,7 @@ std::optional<SegmentIntersectionPoints> PhysicsHandler::findSegmentsIntersectio
 			assert(!utils::isNan(intersectionSegment.start));
 			assert(!utils::isNan(intersectionSegment.end));
 		}
-		return SegmentIntersectionPoints{ intersectionSegment.start, intersectionSegment.end };
+		return SegmentIntersectionPoints{intersectionSegment.start, intersectionSegment.end};
 	}
 
 	auto dot1 = x3 * y4 - y3 * x4;
@@ -345,9 +348,11 @@ std::optional<SegmentIntersectionPoints> PhysicsHandler::findSegmentsIntersectio
 		auto dx = seg.end.x - seg.start.x;
 		auto dy = seg.end.y - seg.start.y;
 		if (std::abs(dy) > std::abs(dx)) {
-			return linesIntersection.y >= std::min(seg.start.y, seg.end.y) && linesIntersection.y <= std::max(seg.start.y, seg.end.y);
+			return linesIntersection.y >= std::min(seg.start.y, seg.end.y) &&
+			       linesIntersection.y <= std::max(seg.start.y, seg.end.y);
 		}
-		return linesIntersection.x >= std::min(seg.start.x, seg.end.x) && linesIntersection.x <= std::max(seg.start.x, seg.end.x);
+		return linesIntersection.x >= std::min(seg.start.x, seg.end.x) &&
+		       linesIntersection.x <= std::max(seg.start.x, seg.end.x);
 	};
 	if (!isInsideSegment(segA)) {
 		return std::nullopt;
@@ -355,10 +360,11 @@ std::optional<SegmentIntersectionPoints> PhysicsHandler::findSegmentsIntersectio
 	if (!isInsideSegment(segB)) {
 		return std::nullopt;
 	}
-	return SegmentIntersectionPoints{ linesIntersection };
+	return SegmentIntersectionPoints{linesIntersection};
 }
 
-std::optional<SegmentIntersectionPoints> PhysicsHandler::findSegmentCircleIntersectionPoint(const Segment& seg, const sf::Vector2f& circleCenter, float radius) {
+std::optional<SegmentIntersectionPoints>
+PhysicsHandler::findSegmentCircleIntersectionPoint(const Segment& seg, const sf::Vector2f& circleCenter, float radius) {
 	using namespace utils;
 	SegmentIntersectionPoints result;
 	auto s = seg;
@@ -442,15 +448,15 @@ void PhysicsHandler::resolveCollision(const IntersectionDetails& collision) {
 
 	auto pc1 = body1->findComponent<PhysicalComponent>();
 	auto pc2 = body2->findComponent<PhysicalComponent>();
-	
+
 	if (pc1->isImmovable()) { // fixed body must be second
 		std::swap(body1, body2);
 		std::swap(pc1, pc2);
 	}
 
-	const auto m1 = pc1->mMass;
-	const auto m2 = pc2->mMass;
-	auto v1_to_v2 = pc2->mVelocity - pc1->mVelocity;
+	const auto m1 = pc1->_mass;
+	const auto m2 = pc2->_mass;
+	auto v1_to_v2 = pc2->_velocity - pc1->_velocity;
 	auto b1_tangent = collision.intersection.getDirVector();
 	auto b1_normal = utils::normalize(sf::Vector2f(-b1_tangent.y, b1_tangent.x));
 	if (utils::dot(body2->getPosGlobal() - body1->getPosGlobal(), b1_normal) < 0.f) {
@@ -459,7 +465,8 @@ void PhysicsHandler::resolveCollision(const IntersectionDetails& collision) {
 	}
 
 	/* overlapping fixing */
-	auto getPenetrationDepth = [collisionPoint = collision.intersection.start](const AbstractBody* body, const sf::Vector2f& bodyNormal) {
+	auto getPenetrationDepth = [collisionPoint = collision.intersection.start](const AbstractBody* body,
+	                                                                           const sf::Vector2f& bodyNormal) {
 		float result = 0.f;
 		for (size_t i = 0; i < body->getPointCount(); ++i) {
 			auto penetrationVec = body->getPointGlobal(i) - collisionPoint;
@@ -468,7 +475,8 @@ void PhysicsHandler::resolveCollision(const IntersectionDetails& collision) {
 		}
 		return result;
 	};
-	float penetrationDepthSum = getPenetrationDepth(body1.get(), b1_normal) + getPenetrationDepth(body2.get(), -b1_normal);
+	float penetrationDepthSum =
+	    getPenetrationDepth(body1.get(), b1_normal) + getPenetrationDepth(body2.get(), -b1_normal);
 
 	if (pc2->isImmovable()) {
 		auto b1_pos = body1->getPosGlobal() - b1_normal * penetrationDepthSum;
@@ -483,10 +491,10 @@ void PhysicsHandler::resolveCollision(const IntersectionDetails& collision) {
 
 	/* velocities handling */
 	if (bool areMovingTowards = utils::dot(b1_normal, v1_to_v2) < 0.f) {
-		const auto r = pc1->mRestitution * pc2->mRestitution;
+		const auto r = pc1->_restitution * pc2->_restitution;
 
-		auto norm_v1 = utils::project(pc1->mVelocity, b1_normal);
-		auto norm_v2 = utils::project(pc2->mVelocity, b1_normal);
+		auto norm_v1 = utils::project(pc1->_velocity, b1_normal);
+		auto norm_v2 = utils::project(pc2->_velocity, b1_normal);
 		auto norm_v_diff = norm_v1 - norm_v2;
 
 		float norm_dv1 = 0.f;
@@ -502,10 +510,10 @@ void PhysicsHandler::resolveCollision(const IntersectionDetails& collision) {
 
 		auto dv1 = b1_normal * norm_dv1;
 		auto dv2 = b1_normal * norm_dv2;
-		pc1->mVelocity += dv1;
-		pc2->mVelocity += dv2;
+		pc1->_velocity += dv1;
+		pc2->_velocity += dv2;
 
-		auto isNan = utils::isNan(pc1->mVelocity) || utils::isNan(pc2->mVelocity);
+		auto isNan = utils::isNan(pc1->_velocity) || utils::isNan(pc2->_velocity);
 		assert(!isNan);
 
 		if (EngineContext::instance().isDebugEnabled()) {
@@ -529,19 +537,18 @@ void PhysicsHandler::resolveCollision(const IntersectionDetails& collision) {
 				window->draw(force2);
 			}
 		}
-		
 	}
 
 	if (EngineContext::instance().isDebugEnabled()) {
 		auto window = EngineContext::instance().getMainWindow();
 		const sf::Vector2f middlePoint((collision.intersection.start + collision.intersection.end) * 0.5f);
 
-		{	// collision segment
+		{ // collision segment
 			VectorArrow segment(collision.intersection.start, collision.intersection.end, sf::Color::Magenta);
 			window->draw(segment);
 		}
 
-		{	// normal
+		{ // normal
 			VectorArrow tangentArrow(middlePoint, middlePoint + b1_normal * 50.f, sf::Color::Yellow);
 			window->draw(tangentArrow);
 		}

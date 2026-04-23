@@ -3,23 +3,21 @@
 #include "Engine/Utils.h"
 
 template <typename TShape>
-class ShapeBody : public AbstractShapeBody {
+class ShapeBody : public AbstractShapeBody
+{
 	static_assert(std::is_base_of_v<sf::Shape, TShape>);
 
 public:
-	ShapeBody() {
-		mShape = new TShape;
-	}
-	~ShapeBody() override {
-		delete mShape;
-	}
-	TShape* getShape() const {
-		return dynamic_cast<TShape*>(mShape);
-	}
+	ShapeBody() { _shape = new TShape; }
+
+	~ShapeBody() override { delete _shape; }
+
+	TShape* getShape() const { return dynamic_cast<TShape*>(_shape); }
+
 	void init() override {
 		AbstractBody::init();
-		auto centerOfMass = utils::findCenterOfMass(mShape);
-		mShape->setOrigin(centerOfMass);
+		auto centerOfMass = utils::findCenterOfMass(_shape);
+		_shape->setOrigin(centerOfMass);
 	}
 };
 

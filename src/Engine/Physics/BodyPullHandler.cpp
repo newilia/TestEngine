@@ -1,9 +1,9 @@
 #include "BodyPullHandler.h"
 
 #include "Engine/EngineInterface.h"
-#include "UserPullComponent.h"
 #include "Engine/Utils.h"
 #include "Engine/VectorArrow.h"
+#include "UserPullComponent.h"
 
 void BodyPullHandler::startPull(sf::Vector2f mousePos, UserPullComponent::PullMode pullMode) {
 	auto bodies = EngineContext::instance().getPhysicsHandler()->getAllBodies();
@@ -21,41 +21,41 @@ void BodyPullHandler::startPull(sf::Vector2f mousePos, UserPullComponent::PullMo
 			}
 		}
 		auto pullComponent = body->requireComponent<UserPullComponent>();
-		pullComponent->mLocalSourcePoint = mousePos - body->getPosGlobal();
-		pullComponent->mGlobalDestPoint = mousePos;
-		pullComponent->mMode = pullMode;
-		mPullingBody = utils::sharedPtrCast<AbstractBody>(body.get());
+		pullComponent->_localSourcePoint = mousePos - body->getPosGlobal();
+		pullComponent->_globalDestPoint = mousePos;
+		pullComponent->_mode = pullMode;
+		_pullingBody = utils::sharedPtrCast<AbstractBody>(body.get());
 		break;
 	}
 }
 
 void BodyPullHandler::stopPull() {
-	if (auto pullingBody = mPullingBody.lock()) {
+	if (auto pullingBody = _pullingBody.lock()) {
 		pullingBody->removeComponent<UserPullComponent>();
 	}
-	mPullingBody.reset();
+	_pullingBody.reset();
 }
 
 void BodyPullHandler::setPullDestination(sf::Vector2f dest) const {
-	if (auto pullingBody = mPullingBody.lock()) {
+	if (auto pullingBody = _pullingBody.lock()) {
 		if (auto pullComp = pullingBody->findComponent<UserPullComponent>()) {
-			pullComp->mGlobalDestPoint = dest;
+			pullComp->_globalDestPoint = dest;
 		}
 	}
 }
 
 void BodyPullHandler::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-	if (!mIsDebugDrawEnabled) {
+	if (!_isDebugDrawEnabled) {
 		return;
 	}
-	
-	if (auto body = mPullingBody.lock()) {
+
+	if (auto body = _pullingBody.lock()) {
 		if (auto pullComp = body->findComponent<UserPullComponent>()) {
-			if (pullComp->mMode == UserPullComponent::PullMode::FORCE) {
+			if (pullComp->_mode == UserPullComponent::PullMode::FORCE) {
 				VectorArrow arrow;
 				arrow.setColor(sf::Color::Green);
-				arrow.setStartPos(body->getPosGlobal() + pullComp->mLocalSourcePoint);
-				arrow.setEndPos(pullComp->mGlobalDestPoint);
+				arrow.setStartPos(body->getPosGlobal() + pullComp->_localSourcePoint);
+				arrow.setEndPos(pullComp->_globalDestPoint);
 				target.draw(arrow, states);
 			}
 		}

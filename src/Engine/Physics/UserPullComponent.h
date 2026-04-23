@@ -1,21 +1,25 @@
 #pragma once
-#include <SFML/System/Vector2.hpp>
 #include "Engine/ComponentBase.h"
 
-class UserPullComponent : public ComponentBase {
+#include <SFML/System/Vector2.hpp>
+
+class UserPullComponent : public ComponentBase
+{
 public:
 	UserPullComponent(ComponentHolderBase* holder) : ComponentBase(holder) {}
+
 	~UserPullComponent() override = default;
 
 	sf::Vector2f getPullVector() const;
 
-	sf::Vector2f mLocalSourcePoint;
-	sf::Vector2f mGlobalDestPoint;
-	float mPullingStrength = 100000.f;
+	sf::Vector2f _localSourcePoint;
+	sf::Vector2f _globalDestPoint;
+	float _pullingStrength = 100000.f;
 
-	enum class PullMode {
+	enum class PullMode
+	{
 		POSITION,
 		FORCE,
 		VELOCITY,
-	} mMode = PullMode::FORCE;
+	} _mode = PullMode::FORCE;
 };

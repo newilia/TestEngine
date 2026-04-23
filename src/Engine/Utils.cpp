@@ -1,6 +1,7 @@
 #include "Utils.h"
-#include "fmt/format.h"
+
 #include "SFML/Graphics.hpp"
+#include "fmt/format.h"
 
 float utils::length(const sf::Vector2f& vec) {
 	return std::sqrt(vec.x * vec.x + vec.y * vec.y);
@@ -112,11 +113,10 @@ sf::Vector2f utils::findCenterOfMass(const sf::Shape* shape) {
 		}
 		return result / trianglesAreaSum;
 	}
-	
 }
 
 float utils::calcTriangleArea(float a, float b, float c) {
-	float p = (a + b + c) * 0.5f; 
+	float p = (a + b + c) * 0.5f;
 	return sqrt(p * (p - a) * (p - b) * (p - c));
 }
 
@@ -137,7 +137,7 @@ sf::CircleShape utils::createCircle(const sf::Vector2f& pos, float radius, sf::C
 	sf::CircleShape circle;
 	circle.setPosition(pos);
 	circle.setRadius(radius);
-	circle.setOrigin({ radius, radius });
+	circle.setOrigin({radius, radius});
 	circle.setFillColor(color);
 	return circle;
 }

@@ -14,8 +14,7 @@
 void TestEnvironment::setup() {
 	EngineContext& engine = EngineContext::instance();
 	engine.createMainWindow(sf::VideoMode({800u, 600u}), "Test scene",
-	                        sf::Style::Titlebar | sf::Style::Close |
-	                            sf::Style::Resize);
+	                        sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize);
 	engine.getPhysicsHandler()->setSubstepCount(2);
 	engine.getPhysicsHandler()->setGravity({0, 1000});
 	engine.setScene(buildScene());
@@ -35,11 +34,10 @@ std::shared_ptr<Scene> TestEnvironment::buildScene() {
 	                            {screenSize.x, wallActualWidth},
 	                            {wallActualWidth, screenSize.y},
 	                            {wallActualWidth, screenSize.y}};
-	sf::Vector2f wallPositions[] = {
-	    {screenSize.x / 2, screenSize.y + wallOffset},
-	    {screenSize.x / 2, -wallOffset},
-	    {-wallOffset, screenSize.y / 2},
-	    {screenSize.x + wallOffset, screenSize.y / 2}};
+	sf::Vector2f wallPositions[] = {{screenSize.x / 2, screenSize.y + wallOffset},
+	                                {screenSize.x / 2, -wallOffset},
+	                                {-wallOffset, screenSize.y / 2},
+	                                {screenSize.x + wallOffset, screenSize.y / 2}};
 	for (int i = 0; i < 4; ++i) {
 		auto body = make_shared<RectangleBody>();
 		body->setName(wallNames[i]);
@@ -49,9 +47,8 @@ std::shared_ptr<Scene> TestEnvironment::buildScene() {
 		body->getShape()->setOutlineColor(sf::Color(30, 255, 30, 120));
 		body->getShape()->setOutlineThickness(1.f);
 		body->getPhysicalComponent()->setImmovable();
-		body->getPhysicalComponent()->mRestitution = bodiesRestitution;
-		body->requireComponent<CollisionComponent>()->mCollisionGroups.set(
-		    0, true);
+		body->getPhysicalComponent()->_restitution = bodiesRestitution;
+		body->requireComponent<CollisionComponent>()->_collisionGroups.set(0, true);
 		body->init();
 		scene->addChild(body);
 	}
@@ -63,8 +60,7 @@ std::shared_ptr<Scene> TestEnvironment::buildScene() {
 		float radius = 5.f * (1 + i % 3);
 		body->getShape()->setRadius(radius);
 		constexpr float pointsCountConstant = 3.f;
-		auto pointsCount =
-		    static_cast<size_t>(pointsCountConstant * (7 + radius / 8));
+		auto pointsCount = static_cast<size_t>(pointsCountConstant * (7 + radius / 8));
 		body->getShape()->setPointCount(pointsCount);
 
 		sf::Color color(40, 170, 255, 200);
@@ -81,10 +77,9 @@ std::shared_ptr<Scene> TestEnvironment::buildScene() {
 		auto x = static_cast<float>(minX + rand() % (maxX - minX));
 		auto y = static_cast<float>(minY + rand() % (maxY - minY));
 		body->getShape()->setPosition(sf::Vector2f{x, y});
-		body->getPhysicalComponent()->mMass = 3.14f * radius * radius;
-		body->getPhysicalComponent()->mRestitution = bodiesRestitution;
-		body->requireComponent<CollisionComponent>()->mCollisionGroups.set(
-		    0, true);
+		body->getPhysicalComponent()->_mass = 3.14f * radius * radius;
+		body->getPhysicalComponent()->_restitution = bodiesRestitution;
+		body->requireComponent<CollisionComponent>()->_collisionGroups.set(0, true);
 		body->init();
 		scene->addChild(body);
 	}
@@ -97,84 +92,73 @@ void TestEnvironment::configureInput() {
 	auto userInput = ei->getUserInput();
 	auto scene = ei->getScene();
 
-	userInput->attachEventHandler(
-	    createDelegate<sf::Event>([ei](sf::Event event) {
-		    if (const auto *key = event.getIf<sf::Event::KeyPressed>()) {
-			    if (key->code == sf::Keyboard::Key::R) {
-				    ei->setScene(buildScene());
-			    }
-		    }
-	    }));
+	userInput->attachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
+			if (key->code == sf::Keyboard::Key::R) {
+				ei->setScene(buildScene());
+			}
+		}
+	}));
 
-	userInput->attachEventHandler(
-	    createDelegate<sf::Event>([ei](sf::Event event) {
-		    if (const auto *pressed =
-		            event.getIf<sf::Event::MouseButtonPressed>()) {
-			    sf::Vector2f mousePos(static_cast<float>(pressed->position.x),
-			                          static_cast<float>(pressed->position.y));
-			    if (pressed->button == sf::Mouse::Button::Left) {
-				    ei->getBodyPullHandler()->startPull(
-				        mousePos, UserPullComponent::PullMode::FORCE);
-			    } else if (pressed->button == sf::Mouse::Button::Right) {
-				    ei->getBodyPullHandler()->startPull(
-				        mousePos, UserPullComponent::PullMode::POSITION);
-			    } else if (pressed->button == sf::Mouse::Button::Middle) {
-				    ei->getBodyPullHandler()->startPull(
-				        mousePos, UserPullComponent::PullMode::VELOCITY);
-			    }
-		    } else if (event.is<sf::Event::MouseButtonReleased>()) {
-			    ei->getBodyPullHandler()->stopPull();
-		    } else if (const auto *moved =
-		                   event.getIf<sf::Event::MouseMoved>()) {
-			    ei->getBodyPullHandler()->setPullDestination(
-			        sf::Vector2f(static_cast<float>(moved->position.x),
-			                     static_cast<float>(moved->position.y)));
-		    }
-	    }));
+	userInput->attachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+		if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
+			sf::Vector2f mousePos(static_cast<float>(pressed->position.x), static_cast<float>(pressed->position.y));
+			if (pressed->button == sf::Mouse::Button::Left) {
+				ei->getBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::FORCE);
+			}
+			else if (pressed->button == sf::Mouse::Button::Right) {
+				ei->getBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::POSITION);
+			}
+			else if (pressed->button == sf::Mouse::Button::Middle) {
+				ei->getBodyPullHandler()->startPull(mousePos, UserPullComponent::PullMode::VELOCITY);
+			}
+		}
+		else if (event.is<sf::Event::MouseButtonReleased>()) {
+			ei->getBodyPullHandler()->stopPull();
+		}
+		else if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
+			ei->getBodyPullHandler()->setPullDestination(
+			    sf::Vector2f(static_cast<float>(moved->position.x), static_cast<float>(moved->position.y)));
+		}
+	}));
 
-	userInput->attachEventHandler(
-	    createDelegate<sf::Event>([ei](sf::Event event) {
-		    if (const auto *key = event.getIf<sf::Event::KeyPressed>()) {
-			    switch (key->code) {
-			    case sf::Keyboard::Key::Equal:
-				    ei->setSimSpeedMultiplier(ei->getSimSpeedMultiplier() * 2);
-				    break;
-			    case sf::Keyboard::Key::Hyphen:
-				    ei->setSimSpeedMultiplier(ei->getSimSpeedMultiplier() *
-				                              0.5f);
-				    break;
-			    case sf::Keyboard::Key::Num0:
-				    ei->setSimPaused(!ei->isSimPaused());
-				    break;
-			    default:
-				    break;
-			    }
-		    }
-	    }));
+	userInput->attachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
+			switch (key->code) {
+			case sf::Keyboard::Key::Equal:
+				ei->setSimSpeedMultiplier(ei->getSimSpeedMultiplier() * 2);
+				break;
+			case sf::Keyboard::Key::Hyphen:
+				ei->setSimSpeedMultiplier(ei->getSimSpeedMultiplier() * 0.5f);
+				break;
+			case sf::Keyboard::Key::Num0:
+				ei->setSimPaused(!ei->isSimPaused());
+				break;
+			default:
+				break;
+			}
+		}
+	}));
 
-	userInput->attachEventHandler(
-	    createDelegate<sf::Event>([](sf::Event event) {
-		    if (event.is<sf::Event::Closed>()) {
-			    std::exit(EXIT_SUCCESS);
-		    }
-	    }));
+	userInput->attachEventHandler(createDelegate<sf::Event>([](sf::Event event) {
+		if (event.is<sf::Event::Closed>()) {
+			std::exit(EXIT_SUCCESS);
+		}
+	}));
 
-	userInput->attachEventHandler(
-	    createDelegate<sf::Event>([ei](sf::Event event) {
-		    if (const auto *key = event.getIf<sf::Event::KeyPressed>()) {
-			    if (key->code == sf::Keyboard::Key::G) {
-				    ei->getPhysicsHandler()->setGravityEnabled(
-				        !ei->getPhysicsHandler()->isGravityEnabled());
-			    }
-		    }
-	    }));
+	userInput->attachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
+			if (key->code == sf::Keyboard::Key::G) {
+				ei->getPhysicsHandler()->setGravityEnabled(!ei->getPhysicsHandler()->isGravityEnabled());
+			}
+		}
+	}));
 
-	userInput->attachEventHandler(
-	    createDelegate<sf::Event>([ei](sf::Event event) {
-		    if (const auto *key = event.getIf<sf::Event::KeyPressed>()) {
-			    if (key->code == sf::Keyboard::Key::D) {
-				    ei->setDebugEnabled(!ei->isDebugEnabled());
-			    }
-		    }
-	    }));
+	userInput->attachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
+			if (key->code == sf::Keyboard::Key::D) {
+				ei->setDebugEnabled(!ei->isDebugEnabled());
+			}
+		}
+	}));
 }

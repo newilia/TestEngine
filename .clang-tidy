@@ -1,0 +1,26 @@
+# Naming and style checks complementary to .clang-format.
+# Run: clang-tidy path/to/file.cpp -- -std=c++20 (plus include paths / compile_commands.json)
+
+Checks: '-*,readability-identifier-naming'
+
+CheckOptions:
+  readability-identifier-naming.ClassCase: CamelCase
+  readability-identifier-naming.StructCase: CamelCase
+  readability-identifier-naming.EnumCase: CamelCase
+  readability-identifier-naming.EnumConstantCase: UPPER_CASE
+  readability-identifier-naming.UnionCase: CamelCase
+  readability-identifier-naming.TypeAliasCase: CamelCase
+  readability-identifier-naming.TypedefCase: CamelCase
+  readability-identifier-naming.FunctionCase: CamelCase
+  readability-identifier-naming.MethodCase: CamelCase
+  readability-identifier-naming.VariableCase: camelBack
+  readability-identifier-naming.ParameterCase: camelBack
+  readability-identifier-naming.LocalConstantCase: camelBack
+  readability-identifier-naming.MemberCase: camelBack
+  readability-identifier-naming.PrivateMemberPrefix: '_'
+  readability-identifier-naming.ProtectedMemberPrefix: '_'
+  readability-identifier-naming.PublicMemberPrefix: '_'
+  readability-identifier-naming.GlobalConstantCase: UPPER_CASE
+  readability-identifier-naming.NamespaceCase: lower_case
+
+WarningsAsErrors: ''

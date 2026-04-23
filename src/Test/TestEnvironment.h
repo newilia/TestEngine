@@ -1,13 +1,14 @@
 #pragma once
-#include <memory>
-
 #include "Engine/Scene.h"
 
-class TestEnvironment {
-  public:
+#include <memory>
+
+class TestEnvironment
+{
+public:
 	static void setup();
 
-  private:
+private:
 	static std::shared_ptr<Scene> buildScene();
 	static void configureInput();
 };

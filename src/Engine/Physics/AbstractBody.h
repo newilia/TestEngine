@@ -1,14 +1,15 @@
 #pragma once
 
-#include "Engine/SceneNode.h"
 #include "Engine/ComponentHolder.h"
+#include "Engine/SceneNode.h"
 #include "PhysicalComponent.h"
 
-class AbstractBody : public SceneNode {
+class AbstractBody : public SceneNode
+{
 public:
 	AbstractBody();
 	~AbstractBody() override;
-	virtual sf::FloatRect getBbox() const = 0 ;
+	virtual sf::FloatRect getBbox() const = 0;
 	virtual size_t getPointCount() const = 0;
 	virtual sf::Vector2f getPointGlobal(std::size_t index) const = 0;
 	virtual sf::Vector2f getPosGlobal() const = 0;

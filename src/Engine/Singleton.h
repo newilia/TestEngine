@@ -1,23 +1,22 @@
 #pragma once
 
 template <typename T>
-class Singleton {
+class Singleton
+{
 public:
 	static T* getInstance() {
-		if (!mInstance) {
-			mInstance = new T();
+		if (!_instance) {
+			_instance = new T();
 		}
-		return mInstance;
+		return _instance;
 	}
 
 	static void destroy() {
-		delete mInstance;
-		mInstance = nullptr;
+		delete _instance;
+		_instance = nullptr;
 	}
 
-	static bool isAlive() {
-		return mInstance != nullptr;
-	}
+	static bool isAlive() { return _instance != nullptr; }
 
 protected:
 	Singleton() = default;
@@ -29,5 +28,5 @@ private:
 	Singleton(Singleton&&) = delete;
 	Singleton& operator=(Singleton&&) = delete;
 
-	inline static T* mInstance = nullptr;
+	inline static T* _instance = nullptr;
 };
