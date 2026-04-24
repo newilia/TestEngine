@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/NodeVisual.h"
+#include "Engine/Visual/NodeVisual.h"
 
 #include <SFML/Graphics/Shape.hpp>
 #include <memory>

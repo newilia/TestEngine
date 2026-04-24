@@ -1,13 +1,14 @@
 #include "FpsCounterBehaviour.h"
 
-#include "EngineInterface.h"
-#include "FpsNodeVisual.h"
-#include "SceneNode.h"
+#include "Engine/App/EngineInterface.h"
+#include "Engine/Core/SceneNode.h"
+#include "Engine/Visual/TextVisual.h"
 
 #include <SFML/Graphics/Text.hpp>
 
-#include <cassert>
 #include <fmt/format.h>
+
+#include <cassert>
 
 std::shared_ptr<SceneNode> CreateFpsCounterNode() {
 	auto node = std::make_shared<SceneNode>();
@@ -32,7 +33,7 @@ void FpsCounterBehaviour::OnAttached() {
 	if (!_text) {
 		return;
 	}
-	auto visual = std::make_shared<FpsNodeVisual>(_text);
+	auto visual = std::make_shared<TextVisual>(_text);
 	if (auto node = GetNode()) {
 		node->SetVisual(std::move(visual));
 	}

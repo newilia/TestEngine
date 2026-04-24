@@ -2,7 +2,7 @@
 
 #include "ShapeColliderBehaviourBase.h"
 #include "ShapeNodeVisual.h"
-#include "Engine/SceneNode.h"
+#include "Engine/Core/SceneNode.h"
 
 void ShapeVisualBehaviour::OnAttached() {
 	auto node = GetNode();

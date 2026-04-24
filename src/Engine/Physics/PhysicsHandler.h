@@ -1,9 +1,9 @@
 #pragma once
 
 #include "AbstractBody.h"
-#include "Engine/SceneNode.h"
-#include "Engine/Updateable.h"
-#include "Engine/common.h"
+#include "Engine/Core/SceneNode.h"
+#include "Engine/Core/Updateable.h"
+#include "Engine/Core/common.h"
 #include "IntersectionDetails.h"
 
 #include <SFML/Graphics/CircleShape.hpp>

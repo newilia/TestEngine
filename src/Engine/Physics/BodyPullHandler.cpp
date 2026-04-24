@@ -1,8 +1,8 @@
 #include "BodyPullHandler.h"
 
-#include "Engine/EngineInterface.h"
-#include "Engine/SceneNode.h"
-#include "Engine/Utils.h"
+#include "Engine/App/EngineInterface.h"
+#include "Engine/Core/SceneNode.h"
+#include "Engine/App/Utils.h"
 
 #include <memory>
 

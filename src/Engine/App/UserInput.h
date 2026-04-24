@@ -1,6 +1,6 @@
 #pragma once
-#include "Delegates.h"
-#include "Updateable.h"
+#include "Engine/Core/Delegates.h"
+#include "Engine/Core/Updateable.h"
 
 #include <functional>
 #include <set>

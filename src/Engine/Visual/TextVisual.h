@@ -8,10 +8,10 @@ namespace sf {
 class Text;
 }
 
-class FpsNodeVisual : public NodeVisual
+class TextVisual : public NodeVisual
 {
 public:
-	explicit FpsNodeVisual(std::shared_ptr<sf::Text> text) : _text(std::move(text)) {}
+	explicit TextVisual(std::shared_ptr<sf::Text> text) : _text(std::move(text)) {}
 
 	void Draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Engine/Behaviour.h"
-#include "Engine/Delegates.h"
+#include "Engine/Core/Behaviour.h"
+#include "Engine/Core/Delegates.h"
 
 #include <bitset>
 #include <memory>

@@ -2,8 +2,8 @@
 
 #include "PlatformControllerBase.h"
 
-#include "Engine/common.h"
-#include "Engine/SceneNode.h"
+#include "Engine/Core/common.h"
+#include "Engine/Core/SceneNode.h"
 
 #include <SFML/Graphics/Rect.hpp>
 #include <SFML/Graphics.hpp>

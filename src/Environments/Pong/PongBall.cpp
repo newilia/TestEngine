@@ -1,9 +1,9 @@
 #include "PongBall.h"
 
-#include "Engine/Behaviour.h"
+#include "Engine/Core/Behaviour.h"
 #include "Engine/Physics/PhysicalBehaviour.h"
 #include "Engine/Physics/ShapeColliderBehaviourBase.h"
-#include "Engine/Utils.h"
+#include "Engine/App/Utils.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
 

@@ -1,15 +1,15 @@
 #include "TestEnvironment.h"
 
-#include "Engine/EngineInterface.h"
-#include "Engine/FpsCounterBehaviour.h"
+#include "Engine/App/EngineInterface.h"
+#include "Engine/App/FpsCounterBehaviour.h"
 #include "Engine/Physics/BodyPullHandler.h"
 #include "Engine/Physics/CollisionBehaviour.h"
 #include "Engine/Physics/UserPullBehaviour.h"
 #include "Engine/Physics/PhysicsHandler.h"
 #include "Engine/Physics/ShapeColliderBehaviour.h"
-#include "Engine/Scene.h"
-#include "Engine/UserInput.h"
-#include "Engine/Utils.h"
+#include "Engine/Core/Scene.h"
+#include "Engine/App/UserInput.h"
+#include "Engine/App/Utils.h"
 #include "fmt/format.h"
 
 #include <utility>
