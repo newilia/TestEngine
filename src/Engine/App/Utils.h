@@ -1,5 +1,5 @@
 #pragma once
-#include "Engine/Physics/AbstractBody.h"
+#include "Engine/Behaviour/Physics/AbstractBody.h"
 #include "SFML/Graphics.hpp"
 
 #include <memory>

@@ -1,7 +1,7 @@
 #include "ShapeVisualBehaviour.h"
 
 #include "ShapeColliderBehaviourBase.h"
-#include "ShapeVisual.h"
+#include "Engine/Visual/MakeShapeVisual.h"
 #include "Engine/Core/SceneNode.h"
 
 void ShapeVisualBehaviour::OnAttached() {

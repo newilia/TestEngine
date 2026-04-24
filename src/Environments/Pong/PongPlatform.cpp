@@ -1,7 +1,7 @@
 #include "PongPlatform.h"
 
-#include "Engine/Core/Behaviour.h"
-#include "Engine/Physics/ShapeColliderBehaviourBase.h"
+#include "Engine/Behaviour/Behaviour.h"
+#include "Engine/Behaviour/Physics/ShapeColliderBehaviourBase.h"
 
 #include <cassert>
 

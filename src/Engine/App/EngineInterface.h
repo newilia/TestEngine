@@ -1,6 +1,6 @@
 #pragma once
-#include "Engine/Visual/FontManager.h"
-#include "Engine/Physics/PhysicsHandler.h"
+#include "Engine/App/FontManager.h"
+#include "Engine/Behaviour/Physics/PhysicsHandler.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/Singleton.h"
 #include "Engine/App/UserInput.h"

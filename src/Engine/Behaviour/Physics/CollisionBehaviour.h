@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/Core/Behaviour.h"
+#include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Core/Delegates.h"
 
 #include <bitset>

@@ -1,8 +1,8 @@
 #include "Utils.h"
 
 #include "Engine/Visual/TextVisual.h"
-#include "Engine/Physics/ShapeColliderBehaviourBase.h"
-#include "Engine/Physics/ShapeVisual.h"
+#include "Engine/Behaviour/Physics/ShapeColliderBehaviourBase.h"
+#include "Engine/Visual/ShapeVisualBase.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>

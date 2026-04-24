@@ -1,6 +1,6 @@
 #pragma once
 
-#include "EntityOnNode.h"
+#include "Engine/Core/EntityOnNode.h"
 
 class SortingStrategy : public EntityOnNode
 {

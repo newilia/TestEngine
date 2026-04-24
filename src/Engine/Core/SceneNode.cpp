@@ -3,7 +3,7 @@
 #include <algorithm>
 
 #include "Engine/App/EngineInterface.h"
-#include "Engine/Physics/PhysicsDebugBehaviour.h"
+#include "Engine/Behaviour/Physics/PhysicsDebugBehaviour.h"
 
 #include <cassert>
 

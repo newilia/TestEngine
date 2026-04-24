@@ -1,10 +1,10 @@
 #include "PhysicsDebugBehaviour.h"
 
-#include "Engine/Physics/RigidBodyBehaviour.h"
+#include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/App/EngineInterface.h"
-#include "Engine/Visual/FontManager.h"
+#include "Engine/App/FontManager.h"
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Visual/VectorArrow.h"
+#include "Engine/Visual/VectorArrowVisual.h"
 
 #include <fmt/format.h>
 
