@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# Dear ImGui (runtime layout state next to cwd)
+imgui.ini
+
 # CMake build artifacts
 build/
 _deps/

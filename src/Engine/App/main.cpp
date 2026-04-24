@@ -5,7 +5,33 @@
 
 #include <SFML/Graphics.hpp>
 
+#include <imgui.h>
+#include <imgui-SFML.h>
+
 #include <fmt/format.h>
+
+namespace {
+
+// Uses ImGui IO flags from the previous frame (after the last ImGui::SFML::Update), which is
+// the usual pattern for deciding whether application code should see mouse/keyboard events.
+[[nodiscard]] bool ShouldForwardEventToGame(const sf::Event& event) {
+	const ImGuiIO& io = ImGui::GetIO();
+	if (event.is<sf::Event::MouseButtonPressed>() || event.is<sf::Event::MouseButtonReleased>() ||
+	    event.is<sf::Event::MouseMoved>() || event.is<sf::Event::MouseMovedRaw>() ||
+	    event.is<sf::Event::MouseWheelScrolled>() || event.is<sf::Event::TouchBegan>() ||
+	    event.is<sf::Event::TouchMoved>() || event.is<sf::Event::TouchEnded>()) {
+		return !io.WantCaptureMouse;
+	}
+	if (event.is<sf::Event::KeyPressed>() || event.is<sf::Event::KeyReleased>()) {
+		return !io.WantCaptureKeyboard;
+	}
+	if (event.is<sf::Event::TextEntered>()) {
+		return !io.WantTextInput;
+	}
+	return true;
+}
+
+} // namespace
 
 #ifdef _CONSOLE
 int main() {
@@ -20,6 +46,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 	env.Setup();
 
 	EngineContext& engine = EngineContext::Instance();
+	bool imguiInitialized = false;
 	while (true) {
 		auto window = engine.GetMainWindow();
 		if (!window) {
@@ -33,16 +60,33 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 			continue;
 		}
 
+		if (!imguiInitialized) {
+			if (!ImGui::SFML::Init(*window)) {
+				return EXIT_FAILURE;
+			}
+			imguiInitialized = true;
+		}
+
 		engine.OnStartFrame();
 		window->clear();
 
 		while (auto ev = window->pollEvent()) {
+			ImGui::SFML::ProcessEvent(*window, *ev);
 			sf::Event event = *ev;
 			if (event.is<sf::Event::Closed>()) {
-				return EXIT_SUCCESS;
+				window->close();
+				break;
 			}
-			engine.GetUserInput()->HandleEvent(event);
+			if (ShouldForwardEventToGame(event)) {
+				engine.GetUserInput()->HandleEvent(event);
+			}
 		}
+
+		if (!window->isOpen()) {
+			break;
+		}
+
+		ImGui::SFML::Update(*window, engine.GetFrameDt());
 
 		auto dt = engine.GetSimDt();
 		if (!engine.IsSimPaused()) {
@@ -53,8 +97,15 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 		}
 		scene->UpdateRec(dt);
 
+		ImGui::ShowDemoWindow();
+
 		window->draw(*scene);
+		ImGui::SFML::Render(*window);
 		window->display();
+	}
+
+	if (imguiInitialized) {
+		ImGui::SFML::Shutdown();
 	}
 
 	return EXIT_SUCCESS;
