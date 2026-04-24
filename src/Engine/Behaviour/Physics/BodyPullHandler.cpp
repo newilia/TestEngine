@@ -1,7 +1,7 @@
 #include "BodyPullHandler.h"
 
 #include "Engine/App/EngineInterface.h"
-#include "Engine/Physics/RigidBodyBehaviour.h"
+#include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/App/Utils.h"
 

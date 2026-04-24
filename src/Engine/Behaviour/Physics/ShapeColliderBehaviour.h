@@ -2,7 +2,7 @@
 
 #include "ShapeColliderBehaviourBase.h"
 
-#include "Engine/Physics/RigidBodyBehaviour.h"
+#include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "ShapeVisualBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 

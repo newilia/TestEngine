@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Behaviour.h"
+#include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Visual/Visual.h"
-#include "Engine/Physics/RigidBodyBehaviour.h"
-#include "Engine/Physics/ShapeColliderBehaviourBase.h"
-#include "SortingStrategy.h"
+#include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
+#include "Engine/Behaviour/Physics/ShapeColliderBehaviourBase.h"
+#include "Engine/Sorting/SortingStrategy.h"
 #include "Updatable.h"
 
 #include <SFML/Graphics.hpp>

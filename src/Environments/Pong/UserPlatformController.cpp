@@ -1,6 +1,6 @@
 #include "UserPlatformController.h"
 
-#include "Engine/Physics/RigidBodyBehaviour.h"
+#include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "PongPlatform.h"
 #include "SFML/Window/Event.hpp"
 

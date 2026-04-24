@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Engine/Core/Behaviour.h"
+#include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Visual/VectorArrowVisual.h"
-#include "Engine/Physics/UserPullBehaviour.h"
+#include "Engine/Behaviour/Physics/UserPullBehaviour.h"
 
 #include <memory>
 
