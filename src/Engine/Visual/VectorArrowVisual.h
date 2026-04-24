@@ -1,25 +1,25 @@
 #pragma once
 
-#include "NodeVisual.h"
+#include "Visual.h"
 #include "VectorArrow.h"
 
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/System/Vector2.hpp>
 
-class VectorArrowNodeVisual : public NodeVisual
+class VectorArrowVisual : public Visual
 {
 public:
 	void Draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
 	bool HitTest(sf::Vector2f windowPosition) const override;
 
-	void setStartPos(const sf::Vector2f& start);
+	void SetStartPos(const sf::Vector2f& start);
 
-	void setEndPos(const sf::Vector2f& end);
+	void SetEndPos(const sf::Vector2f& end);
 
-	void setColor(const sf::Color& color);
+	void SetColor(const sf::Color& color);
 
-	void setVisible(bool visible);
+	void SetVisible(bool visible);
 
 private:
 	VectorArrow _arrow;

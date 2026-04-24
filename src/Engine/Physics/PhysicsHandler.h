@@ -2,7 +2,7 @@
 
 #include "AbstractBody.h"
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Core/Updateable.h"
+#include "Engine/Core/Updatable.h"
 #include "Engine/Core/common.h"
 #include "IntersectionDetails.h"
 
@@ -11,7 +11,7 @@
 #include <list>
 #include <optional>
 
-class PhysicsHandler : public Updateable
+class PhysicsHandler : public Updatable
 {
 public:
 	~PhysicsHandler() override = default;

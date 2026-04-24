@@ -11,7 +11,7 @@ public:
 
 	~UserPullBehaviour() override = default;
 
-	sf::Vector2f getPullVector() const;
+	sf::Vector2f GetPullVector() const;
 
 	sf::Vector2f _localSourcePoint;
 	sf::Vector2f _globalDestPoint;

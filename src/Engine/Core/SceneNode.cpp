@@ -13,10 +13,10 @@ void sortChildrenByDrawOrder(std::vector<shared_ptr<SceneNode>>& nodes) {
 	std::stable_sort(nodes.begin(), nodes.end(), [](const shared_ptr<SceneNode>& a, const shared_ptr<SceneNode>& b) {
 		int la = 0;
 		int lb = 0;
-		if (auto sa = a->FindEntity<SortingStrategyEntity>()) {
+		if (auto sa = a->FindEntity<SortingStrategy>()) {
 			la = sa->GetSortLayer();
 		}
-		if (auto sb = b->FindEntity<SortingStrategyEntity>()) {
+		if (auto sb = b->FindEntity<SortingStrategy>()) {
 			lb = sb->GetSortLayer();
 		}
 		return la < lb;
@@ -25,14 +25,14 @@ void sortChildrenByDrawOrder(std::vector<shared_ptr<SceneNode>>& nodes) {
 
 } // namespace
 
-void SceneNode::SetVisual(shared_ptr<NodeVisual>&& visual) {
+void SceneNode::SetVisual(shared_ptr<Visual>&& visual) {
 	_visual = std::move(visual);
 	if (_visual) {
 		_visual->AttachTo(shared_from_this());
 	}
 }
 
-void SceneNode::SetSortingStrategy(shared_ptr<SortingStrategyEntity>&& sorting) {
+void SceneNode::SetSortingStrategy(shared_ptr<SortingStrategy>&& sorting) {
 	_sortingStrategy = std::move(sorting);
 	if (_sortingStrategy) {
 		_sortingStrategy->AttachTo(shared_from_this());
@@ -45,27 +45,27 @@ void SceneNode::AddBehaviour(shared_ptr<Behaviour> behaviour) {
 	_behaviours.back()->OnAttached();
 }
 
-void SceneNode::addChild(std::shared_ptr<SceneNode>&& child) {
-	assert(!hasChild(child));
+void SceneNode::AddChild(std::shared_ptr<SceneNode>&& child) {
+	assert(!HasChild(child));
 
 	_children.push_back(child);
-	child->setParent(shared_from_this());
+	child->SetParent(shared_from_this());
 }
 
-void SceneNode::addChild(SceneNode&& child) {
-	child.setParent(shared_from_this());
+void SceneNode::AddChild(SceneNode&& child) {
+	child.SetParent(shared_from_this());
 	_children.push_back(make_shared<SceneNode>(child));
 }
 
-shared_ptr<SceneNode> SceneNode::findChild(const std::string& id, bool recursively) {
+shared_ptr<SceneNode> SceneNode::FindChild(const std::string& id, bool recursively) {
 	for (auto& child : _children) {
-		if (child->getName() == id) {
+		if (child->GetName() == id) {
 			return child;
 		}
 	}
 	if (recursively) {
 		for (auto& child : _children) {
-			if (auto grandChild = child->findChild(id, true)) {
+			if (auto grandChild = child->FindChild(id, true)) {
 				return grandChild;
 			}
 		}
@@ -73,34 +73,34 @@ shared_ptr<SceneNode> SceneNode::findChild(const std::string& id, bool recursive
 	return nullptr;
 }
 
-bool SceneNode::hasChild(std::shared_ptr<SceneNode>& child) {
+bool SceneNode::HasChild(std::shared_ptr<SceneNode>& child) {
 	auto it = std::find(_children.begin(), _children.end(), child);
 	return it != _children.end();
 }
 
-std::vector<shared_ptr<SceneNode>> SceneNode::findChildren(const std::string& id, bool recursively) {
+std::vector<shared_ptr<SceneNode>> SceneNode::FindChildren(const std::string& id, bool recursively) {
 	std::vector<shared_ptr<SceneNode>> result;
 	for (auto& child : _children) {
-		if (child->getName() == id) {
+		if (child->GetName() == id) {
 			result.emplace_back(child);
 		}
 	}
 	if (recursively) {
 		for (auto& child : _children) {
-			auto grandChildren = child->findChildren(id, true);
+			auto grandChildren = child->FindChildren(id, true);
 			result.insert(result.end(), grandChildren.begin(), grandChildren.end());
 		}
 	}
 	return result;
 }
 
-void SceneNode::updateRec(const sf::Time& dt) {
+void SceneNode::UpdateRec(const sf::Time& dt) {
 	Update(dt);
 	for (auto& b : _behaviours) {
 		b->OnUpdate(dt);
 	}
 	for (auto& child : _children) {
-		child->updateRec(dt);
+		child->UpdateRec(dt);
 	}
 }
 
@@ -119,7 +119,7 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	}
 
 	if (EngineContext::Instance().IsDebugEnabled()) {
-		if (auto debugBehaviour = FindEntity<PhysicsDebugBehaviour>()) {
+		if (auto debugBehaviour = FindBehaviour<PhysicsDebugBehaviour>()) {
 			debugBehaviour->DrawDebug(target, states);
 		}
 	}
@@ -151,13 +151,13 @@ bool SceneNode::DispatchTapAt(sf::Vector2f windowPosition) {
 	return false;
 }
 
-void SceneNode::removeFromParent() {
-	if (auto parent = getParent()) {
-		parent->removeChild(this);
+void SceneNode::RemoveFromParent() {
+	if (auto parent = GetParent()) {
+		parent->RemoveChild(this);
 	}
 }
 
-void SceneNode::removeChild(SceneNode* child) {
+void SceneNode::RemoveChild(SceneNode* child) {
 	auto it = std::ranges::find_if(_children.begin(), _children.end(),
 	                              [child](const auto& ptr) { return ptr.get() == child; });
 	if (it != _children.end()) {

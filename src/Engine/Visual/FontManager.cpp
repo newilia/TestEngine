@@ -3,10 +3,10 @@
 #include <iostream>
 
 FontManager::FontManager() {
-	initDefaultFont();
+	InitDefaultFont();
 }
 
-void FontManager::initDefaultFont() {
+void FontManager::InitDefaultFont() {
 	try {
 		_defaultFont = new sf::Font{"resources/fonts/calibri.ttf"};
 	}
@@ -18,6 +18,6 @@ void FontManager::initDefaultFont() {
 	}
 }
 
-const sf::Font* FontManager::getDefaultFont() const {
+const sf::Font* FontManager::GetDefaultFont() const {
 	return _defaultFont;
 }

@@ -2,10 +2,10 @@
 
 #include "EntityOnNode.h"
 
-class SortingStrategyEntity : public EntityOnNode
+class SortingStrategy : public EntityOnNode
 {
 public:
-	~SortingStrategyEntity() override = default;
+	~SortingStrategy() override = default;
 
 	virtual int GetSortLayer() const { return 0; }
 };

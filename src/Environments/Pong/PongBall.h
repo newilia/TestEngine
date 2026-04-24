@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Engine/Physics/PhysicalBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 
 #include <SFML/System/Time.hpp>
@@ -17,21 +16,19 @@ class PongBall : public std::enable_shared_from_this<PongBall>
 public:
 	explicit PongBall(std::shared_ptr<SceneNode> node);
 
-	void setupBehaviours();
+	void SetupBehaviours();
 
 	std::shared_ptr<SceneNode> GetNode() const { return _node; }
 
 	sf::CircleShape* GetShape() const;
 
-	std::shared_ptr<PhysicalBehaviour> GetPhysicalComponent() const { return _node->GetPhysicalComponent(); }
+	float GetMaxSpeed() const { return _targetSpeed; }
 
-	float getMaxSpeed() const { return _targetSpeed; }
+	float GetSpeedDampingFactor() const { return _speedDampingFactor; }
 
-	float getSpeedDampingFactor() const { return _speedDampingFactor; }
+	void SetMaxSpeed(float maxSpeed) { _targetSpeed = maxSpeed; }
 
-	void setMaxSpeed(float maxSpeed) { _targetSpeed = maxSpeed; }
-
-	void setSpeedDampingFactor(float speedDampingFactor) { _speedDampingFactor = speedDampingFactor; }
+	void SetSpeedDampingFactor(float speedDampingFactor) { _speedDampingFactor = speedDampingFactor; }
 
 private:
 	std::shared_ptr<SceneNode> _node;

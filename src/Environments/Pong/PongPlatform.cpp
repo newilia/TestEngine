@@ -25,7 +25,7 @@ public:
 
 PongPlatform::PongPlatform(std::shared_ptr<SceneNode> node) : _node(std::move(node)) {}
 
-void PongPlatform::registerTickBehaviour() {
+void PongPlatform::RegisterTickBehaviour() {
 	_node->AddBehaviour(std::make_shared<PongPlatformTickBehaviour>(weak_from_this()));
 }
 
@@ -48,7 +48,7 @@ sf::FloatRect PongPlatform::GetBbox() const {
 	return c ? c->GetBbox() : sf::FloatRect{};
 }
 
-void PongPlatform::setShapeDimensions(sf::Vector2f size, float curvature, float rotationDeg) {
+void PongPlatform::SetShapeDimensions(sf::Vector2f size, float curvature, float rotationDeg) {
 	assert(curvature >= 0.f && curvature <= 1.f);
 
 	constexpr int pointCount = 42;

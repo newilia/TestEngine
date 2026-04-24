@@ -1,5 +1,5 @@
 #pragma once
-#include "Engine/Core/Updateable.h"
+#include "Engine/Core/Updatable.h"
 #include "PlatformControllerBase.h"
 
 #include <SFML/System/Vector2.hpp>
@@ -13,15 +13,15 @@ class Event;
 class UserPlatformController : public PlatformControllerBase
 {
 public:
-	UserPlatformController(PongPlatform* platform) : PlatformControllerBase(platform) {};
+	explicit UserPlatformController(PongPlatform* platform) : PlatformControllerBase(platform) {}
 	void Init() override;
-	void handleEvent(const sf::Event& event);
+	void HandleEvent(const sf::Event& event);
 
-	void setVerticalFreedomFactor(float val) { _verticalMoveFactor = val; }
+	void SetVerticalFreedomFactor(float val) { _verticalMoveFactor = val; }
 
-	void setVelocityFactor(float val) { _speedFactor = val; }
+	void SetVelocityFactor(float val) { _speedFactor = val; }
 
-	void setVelLimit(sf::Vector2f val) { _velLimit = val; }
+	void SetVelLimit(sf::Vector2f val) { _velLimit = val; }
 
 	void Update(const sf::Time& dt) override;
 

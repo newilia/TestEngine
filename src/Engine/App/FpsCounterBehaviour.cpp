@@ -12,10 +12,10 @@
 
 std::shared_ptr<SceneNode> CreateFpsCounterNode() {
 	auto node = std::make_shared<SceneNode>();
-	node->setName("Fps");
+	node->SetName("Fps");
 
 	EngineContext& engine = EngineContext::Instance();
-	auto* font = engine.GetFontManager()->getDefaultFont();
+	auto* font = engine.GetFontManager()->GetDefaultFont();
 	assert(font);
 
 	sf::Vector2f pos = {engine.GetMainWindow()->getSize().x - 50.f, 0.f};

@@ -1,5 +1,5 @@
 #pragma once
-#include "Engine/Core/Updateable.h"
+#include "Engine/Core/Updatable.h"
 
 class PongPlatform;
 
@@ -7,7 +7,7 @@ namespace sf {
 class Event;
 }
 
-class PlatformControllerBase : public Updateable
+class PlatformControllerBase : public Updatable
 {
 public:
 	explicit PlatformControllerBase(PongPlatform* platform) : _platform(platform) {}

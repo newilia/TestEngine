@@ -4,6 +4,7 @@
 #include "Engine/App/FpsCounterBehaviour.h"
 #include "Engine/Physics/BodyPullHandler.h"
 #include "Engine/Physics/CollisionBehaviour.h"
+#include "Engine/Physics/RigidBodyBehaviour.h"
 #include "Engine/Physics/UserPullBehaviour.h"
 #include "Engine/Physics/PhysicsHandler.h"
 #include "Engine/Physics/ShapeColliderBehaviour.h"
@@ -14,17 +15,20 @@
 
 #include <utility>
 
-void TestEnvironment::setup() {
+using std::make_shared;
+using std::shared_ptr;
+
+void TestEnvironment::Setup() {
 	EngineContext& engine = EngineContext::Instance();
 	engine.CreateMainWindow(sf::VideoMode({800u, 600u}), "Test scene",
 	                        sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize);
 	engine.GetPhysicsHandler()->SetSubstepCount(2);
 	engine.GetPhysicsHandler()->SetGravity({0, 1000});
-	engine.SetScene(buildScene());
-	configureInput();
+	engine.SetScene(BuildScene());
+	ConfigureInput();
 }
 
-std::shared_ptr<Scene> TestEnvironment::buildScene() {
+std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	auto scene = make_shared<Scene>();
 	sf::Vector2f screenSize(EngineContext::Instance().GetMainWindow()->getSize());
 	constexpr float wallActualWidth = 200;
@@ -43,23 +47,24 @@ std::shared_ptr<Scene> TestEnvironment::buildScene() {
 	                                {screenSize.x + wallOffset, screenSize.y / 2}};
 	for (int i = 0; i < 4; ++i) {
 		auto body = CreateShapeBodyNode<sf::RectangleShape>();
-		body->setName(wallNames[i]);
+		body->SetName(wallNames[i]);
 		auto* rect = dynamic_cast<sf::RectangleShape*>(body->FindShapeCollider()->GetBaseShape());
 		rect->setSize(wallSizes[i]);
-		rect->setOrigin(utils::findCenterOfMass(rect));
+		rect->setOrigin(utils::FindCenterOfMass(rect));
 		rect->setPosition(wallPositions[i]);
 		rect->setFillColor(sf::Color(30, 255, 30, 50));
 		rect->setOutlineColor(sf::Color(30, 255, 30, 120));
 		rect->setOutlineThickness(1.f);
-		body->GetPhysicalComponent()->setImmovable();
-		body->GetPhysicalComponent()->_restitution = bodiesRestitution;
-		body->RequireEntity<CollisionBehaviour>()->_collisionGroups.set(0, true);
-		scene->addChild(std::move(body));
+		auto wrb = body->RequireBehaviour<RigidBodyBehaviour>();
+		wrb->SetImmovable();
+		wrb->_restitution = bodiesRestitution;
+		body->RequireBehaviour<CollisionBehaviour>()->_collisionGroups.set(0, true);
+		scene->AddChild(std::move(body));
 	}
 
 	for (int i = 0; i < 300; ++i) {
 		auto body = CreateShapeBodyNode<sf::CircleShape>();
-		body->setName(fmt::format("circle_{}", i));
+		body->SetName(fmt::format("circle_{}", i));
 
 		float radius = 5.f * (1 + i % 3);
 		auto* circle = dynamic_cast<sf::CircleShape*>(body->FindShapeCollider()->GetBaseShape());
@@ -75,7 +80,7 @@ std::shared_ptr<Scene> TestEnvironment::buildScene() {
 		circle->setFillColor(color);
 		circle->setOutlineColor(outlineColor);
 		circle->setOutlineThickness(1);
-		circle->setOrigin(utils::findCenterOfMass(circle));
+		circle->setOrigin(utils::FindCenterOfMass(circle));
 		auto minX = static_cast<int>(wallVisibleWidth + radius);
 		auto maxX = static_cast<int>(screenSize.x - wallVisibleWidth - radius);
 		auto minY = static_cast<int>(wallVisibleWidth + radius);
@@ -83,32 +88,32 @@ std::shared_ptr<Scene> TestEnvironment::buildScene() {
 		auto x = static_cast<float>(minX + rand() % (maxX - minX));
 		auto y = static_cast<float>(minY + rand() % (maxY - minY));
 		circle->setPosition(sf::Vector2f{x, y});
-		body->GetPhysicalComponent()->_mass = 3.14f * radius * radius;
-		body->GetPhysicalComponent()->_restitution = bodiesRestitution;
-		body->RequireEntity<CollisionBehaviour>()->_collisionGroups.set(0, true);
-		scene->addChild(std::move(body));
+		auto rb = body->RequireBehaviour<RigidBodyBehaviour>();
+		rb->_mass = 3.14f * radius * radius;
+		rb->_restitution = bodiesRestitution;
+		body->RequireBehaviour<CollisionBehaviour>()->_collisionGroups.set(0, true);
+		scene->AddChild(std::move(body));
 	}
-	scene->addChild(CreateFpsCounterNode());
+	scene->AddChild(CreateFpsCounterNode());
 	auto bodyPull = CreateBodyPullOverlay();
-	scene->addChild(std::move(bodyPull.node));
+	scene->AddChild(std::move(bodyPull.node));
 	EngineContext::Instance().SetBodyPullHandler(bodyPull.handler);
 	return scene;
 }
 
-void TestEnvironment::configureInput() {
+void TestEnvironment::ConfigureInput() {
 	auto ei = &EngineContext::Instance();
 	auto userInput = ei->GetUserInput();
-	auto scene = ei->GetScene();
 
-	userInput->attachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+	userInput->AttachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			if (key->code == sf::Keyboard::Key::R) {
-				ei->SetScene(buildScene());
+				ei->SetScene(BuildScene());
 			}
 		}
 	}));
 
-	userInput->attachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+	userInput->AttachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
 		if (const auto* touch = event.getIf<sf::Event::TouchBegan>()) {
 			sf::Vector2f pos(static_cast<float>(touch->position.x), static_cast<float>(touch->position.y));
 			if (auto scene = ei->GetScene()) {
@@ -143,7 +148,7 @@ void TestEnvironment::configureInput() {
 		}
 	}));
 
-	userInput->attachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+	userInput->AttachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			switch (key->code) {
 			case sf::Keyboard::Key::Equal:
@@ -161,13 +166,13 @@ void TestEnvironment::configureInput() {
 		}
 	}));
 
-	userInput->attachEventHandler(createDelegate<sf::Event>([](sf::Event event) {
+	userInput->AttachEventHandler(createDelegate<sf::Event>([](sf::Event event) {
 		if (event.is<sf::Event::Closed>()) {
 			std::exit(EXIT_SUCCESS);
 		}
 	}));
 
-	userInput->attachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+	userInput->AttachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			if (key->code == sf::Keyboard::Key::G) {
 				ei->GetPhysicsHandler()->SetGravityEnabled(!ei->GetPhysicsHandler()->IsGravityEnabled());
@@ -175,7 +180,7 @@ void TestEnvironment::configureInput() {
 		}
 	}));
 
-	userInput->attachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+	userInput->AttachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			if (key->code == sf::Keyboard::Key::D) {
 				ei->SetDebugEnabled(!ei->IsDebugEnabled());

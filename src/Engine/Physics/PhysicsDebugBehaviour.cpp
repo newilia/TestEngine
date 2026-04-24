@@ -1,6 +1,6 @@
 #include "PhysicsDebugBehaviour.h"
 
-#include "PhysicalBehaviour.h"
+#include "Engine/Physics/RigidBodyBehaviour.h"
 #include "Engine/App/EngineInterface.h"
 #include "Engine/Visual/FontManager.h"
 #include "Engine/Core/SceneNode.h"
@@ -16,12 +16,12 @@ void PhysicsDebugBehaviour::DrawDebug(sf::RenderTarget& target, sf::RenderStates
 	if (!node) {
 		return;
 	}
-	auto physComp = node->FindEntity<PhysicalBehaviour>();
-	if (!physComp) {
+	auto rigidBody = node->FindBehaviour<RigidBodyBehaviour>();
+	if (!rigidBody) {
 		return;
 	}
 
-	auto font = EngineContext::Instance().GetFontManager()->getDefaultFont();
+	auto font = EngineContext::Instance().GetFontManager()->GetDefaultFont();
 	sf::Text text(*font, "", 15);
 	text.setFillColor(sf::Color::White);
 	text.setOutlineColor(sf::Color::Black);
@@ -29,9 +29,9 @@ void PhysicsDebugBehaviour::DrawDebug(sf::RenderTarget& target, sf::RenderStates
 
 	auto pos = node->GetPosGlobal();
 	text.setPosition(pos);
-	text.setString(fmt::format("{}\n{:.1f}, {:.1f}", node->getName(), pos.x, pos.y));
+	text.setString(fmt::format("{}\n{:.1f}, {:.1f}", node->GetName(), pos.x, pos.y));
 	target.draw(text, states);
 
-	VectorArrow velArrow(node->GetPosGlobal(), node->GetPosGlobal() + physComp->_velocity);
+	VectorArrow velArrow(node->GetPosGlobal(), node->GetPosGlobal() + rigidBody->_velocity);
 	target.draw(velArrow, states);
 }

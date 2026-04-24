@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/Visual/NodeVisual.h"
+#include "Engine/Visual/Visual.h"
 
 #include <SFML/Graphics/Shape.hpp>
 #include <memory>
@@ -12,10 +12,10 @@ class ConvexShape;
 }
 
 /// Общая отрисовка `sf::Shape*`; проверка попадания — в наследниках.
-class ShapeNodeVisualBase : public NodeVisual
+class ShapeVisualBase : public Visual
 {
 public:
-	explicit ShapeNodeVisualBase(sf::Shape* shape) : _shape(shape) {}
+	explicit ShapeVisualBase(sf::Shape* shape) : _shape(shape) {}
 
 	void Draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
@@ -25,10 +25,10 @@ private:
 	sf::Shape* _shape = nullptr;
 };
 
-class CircleShapeNodeVisual : public ShapeNodeVisualBase
+class CircleShapeVisual : public ShapeVisualBase
 {
 public:
-	explicit CircleShapeNodeVisual(sf::CircleShape* circle);
+	explicit CircleShapeVisual(sf::CircleShape* circle);
 
 	bool HitTest(sf::Vector2f windowPosition) const override;
 
@@ -36,10 +36,10 @@ private:
 	sf::CircleShape* _circle = nullptr;
 };
 
-class RectangleShapeNodeVisual : public ShapeNodeVisualBase
+class RectangleShapeVisual : public ShapeVisualBase
 {
 public:
-	explicit RectangleShapeNodeVisual(sf::RectangleShape* rect);
+	explicit RectangleShapeVisual(sf::RectangleShape* rect);
 
 	bool HitTest(sf::Vector2f windowPosition) const override;
 
@@ -47,10 +47,10 @@ private:
 	sf::RectangleShape* _rect = nullptr;
 };
 
-class ConvexShapeNodeVisual : public ShapeNodeVisualBase
+class ConvexShapeVisual : public ShapeVisualBase
 {
 public:
-	explicit ConvexShapeNodeVisual(sf::ConvexShape* convex);
+	explicit ConvexShapeVisual(sf::ConvexShape* convex);
 
 	bool HitTest(sf::Vector2f windowPosition) const override;
 
@@ -59,12 +59,12 @@ private:
 };
 
 /// Любой другой подкласс `sf::Shape`: веер по вершинам (как у тела).
-class PolygonShapeNodeVisual : public ShapeNodeVisualBase
+class PolygonShapeVisual : public ShapeVisualBase
 {
 public:
-	explicit PolygonShapeNodeVisual(sf::Shape* shape);
+	explicit PolygonShapeVisual(sf::Shape* shape);
 
 	bool HitTest(sf::Vector2f windowPosition) const override;
 };
 
-std::shared_ptr<NodeVisual> MakeShapeNodeVisual(sf::Shape* shape);
+std::shared_ptr<Visual> MakeShapeVisual(sf::Shape* shape);

@@ -17,7 +17,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 	_set_error_mode(_OUT_TO_MSGBOX);
 	TestEnvironment env;
 	// PongEnvironment env;
-	env.setup();
+	env.Setup();
 
 	EngineContext& engine = EngineContext::Instance();
 	while (true) {
@@ -41,7 +41,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 			if (event.is<sf::Event::Closed>()) {
 				return EXIT_SUCCESS;
 			}
-			engine.GetUserInput()->handleEvent(event);
+			engine.GetUserInput()->HandleEvent(event);
 		}
 
 		auto dt = engine.GetSimDt();
@@ -51,7 +51,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 		if (dt.asSeconds() > 0.1f) {
 			dt = sf::seconds(0.1f);
 		}
-		scene->updateRec(dt);
+		scene->UpdateRec(dt);
 
 		window->draw(*scene);
 		window->display();

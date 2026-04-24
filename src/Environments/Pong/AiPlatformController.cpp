@@ -4,29 +4,29 @@
 
 AiPlatformController::AiPlatformController(PongPlatform* platform) : UserPlatformController(platform) {}
 
-void AiPlatformController::beginObserve(const std::weak_ptr<PongPlatform>& opponentPlatform,
+void AiPlatformController::BeginObserve(const std::weak_ptr<PongPlatform>& opponentPlatform,
                                         const std::weak_ptr<PongBall>& ball) {
 	_opponentPlatform = opponentPlatform;
 	_ball = ball;
 }
 
-void AiPlatformController::setAggressivenessParams(float aggression, const sf::Time& changePeriod) {
+void AiPlatformController::SetAggressivenessParams(float aggression, const sf::Time& changePeriod) {
 	_aggression = aggression;
 	_aggressionChangePeriod = changePeriod;
 }
 
-void AiPlatformController::observeState() {
+void AiPlatformController::ObserveState() {
 	if (auto ball = _ball.lock()) {
 		ExternalState state = {.ballPos = ball->GetShape()->getPosition()};
 		_externalStateTimers.push({sf::Clock(), state});
 	}
 }
 
-void AiPlatformController::react() {
-	movePlatformTowardsBall();
+void AiPlatformController::React() {
+	MovePlatformTowardsBall();
 }
 
-void AiPlatformController::movePlatformTowardsBall() {
+void AiPlatformController::MovePlatformTowardsBall() {
 	float distanceToBall = 0.f;
 	if (auto ball = _ball.lock()) {
 		distanceToBall = std::abs(_curExState.ballPos.y - _platform->GetShape()->getPosition().y) -
@@ -47,7 +47,7 @@ void AiPlatformController::movePlatformTowardsBall() {
 void AiPlatformController::Update(const sf::Time& dt) {
 	if (_observeTimer.getElapsedTime() > _observePeriod) {
 		_observeTimer.restart();
-		observeState();
+		ObserveState();
 	}
 
 	if (_aggressionChangeTimer.getElapsedTime() > _aggressionChangePeriod) {
@@ -64,7 +64,7 @@ void AiPlatformController::Update(const sf::Time& dt) {
 			_prevExState = _curExState;
 			_curExState = stateTimer.state;
 			_externalStateTimers.pop();
-			react();
+			React();
 		}
 	}
 

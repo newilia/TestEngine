@@ -8,21 +8,18 @@ class PongPlatform;
 class PongEnvironment
 {
 public:
-	void setup();
+	void Setup();
 
 private:
-	// scene building
-	std::shared_ptr<Scene> buildScene();
-	void addWalls(Scene* scene);
-	void addBall(Scene* scene);
-	void addUserPlatform(Scene* scene);
-	void addAiPlatform(Scene* scene);
+	std::shared_ptr<Scene> BuildScene();
+	void AddWalls(Scene* scene);
+	void AddBall(Scene* scene);
+	void AddUserPlatform(Scene* scene);
+	void AddAiPlatform(Scene* scene);
 
-	// helpers
-	shared_ptr<PongPlatform> createDefaultPlatform(sf::Vector2f size, sf::Vector2f pos, float rotationDeg,
-	                                               sf::Color color) const;
-	void configureGlobalInput();
+	std::shared_ptr<PongPlatform> CreateDefaultPlatform(sf::Vector2f size, sf::Vector2f pos, float rotationDeg,
+	                                                    sf::Color color) const;
+	void ConfigureGlobalInput();
 
-	// game interactions
-	void onLose();
+	void OnLose();
 };

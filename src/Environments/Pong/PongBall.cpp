@@ -1,7 +1,7 @@
 #include "PongBall.h"
 
 #include "Engine/Core/Behaviour.h"
-#include "Engine/Physics/PhysicalBehaviour.h"
+#include "Engine/Physics/RigidBodyBehaviour.h"
 #include "Engine/Physics/ShapeColliderBehaviourBase.h"
 #include "Engine/App/Utils.h"
 
@@ -21,10 +21,10 @@ public:
 		if (!owner) {
 			return;
 		}
-		auto pc = owner->GetPhysicalComponent();
-		if (auto speedExcess = utils::length(pc->_velocity) / owner->getMaxSpeed(); speedExcess > 1.f) {
-			float dampingMultiplier = 1 - speedExcess * dt.asSeconds() * owner->getSpeedDampingFactor();
-			pc->_velocity *= dampingMultiplier;
+		auto rigidBody = owner->GetNode()->RequireBehaviour<RigidBodyBehaviour>();
+		if (auto speedExcess = utils::Length(rigidBody->_velocity) / owner->GetMaxSpeed(); speedExcess > 1.f) {
+			float dampingMultiplier = 1 - speedExcess * dt.asSeconds() * owner->GetSpeedDampingFactor();
+			rigidBody->_velocity *= dampingMultiplier;
 		}
 	}
 };
@@ -33,7 +33,7 @@ public:
 
 PongBall::PongBall(std::shared_ptr<SceneNode> node) : _node(std::move(node)) {}
 
-void PongBall::setupBehaviours() {
+void PongBall::SetupBehaviours() {
 	_node->AddBehaviour(std::make_shared<PongBallDampingBehaviour>(weak_from_this()));
 }
 

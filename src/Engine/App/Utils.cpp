@@ -2,13 +2,15 @@
 
 #include "Engine/Visual/TextVisual.h"
 #include "Engine/Physics/ShapeColliderBehaviourBase.h"
-#include "Engine/Physics/ShapeNodeVisual.h"
+#include "Engine/Physics/ShapeVisual.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics/Text.hpp>
 #include "SFML/Graphics.hpp"
 #include "fmt/format.h"
+
+#include <cmath>
 
 namespace {
 	template <typename GetVertex>
@@ -18,60 +20,60 @@ namespace {
 		}
 		auto t1 = getVertex(0);
 		for (std::size_t i = 0; i < count - 2; ++i) {
-			if (utils::isPointInsideOfTriangle(point, t1, getVertex(i + 1), getVertex(i + 2))) {
+			if (utils::IsPointInsideOfTriangle(point, t1, getVertex(i + 1), getVertex(i + 2))) {
 				return true;
 			}
 		}
 		return false;
 	}
-}
+} // namespace
 
-float utils::length(const sf::Vector2f& vec) {
+float utils::Length(const sf::Vector2f& vec) {
 	return std::sqrt(vec.x * vec.x + vec.y * vec.y);
 }
 
-float utils::manhattan_dist(const sf::Vector2f& vec) {
+float utils::ManhattanDist(const sf::Vector2f& vec) {
 	return abs(vec.x) + abs(vec.y);
 }
 
-sf::Vector2f utils::normalize(const sf::Vector2f& vec) {
+sf::Vector2f utils::Normalize(const sf::Vector2f& vec) {
 	auto result = vec;
-	if (auto length = utils::length(vec); length > std::numeric_limits<float>::epsilon()) {
-		result /= length;
+	if (auto len = utils::Length(vec); len > std::numeric_limits<float>::epsilon()) {
+		result /= len;
 	}
 	return result;
 }
 
-float utils::dot(const sf::Vector2f& a, const sf::Vector2f& b) {
+float utils::Dot(const sf::Vector2f& a, const sf::Vector2f& b) {
 	return a.x * b.x + a.y * b.y;
 }
 
-sf::Vector2f utils::reflect(const sf::Vector2f& vector, const sf::Vector2f& relativeVector) {
-	auto normal = normalize(relativeVector);
-	return vector - 2.f * normal * dot(vector, normal);
+sf::Vector2f utils::Reflect(const sf::Vector2f& vector, const sf::Vector2f& relativeVector) {
+	auto normal = Normalize(relativeVector);
+	return vector - 2.f * normal * Dot(vector, normal);
 }
 
-float utils::project(const sf::Vector2f& a, const sf::Vector2f& b) {
-	auto result = dot(a, b);
-	if (auto lengthB = length(b); lengthB > std::numeric_limits<float>::epsilon()) {
-		result /= length(b);
+float utils::Project(const sf::Vector2f& a, const sf::Vector2f& b) {
+	auto result = Dot(a, b);
+	if (auto lengthB = Length(b); lengthB > std::numeric_limits<float>::epsilon()) {
+		result /= Length(b);
 	}
 	return result;
 }
 
-bool utils::arePointsCollinear(const sf::Vector2f& p1, const sf::Vector2f& p2, const sf::Vector2f& p3) {
+bool utils::ArePointsCollinear(const sf::Vector2f& p1, const sf::Vector2f& p2, const sf::Vector2f& p3) {
 	float triangleArea = 0.5f * ((p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y));
 	return std::abs(triangleArea) <= std::numeric_limits<float>::epsilon();
 }
 
-sf::Vector2f utils::rotate(const sf::Vector2f& v, float angle) {
+sf::Vector2f utils::Rotate(const sf::Vector2f& v, float angle) {
 	sf::Vector2f result;
 	result.x = v.x * cos(angle) - v.y * sin(angle);
 	result.y = v.x * sin(angle) + v.y * cos(angle);
 	return result;
 }
 
-bool utils::isPointInsideShapeByFan(const sf::Vector2f& point, const sf::Shape* shape) {
+bool utils::IsPointInsideShapeByFan(const sf::Vector2f& point, const sf::Shape* shape) {
 	if (!shape) {
 		return false;
 	}
@@ -80,7 +82,7 @@ bool utils::isPointInsideShapeByFan(const sf::Vector2f& point, const sf::Shape* 
 	});
 }
 
-bool utils::isPointInsideOfShape(const sf::Vector2f& point, const sf::Shape* shape) {
+bool utils::IsPointInsideOfShape(const sf::Vector2f& point, const sf::Shape* shape) {
 	if (!shape) {
 		return false;
 	}
@@ -88,24 +90,24 @@ bool utils::isPointInsideOfShape(const sf::Vector2f& point, const sf::Shape* sha
 		const auto& tf = circle->getTransform();
 		const sf::Vector2f localCenter = circle->getGeometricCenter();
 		const sf::Vector2f center = tf.transformPoint(localCenter);
-		const float radius =
-		    length(tf.transformPoint(localCenter + sf::Vector2f{circle->getRadius(), 0.f}) - center);
-		return sq(point.x - center.x) + sq(point.y - center.y) <= sq(radius);
+		const float radius = Length(
+		    tf.transformPoint(localCenter + sf::Vector2f{circle->getRadius(), 0.f}) - center);
+		return Sq(point.x - center.x) + Sq(point.y - center.y) <= Sq(radius);
 	}
 	if (const auto* rect = dynamic_cast<const sf::RectangleShape*>(shape)) {
 		const sf::Vector2f local = rect->getInverseTransform().transformPoint(point);
 		const sf::FloatRect localBounds({0.f, 0.f}, rect->getSize());
 		return localBounds.contains(local);
 	}
-	return isPointInsideShapeByFan(point, shape);
+	return IsPointInsideShapeByFan(point, shape);
 }
 
-bool utils::isPointInsideOfNodeVisual(const sf::Vector2f& point, const NodeVisual* visual) {
+bool utils::IsPointInsideOfVisual(const sf::Vector2f& point, const Visual* visual) {
 	if (!visual) {
 		return false;
 	}
-	if (const auto* shapeVisual = dynamic_cast<const ShapeNodeVisualBase*>(visual)) {
-		return isPointInsideOfShape(point, shapeVisual->GetShape());
+	if (const auto* shapeVisual = dynamic_cast<const ShapeVisualBase*>(visual)) {
+		return IsPointInsideOfShape(point, shapeVisual->GetShape());
 	}
 	if (const auto* fps = dynamic_cast<const TextVisual*>(visual)) {
 		if (const sf::Text* text = fps->GetText()) {
@@ -116,20 +118,20 @@ bool utils::isPointInsideOfNodeVisual(const sf::Vector2f& point, const NodeVisua
 	return false;
 }
 
-bool utils::isPointInsideOfBody(const sf::Vector2f& point, const AbstractBody* body) {
+bool utils::IsPointInsideOfBody(const sf::Vector2f& point, const AbstractBody* body) {
 	if (!body) {
 		return false;
 	}
 	if (const auto* collider = dynamic_cast<const ShapeColliderBehaviourBase*>(body)) {
 		if (const sf::Shape* shape = collider->GetBaseShape()) {
-			return isPointInsideOfShape(point, shape);
+			return IsPointInsideOfShape(point, shape);
 		}
 	}
 	return pointInsideConvexFan(point, body->GetPointCount(),
-	                           [&](std::size_t i) { return body->GetPointGlobal(i); });
+	                            [&](std::size_t i) { return body->GetPointGlobal(i); });
 }
 
-bool utils::isPointInsideOfTriangle(sf::Vector2f p, sf::Vector2f t1, sf::Vector2f t2, sf::Vector2f t3) {
+bool utils::IsPointInsideOfTriangle(sf::Vector2f p, sf::Vector2f t1, sf::Vector2f t2, sf::Vector2f t3) {
 	auto a = (t1.x - p.x) * (t2.y - t1.y) - (t2.x - t1.x) * (t1.y - p.y);
 	auto b = (t2.x - p.x) * (t3.y - t2.y) - (t3.x - t2.x) * (t2.y - p.y);
 	auto c = (t3.x - p.x) * (t1.y - t3.y) - (t1.x - t3.x) * (t3.y - p.y);
@@ -139,15 +141,15 @@ bool utils::isPointInsideOfTriangle(sf::Vector2f p, sf::Vector2f t1, sf::Vector2
 	return false;
 }
 
-bool utils::isNan(const sf::Vector2f& v) {
+bool utils::IsNan(const sf::Vector2f& v) {
 	return std::isnan(v.x) || std::isnan(v.y);
 }
 
-std::string utils::toString(const sf::Vector2f& v) {
+std::string utils::ToString(const sf::Vector2f& v) {
 	return fmt::format("({:.1f}, {:.1f})", v.x, v.y);
 }
 
-sf::Vector2f utils::findCenterOfMass(const sf::Shape* shape) {
+sf::Vector2f utils::FindCenterOfMass(const sf::Shape* shape) {
 	if (auto circle = dynamic_cast<const sf::CircleShape*>(shape)) {
 		return sf::Vector2f(circle->getRadius(), circle->getRadius());
 	}
@@ -172,10 +174,10 @@ sf::Vector2f utils::findCenterOfMass(const sf::Shape* shape) {
 		for (size_t i = 0; i < pointCount - 2; ++i) {
 			sf::Vector2f p2 = shape->getPoint(i + 1);
 			sf::Vector2f p3 = shape->getPoint(i + 2);
-			auto a = length(p1 - p2);
-			auto b = length(p2 - p3);
-			auto c = length(p3 - p1);
-			float triangleArea = calcTriangleArea(a, b, c);
+			auto a = Length(p1 - p2);
+			auto b = Length(p2 - p3);
+			auto c = Length(p3 - p1);
+			float triangleArea = CalcTriangleArea(a, b, c);
 			auto triangleCenter = (p1 + p2 + p3) / 3.f;
 			trianglesAreaSum += triangleArea;
 			result += triangleCenter * triangleArea;
@@ -184,25 +186,25 @@ sf::Vector2f utils::findCenterOfMass(const sf::Shape* shape) {
 	}
 }
 
-float utils::calcTriangleArea(float a, float b, float c) {
+float utils::CalcTriangleArea(float a, float b, float c) {
 	float p = (a + b + c) * 0.5f;
 	return sqrt(p * (p - a) * (p - b) * (p - c));
 }
 
-std::optional<std::pair<float, std::optional<float>>> utils::solveQuadraticEquation(float a, float b, float c) {
-	float D = sq(b) - 4 * a * c;
+std::optional<std::pair<float, std::optional<float>>> utils::SolveQuadraticEquation(float a, float b, float c) {
+	float D = Sq(b) - 4 * a * c;
 	if (D > std::numeric_limits<float>::epsilon()) {
 		float x1 = (-b + sqrt(D)) / (2 * a);
 		float x2 = (-b - sqrt(D)) / (2 * a);
 		return std::pair(x1, x2);
 	}
-	if (isZero(D)) {
+	if (IsZero(D)) {
 		return std::pair(-b / (2 * a), std::nullopt);
 	}
 	return std::nullopt;
 }
 
-sf::CircleShape utils::createCircle(const sf::Vector2f& pos, float radius, sf::Color color) {
+sf::CircleShape utils::CreateCircle(const sf::Vector2f& pos, float radius, sf::Color color) {
 	sf::CircleShape circle;
 	circle.setPosition(pos);
 	circle.setRadius(radius);

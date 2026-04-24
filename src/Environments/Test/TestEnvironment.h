@@ -6,9 +6,9 @@
 class TestEnvironment
 {
 public:
-	static void setup();
+	static void Setup();
 
 private:
-	static std::shared_ptr<Scene> buildScene();
-	static void configureInput();
+	static std::shared_ptr<Scene> BuildScene();
+	static void ConfigureInput();
 };

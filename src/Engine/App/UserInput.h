@@ -1,6 +1,7 @@
 #pragma once
 #include "Engine/Core/Delegates.h"
-#include "Engine/Core/Updateable.h"
+
+#include <SFML/Window/Event.hpp>
 
 #include <functional>
 #include <set>
@@ -9,8 +10,8 @@ class UserInput
 {
 public:
 	using EventHandler = std::function<void(const sf::Event&)>;
-	void handleEvent(const sf::Event& event);
-	void attachEventHandler(std::unique_ptr<IDelegate<sf::Event>>&& delegatePtr);
+	void HandleEvent(const sf::Event& event);
+	void AttachEventHandler(std::unique_ptr<IDelegate<sf::Event>>&& delegatePtr);
 
 private:
 	// void onMouseButtonPress(const sf::Event::MouseButtonEvent& event);
