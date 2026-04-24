@@ -1,6 +1,6 @@
 #pragma once
 
-#include "EntityOnNode.h"
+#include "Engine/Core/EntityOnNode.h"
 
 #include <SFML/Graphics/RenderStates.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>

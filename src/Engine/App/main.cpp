@@ -1,7 +1,7 @@
-#include "EngineInterface.h"
-#include "Pong/PongEnvironment.h"
-#include "Test/TestEnvironment.h"
-#include "UserInput.h"
+#include "Engine/App/EngineInterface.h"
+#include "Environments/Pong/PongEnvironment.h"
+#include "Environments/Test/TestEnvironment.h"
+#include "Engine/App/UserInput.h"
 
 #include <SFML/Graphics.hpp>
 

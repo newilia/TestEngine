@@ -4,7 +4,7 @@
 
 #include "PhysicalBehaviour.h"
 #include "ShapeVisualBehaviour.h"
-#include "Engine/SceneNode.h"
+#include "Engine/Core/SceneNode.h"
 
 #include <SFML/Graphics.hpp>
 

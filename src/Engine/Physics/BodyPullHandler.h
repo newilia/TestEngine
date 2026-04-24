@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Engine/Behaviour.h"
-#include "Engine/VectorArrowNodeVisual.h"
+#include "Engine/Core/Behaviour.h"
+#include "Engine/Visual/VectorArrowNodeVisual.h"
 #include "Engine/Physics/UserPullBehaviour.h"
 
 #include <memory>

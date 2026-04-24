@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AbstractBody.h"
-#include "Engine/Behaviour.h"
+#include "Engine/Core/Behaviour.h"
 
 #include <SFML/Graphics/Shape.hpp>
 

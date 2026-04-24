@@ -1,8 +1,8 @@
 #include "Utils.h"
 
-#include "Engine/FpsNodeVisual.h"
-#include "Physics/ShapeColliderBehaviourBase.h"
-#include "Physics/ShapeNodeVisual.h"
+#include "Engine/Visual/TextVisual.h"
+#include "Engine/Physics/ShapeColliderBehaviourBase.h"
+#include "Engine/Physics/ShapeNodeVisual.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
@@ -107,7 +107,7 @@ bool utils::isPointInsideOfNodeVisual(const sf::Vector2f& point, const NodeVisua
 	if (const auto* shapeVisual = dynamic_cast<const ShapeNodeVisualBase*>(visual)) {
 		return isPointInsideOfShape(point, shapeVisual->GetShape());
 	}
-	if (const auto* fps = dynamic_cast<const FpsNodeVisual*>(visual)) {
+	if (const auto* fps = dynamic_cast<const TextVisual*>(visual)) {
 		if (const sf::Text* text = fps->GetText()) {
 			return text->getGlobalBounds().contains(point);
 		}

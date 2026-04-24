@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Behaviour.h"
+#include "Engine/Core/Behaviour.h"
 
 #include <SFML/Graphics/Text.hpp>
 #include <SFML/System/Time.hpp>

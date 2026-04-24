@@ -1,5 +1,5 @@
 #pragma once
-#include "Engine/Scene.h"
+#include "Engine/Core/Scene.h"
 
 #include <memory>
 

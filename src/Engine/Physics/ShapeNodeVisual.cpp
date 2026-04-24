@@ -1,6 +1,6 @@
 #include "ShapeNodeVisual.h"
 
-#include "Engine/Utils.h"
+#include "Engine/App/Utils.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/ConvexShape.hpp>

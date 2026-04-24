@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Engine/Physics/PhysicalBehaviour.h"
-#include "Engine/SceneNode.h"
+#include "Engine/Core/SceneNode.h"
 
 #include <SFML/System/Time.hpp>
 

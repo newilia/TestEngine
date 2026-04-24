@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/Behaviour.h"
+#include "Engine/Core/Behaviour.h"
 
 #include <SFML/System/Vector2.hpp>
 

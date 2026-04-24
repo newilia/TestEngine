@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Behaviour.h"
-#include "NodeVisual.h"
-#include "Physics/PhysicalBehaviour.h"
-#include "Physics/ShapeColliderBehaviourBase.h"
+#include "Engine/Visual/NodeVisual.h"
+#include "Engine/Physics/PhysicalBehaviour.h"
+#include "Engine/Physics/ShapeColliderBehaviourBase.h"
 #include "SortingStrategyEntity.h"
 #include "Updateable.h"
 

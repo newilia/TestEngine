@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/SceneNode.h"
+#include "Engine/Core/SceneNode.h"
 
 #include <SFML/System/Vector2.hpp>
 

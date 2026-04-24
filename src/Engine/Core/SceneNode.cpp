@@ -2,8 +2,8 @@
 
 #include <algorithm>
 
-#include "EngineInterface.h"
-#include "Physics/PhysicsDebugBehaviour.h"
+#include "Engine/App/EngineInterface.h"
+#include "Engine/Physics/PhysicsDebugBehaviour.h"
 
 #include <cassert>
 

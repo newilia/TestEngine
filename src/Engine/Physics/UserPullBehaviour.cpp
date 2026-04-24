@@ -1,6 +1,6 @@
 #include "UserPullBehaviour.h"
 
-#include "Engine/SceneNode.h"
+#include "Engine/Core/SceneNode.h"
 
 sf::Vector2f UserPullBehaviour::getPullVector() const {
 	if (auto node = GetNode()) {
