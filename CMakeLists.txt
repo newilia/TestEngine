@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.28)
 
 # MSVC: honor MSVC_DEBUG_INFORMATION_FORMAT (Embedded /Z7 vs ProgramDatabase) in generated flags.
 if(POLICY CMP0091)
@@ -43,12 +43,18 @@ set(SFML_BUILD_TEST_SUITE OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(third-party/SFML EXCLUDE_FROM_ALL)
 
+# Dear ImGui + ImGui-SFML (submodules under third-party/)
+set(IMGUI_DIR "${CMAKE_SOURCE_DIR}/third-party/imgui" CACHE PATH "" FORCE)
+set(IMGUI_SFML_FIND_SFML OFF CACHE BOOL "" FORCE)
+add_subdirectory(third-party/imgui-sfml EXCLUDE_FROM_ALL)
+
 target_link_libraries(TestEngine PRIVATE
     sfml-graphics
     sfml-window
     sfml-system
     sfml-audio
     sfml-network
+    ImGui-SFML::ImGui-SFML
 )
 
 # Стартовый проект в Visual Studio (F5) — иначе часто остаётся ALL_BUILD / таргет из third-party
