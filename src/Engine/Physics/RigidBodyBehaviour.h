@@ -6,7 +6,7 @@
 
 #include <limits>
 
-class PhysicalBehaviour : public Behaviour
+class RigidBodyBehaviour : public Behaviour
 {
 public:
 	void OnAttached() override {}
@@ -20,7 +20,7 @@ public:
 	float _restitution = 0.5f;
 	float _friction = 0.5f;
 
-	void setImmovable() { _mass = std::numeric_limits<float>::infinity(); }
+	void SetImmovable() { _mass = std::numeric_limits<float>::infinity(); }
 
-	bool isImmovable() const { return _mass == std::numeric_limits<float>::infinity(); }
+	bool IsImmovable() const { return _mass == std::numeric_limits<float>::infinity(); }
 };

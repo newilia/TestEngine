@@ -1,6 +1,6 @@
 #include "UserInput.h"
 
-void UserInput::handleEvent(const sf::Event& event) {
+void UserInput::HandleEvent(const sf::Event& event) {
 	// switch (event.type) {
 	// case sf::Event::MouseButtonPressed:
 	//	onMouseButtonPress(event.mouseButton);
@@ -30,7 +30,7 @@ void UserInput::handleEvent(const sf::Event& event) {
 	}
 }
 
-void UserInput::attachEventHandler(std::unique_ptr<IDelegate<sf::Event>>&& delegatePtr) {
+void UserInput::AttachEventHandler(std::unique_ptr<IDelegate<sf::Event>>&& delegatePtr) {
 	_eventHandlers.emplace(std::move(delegatePtr));
 }
 

@@ -5,10 +5,10 @@ class FontManager
 {
 public:
 	FontManager();
-	const sf::Font* getDefaultFont() const;
+	const sf::Font* GetDefaultFont() const;
 
 private:
-	void initDefaultFont();
+	void InitDefaultFont();
 
 private:
 	sf::Font* _defaultFont = nullptr;

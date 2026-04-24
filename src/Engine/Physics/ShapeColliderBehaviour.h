@@ -2,7 +2,7 @@
 
 #include "ShapeColliderBehaviourBase.h"
 
-#include "PhysicalBehaviour.h"
+#include "Engine/Physics/RigidBodyBehaviour.h"
 #include "ShapeVisualBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 
@@ -27,7 +27,7 @@ template <typename TShape>
 std::shared_ptr<SceneNode> CreateShapeBodyNode() {
 	auto n = std::make_shared<SceneNode>();
 	n->AddBehaviour(std::make_shared<ShapeColliderBehaviour<TShape>>());
-	n->RequireEntity<PhysicalBehaviour>();
+	n->RequireBehaviour<RigidBodyBehaviour>();
 	n->AddBehaviour(std::make_shared<ShapeVisualBehaviour>());
 	return n;
 }

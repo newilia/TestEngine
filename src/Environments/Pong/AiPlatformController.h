@@ -1,7 +1,7 @@
 #pragma once
 #include "PlatformControllerBase.h"
 #include "PongBall.h"
-#include "UserPlatformContoller.h"
+#include "UserPlatformController.h"
 
 #include <SFML/System/Clock.hpp>
 
@@ -14,12 +14,12 @@ public:
 	explicit AiPlatformController(PongPlatform* platform);
 	void Update(const sf::Time& dt) override;
 
-	void setReactionDelay(const sf::Time& delay) { _reactionDelay = delay; }
+	void SetReactionDelay(const sf::Time& delay) { _reactionDelay = delay; }
 
-	void setObservePeriod(const sf::Time& period) { _observePeriod = period; }
+	void SetObservePeriod(const sf::Time& period) { _observePeriod = period; }
 
-	void beginObserve(const std::weak_ptr<PongPlatform>& opponentPlatform, const std::weak_ptr<PongBall>& ball);
-	void setAggressivenessParams(float aggression, const sf::Time& changePeriod);
+	void BeginObserve(const std::weak_ptr<PongPlatform>& opponentPlatform, const std::weak_ptr<PongBall>& ball);
+	void SetAggressivenessParams(float aggression, const sf::Time& changePeriod);
 
 private:
 	struct ExternalState
@@ -38,11 +38,10 @@ private:
 		float activity = 0.1f;
 	};
 
-	void observeState();
-	void react();
+	void ObserveState();
+	void React();
 
-	// reactions
-	void movePlatformTowardsBall();
+	void MovePlatformTowardsBall();
 
 	std::weak_ptr<PongPlatform> _opponentPlatform;
 	std::weak_ptr<PongBall> _ball;

@@ -1,7 +1,7 @@
 #include "ShapeVisualBehaviour.h"
 
 #include "ShapeColliderBehaviourBase.h"
-#include "ShapeNodeVisual.h"
+#include "ShapeVisual.h"
 #include "Engine/Core/SceneNode.h"
 
 void ShapeVisualBehaviour::OnAttached() {
@@ -13,7 +13,7 @@ void ShapeVisualBehaviour::OnAttached() {
 	if (!collider) {
 		return;
 	}
-	auto visual = MakeShapeNodeVisual(collider->GetBaseShape());
+	auto visual = MakeShapeVisual(collider->GetBaseShape());
 	if (visual) {
 		node->SetVisual(std::move(visual));
 	}

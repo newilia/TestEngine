@@ -1,23 +1,24 @@
 #include "BodyPullHandler.h"
 
 #include "Engine/App/EngineInterface.h"
+#include "Engine/Physics/RigidBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/App/Utils.h"
 
 #include <memory>
 
-BodyPullHandler::BodyPullHandler(std::shared_ptr<VectorArrowNodeVisual> arrowVisual)
+BodyPullHandler::BodyPullHandler(std::shared_ptr<VectorArrowVisual> arrowVisual)
     : _arrowVisual(std::move(arrowVisual)) {}
 
 BodyPullSetup CreateBodyPullOverlay() {
 	auto root = std::make_shared<SceneNode>();
-	root->setName("body_pull");
+	root->SetName("body_pull");
 
 	auto arrowNode = std::make_shared<SceneNode>();
-	arrowNode->setName("body_pull_arrow");
-	auto arrowVis = std::make_shared<VectorArrowNodeVisual>();
+	arrowNode->SetName("body_pull_arrow");
+	auto arrowVis = std::make_shared<VectorArrowVisual>();
 	arrowNode->SetVisual(arrowVis);
-	root->addChild(std::move(arrowNode));
+	root->AddChild(std::move(arrowNode));
 
 	auto handler = std::make_shared<BodyPullHandler>(arrowVis);
 	root->AddBehaviour(handler);
@@ -36,16 +37,16 @@ void BodyPullHandler::StartPull(sf::Vector2f mousePos, UserPullBehaviour::PullMo
 			continue;
 		}
 		auto* collider = body->FindShapeCollider();
-		if (!collider || !utils::isPointInsideOfBody(mousePos, collider)) {
+		if (!collider || !utils::IsPointInsideOfBody(mousePos, collider)) {
 			continue;
 		}
-		auto physComp = body->GetPhysicalComponent();
-		if (physComp && physComp->isImmovable()) {
+		auto rigidBody = body->FindBehaviour<RigidBodyBehaviour>();
+		if (rigidBody && rigidBody->IsImmovable()) {
 			if (pullMode == UserPullBehaviour::PullMode::FORCE || pullMode == UserPullBehaviour::PullMode::VELOCITY) {
 				continue;
 			}
 		}
-		auto pullComponent = body->RequireEntity<UserPullBehaviour>();
+		auto pullComponent = body->RequireBehaviour<UserPullBehaviour>();
 		pullComponent->_localSourcePoint = mousePos - body->GetPosGlobal();
 		pullComponent->_globalDestPoint = mousePos;
 		pullComponent->_mode = pullMode;
@@ -63,7 +64,7 @@ void BodyPullHandler::StopPull() {
 
 void BodyPullHandler::SetPullDestination(sf::Vector2f dest) const {
 	if (auto pullingBody = _pullingBody.lock()) {
-		if (auto pullComp = pullingBody->FindEntity<UserPullBehaviour>()) {
+		if (auto pullComp = pullingBody->FindBehaviour<UserPullBehaviour>()) {
 			pullComp->_globalDestPoint = dest;
 		}
 	}
@@ -77,15 +78,15 @@ void BodyPullHandler::OnUpdate(const sf::Time& /*dt*/) {
 		return;
 	}
 	if (auto body = _pullingBody.lock()) {
-		if (auto pullComp = body->FindEntity<UserPullBehaviour>()) {
+		if (auto pullComp = body->FindBehaviour<UserPullBehaviour>()) {
 			if (pullComp->_mode == UserPullBehaviour::PullMode::FORCE) {
-				_arrowVisual->setColor(sf::Color::Green);
-				_arrowVisual->setStartPos(body->GetPosGlobal() + pullComp->_localSourcePoint);
-				_arrowVisual->setEndPos(pullComp->_globalDestPoint);
-				_arrowVisual->setVisible(true);
+				_arrowVisual->SetColor(sf::Color::Green);
+				_arrowVisual->SetStartPos(body->GetPosGlobal() + pullComp->_localSourcePoint);
+				_arrowVisual->SetEndPos(pullComp->_globalDestPoint);
+				_arrowVisual->SetVisible(true);
 				return;
 			}
 		}
 	}
-	_arrowVisual->setVisible(false);
+	_arrowVisual->SetVisible(false);
 }

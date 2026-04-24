@@ -11,15 +11,15 @@ public:
 
 	~VectorArrow() override = default;
 
-	void setStartPos(const sf::Vector2f& start) { _start = start; }
+	void SetStartPos(const sf::Vector2f& start) { _start = start; }
 
-	void setEndPos(const sf::Vector2f& end) { _end = end; }
+	void SetEndPos(const sf::Vector2f& end) { _end = end; }
 
-	void setColor(const sf::Color& color) { _color = color; }
+	void SetColor(const sf::Color& color) { _color = color; }
 
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
-	void enableArrowHead(bool enable) { _arrowHeadEnabled = enable; }
+	void EnableArrowHead(bool enable) { _arrowHeadEnabled = enable; }
 
 private:
 	sf::Vector2f _start;

@@ -6,10 +6,10 @@
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/System/Vector2.hpp>
 
-class NodeVisual : public EntityOnNode
+class Visual : public EntityOnNode
 {
 public:
-	~NodeVisual() override = default;
+	~Visual() override = default;
 
 	virtual void Draw(sf::RenderTarget& target, sf::RenderStates states) const = 0;
 

@@ -11,5 +11,5 @@ void TextVisual::Draw(sf::RenderTarget& target, sf::RenderStates states) const {
 }
 
 bool TextVisual::HitTest(sf::Vector2f windowPosition) const {
-	return utils::isPointInsideOfNodeVisual(windowPosition, this);
+	return utils::IsPointInsideOfVisual(windowPosition, this);
 }

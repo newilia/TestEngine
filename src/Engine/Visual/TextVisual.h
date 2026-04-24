@@ -1,6 +1,6 @@
 #pragma once
 
-#include "NodeVisual.h"
+#include "Visual.h"
 
 #include <memory>
 
@@ -8,7 +8,7 @@ namespace sf {
 class Text;
 }
 
-class TextVisual : public NodeVisual
+class TextVisual : public Visual
 {
 public:
 	explicit TextVisual(std::shared_ptr<sf::Text> text) : _text(std::move(text)) {}

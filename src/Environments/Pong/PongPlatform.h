@@ -14,17 +14,17 @@ namespace sf {
 class ConvexShape;
 }
 
-/// Платформа Pong: геометрия и физика — через ShapeCollider + PhysicalBehaviour на ноде.
+/// Платформа Pong: геометрия и физика — через ShapeCollider + RigidBodyBehaviour на ноде.
 class PongPlatform : public std::enable_shared_from_this<PongPlatform>
 {
 public:
 	explicit PongPlatform(std::shared_ptr<SceneNode> node);
 
-	void registerTickBehaviour();
+	void RegisterTickBehaviour();
 
 	void Init();
 
-	void setShapeDimensions(sf::Vector2f size, float curveness, float rotationDeg);
+	void SetShapeDimensions(sf::Vector2f size, float curveness, float rotationDeg);
 
 	void Update(const sf::Time& dt);
 
@@ -36,13 +36,11 @@ public:
 
 	sf::Vector2f GetPosGlobal() const { return _node->GetPosGlobal(); }
 
-	void setName(const std::string& name) { _node->setName(name); }
+	void SetName(const std::string& name) { _node->SetName(name); }
 
-	shared_ptr<PlatformControllerBase> getController() const { return _controller; }
+	shared_ptr<PlatformControllerBase> GetController() const { return _controller; }
 
-	void setController(const shared_ptr<PlatformControllerBase>& controller) { _controller = controller; }
-
-	auto GetPhysicalComponent() const { return _node->GetPhysicalComponent(); }
+	void SetController(const shared_ptr<PlatformControllerBase>& controller) { _controller = controller; }
 
 private:
 	std::shared_ptr<SceneNode> _node;
