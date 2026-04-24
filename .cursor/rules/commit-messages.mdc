@@ -1,0 +1,40 @@
+---
+description: Git commit messages in English, concise and specific
+alwaysApply: true
+---
+
+# Commit messages
+
+When creating commits for this project:
+
+- **Language:** English.
+- **Focus:** The first line (subject) must state **what** changed in concrete terms, not a vague category. Prefer **noun or short phrase** over a bare verb label.
+
+**Avoid** generic subjects that could mean many things, for example:
+
+- `refactor` (code? architecture? naming? — unclear)
+- `fix` (what broke?)
+- `update` (which area?)
+
+**Prefer** a subject that names the **area and nature** of the change, for example:
+
+- `reorganize Engine/Behaviour and Visual layout`
+- `move FontManager from Visual to App`
+- `split ShapeVisual into separate translation units`
+- `merge VectorArrow into VectorArrowVisual header`
+
+- **Length:** One line when possible; second paragraph optional for bullets or **why** the change was made, **when the user (or context) has already stated a reason** (e.g. “not a Visual, owned by context”). Do not invent motivation.
+
+- **Conventional prefix:** Optional (`fix:`, `chore:`, `docs:`) if the project already uses them, but the rest of the line must still be **specific** as above.
+
+Example of a **bad** subject:
+
+```
+refactor: engine structure
+```
+
+Example of a **good** subject:
+
+```
+reorganize src into Engine/Behaviour and move FontManager to App
+```
