@@ -64,6 +64,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 			if (!ImGui::SFML::Init(*window)) {
 				return EXIT_FAILURE;
 			}
+			ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 			imguiInitialized = true;
 		}
 
