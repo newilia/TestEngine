@@ -46,7 +46,6 @@ namespace Engine {
 			_nodeInspectorWidget.Draw(GetSelectedNode());
 		}
 		ImGui::End();
-		ImGui::ShowDemoWindow();
 	}
 
 	void Editor::OnEvent(const sf::Event& event) {
