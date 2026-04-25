@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Engine/Behaviour/Behaviour.h"
-#include "Engine/Visual/VectorArrowVisual.h"
 #include "Engine/Behaviour/Physics/UserPullBehaviour.h"
+#include "Engine/Visual/VectorArrowVisual.h"
 
 #include <memory>
 
@@ -27,7 +27,8 @@ private:
 	std::shared_ptr<VectorArrowVisual> _arrowVisual;
 };
 
-struct BodyPullSetup {
+struct BodyPullSetup
+{
 	std::shared_ptr<SceneNode> node;
 	std::shared_ptr<BodyPullHandler> handler;
 };

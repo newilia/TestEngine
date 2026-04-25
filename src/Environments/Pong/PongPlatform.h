@@ -1,17 +1,16 @@
 #pragma once
 
+#include "Engine/Core/SceneNode.h"
+#include "Engine/Core/common.h"
 #include "PlatformControllerBase.h"
 
-#include "Engine/Core/common.h"
-#include "Engine/Core/SceneNode.h"
-
-#include <SFML/Graphics/Rect.hpp>
 #include <SFML/Graphics.hpp>
+#include <SFML/Graphics/Rect.hpp>
 
 #include <memory>
 
 namespace sf {
-class ConvexShape;
+	class ConvexShape;
 }
 
 /// Платформа Pong: геометрия и физика — через ShapeCollider + RigidBodyBehaviour на ноде.

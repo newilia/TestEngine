@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Engine/Visual/Visual.h"
-
 #include "SFML/Graphics.hpp"
 
 /// Линия с опциональным наконечником; риуется как `sf::Drawable`.

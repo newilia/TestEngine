@@ -7,7 +7,7 @@
 #include <memory>
 
 namespace sf {
-class CircleShape;
+	class CircleShape;
 }
 
 /// Игровой шарик: коллайдер и визуал задаются поведениями на одной ноде.

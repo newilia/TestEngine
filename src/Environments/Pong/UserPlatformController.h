@@ -7,13 +7,14 @@
 class PongPlatform;
 
 namespace sf {
-class Event;
+	class Event;
 }
 
 class UserPlatformController : public PlatformControllerBase
 {
 public:
 	explicit UserPlatformController(PongPlatform* platform) : PlatformControllerBase(platform) {}
+
 	void Init() override;
 	void HandleEvent(const sf::Event& event);
 

@@ -1,8 +1,8 @@
 #include "ShapeVisualBehaviour.h"
 
-#include "ShapeColliderBehaviourBase.h"
-#include "Engine/Visual/MakeShapeVisual.h"
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Visual/MakeShapeVisual.h"
+#include "ShapeColliderBehaviourBase.h"
 
 void ShapeVisualBehaviour::OnAttached() {
 	auto node = GetNode();

@@ -2,14 +2,14 @@
 
 #include "AbstractBody.h"
 #include "Engine/App/EngineInterface.h"
+#include "Engine/App/Utils.h"
 #include "Engine/Behaviour/Physics/CollisionBehaviour.h"
 #include "Engine/Behaviour/Physics/OverlappingBehaviour.h"
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Behaviour/Physics/UserPullBehaviour.h"
 #include "Engine/Core/SceneNode.h"
-#include "Engine/App/Utils.h"
-#include "Engine/Visual/VectorArrowVisual.h"
 #include "Engine/Core/common.h"
+#include "Engine/Visual/VectorArrowVisual.h"
 #include "IntersectionDetails.h"
 #include "ShapeColliderBehaviourBase.h"
 #include "fmt/format.h"
@@ -94,8 +94,8 @@ void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 					auto b2Collision = b2->FindBehaviour<CollisionBehaviour>();
 					auto b1RigidBody = b1->RequireBehaviour<RigidBodyBehaviour>();
 					auto b2RigidBody = b2->RequireBehaviour<RigidBodyBehaviour>();
-					if (b1Collision && b2Collision && b1RigidBody && b2RigidBody
-					    && (b1Collision->_collisionGroups & b2Collision->_collisionGroups).any()) {
+					if (b1Collision && b2Collision && b1RigidBody && b2RigidBody &&
+					    (b1Collision->_collisionGroups & b2Collision->_collisionGroups).any()) {
 						if (!b1RigidBody->IsImmovable() || !b2RigidBody->IsImmovable()) {
 							ResolveCollision(*intersection);
 							for (auto callback : b1Collision->_collisionCallbacks) {
@@ -115,8 +115,8 @@ void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 				{
 					auto b1Overlapping = b1->FindBehaviour<OverlappingBehaviour>();
 					auto b2Overlapping = b2->FindBehaviour<OverlappingBehaviour>();
-					if (b1Overlapping && b2Overlapping
-					    && (b1Overlapping->_overlappingGroups & b2Overlapping->_overlappingGroups).any()) {
+					if (b1Overlapping && b2Overlapping &&
+					    (b1Overlapping->_overlappingGroups & b2Overlapping->_overlappingGroups).any()) {
 						for (auto callback : b1Overlapping->_overlappingCallbacks) {
 							if (callback) {
 								callback->operator()(*intersection);
@@ -243,7 +243,7 @@ std::optional<IntersectionDetails> PhysicsHandler::DetectPolygonPolygonIntersect
 }
 
 std::optional<IntersectionDetails> PhysicsHandler::DetectCirclePolygonIntersection(const sf::CircleShape* circle,
-                                                                                 const AbstractBody* body) {
+                                                                                   const AbstractBody* body) {
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
 
@@ -253,8 +253,7 @@ std::optional<IntersectionDetails> PhysicsHandler::DetectCirclePolygonIntersecti
 	for (size_t i = 0; i < pointsCount; ++i) {
 		const Segment edge = {body->GetPointGlobal(i), body->GetPointGlobal((i + 1) % pointsCount)};
 
-		if (auto i_point =
-		        FindSegmentCircleIntersectionPoint(edge, circle->getPosition(), circle->getRadius())) {
+		if (auto i_point = FindSegmentCircleIntersectionPoint(edge, circle->getPosition(), circle->getRadius())) {
 			edges_i_p.emplace_back(i_point->p1);
 			if (i_point->p2) {
 				edges_i_p.emplace_back(*i_point->p2);

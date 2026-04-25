@@ -2,17 +2,17 @@
 
 #include "AiPlatformController.h"
 #include "Engine/App/EngineInterface.h"
+#include "Engine/App/UserInput.h"
+#include "Engine/App/Utils.h"
 #include "Engine/Behaviour/FpsCounterBehaviour.h"
 #include "Engine/Behaviour/Physics/CollisionBehaviour.h"
+#include "Engine/Behaviour/Physics/IntersectionDetails.h"
 #include "Engine/Behaviour/Physics/OverlappingBehaviour.h"
 #include "Engine/Behaviour/Physics/PhysicsDebugBehaviour.h"
 #include "Engine/Behaviour/Physics/PhysicsHandler.h"
-#include "Engine/Behaviour/Physics/IntersectionDetails.h"
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Behaviour/Physics/ShapeColliderBehaviour.h"
 #include "Engine/Core/Scene.h"
-#include "Engine/App/Utils.h"
-#include "Engine/App/UserInput.h"
 #include "PongBall.h"
 #include "PongPlatform.h"
 #include "UserPlatformController.h"
@@ -32,9 +32,9 @@ static weak_ptr<PongBall> sBall;
 
 namespace {
 
-sf::Vector2f GetScreenSize() {
-	return sf::Vector2f(EngineContext::Instance().GetMainWindow()->getSize());
-}
+	sf::Vector2f GetScreenSize() {
+		return sf::Vector2f(EngineContext::Instance().GetMainWindow()->getSize());
+	}
 
 } // namespace
 

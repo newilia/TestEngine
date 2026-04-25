@@ -1,8 +1,8 @@
 #include "PhysicsDebugBehaviour.h"
 
-#include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/App/EngineInterface.h"
 #include "Engine/App/FontManager.h"
+#include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Visual/VectorArrowVisual.h"
 

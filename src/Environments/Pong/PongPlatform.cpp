@@ -7,19 +7,19 @@
 
 namespace {
 
-class PongPlatformTickBehaviour : public Behaviour
-{
-	std::weak_ptr<PongPlatform> _platform;
+	class PongPlatformTickBehaviour : public Behaviour
+	{
+		std::weak_ptr<PongPlatform> _platform;
 
-public:
-	explicit PongPlatformTickBehaviour(std::weak_ptr<PongPlatform> platform) : _platform(std::move(platform)) {}
+	public:
+		explicit PongPlatformTickBehaviour(std::weak_ptr<PongPlatform> platform) : _platform(std::move(platform)) {}
 
-	void OnUpdate(const sf::Time& dt) override {
-		if (auto p = _platform.lock()) {
-			p->Update(dt);
+		void OnUpdate(const sf::Time& dt) override {
+			if (auto p = _platform.lock()) {
+				p->Update(dt);
+			}
 		}
-	}
-};
+	};
 
 } // namespace
 

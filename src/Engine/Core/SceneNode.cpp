@@ -1,27 +1,27 @@
 #include "SceneNode.h"
 
-#include <algorithm>
-
 #include "Engine/App/EngineInterface.h"
 #include "Engine/Behaviour/Physics/PhysicsDebugBehaviour.h"
 
+#include <algorithm>
 #include <cassert>
 
 namespace {
 
-void sortChildrenByDrawOrder(std::vector<shared_ptr<SceneNode>>& nodes) {
-	std::stable_sort(nodes.begin(), nodes.end(), [](const shared_ptr<SceneNode>& a, const shared_ptr<SceneNode>& b) {
-		int la = 0;
-		int lb = 0;
-		if (auto sa = a->FindEntity<SortingStrategy>()) {
-			la = sa->GetSortLayer();
-		}
-		if (auto sb = b->FindEntity<SortingStrategy>()) {
-			lb = sb->GetSortLayer();
-		}
-		return la < lb;
-	});
-}
+	void sortChildrenByDrawOrder(std::vector<shared_ptr<SceneNode>>& nodes) {
+		std::stable_sort(nodes.begin(), nodes.end(),
+		                 [](const shared_ptr<SceneNode>& a, const shared_ptr<SceneNode>& b) {
+			                 int la = 0;
+			                 int lb = 0;
+			                 if (auto sa = a->FindEntity<SortingStrategy>()) {
+				                 la = sa->GetSortLayer();
+			                 }
+			                 if (auto sb = b->FindEntity<SortingStrategy>()) {
+				                 lb = sb->GetSortLayer();
+			                 }
+			                 return la < lb;
+		                 });
+	}
 
 } // namespace
 
@@ -159,7 +159,7 @@ void SceneNode::RemoveFromParent() {
 
 void SceneNode::RemoveChild(SceneNode* child) {
 	auto it = std::ranges::find_if(_children.begin(), _children.end(),
-	                              [child](const auto& ptr) { return ptr.get() == child; });
+	                               [child](const auto& ptr) { return ptr.get() == child; });
 	if (it != _children.end()) {
 		_children.erase(it);
 	}

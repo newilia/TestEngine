@@ -1,14 +1,14 @@
 #include "Utils.h"
 
-#include "Engine/Visual/TextVisual.h"
 #include "Engine/Behaviour/Physics/ShapeColliderBehaviourBase.h"
 #include "Engine/Visual/ShapeVisualBase.h"
+#include "Engine/Visual/TextVisual.h"
+#include "SFML/Graphics.hpp"
+#include "fmt/format.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics/Text.hpp>
-#include "SFML/Graphics.hpp"
-#include "fmt/format.h"
 
 #include <cmath>
 
@@ -90,8 +90,7 @@ bool utils::IsPointInsideOfShape(const sf::Vector2f& point, const sf::Shape* sha
 		const auto& tf = circle->getTransform();
 		const sf::Vector2f localCenter = circle->getGeometricCenter();
 		const sf::Vector2f center = tf.transformPoint(localCenter);
-		const float radius = Length(
-		    tf.transformPoint(localCenter + sf::Vector2f{circle->getRadius(), 0.f}) - center);
+		const float radius = Length(tf.transformPoint(localCenter + sf::Vector2f{circle->getRadius(), 0.f}) - center);
 		return Sq(point.x - center.x) + Sq(point.y - center.y) <= Sq(radius);
 	}
 	if (const auto* rect = dynamic_cast<const sf::RectangleShape*>(shape)) {
@@ -127,8 +126,7 @@ bool utils::IsPointInsideOfBody(const sf::Vector2f& point, const AbstractBody* b
 			return IsPointInsideOfShape(point, shape);
 		}
 	}
-	return pointInsideConvexFan(point, body->GetPointCount(),
-	                            [&](std::size_t i) { return body->GetPointGlobal(i); });
+	return pointInsideConvexFan(point, body->GetPointCount(), [&](std::size_t i) { return body->GetPointGlobal(i); });
 }
 
 bool utils::IsPointInsideOfTriangle(sf::Vector2f p, sf::Vector2f t1, sf::Vector2f t2, sf::Vector2f t3) {
