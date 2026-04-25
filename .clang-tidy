@@ -21,6 +21,6 @@ CheckOptions:
   readability-identifier-naming.ProtectedMemberPrefix: '_'
   readability-identifier-naming.PublicMemberPrefix: '_'
   readability-identifier-naming.GlobalConstantCase: UPPER_CASE
-  readability-identifier-naming.NamespaceCase: lower_case
+  readability-identifier-naming.NamespaceCase: CamelCase
 
 WarningsAsErrors: ''
