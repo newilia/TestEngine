@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Format staged C/C++ sources with clang-format before the commit is recorded.
+set -euo pipefail
+
+CLANG_FORMAT="${CLANG_FORMAT:-clang-format}"
+if ! command -v "$CLANG_FORMAT" >/dev/null 2>&1; then
+	echo "pre-commit: warning: '$CLANG_FORMAT' not found in PATH; skipping clang-format" >&2
+	exit 0
+fi
+
+# Only paths that exist in the working tree and are fully staged (avoid partial-stage surprises).
+while IFS= read -r -d '' path; do
+	case "${path,,}" in
+	*.c | *.h | *.cc | *.cpp | *.cxx | *.cppm | *.hpp | *.hh | *.hxx | *.inl | *.inc) ;;
+	*) continue ;;
+	esac
+	if [[ ! -f "$path" ]]; then
+		continue
+	fi
+	index_hash=$(git rev-parse ":$path" 2>/dev/null) || continue
+	wt_hash=$(git hash-object "$path" 2>/dev/null) || continue
+	if [[ "$wt_hash" != "$index_hash" ]]; then
+		echo "pre-commit: skip (working tree != index; stage the whole file first): $path" >&2
+		continue
+	fi
+	"$CLANG_FORMAT" -i --style=file "$path"
+	git add -- "$path"
+done < <(git diff --cached -z --name-only --diff-filter=ACM)

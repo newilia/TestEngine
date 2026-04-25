@@ -85,3 +85,4 @@ MaxEmptyLinesToKeep: 1
 
 InsertBraces: false
 InsertNewlineAtEOF: true
+NamespaceIndentation: All
