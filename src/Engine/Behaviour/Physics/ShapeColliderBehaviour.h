@@ -1,10 +1,9 @@
 #pragma once
 
-#include "ShapeColliderBehaviourBase.h"
-
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
-#include "ShapeVisualBehaviour.h"
 #include "Engine/Core/SceneNode.h"
+#include "ShapeColliderBehaviourBase.h"
+#include "ShapeVisualBehaviour.h"
 
 #include <SFML/Graphics.hpp>
 

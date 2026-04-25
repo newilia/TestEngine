@@ -4,7 +4,7 @@
 class PongPlatform;
 
 namespace sf {
-class Event;
+	class Event;
 }
 
 class PlatformControllerBase : public Updatable

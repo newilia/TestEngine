@@ -5,7 +5,7 @@
 #include <memory>
 
 namespace sf {
-class Text;
+	class Text;
 }
 
 class TextVisual : public Visual

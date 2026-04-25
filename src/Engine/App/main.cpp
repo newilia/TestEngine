@@ -1,36 +1,35 @@
 #include "Engine/App/EngineInterface.h"
-#include "Environments/Pong/PongEnvironment.h"
-#include "Environments/Test/TestEnvironment.h"
 #include "Engine/App/UserInput.h"
 #include "Engine/Editor/Editor.h"
+#include "Environments/Pong/PongEnvironment.h"
+#include "Environments/Test/TestEnvironment.h"
 
 #include <SFML/Graphics.hpp>
 
-#include <imgui.h>
-#include <imgui-SFML.h>
-
 #include <fmt/format.h>
+#include <imgui-SFML.h>
+#include <imgui.h>
 
 namespace {
 
-// Uses ImGui IO flags from the previous frame (after the last ImGui::SFML::Update), which is
-// the usual pattern for deciding whether application code should see mouse/keyboard events.
-[[nodiscard]] bool ShouldForwardEventToGame(const sf::Event& event) {
-	const ImGuiIO& io = ImGui::GetIO();
-	if (event.is<sf::Event::MouseButtonPressed>() || event.is<sf::Event::MouseButtonReleased>() ||
-	    event.is<sf::Event::MouseMoved>() || event.is<sf::Event::MouseMovedRaw>() ||
-	    event.is<sf::Event::MouseWheelScrolled>() || event.is<sf::Event::TouchBegan>() ||
-	    event.is<sf::Event::TouchMoved>() || event.is<sf::Event::TouchEnded>()) {
-		return !io.WantCaptureMouse;
+	// Uses ImGui IO flags from the previous frame (after the last ImGui::SFML::Update), which is
+	// the usual pattern for deciding whether application code should see mouse/keyboard events.
+	[[nodiscard]] bool ShouldForwardEventToGame(const sf::Event& event) {
+		const ImGuiIO& io = ImGui::GetIO();
+		if (event.is<sf::Event::MouseButtonPressed>() || event.is<sf::Event::MouseButtonReleased>() ||
+		    event.is<sf::Event::MouseMoved>() || event.is<sf::Event::MouseMovedRaw>() ||
+		    event.is<sf::Event::MouseWheelScrolled>() || event.is<sf::Event::TouchBegan>() ||
+		    event.is<sf::Event::TouchMoved>() || event.is<sf::Event::TouchEnded>()) {
+			return !io.WantCaptureMouse;
+		}
+		if (event.is<sf::Event::KeyPressed>() || event.is<sf::Event::KeyReleased>()) {
+			return !io.WantCaptureKeyboard;
+		}
+		if (event.is<sf::Event::TextEntered>()) {
+			return !io.WantTextInput;
+		}
+		return true;
 	}
-	if (event.is<sf::Event::KeyPressed>() || event.is<sf::Event::KeyReleased>()) {
-		return !io.WantCaptureKeyboard;
-	}
-	if (event.is<sf::Event::TextEntered>()) {
-		return !io.WantTextInput;
-	}
-	return true;
-}
 
 } // namespace
 

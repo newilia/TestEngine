@@ -1,9 +1,9 @@
 #pragma once
 #include "Engine/App/FontManager.h"
+#include "Engine/App/UserInput.h"
 #include "Engine/Behaviour/Physics/PhysicsHandler.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/Singleton.h"
-#include "Engine/App/UserInput.h"
 
 #include <cstdint>
 #include <memory>
