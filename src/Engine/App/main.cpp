@@ -2,6 +2,7 @@
 #include "Environments/Pong/PongEnvironment.h"
 #include "Environments/Test/TestEnvironment.h"
 #include "Engine/App/UserInput.h"
+#include "Engine/Editor/Editor.h"
 
 #include <SFML/Graphics.hpp>
 
@@ -77,6 +78,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 				window->close();
 				break;
 			}
+			Engine::Editor::GetInstance()->OnEvent(event);
 			if (ShouldForwardEventToGame(event)) {
 				engine.GetUserInput()->HandleEvent(event);
 			}
@@ -97,7 +99,8 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 		}
 		scene->UpdateRec(dt);
 
-		ImGui::ShowDemoWindow();
+		Engine::Editor::GetInstance()->Update(engine.GetFrameDt().asSeconds());
+		Engine::Editor::GetInstance()->Draw();
 
 		window->draw(*scene);
 		ImGui::SFML::Render(*window);
