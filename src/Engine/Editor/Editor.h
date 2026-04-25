@@ -29,7 +29,7 @@ namespace Engine {
 		void ClearNodeSelection();
 
 	private:
-		bool _isOpen = false;
+		bool _isOpen = true;
 		SceneHierarchyWidget _sceneHierarchyWidget;
 		NodeInspectorWidget _nodeInspectorWidget;
 	};
