@@ -6,6 +6,9 @@
 # Dear ImGui (runtime layout state next to cwd)
 imgui.ini
 
+# Generated property trees (tools/property_codegen.py)
+src/Codegen/
+
 # CMake build artifacts
 build/
 _deps/
