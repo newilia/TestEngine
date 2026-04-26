@@ -37,11 +37,8 @@ namespace Engine {
 			ImGui::TextUnformatted("No node selected");
 			return;
 		}
-		const char* const nameCStr = node->GetName().empty() ? "<unnamed>" : node->GetName().c_str();
 		ImGui::SeparatorText("Node");
-		ImGui::Text("Name: ");
-		ImGui::SameLine();
-		ImGui::TextUnformatted(nameCStr);
+		DrawIPropertiesProviderBlock("SceneNode", dynamic_cast<IPropertiesProvider*>(node.get()), _propertyDrawer);
 		ImGui::Text("Children: %zu", node->GetChildren().size());
 		if (const auto parent = node->GetParent()) {
 			const char* pName = parent->GetName().empty() ? "<unnamed>" : parent->GetName().c_str();

@@ -8,7 +8,11 @@ alwaysApply: false
 
 ## Purpose
 
-Editor property trees for classes inheriting `Engine::IPropertiesProvider` (e.g. via `EntityOnNode` → `Behaviour`) are generated into `src/Codegen/<HeaderStem>_gen.hpp`. The generator is **not** a full C++ parser; it supports a **small, documented subset** of header syntax.
+Editor property trees for classes inheriting `Engine::IPropertiesProvider` (e.g. via `EntityOnNode` → `Behaviour`, or `SceneNode` which also implements `IPropertiesProvider`) are generated into `src/Codegen/<HeaderStem>_gen.hpp`. The generator is **not** a full C++ parser; it supports a **small, documented subset** of header syntax.
+
+**Types in this repo that use codegen (non-exhaustive):** `SceneNode`, `FpsCounterBehaviour`, `RigidBodyBehaviour`, `BodyPullHandler`, `ShapeColliderBehaviourBase`, `UserPullBehaviour`. Not every `Behaviour` subclass has reflectable scalars (e.g. `CollisionBehaviour` / `OverlappingBehaviour` use `std::bitset` and delegates; `PhysicsDebugBehaviour` / `ShapeVisualBehaviour` have no data; Pong-local anonymous behaviours stay without `META_CLASS`).
+
+Adding a **new** `src/**.cpp` that only includes `*_gen.hpp` requires re-running **CMake configure** once so `file(GLOB_RECURSE ... *.cpp)` picks it up.
 
 ## Author workflow
 

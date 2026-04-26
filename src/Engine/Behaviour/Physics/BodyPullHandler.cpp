@@ -1,5 +1,6 @@
 #include "BodyPullHandler.h"
 
+#include "BodyPullHandler_gen.hpp"
 #include "Engine/App/EngineInterface.h"
 #include "Engine/App/Utils.h"
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"

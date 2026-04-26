@@ -2,12 +2,14 @@
 
 #include "AbstractBody.h"
 #include "Engine/Behaviour/Behaviour.h"
+#include "Engine/Core/MetaClass.h"
 
 #include <SFML/Graphics/Shape.hpp>
 
 /// Коллайдер на базе sf::Shape: геометрия для физики и связь с нодой сцены.
 class ShapeColliderBehaviourBase : public Behaviour, public AbstractBody
 {
+	META_CLASS()
 public:
 	~ShapeColliderBehaviourBase() override;
 
@@ -26,5 +28,6 @@ public:
 	virtual sf::Shape* GetBaseShape() const = 0;
 
 private:
+	/// @property(readonly=true, tooltip="Set when collider is registered with the physics handler.")
 	bool _registered = false;
 };
