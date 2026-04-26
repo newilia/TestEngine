@@ -12,24 +12,47 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-file(GLOB_RECURSE ENGINE_SOURCES
-    "src/**.cpp"
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
+file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/Codegen")
+
+add_custom_target(
+	Codegen
+	COMMAND Python3::Interpreter "${CMAKE_SOURCE_DIR}/tools/property_codegen.py" --root "${CMAKE_SOURCE_DIR}"
+	WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+	COMMENT "Running tools/property_codegen.py"
+	VERBATIM
 )
-file(GLOB_RECURSE ENGINE_HEADERS
-    "src/**.h"
+
+add_custom_target(
+	Codegen_Force
+	COMMAND Python3::Interpreter "${CMAKE_SOURCE_DIR}/tools/property_codegen.py" --root "${CMAKE_SOURCE_DIR}" --force
+	WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+	COMMENT "Running tools/property_codegen.py --force"
+	VERBATIM
 )
+
+file(GLOB_RECURSE ENGINE_SOURCES "src/**.cpp")
+file(GLOB_RECURSE ENGINE_HEADERS "src/**.h")
+file(GLOB_RECURSE ENGINE_CODEGEN CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/Codegen/*_gen.hpp")
 
 if(NOT ENGINE_SOURCES)
-    message(FATAL_ERROR "No source files found in src/. Check project structure.")
+	message(FATAL_ERROR "No source files found in src/. Check project structure.")
 endif()
 
-add_executable(TestEngine WIN32 ${ENGINE_SOURCES} ${ENGINE_HEADERS})
+add_executable(TestEngine WIN32 ${ENGINE_SOURCES} ${ENGINE_HEADERS} ${ENGINE_CODEGEN})
 
 if(ENGINE_HEADERS)
-    set_source_files_properties(${ENGINE_HEADERS} PROPERTIES HEADER_FILE_ONLY TRUE)
+	set_source_files_properties(${ENGINE_HEADERS} PROPERTIES HEADER_FILE_ONLY TRUE)
+endif()
+if(ENGINE_CODEGEN)
+	set_source_files_properties(${ENGINE_CODEGEN} PROPERTIES HEADER_FILE_ONLY TRUE)
 endif()
 
+add_dependencies(TestEngine Codegen)
+
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "" FILES ${ENGINE_SOURCES} ${ENGINE_HEADERS})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src/Codegen" PREFIX "Codegen" FILES ${ENGINE_CODEGEN})
 
 if(MSVC)
 	target_compile_options(TestEngine PRIVATE /FS)
@@ -37,8 +60,11 @@ if(MSVC)
 	target_compile_options(TestEngine PRIVATE $<$<CONFIG:Debug>:/Z7>)
 endif()
 
-target_include_directories(TestEngine PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
+target_include_directories(
+	TestEngine
+	PRIVATE
+		${CMAKE_CURRENT_SOURCE_DIR}/src
+		${CMAKE_CURRENT_SOURCE_DIR}/src/Codegen
 )
 
 # fmt submodule: third-party/fmt

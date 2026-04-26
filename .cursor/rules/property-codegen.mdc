@@ -1,0 +1,51 @@
+---
+description: Property reflection codegen (META_CLASS, @property, Python generator)
+globs: src/**/*.h, tools/property_codegen.py, CMakeLists.txt, src/Codegen/**/*
+alwaysApply: false
+---
+
+# Property codegen (`tools/property_codegen.py`)
+
+## Purpose
+
+Editor property trees for classes inheriting `Engine::IPropertiesProvider` (e.g. via `EntityOnNode` → `Behaviour`) are generated into `src/Codegen/<HeaderStem>_gen.hpp`. The generator is **not** a full C++ parser; it supports a **small, documented subset** of header syntax.
+
+## Author workflow
+
+1. In the class header: `#include "Engine/Core/MetaClass.h"`, then put `META_CLASS()` inside the class (typically before `public:`).
+2. Above each reflected member: `/// @property` or `/// @property(key=value, ...)`.
+3. In **one** corresponding `.cpp`: `#include "<HeaderStem>_gen.hpp"` after the class header so out-of-line `BuildPropertyTree` sees the full class type.
+4. Build `TestEngine`; CMake target **`Codegen`** runs first. Include generated headers as `#include "Foo_gen.hpp"` (`src/Codegen` is on the include path).
+
+## `@property` argument syntax
+
+- Comma-separated `key=value`. Keys (v1): `name` / `label` (display label), `readonly`, `minValue`, `maxValue`, `step`, `dragSpeed`, `tooltip`.
+- Strings in double quotes. Booleans `true` / `false`. Numbers may use a trailing `f`.
+- Parser errors include `file:line:col:` messages; fix the tag or the following field line.
+
+## Supported field types (v1)
+
+`float`, `double`, `bool`, `int`, `std::int32_t`, `std::int64_t`, `std::string`, `sf::Vector2f`, `sf::Vector3f`, `sf::Color`. Other types → codegen error until mapped in `tools/property_codegen.py`.
+
+## Limitations (maintainability)
+
+- One-line `/// @property` tags only; the next non-empty code line must be the field declaration ending in `;`.
+- Templates, tricky macros, multi-line declarations, and container properties (`beginSequence` / `beginAssociative`) are **not** supported in v1.
+- `#define META_CLASS()` in `MetaClass.h` is ignored by the scanner (not treated as usage).
+
+## Cache and force rebuild
+
+- Cache: `src/Codegen/.codegen_cache.json` (ignored with `src/Codegen/`). Skips unchanged headers by mtime/size.
+- **`Codegen_Force`** CMake target (or `python tools/property_codegen.py --root . --force`) clears incremental assumptions and regenerates everything.
+- Default CLI output is a **short summary**; use **`--verbose`** to print every scanned header (useful when debugging the scanner).
+
+## Extending reflection
+
+1. Prefer extending **meta keys** → `Engine::PropertyMeta` / existing `PropertyBuilder::add*` in the generator.
+2. New C++ types: add to `KNOWN_TYPES`, `FIELD_RE`, and the emit branch in `generate_file_content`.
+3. If headers outgrow the scanner, plan a **Clang-based** extraction step; keep `_gen.hpp` output format stable.
+
+## CMake
+
+- `find_package(Python3 COMPONENTS Interpreter REQUIRED)` — Python must be discoverable at configure time.
+- `file(GLOB_RECURSE ENGINE_CODEGEN CONFIGURE_DEPENDS ... *_gen.hpp)` picks up new generated headers after they appear.

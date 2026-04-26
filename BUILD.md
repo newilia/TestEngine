@@ -1,6 +1,6 @@
 # Сборка TestEngine
 
-**Требования:** Windows, MSVC (Visual Studio или Build Tools с C++), CMake 3.16+ (см. `cmake_minimum_required` в `CMakeLists.txt`).
+**Требования:** Windows, MSVC (Visual Studio или Build Tools с C++), **Python 3** (интерпретатор нужен CMake на этапе `find_package`), CMake 3.28+ (см. `cmake_minimum_required` в `CMakeLists.txt`).
 
 Вся работа из **корня репозитория** (рядом с `CMakeLists.txt`). Каталог **сборки — `build`**, **не** запускайте `cmake` прямо в исходниках (иначе появится `CMakeCache.txt` в корне).
 
@@ -25,6 +25,19 @@ cmake --build build --config Release
 Первый шаг: генератор (часто Visual Studio). Если `cmake` не находит Visual Studio, укажите `-G` сами, см. `cmake --help` (Generators). Для Visual Studio / Ninja **Multi-Config** тип (Release/Debug) задаётся **при сборке** (`--config`), а не одним `CMAKE_BUILD_TYPE` в чистом виде.
 
 **Где exe:** `build/bin/Release/TestEngine.exe` и `build/bin/Debug/TestEngine.exe`.
+
+## Codegen (дерево свойств)
+
+Скрипт [`tools/property_codegen.py`](tools/property_codegen.py) генерирует заголовки `src/Codegen/<ИмяИсходника>_gen.hpp` из тегов `META_CLASS()` и `/// @property` в `src/**/*.h`. Каталог `src/Codegen/` в `.gitignore`; при сборке `TestEngine` цель **`Codegen`** запускается автоматически первой (`add_dependencies`).
+
+| CMake-цель | Назначение |
+|------------|------------|
+| `Codegen` | Инкрементально: кеш `src/Codegen/.codegen_cache.json`, пропуск неизменённых `.h` |
+| `Codegen_Force` | Полная перегенерация (`--force`, кеш перезаписывается) |
+
+Вручную: `cmake --build build --config Debug --target Codegen` или `Codegen_Force`.
+
+Полный лог по каждому заголовку: `python tools/property_codegen.py --root . --verbose` (в CMake по умолчанию без `--verbose`, в конце — сводка).
 
 ## Visual Studio
 
