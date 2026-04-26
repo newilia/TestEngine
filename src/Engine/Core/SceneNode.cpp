@@ -2,6 +2,7 @@
 
 #include "Engine/App/EngineInterface.h"
 #include "Engine/Behaviour/Physics/PhysicsDebugBehaviour.h"
+#include "SceneNode_gen.hpp"
 
 #include <algorithm>
 #include <cassert>

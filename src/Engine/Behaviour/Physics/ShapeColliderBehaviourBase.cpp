@@ -2,6 +2,7 @@
 
 #include "Engine/App/EngineInterface.h"
 #include "PhysicsHandler.h"
+#include "ShapeColliderBehaviourBase_gen.hpp"
 
 ShapeColliderBehaviourBase::~ShapeColliderBehaviourBase() {
 	if (_registered) {

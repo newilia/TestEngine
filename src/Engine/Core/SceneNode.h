@@ -3,6 +3,8 @@
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Behaviour/Physics/ShapeColliderBehaviourBase.h"
+#include "Engine/Core/IPropertiesProvider.h"
+#include "Engine/Core/MetaClass.h"
 #include "Engine/Sorting/SortingStrategy.h"
 #include "Engine/Visual/Visual.h"
 #include "Updatable.h"
@@ -23,8 +25,10 @@ using std::weak_ptr;
 class SceneNode final : public enable_shared_from_this<SceneNode>,
                         public Updatable,
                         public sf::Drawable,
-                        public sf::Transformable
+                        public sf::Transformable,
+                        public Engine::IPropertiesProvider
 {
+	META_CLASS()
 public:
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
@@ -120,10 +124,13 @@ protected:
 	shared_ptr<SortingStrategy> _sortingStrategy;
 	std::vector<shared_ptr<Behaviour>> _behaviours;
 
+	/// @property(name="Name")
 	std::string _name;
 	weak_ptr<SceneNode> _parent;
 	std::vector<shared_ptr<SceneNode>> _children;
+	/// @property(name="Enabled")
 	bool _isEnabled = true;
+	/// @property(name="Visible")
 	bool _isVisible = true;
 };
 

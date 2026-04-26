@@ -2,6 +2,7 @@
 
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Behaviour/Physics/UserPullBehaviour.h"
+#include "Engine/Core/MetaClass.h"
 #include "Engine/Visual/VectorArrowVisual.h"
 
 #include <memory>
@@ -10,6 +11,7 @@ class SceneNode;
 
 class BodyPullHandler : public Behaviour
 {
+	META_CLASS()
 public:
 	explicit BodyPullHandler(std::shared_ptr<VectorArrowVisual> arrowVisual);
 
@@ -22,6 +24,7 @@ public:
 	void OnUpdate(const sf::Time& dt) override;
 
 private:
+	/// @property(name="Debug draw")
 	bool _isDebugDrawEnabled = true;
 	std::weak_ptr<SceneNode> _pullingBody;
 	std::shared_ptr<VectorArrowVisual> _arrowVisual;

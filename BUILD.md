@@ -39,6 +39,8 @@ cmake --build build --config Release
 
 Полный лог по каждому заголовку: `python tools/property_codegen.py --root . --verbose` (в CMake по умолчанию без `--verbose`, в конце — сводка).
 
+После добавления **нового** `src/**/*.cpp` выполните шаг конфигурации CMake (`cmake -S . -B build -A x64` или скрипт `__gen_solution.cmd`), иначе список исходников из `GLOB_RECURSE` может не обновиться до следующей полной перегенерации.
+
 ## Visual Studio
 
 - В корневом `CMakeLists.txt` задано **`VS_STARTUP_PROJECT` = `TestEngine`** — при открытии сгенерированного solution **элементом запуска** по умолчанию должна быть эта цель, а не `ALL_BUILD`. При необходимости выберите `TestEngine` вручную в списке запуска. Рабочая папка при отладке из VS — **корень репозитория** (`VS_DEBUGGER_WORKING_DIRECTORY`).
