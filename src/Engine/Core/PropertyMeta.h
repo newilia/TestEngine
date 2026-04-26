@@ -5,7 +5,6 @@
 #include <string>
 
 namespace Engine {
-
 	/// UI hints separate from value type; used by the editor drawer only.
 	struct PropertyMeta
 	{
@@ -24,5 +23,4 @@ namespace Engine {
 		std::optional<std::size_t> minElementCount;
 		std::optional<std::size_t> maxElementCount;
 	};
-
 } // namespace Engine

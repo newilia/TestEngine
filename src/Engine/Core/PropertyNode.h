@@ -15,7 +15,6 @@
 #include <vector>
 
 namespace Engine {
-
 	struct PropAccessNone
 	{};
 
@@ -108,5 +107,4 @@ namespace Engine {
 		PropertyAccess access;
 		std::vector<PropertyNode> children;
 	};
-
 } // namespace Engine

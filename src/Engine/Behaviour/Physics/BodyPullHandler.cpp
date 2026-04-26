@@ -38,7 +38,7 @@ void BodyPullHandler::StartPull(sf::Vector2f mousePos, UserPullBehaviour::PullMo
 			continue;
 		}
 		auto* collider = body->FindShapeCollider();
-		if (!collider || !utils::IsPointInsideOfBody(mousePos, collider)) {
+		if (!collider || !Utils::IsPointInsideOfBody(mousePos, collider)) {
 			continue;
 		}
 		auto rigidBody = body->FindBehaviour<RigidBodyBehaviour>();

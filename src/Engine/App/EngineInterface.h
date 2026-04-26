@@ -31,6 +31,8 @@ public:
 
 	auto GetBodyPullHandler() { return _bodyPullHandler; }
 
+	void SetBodyPullHandler(const shared_ptr<BodyPullHandler>& handler) { _bodyPullHandler = handler; }
+
 	float GetSimSpeedMultiplier() const { return _simSpeedMultiplier; }
 
 	void SetSimSpeedMultiplier(float val) { _simSpeedMultiplier = val; }
@@ -53,8 +55,6 @@ public:
 	bool IsDebugEnabled() const { return _isDebugDrawEnabled; }
 
 	void SetDebugEnabled(bool enabled) { _isDebugDrawEnabled = enabled; }
-
-	void SetBodyPullHandler(const shared_ptr<BodyPullHandler>& handler) { _bodyPullHandler = handler; }
 
 private:
 	shared_ptr<sf::RenderWindow> _mainWindow;

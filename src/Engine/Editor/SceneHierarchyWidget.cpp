@@ -3,7 +3,6 @@
 #include <imgui.h>
 
 namespace Engine {
-
 	std::shared_ptr<SceneNode> SceneHierarchyWidget::GetSelected() const {
 		return _selectedNode.lock();
 	}
@@ -62,5 +61,4 @@ namespace Engine {
 		DrawNode(*scene, "Scene", 0);
 		ImGui::EndChild();
 	}
-
 } // namespace Engine

@@ -11,7 +11,7 @@
 
 class Visual;
 
-namespace utils {
+namespace Utils {
 	float Length(const sf::Vector2f& vec);
 	float ManhattanDist(const sf::Vector2f& vec);
 	sf::Vector2f Normalize(const sf::Vector2f& vec);
@@ -61,4 +61,4 @@ namespace utils {
 	std::shared_ptr<T> SharedPtrCast(const U* ptr) {
 		return std::dynamic_pointer_cast<T>((const_cast<U*>(ptr))->shared_from_this());
 	}
-} // namespace utils
+} // namespace Utils

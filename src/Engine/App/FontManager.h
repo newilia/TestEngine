@@ -9,7 +9,5 @@ public:
 
 private:
 	void InitDefaultFont();
-
-private:
 	sf::Font* _defaultFont = nullptr;
 };

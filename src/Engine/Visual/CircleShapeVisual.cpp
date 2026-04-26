@@ -5,5 +5,5 @@
 CircleShapeVisual::CircleShapeVisual(sf::CircleShape* circle) : ShapeVisualBase(circle), _circle(circle) {}
 
 bool CircleShapeVisual::HitTest(sf::Vector2f windowPosition) const {
-	return _circle && utils::IsPointInsideOfShape(windowPosition, _circle);
+	return _circle && Utils::IsPointInsideOfShape(windowPosition, _circle);
 }

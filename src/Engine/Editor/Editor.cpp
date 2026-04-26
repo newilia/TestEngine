@@ -45,11 +45,9 @@ namespace {
 		ImGui::DockBuilderFinish(dockspace_id);
 		layout_finished = true;
 	}
-
 } // namespace
 
 namespace Engine {
-
 	void Editor::Toggle() {
 		_isOpen = !_isOpen;
 	}
@@ -148,5 +146,4 @@ namespace Engine {
 	void Editor::OnKeyRelease(const sf::Keyboard::Key& /*key*/) {}
 
 	void Editor::OnMouseMove(const sf::Vector2i& /*position*/) {}
-
 } // namespace Engine

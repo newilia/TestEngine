@@ -17,14 +17,13 @@ public:
 
 	void Init() override;
 	void HandleEvent(const sf::Event& event);
+	void Update(const sf::Time& dt) override;
 
 	void SetVerticalFreedomFactor(float val) { _verticalMoveFactor = val; }
 
 	void SetVelocityFactor(float val) { _speedFactor = val; }
 
 	void SetVelLimit(sf::Vector2f val) { _velLimit = val; }
-
-	void Update(const sf::Time& dt) override;
 
 protected:
 	sf::Vector2f _defaultPos;

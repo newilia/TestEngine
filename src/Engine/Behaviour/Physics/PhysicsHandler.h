@@ -32,6 +32,7 @@ public:
 	bool IsGravityEnabled() const { return _isGravityEnabled; }
 
 private:
+	void UpdateSubStep(const sf::Time& dt);
 	static bool CheckBboxIntersection(const AbstractBody* body1, const AbstractBody* body2);
 	static std::optional<IntersectionDetails> DetectIntersection(const shared_ptr<SceneNode>& n1,
 	                                                             const shared_ptr<SceneNode>& n2);
@@ -45,11 +46,8 @@ private:
 	static std::optional<SegmentIntersectionPoints>
 	FindSegmentCircleIntersectionPoint(const Segment& seg, const sf::Vector2f& circleCenter, float radius);
 	static void ResolveCollision(const IntersectionDetails& collision);
-
-	void UpdateSubStep(const sf::Time& dt);
-
 	std::list<std::weak_ptr<SceneNode>> _bodies;
 	int _subStepsCount = 1;
-	bool _isGravityEnabled = false;
 	sf::Vector2f _gravity = {0, 400};
+	bool _isGravityEnabled = false;
 };

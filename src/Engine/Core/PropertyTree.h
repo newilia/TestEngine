@@ -53,7 +53,6 @@ namespace Engine {
 
 		void addColor(std::string id, const std::string& label, std::function<sf::Color()> get,
 		              std::function<void(sf::Color)> set, PropertyMeta meta = {});
-
 		/// Begins a sequence node; push children (e.g. one object per element), then `endSequence()`.
 		void beginSequence(std::string id, const std::string& label, PropAccessSequence sequenceOps,
 		                   PropertyMeta meta = {});

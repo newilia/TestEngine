@@ -40,7 +40,6 @@ private:
 
 	void ObserveState();
 	void React();
-
 	void MovePlatformTowardsBall();
 
 	std::weak_ptr<PongPlatform> _opponentPlatform;

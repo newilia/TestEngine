@@ -50,7 +50,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		body->SetName(wallNames[i]);
 		auto* rect = dynamic_cast<sf::RectangleShape*>(body->FindShapeCollider()->GetBaseShape());
 		rect->setSize(wallSizes[i]);
-		rect->setOrigin(utils::FindCenterOfMass(rect));
+		rect->setOrigin(Utils::FindCenterOfMass(rect));
 		rect->setPosition(wallPositions[i]);
 		rect->setFillColor(sf::Color(30, 255, 30, 50));
 		rect->setOutlineColor(sf::Color(30, 255, 30, 120));
@@ -80,7 +80,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		circle->setFillColor(color);
 		circle->setOutlineColor(outlineColor);
 		circle->setOutlineThickness(1);
-		circle->setOrigin(utils::FindCenterOfMass(circle));
+		circle->setOrigin(Utils::FindCenterOfMass(circle));
 		auto minX = static_cast<int>(wallVisibleWidth + radius);
 		auto maxX = static_cast<int>(screenSize.x - wallVisibleWidth - radius);
 		auto minY = static_cast<int>(wallVisibleWidth + radius);

@@ -11,6 +11,7 @@
 #include <memory>
 
 namespace Engine {
+
 	class Editor : public Singleton<Editor>
 	{
 	public:
@@ -24,7 +25,6 @@ namespace Engine {
 		void OnKeyPress(const sf::Keyboard::Key& key);
 		void OnKeyRelease(const sf::Keyboard::Key& key);
 		void OnMouseMove(const sf::Vector2i& position);
-
 		[[nodiscard]] std::shared_ptr<SceneNode> GetSelectedNode() const;
 		void ClearNodeSelection();
 
@@ -33,4 +33,5 @@ namespace Engine {
 		SceneHierarchyWidget _sceneHierarchyWidget;
 		NodeInspectorWidget _nodeInspectorWidget;
 	};
+
 } // namespace Engine

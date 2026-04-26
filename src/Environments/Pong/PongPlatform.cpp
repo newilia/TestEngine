@@ -6,7 +6,6 @@
 #include <cassert>
 
 namespace {
-
 	class PongPlatformTickBehaviour : public Behaviour
 	{
 		std::weak_ptr<PongPlatform> _platform;
@@ -20,7 +19,6 @@ namespace {
 			}
 		}
 	};
-
 } // namespace
 
 PongPlatform::PongPlatform(std::shared_ptr<SceneNode> node) : _node(std::move(node)) {}

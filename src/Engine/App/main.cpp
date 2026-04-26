@@ -11,7 +11,6 @@
 #include <imgui.h>
 
 namespace {
-
 	// Uses ImGui IO flags from the previous frame (after the last ImGui::SFML::Update), which is
 	// the usual pattern for deciding whether application code should see mouse/keyboard events.
 	[[nodiscard]] bool ShouldForwardEventToGame(const sf::Event& event) {
@@ -30,9 +29,7 @@ namespace {
 		}
 		return true;
 	}
-
 } // namespace
-
 #ifdef _CONSOLE
 int main() {
 #else

@@ -20,7 +20,7 @@ namespace {
 		}
 		auto t1 = getVertex(0);
 		for (std::size_t i = 0; i < count - 2; ++i) {
-			if (utils::IsPointInsideOfTriangle(point, t1, getVertex(i + 1), getVertex(i + 2))) {
+			if (Utils::IsPointInsideOfTriangle(point, t1, getVertex(i + 1), getVertex(i + 2))) {
 				return true;
 			}
 		}
@@ -28,32 +28,32 @@ namespace {
 	}
 } // namespace
 
-float utils::Length(const sf::Vector2f& vec) {
+float Utils::Length(const sf::Vector2f& vec) {
 	return std::sqrt(vec.x * vec.x + vec.y * vec.y);
 }
 
-float utils::ManhattanDist(const sf::Vector2f& vec) {
+float Utils::ManhattanDist(const sf::Vector2f& vec) {
 	return abs(vec.x) + abs(vec.y);
 }
 
-sf::Vector2f utils::Normalize(const sf::Vector2f& vec) {
+sf::Vector2f Utils::Normalize(const sf::Vector2f& vec) {
 	auto result = vec;
-	if (auto len = utils::Length(vec); len > std::numeric_limits<float>::epsilon()) {
+	if (auto len = Utils::Length(vec); len > std::numeric_limits<float>::epsilon()) {
 		result /= len;
 	}
 	return result;
 }
 
-float utils::Dot(const sf::Vector2f& a, const sf::Vector2f& b) {
+float Utils::Dot(const sf::Vector2f& a, const sf::Vector2f& b) {
 	return a.x * b.x + a.y * b.y;
 }
 
-sf::Vector2f utils::Reflect(const sf::Vector2f& vector, const sf::Vector2f& relativeVector) {
+sf::Vector2f Utils::Reflect(const sf::Vector2f& vector, const sf::Vector2f& relativeVector) {
 	auto normal = Normalize(relativeVector);
 	return vector - 2.f * normal * Dot(vector, normal);
 }
 
-float utils::Project(const sf::Vector2f& a, const sf::Vector2f& b) {
+float Utils::Project(const sf::Vector2f& a, const sf::Vector2f& b) {
 	auto result = Dot(a, b);
 	if (auto lengthB = Length(b); lengthB > std::numeric_limits<float>::epsilon()) {
 		result /= Length(b);
@@ -61,19 +61,19 @@ float utils::Project(const sf::Vector2f& a, const sf::Vector2f& b) {
 	return result;
 }
 
-bool utils::ArePointsCollinear(const sf::Vector2f& p1, const sf::Vector2f& p2, const sf::Vector2f& p3) {
+bool Utils::ArePointsCollinear(const sf::Vector2f& p1, const sf::Vector2f& p2, const sf::Vector2f& p3) {
 	float triangleArea = 0.5f * ((p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y));
 	return std::abs(triangleArea) <= std::numeric_limits<float>::epsilon();
 }
 
-sf::Vector2f utils::Rotate(const sf::Vector2f& v, float angle) {
+sf::Vector2f Utils::Rotate(const sf::Vector2f& v, float angle) {
 	sf::Vector2f result;
 	result.x = v.x * cos(angle) - v.y * sin(angle);
 	result.y = v.x * sin(angle) + v.y * cos(angle);
 	return result;
 }
 
-bool utils::IsPointInsideShapeByFan(const sf::Vector2f& point, const sf::Shape* shape) {
+bool Utils::IsPointInsideShapeByFan(const sf::Vector2f& point, const sf::Shape* shape) {
 	if (!shape) {
 		return false;
 	}
@@ -82,7 +82,7 @@ bool utils::IsPointInsideShapeByFan(const sf::Vector2f& point, const sf::Shape* 
 	});
 }
 
-bool utils::IsPointInsideOfShape(const sf::Vector2f& point, const sf::Shape* shape) {
+bool Utils::IsPointInsideOfShape(const sf::Vector2f& point, const sf::Shape* shape) {
 	if (!shape) {
 		return false;
 	}
@@ -101,7 +101,7 @@ bool utils::IsPointInsideOfShape(const sf::Vector2f& point, const sf::Shape* sha
 	return IsPointInsideShapeByFan(point, shape);
 }
 
-bool utils::IsPointInsideOfVisual(const sf::Vector2f& point, const Visual* visual) {
+bool Utils::IsPointInsideOfVisual(const sf::Vector2f& point, const Visual* visual) {
 	if (!visual) {
 		return false;
 	}
@@ -117,7 +117,7 @@ bool utils::IsPointInsideOfVisual(const sf::Vector2f& point, const Visual* visua
 	return false;
 }
 
-bool utils::IsPointInsideOfBody(const sf::Vector2f& point, const AbstractBody* body) {
+bool Utils::IsPointInsideOfBody(const sf::Vector2f& point, const AbstractBody* body) {
 	if (!body) {
 		return false;
 	}
@@ -129,7 +129,7 @@ bool utils::IsPointInsideOfBody(const sf::Vector2f& point, const AbstractBody* b
 	return pointInsideConvexFan(point, body->GetPointCount(), [&](std::size_t i) { return body->GetPointGlobal(i); });
 }
 
-bool utils::IsPointInsideOfTriangle(sf::Vector2f p, sf::Vector2f t1, sf::Vector2f t2, sf::Vector2f t3) {
+bool Utils::IsPointInsideOfTriangle(sf::Vector2f p, sf::Vector2f t1, sf::Vector2f t2, sf::Vector2f t3) {
 	auto a = (t1.x - p.x) * (t2.y - t1.y) - (t2.x - t1.x) * (t1.y - p.y);
 	auto b = (t2.x - p.x) * (t3.y - t2.y) - (t3.x - t2.x) * (t2.y - p.y);
 	auto c = (t3.x - p.x) * (t1.y - t3.y) - (t1.x - t3.x) * (t3.y - p.y);
@@ -139,15 +139,15 @@ bool utils::IsPointInsideOfTriangle(sf::Vector2f p, sf::Vector2f t1, sf::Vector2
 	return false;
 }
 
-bool utils::IsNan(const sf::Vector2f& v) {
+bool Utils::IsNan(const sf::Vector2f& v) {
 	return std::isnan(v.x) || std::isnan(v.y);
 }
 
-std::string utils::ToString(const sf::Vector2f& v) {
+std::string Utils::ToString(const sf::Vector2f& v) {
 	return fmt::format("({:.1f}, {:.1f})", v.x, v.y);
 }
 
-sf::Vector2f utils::FindCenterOfMass(const sf::Shape* shape) {
+sf::Vector2f Utils::FindCenterOfMass(const sf::Shape* shape) {
 	if (auto circle = dynamic_cast<const sf::CircleShape*>(shape)) {
 		return sf::Vector2f(circle->getRadius(), circle->getRadius());
 	}
@@ -184,12 +184,12 @@ sf::Vector2f utils::FindCenterOfMass(const sf::Shape* shape) {
 	}
 }
 
-float utils::CalcTriangleArea(float a, float b, float c) {
+float Utils::CalcTriangleArea(float a, float b, float c) {
 	float p = (a + b + c) * 0.5f;
 	return sqrt(p * (p - a) * (p - b) * (p - c));
 }
 
-std::optional<std::pair<float, std::optional<float>>> utils::SolveQuadraticEquation(float a, float b, float c) {
+std::optional<std::pair<float, std::optional<float>>> Utils::SolveQuadraticEquation(float a, float b, float c) {
 	float D = Sq(b) - 4 * a * c;
 	if (D > std::numeric_limits<float>::epsilon()) {
 		float x1 = (-b + sqrt(D)) / (2 * a);
@@ -202,7 +202,7 @@ std::optional<std::pair<float, std::optional<float>>> utils::SolveQuadraticEquat
 	return std::nullopt;
 }
 
-sf::CircleShape utils::CreateCircle(const sf::Vector2f& pos, float radius, sf::Color color) {
+sf::CircleShape Utils::CreateCircle(const sf::Vector2f& pos, float radius, sf::Color color) {
 	sf::CircleShape circle;
 	circle.setPosition(pos);
 	circle.setRadius(radius);

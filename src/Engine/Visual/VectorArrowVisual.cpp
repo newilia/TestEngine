@@ -19,8 +19,8 @@ void VectorArrow::draw(sf::RenderTarget& target, sf::RenderStates states) const 
 	if (_arrowHeadEnabled) {
 		sf::Vector2f v = _start - _end;
 		for (float i = -0.5f; i < 0.51f; ++i) {
-			auto ahVector = utils::Rotate(v, _arrowHeadAngle * i);
-			ahVector = utils::Normalize(ahVector) * _arrowHeadSize;
+			auto ahVector = Utils::Rotate(v, _arrowHeadAngle * i);
+			ahVector = Utils::Normalize(ahVector) * _arrowHeadSize;
 			vertices[0].position = _end;
 			vertices[1].position = _end + ahVector;
 			vertices[0].color = _color;
@@ -28,6 +28,17 @@ void VectorArrow::draw(sf::RenderTarget& target, sf::RenderStates states) const 
 			target.draw(vertices, 2, sf::PrimitiveType::LineStrip, states);
 		}
 	}
+}
+
+void VectorArrowVisual::Draw(sf::RenderTarget& target, sf::RenderStates states) const {
+	if (!_visible) {
+		return;
+	}
+	target.draw(_arrow, states);
+}
+
+bool VectorArrowVisual::HitTest(sf::Vector2f /*windowPosition*/) const {
+	return false;
 }
 
 void VectorArrowVisual::SetStartPos(const sf::Vector2f& start) {
@@ -44,15 +55,4 @@ void VectorArrowVisual::SetColor(const sf::Color& color) {
 
 void VectorArrowVisual::SetVisible(bool visible) {
 	_visible = visible;
-}
-
-void VectorArrowVisual::Draw(sf::RenderTarget& target, sf::RenderStates states) const {
-	if (!_visible) {
-		return;
-	}
-	target.draw(_arrow, states);
-}
-
-bool VectorArrowVisual::HitTest(sf::Vector2f /*windowPosition*/) const {
-	return false;
 }

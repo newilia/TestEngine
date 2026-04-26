@@ -27,11 +27,9 @@ namespace {
 		ImGui::SeparatorText(title);
 		drawer.Draw(tree);
 	}
-
 } // namespace
 
 namespace Engine {
-
 	void NodeInspectorWidget::Draw(const std::shared_ptr<SceneNode>& node) const {
 		if (!node) {
 			ImGui::TextUnformatted("No node selected");
@@ -77,5 +75,4 @@ namespace Engine {
 			                             _propertyDrawer);
 		}
 	}
-
 } // namespace Engine
