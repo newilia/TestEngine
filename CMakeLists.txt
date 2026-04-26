@@ -15,12 +15,21 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 file(GLOB_RECURSE ENGINE_SOURCES
     "src/**.cpp"
 )
+file(GLOB_RECURSE ENGINE_HEADERS
+    "src/**.h"
+)
 
 if(NOT ENGINE_SOURCES)
     message(FATAL_ERROR "No source files found in src/. Check project structure.")
 endif()
 
-add_executable(TestEngine WIN32 ${ENGINE_SOURCES})
+add_executable(TestEngine WIN32 ${ENGINE_SOURCES} ${ENGINE_HEADERS})
+
+if(ENGINE_HEADERS)
+    set_source_files_properties(${ENGINE_HEADERS} PROPERTIES HEADER_FILE_ONLY TRUE)
+endif()
+
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "" FILES ${ENGINE_SOURCES} ${ENGINE_HEADERS})
 
 if(MSVC)
 	target_compile_options(TestEngine PRIVATE /FS)
