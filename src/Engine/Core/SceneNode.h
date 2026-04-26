@@ -26,14 +26,13 @@ class SceneNode final : public enable_shared_from_this<SceneNode>,
                         public sf::Transformable
 {
 public:
-	void Update(const sf::Time& dt) override {}
-
-	void UpdateRec(const sf::Time& dt);
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
-	void DrawSelf(sf::RenderTarget& target, sf::RenderStates states) const {}
+	void Update(const sf::Time& dt) override {} // TODO remove
 
-	void Init() {}
+	void UpdateRec(const sf::Time& dt); // TODO rename to Update()
+
+	void Init() {} // Todo init members
 
 	void RemoveFromParent();
 
@@ -51,7 +50,6 @@ public:
 	shared_ptr<SceneNode> FindChild(const std::string& id, bool recursively);
 	bool HasChild(std::shared_ptr<SceneNode>& child);
 	std::vector<shared_ptr<SceneNode>> FindChildren(const std::string& id, bool recursively);
-
 	void SetVisual(shared_ptr<Visual>&& visual);
 	void SetSortingStrategy(shared_ptr<SortingStrategy>&& sorting);
 
@@ -62,11 +60,8 @@ public:
 	const std::vector<shared_ptr<Behaviour>>& GetBehaviours() const { return _behaviours; }
 
 	shared_ptr<SceneNode> FindTopMostTapTarget(sf::Vector2f windowPosition);
-
 	bool DispatchTapAt(sf::Vector2f windowPosition);
-
 	void AddBehaviour(shared_ptr<Behaviour> behaviour);
-
 	ShapeColliderBehaviourBase* FindShapeCollider() const;
 
 	sf::Vector2f GetPosGlobal() const;
@@ -128,6 +123,8 @@ protected:
 	std::string _name;
 	weak_ptr<SceneNode> _parent;
 	std::vector<shared_ptr<SceneNode>> _children;
+	bool _isEnabled = true;
+	bool _isVisible = true;
 };
 
 inline ShapeColliderBehaviourBase* SceneNode::FindShapeCollider() const {
