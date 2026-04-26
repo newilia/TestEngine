@@ -1,13 +1,15 @@
 #pragma once
 
+#include "Engine/Core/IPropertiesProvider.h"
+
 #include <memory>
 
 class SceneNode;
 
-class EntityOnNode
+class EntityOnNode : public Engine::IPropertiesProvider
 {
 public:
-	virtual ~EntityOnNode() = default;
+	~EntityOnNode() override = default;
 
 	void AttachTo(const std::shared_ptr<SceneNode>& node);
 

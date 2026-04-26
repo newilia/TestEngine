@@ -57,6 +57,10 @@ public:
 
 	shared_ptr<Visual> GetVisual() const { return _visual; }
 
+	shared_ptr<SortingStrategy> GetSortingStrategy() const { return _sortingStrategy; }
+
+	const std::vector<shared_ptr<Behaviour>>& GetBehaviours() const { return _behaviours; }
+
 	shared_ptr<SceneNode> FindTopMostTapTarget(sf::Vector2f windowPosition);
 
 	bool DispatchTapAt(sf::Vector2f windowPosition);
