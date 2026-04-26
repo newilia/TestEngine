@@ -18,19 +18,14 @@ class PongPlatform : public std::enable_shared_from_this<PongPlatform>
 {
 public:
 	explicit PongPlatform(std::shared_ptr<SceneNode> node);
-
 	void RegisterTickBehaviour();
-
 	void Init();
-
 	void SetShapeDimensions(sf::Vector2f size, float curveness, float rotationDeg);
-
 	void Update(const sf::Time& dt);
 
 	std::shared_ptr<SceneNode> GetNode() const { return _node; }
 
 	sf::ConvexShape* GetShape() const;
-
 	sf::FloatRect GetBbox() const;
 
 	sf::Vector2f GetPosGlobal() const { return _node->GetPosGlobal(); }

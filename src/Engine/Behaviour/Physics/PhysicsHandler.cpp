@@ -20,7 +20,7 @@
 #include <optional>
 
 void PhysicsHandler::Update(const sf::Time& dt) {
-	utils::RemoveExpiredPointers(_bodies);
+	Utils::RemoveExpiredPointers(_bodies);
 	for (int i = 0; i < _subStepsCount; ++i) {
 		UpdateSubStep(dt / static_cast<float>(_subStepsCount));
 	}
@@ -137,13 +137,13 @@ void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 		//			continue;
 		//		}
 		//		auto v = body->getPhysicalComponent()->_velocity;
-		//		auto v_s = utils::Length(v);
+		//		auto v_s = Utils::Length(v);
 		//		auto m = body->getPhysicalComponent()->_mass;
 		//		systemImpulse += v * m;
 		//		systemEnergy += m * v_s * v_s;
 		//	}
 		// }
-		// fmt::println("E = {}, P = {}", systemEnergy, utils::ToString(systemImpulse));
+		// fmt::println("E = {}, P = {}", systemEnergy, Utils::ToString(systemImpulse));
 	}
 }
 
@@ -279,7 +279,7 @@ std::optional<IntersectionDetails> PhysicsHandler::DetectCirclePolygonIntersecti
 
 std::optional<IntersectionDetails> PhysicsHandler::DetectCircleCircleIntersection(const sf::CircleShape* circle1,
                                                                                   const sf::CircleShape* circle2) {
-	using namespace utils;
+	using namespace Utils;
 	auto r1 = circle1->getRadius();
 	auto r2 = circle2->getRadius();
 	auto pos1 = circle1->getPosition();
@@ -334,7 +334,7 @@ std::optional<SegmentIntersectionPoints> PhysicsHandler::FindSegmentsIntersectio
 	float den = dxA * dyB - dyA * dxB;
 
 	if (bool isParallel = abs(den) < std::numeric_limits<float>::epsilon()) {
-		if (!utils::ArePointsCollinear(segA.start, segA.end, segB.start)) {
+		if (!Utils::ArePointsCollinear(segA.start, segA.end, segB.start)) {
 			return std::nullopt;
 		}
 
@@ -350,8 +350,8 @@ std::optional<SegmentIntersectionPoints> PhysicsHandler::FindSegmentsIntersectio
 			intersectionSegment.start.y = k * intersectionSegment.start.x + b;
 			intersectionSegment.end.y = k * intersectionSegment.end.x + b;
 
-			assert(!utils::IsNan(intersectionSegment.start));
-			assert(!utils::IsNan(intersectionSegment.end));
+			assert(!Utils::IsNan(intersectionSegment.start));
+			assert(!Utils::IsNan(intersectionSegment.end));
 		}
 		else {
 			intersectionSegment.start.y = std::max(segA.start.y, segB.start.y);
@@ -364,8 +364,8 @@ std::optional<SegmentIntersectionPoints> PhysicsHandler::FindSegmentsIntersectio
 			intersectionSegment.start.x = k * intersectionSegment.start.y + b;
 			intersectionSegment.end.x = k * intersectionSegment.end.y + b;
 
-			assert(!utils::IsNan(intersectionSegment.start));
-			assert(!utils::IsNan(intersectionSegment.end));
+			assert(!Utils::IsNan(intersectionSegment.start));
+			assert(!Utils::IsNan(intersectionSegment.end));
 		}
 		return SegmentIntersectionPoints{intersectionSegment.start, intersectionSegment.end};
 	}
@@ -397,7 +397,7 @@ std::optional<SegmentIntersectionPoints> PhysicsHandler::FindSegmentsIntersectio
 
 std::optional<SegmentIntersectionPoints>
 PhysicsHandler::FindSegmentCircleIntersectionPoint(const Segment& seg, const sf::Vector2f& circleCenter, float radius) {
-	using namespace utils;
+	using namespace Utils;
 	SegmentIntersectionPoints result;
 	auto s = seg;
 	s.start -= circleCenter;
@@ -495,8 +495,8 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 	const auto m2 = b2RigidBody->_mass;
 	auto v1_to_v2 = b2RigidBody->_velocity - b1RigidBody->_velocity;
 	auto b1_tangent = collision.intersection.getDirVector();
-	auto b1_normal = utils::Normalize(sf::Vector2f(-b1_tangent.y, b1_tangent.x));
-	if (utils::Dot(body2->GetPosGlobal() - body1->GetPosGlobal(), b1_normal) < 0.f) {
+	auto b1_normal = Utils::Normalize(sf::Vector2f(-b1_tangent.y, b1_tangent.x));
+	if (Utils::Dot(body2->GetPosGlobal() - body1->GetPosGlobal(), b1_normal) < 0.f) {
 		b1_tangent = -b1_tangent;
 		b1_normal = -b1_normal;
 	}
@@ -511,7 +511,7 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 		}
 		for (size_t i = 0; i < body->GetPointCount(); ++i) {
 			auto penetrationVec = body->GetPointGlobal(i) - collisionPoint;
-			float depth = utils::Project(penetrationVec, bodyNormal);
+			float depth = Utils::Project(penetrationVec, bodyNormal);
 			result = std::max(result, depth);
 		}
 		return result;
@@ -531,11 +531,11 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 	}
 
 	/* velocities handling */
-	if (bool areMovingTowards = utils::Dot(b1_normal, v1_to_v2) < 0.f) {
+	if (bool areMovingTowards = Utils::Dot(b1_normal, v1_to_v2) < 0.f) {
 		const auto r = b1RigidBody->_restitution * b2RigidBody->_restitution;
 
-		auto norm_v1 = utils::Project(b1RigidBody->_velocity, b1_normal);
-		auto norm_v2 = utils::Project(b2RigidBody->_velocity, b1_normal);
+		auto norm_v1 = Utils::Project(b1RigidBody->_velocity, b1_normal);
+		auto norm_v2 = Utils::Project(b2RigidBody->_velocity, b1_normal);
 		auto norm_v_diff = norm_v1 - norm_v2;
 
 		float norm_dv1 = 0.f;
@@ -554,7 +554,7 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 		b1RigidBody->_velocity += dv1;
 		b2RigidBody->_velocity += dv2;
 
-		auto isNan = utils::IsNan(b1RigidBody->_velocity) || utils::IsNan(b2RigidBody->_velocity);
+		auto isNan = Utils::IsNan(b1RigidBody->_velocity) || Utils::IsNan(b2RigidBody->_velocity);
 		assert(!isNan);
 
 		if (EngineContext::Instance().IsDebugEnabled()) {
@@ -599,7 +599,7 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 				window->draw(tangentArrow);
 			}
 
-			window->draw(utils::CreateCircle(middlePoint, 2, sf::Color::White));
+			window->draw(Utils::CreateCircle(middlePoint, 2, sf::Color::White));
 		}
 	}
 }

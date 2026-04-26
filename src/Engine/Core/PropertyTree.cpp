@@ -1,20 +1,16 @@
 #include "Engine/Core/PropertyTree.h"
 
 namespace Engine::PropertyTreeDetail {
-
 	std::string effectiveLabel(const std::string& label, const PropertyMeta& meta) {
 		if (!meta.displayName.empty()) {
 			return meta.displayName;
 		}
 		return label;
 	}
-
 } // namespace Engine::PropertyTreeDetail
 
 namespace Engine {
-
 	namespace {
-
 		PropertyNode makeLeaf(std::string id, const std::string& label, PropertyKind kind, PropertyMeta meta,
 		                      PropertyAccess access) {
 			PropertyNode n;
@@ -25,7 +21,6 @@ namespace Engine {
 			n.access = std::move(access);
 			return n;
 		}
-
 	} // namespace
 
 	PropertyBuilder::PropertyBuilder(PropertyTree& tree) : _tree(&tree) {}
@@ -154,5 +149,4 @@ namespace Engine {
 	void PropertyBuilder::endAssociative() {
 		pop();
 	}
-
 } // namespace Engine

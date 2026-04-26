@@ -17,12 +17,10 @@ public:
 	float _mass = 1.f;
 	/// @property
 	sf::Vector2f _velocity;
-
 	/// @property(name="Angle (rad)")
 	float _angle = 0.f;
 	/// @property
 	float _angularSpeed = 0.f;
-
 	/// @property
 	float _restitution = 0.5f;
 	/// @property

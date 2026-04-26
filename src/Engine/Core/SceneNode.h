@@ -63,13 +63,7 @@ public:
 
 	const std::vector<shared_ptr<Behaviour>>& GetBehaviours() const { return _behaviours; }
 
-	shared_ptr<SceneNode> FindTopMostTapTarget(sf::Vector2f windowPosition);
-	bool DispatchTapAt(sf::Vector2f windowPosition);
 	void AddBehaviour(shared_ptr<Behaviour> behaviour);
-	ShapeColliderBehaviourBase* FindShapeCollider() const;
-
-	sf::Vector2f GetPosGlobal() const;
-	void SetPosGlobal(sf::Vector2f pos);
 
 	template <typename T>
 	void RemoveBehaviour() {
@@ -117,12 +111,14 @@ public:
 		return created;
 	}
 
+	ShapeColliderBehaviourBase* FindShapeCollider() const;
+	shared_ptr<SceneNode> FindTopMostTapTarget(sf::Vector2f windowPosition);
+	bool DispatchTapAt(sf::Vector2f windowPosition);
+	sf::Vector2f GetPosGlobal() const;
+	void SetPosGlobal(sf::Vector2f pos);
+
 protected:
 	void SetParent(shared_ptr<SceneNode>&& parent) { _parent = parent; }
-
-	shared_ptr<Visual> _visual;
-	shared_ptr<SortingStrategy> _sortingStrategy;
-	std::vector<shared_ptr<Behaviour>> _behaviours;
 
 	/// @property(name="Name")
 	std::string _name;
@@ -132,6 +128,9 @@ protected:
 	bool _isEnabled = true;
 	/// @property(name="Visible")
 	bool _isVisible = true;
+	shared_ptr<Visual> _visual;
+	shared_ptr<SortingStrategy> _sortingStrategy;
+	std::vector<shared_ptr<Behaviour>> _behaviours;
 };
 
 inline ShapeColliderBehaviourBase* SceneNode::FindShapeCollider() const {

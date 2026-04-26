@@ -12,5 +12,4 @@ namespace Engine {
 
 		virtual void BuildPropertyTree(PropertyBuilder& builder);
 	};
-
 } // namespace Engine

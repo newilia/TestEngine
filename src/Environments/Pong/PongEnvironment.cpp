@@ -31,11 +31,9 @@ static weak_ptr<PongPlatform> sUserPlatform;
 static weak_ptr<PongBall> sBall;
 
 namespace {
-
 	sf::Vector2f GetScreenSize() {
 		return sf::Vector2f(EngineContext::Instance().GetMainWindow()->getSize());
 	}
-
 } // namespace
 
 void PongEnvironment::Setup() {
@@ -76,7 +74,7 @@ void PongEnvironment::AddBall(Scene* scene) {
 	shape->setFillColor(color);
 	shape->setOutlineColor(outlineColor);
 	shape->setOutlineThickness(1);
-	shape->setOrigin(utils::FindCenterOfMass(shape));
+	shape->setOrigin(Utils::FindCenterOfMass(shape));
 	shape->setPosition(pos);
 
 	auto rigidBody = ball->GetNode()->RequireBehaviour<RigidBodyBehaviour>();
@@ -104,7 +102,7 @@ shared_ptr<PongPlatform> PongEnvironment::CreateDefaultPlatform(sf::Vector2f siz
 	platform->SetShapeDimensions(size, 0.9f, rotationDeg);
 	// todo platform->setMoveArea(...);
 	if (auto* sh = platform->GetShape()) {
-		sh->setOrigin(utils::FindCenterOfMass(sh));
+		sh->setOrigin(Utils::FindCenterOfMass(sh));
 		sh->setPosition(pos);
 		sh->setFillColor(color);
 	}
@@ -136,7 +134,7 @@ void PongEnvironment::AddWalls(Scene* scene) {
 		wall->SetName(wallNames[i]);
 		auto* rect = dynamic_cast<sf::RectangleShape*>(wall->FindShapeCollider()->GetBaseShape());
 		rect->setSize(wallSizes[i]);
-		rect->setOrigin(utils::FindCenterOfMass(rect));
+		rect->setOrigin(Utils::FindCenterOfMass(rect));
 		rect->setPosition(wallPositions[i]);
 		auto wrb = wall->RequireBehaviour<RigidBodyBehaviour>();
 		wrb->SetImmovable();

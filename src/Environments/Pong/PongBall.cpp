@@ -8,7 +8,6 @@
 #include <SFML/Graphics/CircleShape.hpp>
 
 namespace {
-
 	class PongBallDampingBehaviour : public Behaviour
 	{
 		std::weak_ptr<PongBall> _owner;
@@ -22,13 +21,12 @@ namespace {
 				return;
 			}
 			auto rigidBody = owner->GetNode()->RequireBehaviour<RigidBodyBehaviour>();
-			if (auto speedExcess = utils::Length(rigidBody->_velocity) / owner->GetMaxSpeed(); speedExcess > 1.f) {
+			if (auto speedExcess = Utils::Length(rigidBody->_velocity) / owner->GetMaxSpeed(); speedExcess > 1.f) {
 				float dampingMultiplier = 1 - speedExcess * dt.asSeconds() * owner->GetSpeedDampingFactor();
 				rigidBody->_velocity *= dampingMultiplier;
 			}
 		}
 	};
-
 } // namespace
 
 PongBall::PongBall(std::shared_ptr<SceneNode> node) : _node(std::move(node)) {}

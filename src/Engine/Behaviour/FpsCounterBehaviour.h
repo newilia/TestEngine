@@ -13,9 +13,6 @@
 
 class SceneNode;
 
-/// Обычная SceneNode с sf::Text и FpsCounterBehaviour.
-std::shared_ptr<SceneNode> CreateFpsCounterNode();
-
 /// Плавный FPS в строке и отрисовка через TextVisual.
 class FpsCounterBehaviour : public Behaviour
 {
@@ -41,3 +38,6 @@ private:
 	sf::Color _textColor{255, 255, 255, 255};
 	std::shared_ptr<sf::Text> _text;
 };
+
+/// Обычная SceneNode с sf::Text и FpsCounterBehaviour.
+std::shared_ptr<SceneNode> CreateFpsCounterNode();

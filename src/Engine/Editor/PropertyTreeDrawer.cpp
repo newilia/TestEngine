@@ -14,7 +14,6 @@
 #include <variant>
 
 namespace Engine {
-
 	namespace {
 
 		constexpr float kLabelColumnWidth = 160.f;
@@ -41,7 +40,6 @@ namespace Engine {
 			}
 			return v;
 		}
-
 	} // namespace
 
 	void PropertyTreeDrawer::Draw(const PropertyTree& tree) const {
@@ -323,5 +321,4 @@ namespace Engine {
 
 		ImGui::PopID();
 	}
-
 } // namespace Engine

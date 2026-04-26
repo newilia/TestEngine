@@ -26,6 +26,49 @@ namespace {
 
 } // namespace
 
+void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+	if (!_isEnabled || !_isVisible) {
+		return;
+	}
+
+	if (_visual) {
+		_visual->Draw(target, states);
+	}
+
+	std::vector<shared_ptr<SceneNode>> sorted = _children;
+	SortChildrenByDrawOrder(sorted);
+
+	for (auto& child : sorted) {
+		child->draw(target, states);
+	}
+
+	if (EngineContext::Instance().IsDebugEnabled()) {
+		if (auto debugBehaviour = FindBehaviour<PhysicsDebugBehaviour>()) {
+			debugBehaviour->DebugDraw(target, states);
+		}
+	}
+}
+
+void SceneNode::UpdateRec(const sf::Time& dt) {
+	if (!_isEnabled || !_isVisible) {
+		return;
+	}
+
+	Update(dt);
+	for (auto& b : _behaviours) {
+		b->OnUpdate(dt);
+	}
+	for (auto& child : _children) {
+		child->UpdateRec(dt);
+	}
+}
+
+void SceneNode::RemoveFromParent() {
+	if (auto parent = GetParent()) {
+		parent->RemoveChild(this);
+	}
+}
+
 void SceneNode::SetVisual(shared_ptr<Visual>&& visual) {
 	_visual = std::move(visual);
 	if (_visual) {
@@ -40,12 +83,6 @@ void SceneNode::SetSortingStrategy(shared_ptr<SortingStrategy>&& sorting) {
 	}
 }
 
-void SceneNode::AddBehaviour(shared_ptr<Behaviour> behaviour) {
-	behaviour->AttachTo(shared_from_this());
-	_behaviours.push_back(std::move(behaviour));
-	_behaviours.back()->OnAttached();
-}
-
 void SceneNode::AddChild(std::shared_ptr<SceneNode>&& child) {
 	assert(!HasChild(child));
 
@@ -56,6 +93,14 @@ void SceneNode::AddChild(std::shared_ptr<SceneNode>&& child) {
 void SceneNode::AddChild(SceneNode&& child) {
 	child.SetParent(shared_from_this());
 	_children.push_back(make_shared<SceneNode>(child));
+}
+
+void SceneNode::RemoveChild(SceneNode* child) {
+	auto it = std::ranges::find_if(_children.begin(), _children.end(),
+	                               [child](const auto& ptr) { return ptr.get() == child; });
+	if (it != _children.end()) {
+		_children.erase(it);
+	}
 }
 
 shared_ptr<SceneNode> SceneNode::FindChild(const std::string& id, bool recursively) {
@@ -95,41 +140,10 @@ std::vector<shared_ptr<SceneNode>> SceneNode::FindChildren(const std::string& id
 	return result;
 }
 
-void SceneNode::UpdateRec(const sf::Time& dt) {
-	if (!_isEnabled || !_isVisible) {
-		return;
-	}
-
-	Update(dt);
-	for (auto& b : _behaviours) {
-		b->OnUpdate(dt);
-	}
-	for (auto& child : _children) {
-		child->UpdateRec(dt);
-	}
-}
-
-void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-	if (!_isEnabled || !_isVisible) {
-		return;
-	}
-
-	if (_visual) {
-		_visual->Draw(target, states);
-	}
-
-	std::vector<shared_ptr<SceneNode>> sorted = _children;
-	SortChildrenByDrawOrder(sorted);
-
-	for (auto& child : sorted) {
-		child->draw(target, states);
-	}
-
-	if (EngineContext::Instance().IsDebugEnabled()) {
-		if (auto debugBehaviour = FindBehaviour<PhysicsDebugBehaviour>()) {
-			debugBehaviour->DebugDraw(target, states);
-		}
-	}
+void SceneNode::AddBehaviour(shared_ptr<Behaviour> behaviour) {
+	behaviour->AttachTo(shared_from_this());
+	_behaviours.push_back(std::move(behaviour));
+	_behaviours.back()->OnAttached();
 }
 
 shared_ptr<SceneNode> SceneNode::FindTopMostTapTarget(sf::Vector2f windowPosition) {
@@ -156,18 +170,4 @@ bool SceneNode::DispatchTapAt(sf::Vector2f windowPosition) {
 		}
 	}
 	return false;
-}
-
-void SceneNode::RemoveFromParent() {
-	if (auto parent = GetParent()) {
-		parent->RemoveChild(this);
-	}
-}
-
-void SceneNode::RemoveChild(SceneNode* child) {
-	auto it = std::ranges::find_if(_children.begin(), _children.end(),
-	                               [child](const auto& ptr) { return ptr.get() == child; });
-	if (it != _children.end()) {
-		_children.erase(it);
-	}
 }
