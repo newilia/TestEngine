@@ -8,7 +8,7 @@
 
 #include <fmt/format.h>
 
-void PhysicsDebugBehaviour::DrawDebug(sf::RenderTarget& target, sf::RenderStates states) const {
+void PhysicsDebugBehaviour::DebugDraw(sf::RenderTarget& target, sf::RenderStates states) const {
 	if (!EngineContext::Instance().IsDebugEnabled()) {
 		return;
 	}

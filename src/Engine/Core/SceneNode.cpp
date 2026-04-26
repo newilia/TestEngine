@@ -8,7 +8,7 @@
 
 namespace {
 
-	void sortChildrenByDrawOrder(std::vector<shared_ptr<SceneNode>>& nodes) {
+	void SortChildrenByDrawOrder(std::vector<shared_ptr<SceneNode>>& nodes) {
 		std::stable_sort(nodes.begin(), nodes.end(),
 		                 [](const shared_ptr<SceneNode>& a, const shared_ptr<SceneNode>& b) {
 			                 int la = 0;
@@ -95,6 +95,10 @@ std::vector<shared_ptr<SceneNode>> SceneNode::FindChildren(const std::string& id
 }
 
 void SceneNode::UpdateRec(const sf::Time& dt) {
+	if (!_isEnabled || !_isVisible) {
+		return;
+	}
+
 	Update(dt);
 	for (auto& b : _behaviours) {
 		b->OnUpdate(dt);
@@ -105,14 +109,16 @@ void SceneNode::UpdateRec(const sf::Time& dt) {
 }
 
 void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-	// states.transform *= getTransform();
-	DrawSelf(target, states);
+	if (!_isEnabled || !_isVisible) {
+		return;
+	}
+
 	if (_visual) {
 		_visual->Draw(target, states);
 	}
 
 	std::vector<shared_ptr<SceneNode>> sorted = _children;
-	sortChildrenByDrawOrder(sorted);
+	SortChildrenByDrawOrder(sorted);
 
 	for (auto& child : sorted) {
 		child->draw(target, states);
@@ -120,14 +126,14 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 
 	if (EngineContext::Instance().IsDebugEnabled()) {
 		if (auto debugBehaviour = FindBehaviour<PhysicsDebugBehaviour>()) {
-			debugBehaviour->DrawDebug(target, states);
+			debugBehaviour->DebugDraw(target, states);
 		}
 	}
 }
 
 shared_ptr<SceneNode> SceneNode::FindTopMostTapTarget(sf::Vector2f windowPosition) {
 	std::vector<shared_ptr<SceneNode>> sorted = _children;
-	sortChildrenByDrawOrder(sorted);
+	SortChildrenByDrawOrder(sorted);
 	for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
 		if (auto hit = (*it)->FindTopMostTapTarget(windowPosition)) {
 			return hit;
