@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Core/Scene.h"
+#include "Engine/Editor/PropertyTreeDrawer.h"
 
 #include <memory>
 
@@ -12,6 +13,9 @@ namespace Engine {
 	public:
 		/// Renders the inspector. Pass null when nothing is selected.
 		void Draw(const std::shared_ptr<SceneNode>& node) const;
+
+	private:
+		PropertyTreeDrawer _propertyDrawer;
 	};
 
 } // namespace Engine

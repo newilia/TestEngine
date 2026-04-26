@@ -1,13 +1,31 @@
 #include "Engine/Editor/NodeInspectorWidget.h"
 
+#include "Engine/Behaviour/Behaviour.h"
+#include "Engine/Core/IPropertiesProvider.h"
+#include "Engine/Core/PropertyTree.h"
+#include "Engine/Core/SceneNode.h"
+#include "Engine/Sorting/SortingStrategy.h"
+#include "Engine/Visual/Visual.h"
+
 #include <imgui.h>
 
-namespace {
+#include <string>
+#include <typeinfo>
 
-	void TextLabelValue(const char* label, const char* value) {
-		ImGui::TextUnformatted(label);
-		ImGui::SameLine();
-		ImGui::TextUnformatted(value);
+namespace {
+	void DrawIPropertiesProviderBlock(const char* title, Engine::IPropertiesProvider* inspectable,
+	                                  const Engine::PropertyTreeDrawer& drawer) {
+		if (!inspectable) {
+			return;
+		}
+		Engine::PropertyTree tree;
+		Engine::PropertyBuilder builder(tree);
+		inspectable->BuildPropertyTree(builder);
+		if (tree.roots.empty()) {
+			return;
+		}
+		ImGui::SeparatorText(title);
+		drawer.Draw(tree);
 	}
 
 } // namespace
@@ -45,11 +63,22 @@ namespace Engine {
 		const double rotDeg = static_cast<double>(node->getRotation().asDegrees());
 		ImGui::Text("Rotation: %.2f deg", rotDeg);
 
-		ImGui::SeparatorText("Attachments");
-		const bool hasVisual = node->GetVisual() != nullptr;
-		const bool hasCollider = node->FindShapeCollider() != nullptr;
-		TextLabelValue("Visual: ", hasVisual ? "yes" : "no");
-		TextLabelValue("Shape collider: ", hasCollider ? "yes" : "no");
+		ImGui::SeparatorText("Entities");
+		if (const auto visual = node->GetVisual()) {
+			DrawIPropertiesProviderBlock("Visual", dynamic_cast<IPropertiesProvider*>(visual.get()), _propertyDrawer);
+		}
+		if (const auto sorting = node->GetSortingStrategy()) {
+			DrawIPropertiesProviderBlock("Sorting strategy", dynamic_cast<IPropertiesProvider*>(sorting.get()),
+			                             _propertyDrawer);
+		}
+		for (const auto& behaviour : node->GetBehaviours()) {
+			if (!behaviour) {
+				continue;
+			}
+			const std::string title = std::string("Behaviour: ") + typeid(*behaviour).name();
+			DrawIPropertiesProviderBlock(title.c_str(), dynamic_cast<IPropertiesProvider*>(behaviour.get()),
+			                             _propertyDrawer);
+		}
 	}
 
 } // namespace Engine
