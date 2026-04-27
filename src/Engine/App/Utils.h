@@ -57,6 +57,9 @@ namespace Utils {
 	std::optional<std::pair<float, std::optional<float>>> SolveQuadraticEquation(float a, float b, float c);
 	sf::CircleShape CreateCircle(const sf::Vector2f& pos, float radius, sf::Color color);
 
+	/// Системно разворачивает окно (Windows: `ShowWindow` + `SW_MAXIMIZE`); на других ОС — пусто.
+	void MaximizeWindow(sf::RenderWindow& window);
+
 	template <typename T, typename U>
 	std::shared_ptr<T> SharedPtrCast(const U* ptr) {
 		return std::dynamic_pointer_cast<T>((const_cast<U*>(ptr))->shared_from_this());

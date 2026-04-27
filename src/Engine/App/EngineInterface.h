@@ -44,7 +44,9 @@ public:
 	sf::Time GetSimDt() const;
 	sf::Time GetFrameDt(bool ignoreFixed = false) const;
 	void OnStartFrame();
-	void CreateMainWindow(sf::VideoMode mode, const sf::String& title, std::uint32_t style = 0);
+	std::shared_ptr<sf::RenderWindow> CreateMainWindow(sf::VideoMode mode, const sf::String& title,
+	                                             std::uint32_t style = sf::Style::Default,
+	                                             sf::State state = sf::State::Windowed);
 
 	sf::RenderWindow* GetMainWindow() const { return _mainWindow.get(); }
 
