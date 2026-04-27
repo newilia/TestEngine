@@ -1,5 +1,9 @@
 #include "Utils.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "Engine/Behaviour/Physics/ShapeColliderBehaviourBase.h"
 #include "Engine/Visual/ShapeVisualBase.h"
 #include "Engine/Visual/TextVisual.h"
@@ -209,4 +213,10 @@ sf::CircleShape Utils::CreateCircle(const sf::Vector2f& pos, float radius, sf::C
 	circle.setOrigin({radius, radius});
 	circle.setFillColor(color);
 	return circle;
+}
+
+void Utils::MaximizeWindow(sf::RenderWindow& window) {
+#ifdef _WIN32
+	ShowWindow(static_cast<HWND>(window.getNativeHandle()), SW_MAXIMIZE);
+#endif
 }

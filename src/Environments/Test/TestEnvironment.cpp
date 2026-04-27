@@ -13,6 +13,7 @@
 #include "Engine/Core/Scene.h"
 #include "fmt/format.h"
 
+#include <memory>
 #include <utility>
 
 using std::make_shared;
@@ -20,8 +21,11 @@ using std::shared_ptr;
 
 void TestEnvironment::Setup() {
 	EngineContext& engine = EngineContext::Instance();
-	engine.CreateMainWindow(sf::VideoMode({800u, 600u}), "Test scene",
-	                        sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize);
+	const auto mainWindow = engine.CreateMainWindow(sf::VideoMode::getDesktopMode(), "Test scene");
+	if (!mainWindow) {
+		std::exit(EXIT_FAILURE);
+	}
+	Utils::MaximizeWindow(*mainWindow);
 	engine.GetPhysicsHandler()->SetSubstepCount(2);
 	engine.GetPhysicsHandler()->SetGravity({0, 1000});
 	engine.SetScene(BuildScene());
