@@ -75,6 +75,12 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 				window->close();
 				break;
 			}
+			if (const auto* resized = event.getIf<sf::Event::Resized>()) {
+				const auto sz = resized->size;
+				window->setView(sf::View(sf::FloatRect(
+				    {0.f, 0.f},
+				    {static_cast<float>(sz.x), static_cast<float>(sz.y)})));
+			}
 			Engine::Editor::GetInstance()->OnEvent(event);
 			if (ShouldForwardEventToGame(event)) {
 				engine.GetUserInput()->HandleEvent(event);

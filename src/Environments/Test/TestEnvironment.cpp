@@ -34,7 +34,7 @@ void TestEnvironment::Setup() {
 
 std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	auto scene = make_shared<Scene>();
-	sf::Vector2f screenSize(EngineContext::Instance().GetMainWindow()->getSize());
+	auto screenSize = EngineContext::Instance().GetMainWindow()->getView().getSize();
 	constexpr float wallActualWidth = 200;
 	constexpr float wallVisibleWidth = 30;
 	constexpr float wallOffset = wallActualWidth / 2 - wallVisibleWidth;
@@ -188,6 +188,14 @@ void TestEnvironment::ConfigureInput() {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			if (key->code == sf::Keyboard::Key::D) {
 				ei->SetDebugEnabled(!ei->IsDebugEnabled());
+			}
+		}
+	}));
+
+	userInput->AttachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
+			if (key->code == sf::Keyboard::Key::R) {
+				ei->SetScene(BuildScene());
 			}
 		}
 	}));
