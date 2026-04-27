@@ -21,7 +21,7 @@ using std::shared_ptr;
 
 void TestEnvironment::Setup() {
 	EngineContext& engine = EngineContext::Instance();
-	const auto mainWindow = engine.CreateMainWindow(sf::VideoMode::getDesktopMode(), "Test scene");
+	const auto mainWindow = engine.CreateMainWindow(sf::VideoMode({1024, 768}), "Test scene");
 	if (!mainWindow) {
 		std::exit(EXIT_FAILURE);
 	}
