@@ -58,6 +58,13 @@ if(MSVC)
 	target_compile_options(TestEngine PRIVATE /FS)
 	# Debug: /Z7 embeds symbols in .obj and avoids C1041 (parallel cl.exe vs one vc*.pdb) when /FS alone is not enough.
 	target_compile_options(TestEngine PRIVATE $<$<CONFIG:Debug>:/Z7>)
+	# Do not run C++ Core Check inside vendored fmt headers (we do not patch third-party/fmt).
+	target_compile_options(
+		TestEngine
+		PRIVATE
+			"/external:I${CMAKE_SOURCE_DIR}/third-party/fmt/include"
+			/analyze:external-
+	)
 endif()
 
 target_include_directories(

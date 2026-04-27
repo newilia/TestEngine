@@ -30,8 +30,8 @@ namespace Engine {
 
 	private:
 		bool _isOpen = true;
-		SceneHierarchyWidget _sceneHierarchyWidget;
-		NodeInspectorWidget _nodeInspectorWidget;
+		SceneHierarchyWidget _sceneHierarchyWidget{};
+		NodeInspectorWidget _nodeInspectorWidget{};
 	};
 
 } // namespace Engine

@@ -15,7 +15,7 @@ namespace Engine {
 		void Draw(const std::shared_ptr<SceneNode>& node) const;
 
 	private:
-		PropertyTreeDrawer _propertyDrawer;
+		PropertyTreeDrawer _propertyDrawer{};
 	};
 
 } // namespace Engine
