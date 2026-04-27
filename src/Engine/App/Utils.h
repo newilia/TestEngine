@@ -58,7 +58,7 @@ namespace Utils {
 	sf::CircleShape CreateCircle(const sf::Vector2f& pos, float radius, sf::Color color);
 
 	/// Системно разворачивает окно (Windows: `ShowWindow` + `SW_MAXIMIZE`); на других ОС — пусто.
-	void MaximizeWindow(sf::RenderWindow& window);
+	void MaximizeWindow(const sf::RenderWindow& window);
 
 	template <typename T, typename U>
 	std::shared_ptr<T> SharedPtrCast(const U* ptr) {

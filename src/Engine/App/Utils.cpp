@@ -215,7 +215,7 @@ sf::CircleShape Utils::CreateCircle(const sf::Vector2f& pos, float radius, sf::C
 	return circle;
 }
 
-void Utils::MaximizeWindow(sf::RenderWindow& window) {
+void Utils::MaximizeWindow(const sf::RenderWindow& window) {
 #ifdef _WIN32
 	ShowWindow(static_cast<HWND>(window.getNativeHandle()), SW_MAXIMIZE);
 #endif
