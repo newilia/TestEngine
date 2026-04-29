@@ -13,7 +13,6 @@
 
 class SceneNode;
 
-/// Плавный FPS в строке и отрисовка через TextVisual.
 class FpsCounterBehaviour : public Behaviour
 {
 	META_CLASS()
@@ -27,13 +26,8 @@ public:
 private:
 	/// @property(readonly=true, name="FPS", tooltip="Smoothed frames per second (read-only).")
 	float _fps = 0.f;
-	/// @property(name="Filter", minValue=0.0, maxValue=1.0, step=0.001, dragSpeed=0.001, tooltip="Exponential smoothing
-	/// for FPS / tick readout.")
-	float _smoothFactor = 0.98f;
-	/// @property(name="Demo offset (px)")
-	sf::Vector2f _demoOffset{0.f, 0.f};
-	/// @property(name="Demo Vec3")
-	sf::Vector3f _demoVec3{0.f, 0.f, 0.f};
+	/// @property(name="Filter", minValue=0.0, maxValue=1.0, step=0.001, dragSpeed=0.001)
+	float _filteringFactor = 0.98f;
 	/// @property(name="Text color")
 	sf::Color _textColor{255, 255, 255, 255};
 
@@ -42,5 +36,4 @@ private:
 	bool _ownsDisplayVisual = false;
 };
 
-/// Обычная SceneNode с sf::Text и FpsCounterBehaviour.
 std::shared_ptr<SceneNode> CreateFpsCounterNode();

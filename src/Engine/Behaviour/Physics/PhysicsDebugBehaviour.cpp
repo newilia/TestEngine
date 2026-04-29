@@ -13,7 +13,7 @@
 #include <cmath>
 
 void PhysicsDebugBehaviour::DebugDraw(sf::RenderTarget& target, sf::RenderStates states) const {
-	if (!EngineContext::GetInstance().IsDebugEnabled()) {
+	if (!EngineContext::GetInstance().IsDebugDrawEnabled()) {
 		return;
 	}
 	auto node = GetNode();

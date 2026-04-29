@@ -71,38 +71,34 @@ void PhysicsHandler::Update(const sf::Time& dt) {
 			}
 
 			if (auto intersection = DetectIntersection(b1, b2)) {
-				{
-					auto b1Collision = b1->FindBehaviour<CollisionBehaviour>();
-					auto b2Collision = b2->FindBehaviour<CollisionBehaviour>();
-					auto b1RigidBody = b1->RequireBehaviour<RigidBodyBehaviour>();
-					auto b2RigidBody = b2->RequireBehaviour<RigidBodyBehaviour>();
-					if (b1Collision && b2Collision && b1RigidBody && b2RigidBody &&
-					    (b1Collision->_collisionGroups & b2Collision->_collisionGroups).any()) {
-						if (!b1RigidBody->IsImmovable() || !b2RigidBody->IsImmovable()) {
-							ResolveCollision(*intersection);
-							for (auto callback : b1Collision->_collisionCallbacks) {
-								if (callback) {
-									callback->operator()(*intersection);
-								}
+				auto b1Collision = b1->FindBehaviour<CollisionBehaviour>();
+				auto b2Collision = b2->FindBehaviour<CollisionBehaviour>();
+				auto b1RigidBody = b1->RequireBehaviour<RigidBodyBehaviour>();
+				auto b2RigidBody = b2->RequireBehaviour<RigidBodyBehaviour>();
+				if (b1Collision && b2Collision && b1RigidBody && b2RigidBody &&
+				    (b1Collision->_collisionGroups & b2Collision->_collisionGroups).any()) {
+					if (!b1RigidBody->IsImmovable() || !b2RigidBody->IsImmovable()) {
+						ResolveCollision(*intersection);
+						for (auto callback : b1Collision->_collisionCallbacks) {
+							if (callback) {
+								callback->operator()(*intersection);
 							}
-							for (auto callback : b2Collision->_collisionCallbacks) {
-								if (callback) {
-									callback->operator()(*intersection);
-								}
+						}
+						for (auto callback : b2Collision->_collisionCallbacks) {
+							if (callback) {
+								callback->operator()(*intersection);
 							}
 						}
 					}
 				}
 
-				{
-					auto b1Overlapping = b1->FindBehaviour<OverlappingBehaviour>();
-					auto b2Overlapping = b2->FindBehaviour<OverlappingBehaviour>();
-					if (b1Overlapping && b2Overlapping &&
-					    (b1Overlapping->_overlappingGroups & b2Overlapping->_overlappingGroups).any()) {
-						for (auto callback : b1Overlapping->_overlappingCallbacks) {
-							if (callback) {
-								callback->operator()(*intersection);
-							}
+				auto b1Overlapping = b1->FindBehaviour<OverlappingBehaviour>();
+				auto b2Overlapping = b2->FindBehaviour<OverlappingBehaviour>();
+				if (b1Overlapping && b2Overlapping &&
+				    (b1Overlapping->_overlappingGroups & b2Overlapping->_overlappingGroups).any()) {
+					for (auto callback : b1Overlapping->_overlappingCallbacks) {
+						if (callback) {
+							callback->operator()(*intersection);
 						}
 					}
 				}
@@ -282,7 +278,7 @@ std::optional<IntersectionDetails> PhysicsHandler::DetectCircleCircleIntersectio
 		result.intersection.end.x = x0 - b * mult;
 		result.intersection.end.y = y0 + a * mult;
 	}
-	if (EngineContext::GetInstance().IsDebugEnabled()) {
+	if (EngineContext::GetInstance().IsDebugDrawEnabled()) {
 		if (auto wnd = EngineContext::GetInstance().GetMainWindow()) {
 			wnd->draw(CreateCircle(result.intersection.start, 2, sf::Color::White));
 			wnd->draw(CreateCircle(result.intersection.end, 2, sf::Color::White));
@@ -435,7 +431,7 @@ PhysicsHandler::FindSegmentCircleIntersectionPoint(const Segment& seg, const sf:
 		*result.p2 += circleCenter;
 	}
 
-	if (EngineContext::GetInstance().IsDebugEnabled()) {
+	if (EngineContext::GetInstance().IsDebugDrawEnabled()) {
 		if (auto window = EngineContext::GetInstance().GetMainWindow()) {
 			window->draw(CreateCircle(result.p1, 2.f, sf::Color::White));
 			if (result.p2) {
@@ -532,7 +528,7 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 		auto isNan = Utils::IsNan(b1RigidBody->_velocity) || Utils::IsNan(b2RigidBody->_velocity);
 		assert(!isNan);
 
-		if (EngineContext::GetInstance().IsDebugEnabled()) {
+		if (EngineContext::GetInstance().IsDebugDrawEnabled()) {
 			if (auto window = EngineContext::GetInstance().GetMainWindow()) {
 				{
 					VectorArrow force1(body1->GetPosGlobal(), body1->GetPosGlobal() + dv1);
@@ -560,7 +556,7 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 		}
 	}
 
-	if (EngineContext::GetInstance().IsDebugEnabled()) {
+	if (EngineContext::GetInstance().IsDebugDrawEnabled()) {
 		if (auto window = EngineContext::GetInstance().GetMainWindow()) {
 			const sf::Vector2f middlePoint((collision.intersection.start + collision.intersection.end) * 0.5f);
 

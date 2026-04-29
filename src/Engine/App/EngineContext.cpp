@@ -1,5 +1,6 @@
-#include "Engine/Behaviour/Physics/BodyPullHandler.h"
 #include "EngineContext.h"
+
+#include "Engine/Behaviour/Physics/BodyPullHandler.h"
 
 shared_ptr<Scene> EngineContext::GetScene() const {
 	return _scene;
@@ -45,19 +46,7 @@ sf::RenderWindow* EngineContext::GetMainWindow() const {
 	return _mainWindow.get();
 }
 
-void EngineContext::SetFixedFrameTime(const sf::Time& time) {
-	_fixedFrameTime = time;
-}
-
-void EngineContext::ResetFixedFrameTime() {
-	_fixedFrameTime.reset();
-}
-
-std::optional<sf::Time> EngineContext::GetFixedFrameTime() const {
-	return _fixedFrameTime;
-}
-
-bool EngineContext::IsDebugEnabled() const {
+bool EngineContext::IsDebugDrawEnabled() const {
 	return _isDebugDrawEnabled;
 }
 
@@ -83,10 +72,6 @@ std::uint32_t EngineContext::GetTargetTickRateHz() const {
 
 void EngineContext::SetTargetTickRateHz(std::uint32_t hz) {
 	_targetTickRateHz = hz;
-}
-
-unsigned EngineContext::GetLogicTicksLastFrame() const {
-	return _logicTicksLastFrame;
 }
 
 void EngineContext::SetVerticalSyncEnabled(bool enabled) {
@@ -120,55 +105,29 @@ void EngineContext::SetScene(const shared_ptr<Scene>& scene) {
 
 void EngineContext::Init() {}
 
-sf::Time EngineContext::GetSimDt() const {
+sf::Time EngineContext::GetSimTickDt() const {
 	if (_isSimPaused) {
 		return sf::Time();
 	}
-	return _lastLogicStepDt;
+	return _tickTime * _simSpeedMultiplier;
 }
 
-sf::Time EngineContext::GetFrameDt(bool ignoreFixed) const {
-	if (!ignoreFixed && _fixedFrameTime) {
-		return *_fixedFrameTime;
-	}
+sf::Time EngineContext::GetWallTickDt() const {
+	return _tickTime;
+}
+
+sf::Time EngineContext::GetFrameDt() const {
 	return _frameTime;
 }
 
-sf::Time EngineContext::GetRawFrameDt() const {
-	return _frameTime;
-}
-
-void EngineContext::OnStartFrame() {
+void EngineContext::OnStartPresentFrame() {
 	_frameTime = _frameClock.getElapsedTime();
 	_frameClock.restart();
 }
 
-void EngineContext::BeginLogicFrame() {
-	_lastLogicStepDt = sf::Time();
-	_logicTicksLastFrame = 0;
-	if (!_isSimPaused) {
-		_logicAccumulatorSec +=
-		    static_cast<double>(GetRawFrameDt().asSeconds()) * static_cast<double>(_simSpeedMultiplier);
-	}
-}
-
-bool EngineContext::TryConsumeLogicAccumulator(double stepSeconds) {
-	if (stepSeconds <= 0.0) {
-		return false;
-	}
-	if (_logicAccumulatorSec + 1e-12 >= stepSeconds) {
-		_logicAccumulatorSec -= stepSeconds;
-		return true;
-	}
-	return false;
-}
-
-void EngineContext::SetLastLogicStepDt(const sf::Time& dt) {
-	_lastLogicStepDt = dt;
-}
-
-void EngineContext::SetLogicTicksLastFrame(unsigned n) {
-	_logicTicksLastFrame = n;
+void EngineContext::OnStartUpdateTick() {
+	_tickTime = _tickClock.getElapsedTime();
+	_tickClock.restart();
 }
 
 void EngineContext::ApplyWindowFrameSettings() {
@@ -176,7 +135,6 @@ void EngineContext::ApplyWindowFrameSettings() {
 		return;
 	}
 	_mainWindow->setVerticalSyncEnabled(_verticalSyncEnabled);
-	_mainWindow->setFramerateLimit(_framerateLimit);
 }
 
 std::shared_ptr<sf::RenderWindow> EngineContext::CreateMainWindow(sf::VideoMode mode, const sf::String& title,
@@ -188,7 +146,12 @@ std::shared_ptr<sf::RenderWindow> EngineContext::CreateMainWindow(sf::VideoMode 
 
 void EngineContext::SetFramerateLimit(std::uint32_t maxFps) {
 	_framerateLimit = maxFps;
-	if (_mainWindow) {
-		_mainWindow->setFramerateLimit(maxFps);
-	}
+}
+
+void EngineContext::SetFramerateLimitEnabled(bool enabled) {
+	_isFramerateLimitEnabled = enabled;
+}
+
+bool EngineContext::IsFramerateLimitEnabled() const {
+	return _isFramerateLimitEnabled;
 }

@@ -227,17 +227,17 @@ std::shared_ptr<Scene> PongEnvironment::BuildScene() {
 }
 
 void PongEnvironment::ConfigureGlobalInput() {
-	auto ei = &EngineContext::GetInstance();
-	auto userInput = ei->GetUserInput();
-	auto scene = ei->GetScene();
+	auto engineContext = &EngineContext::GetInstance();
+	auto userInput = engineContext->GetUserInput();
+	auto scene = engineContext->GetScene();
 
-	userInput->AttachEventHandler(createDelegate<sf::Event>([this, ei](sf::Event event) {
+	userInput->AttachEventHandler(createDelegate<sf::Event>([this, engineContext](sf::Event event) {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			if (key->code == sf::Keyboard::Key::R) {
-				ei->SetScene(BuildScene());
+				engineContext->SetScene(BuildScene());
 			}
 			else if (key->code == sf::Keyboard::Key::D) {
-				ei->SetDebugEnabled(!ei->IsDebugEnabled());
+				engineContext->SetDebugEnabled(!engineContext->IsDebugDrawEnabled());
 			}
 			else if (key->code == sf::Keyboard::Key::Escape) {
 				std::exit(EXIT_SUCCESS);

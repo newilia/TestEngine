@@ -31,9 +31,13 @@ namespace Engine {
 		ImGui::SameLine();
 		ImGui::TextDisabled("(sync to display; pair with Max FPS 0)");
 
+		bool isFpsLimitEnabled = engine.IsFramerateLimitEnabled();
+		if (ImGui::Checkbox("FPS limit enabled", &isFpsLimitEnabled)) {
+			engine.SetFramerateLimitEnabled(isFpsLimitEnabled);
+		}
+
 		int fpsLimit = static_cast<int>(engine.GetFramerateLimit());
-		if (ImGui::DragInt("Max FPS (window)", &fpsLimit, 1, 0, 10000)) {
-			fpsLimit = std::max(0, fpsLimit);
+		if (ImGui::DragInt("FPS limit", &fpsLimit, 1, 30, 200)) {
 			engine.SetFramerateLimit(static_cast<std::uint32_t>(fpsLimit));
 		}
 		ImGui::SameLine();
@@ -47,39 +51,14 @@ namespace Engine {
 		ImGui::SameLine();
 		ImGui::TextDisabled("(0 = unlimited: one variable step per frame)");
 
-		ImGui::Text("Frame dt (ImGui / fixed): %.3f s", static_cast<double>(engine.GetFrameDt().asSeconds()));
-		ImGui::Text("Frame dt (raw wall):      %.3f s", static_cast<double>(engine.GetRawFrameDt().asSeconds()));
-		ImGui::Text("Last logic step dt:       %.3f s", static_cast<double>(engine.GetSimDt().asSeconds()));
-		ImGui::Text("Logic ticks last frame:   %u", engine.GetLogicTicksLastFrame());
-
-		{
-			const double rawSec = static_cast<double>(engine.GetRawFrameDt().asSeconds());
-			if (rawSec > 1e-9) {
-				const double fps = 1.0 / rawSec;
-				const double tickHz = static_cast<double>(engine.GetLogicTicksLastFrame()) / rawSec;
-				ImGui::Text("FPS = %.0f | Tick = %.0f (instant)", fps, tickHz);
-			}
-			else {
-				ImGui::Text("FPS = — | Tick = — (instant)");
-			}
+		if (engine.GetFrameDt().asSeconds() > 0.f) {
+			ImGui::Text("Frame dt:      %.3f s (%d fps)", static_cast<double>(engine.GetFrameDt().asSeconds()),
+			            static_cast<int>(1.0 / engine.GetFrameDt().asSeconds()));
 		}
 
-		const bool hadFixed = engine.GetFixedFrameTime().has_value();
-		bool useFixed = hadFixed;
-		if (ImGui::Checkbox("Fixed frame dt", &useFixed)) {
-			if (useFixed) {
-				const float fs = hadFixed ? engine.GetFixedFrameTime()->asSeconds() : (1.f / 60.f);
-				engine.SetFixedFrameTime(sf::seconds(std::max(1e-6f, fs)));
-			}
-			else {
-				engine.ResetFixedFrameTime();
-			}
-		}
-		if (engine.GetFixedFrameTime()) {
-			float fixedSec = engine.GetFixedFrameTime()->asSeconds();
-			if (ImGui::DragFloat("Fixed dt (s)", &fixedSec, 0.00005f, 1e-6f, 0.25f, "%.6f")) {
-				engine.SetFixedFrameTime(sf::seconds(std::max(1e-6f, fixedSec)));
-			}
+		if (engine.GetSimTickDt().asSeconds() > 0.f) {
+			ImGui::Text("Tick dt:       %.3f s (%d fps)", static_cast<double>(engine.GetSimTickDt().asSeconds()),
+			            static_cast<int>(1.0 / engine.GetSimTickDt().asSeconds()));
 		}
 
 		if (const auto ph = engine.GetPhysicsHandler()) {
@@ -97,7 +76,7 @@ namespace Engine {
 		}
 
 		ImGui::SeparatorText("Debug & field");
-		bool debugDraw = engine.IsDebugEnabled();
+		bool debugDraw = engine.IsDebugDrawEnabled();
 		if (ImGui::Checkbox("Debug draw (velocities, labels, ...)", &debugDraw)) {
 			engine.SetDebugEnabled(debugDraw);
 		}
