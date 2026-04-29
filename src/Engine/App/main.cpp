@@ -77,9 +77,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 			}
 			if (const auto* resized = event.getIf<sf::Event::Resized>()) {
 				const auto sz = resized->size;
-				window->setView(sf::View(sf::FloatRect(
-				    {0.f, 0.f},
-				    {static_cast<float>(sz.x), static_cast<float>(sz.y)})));
+				window->setView(
+				    sf::View(sf::FloatRect({0.f, 0.f}, {static_cast<float>(sz.x), static_cast<float>(sz.y)})));
 			}
 			Engine::Editor::GetInstance()->OnEvent(event);
 			if (ShouldForwardEventToGame(event)) {
@@ -94,13 +93,13 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		ImGui::SFML::Update(*window, engine.GetFrameDt());
 
 		auto dt = engine.GetSimDt();
-		if (!engine.IsSimPaused()) {
-			engine.GetPhysicsHandler()->Update(dt);
-		}
 		if (dt.asSeconds() > 0.1f) {
 			dt = sf::seconds(0.1f);
 		}
 		scene->UpdateRec(dt);
+		if (!engine.IsSimPaused()) {
+			engine.GetPhysicsHandler()->Update(dt);
+		}
 
 		Engine::Editor::GetInstance()->Update(engine.GetFrameDt().asSeconds());
 		Engine::Editor::GetInstance()->Draw();

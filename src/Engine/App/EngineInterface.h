@@ -58,6 +58,11 @@ public:
 
 	void SetDebugEnabled(bool enabled) { _isDebugDrawEnabled = enabled; }
 
+	/// World-space force arrows: endpoint = pos + (m * a) * scale (inverse-square field on entities).
+	float GetFieldForceDebugArrowScale() const { return _fieldForceDebugArrowScale; }
+
+	void SetFieldForceDebugArrowScale(float scale) { _fieldForceDebugArrowScale = scale >= 0.f ? scale : 0.f; }
+
 private:
 	shared_ptr<sf::RenderWindow> _mainWindow;
 	shared_ptr<Scene> _scene;
@@ -71,4 +76,5 @@ private:
 	float _simSpeedMultiplier = 1.f;
 	bool _isSimPaused = false;
 	bool _isDebugDrawEnabled = true;
+	float _fieldForceDebugArrowScale = 0.02f;
 };
