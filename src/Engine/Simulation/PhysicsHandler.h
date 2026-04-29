@@ -21,8 +21,6 @@ public:
 	void RegisterBody(shared_ptr<SceneNode> body);
 	void UnregisterBody(SceneNode* body);
 	const std::list<std::weak_ptr<SceneNode>>& GetAllBodies() const;
-	void SetSubstepCount(int count);
-	[[nodiscard]] int GetSubstepCount() const;
 	void SetGravity(const sf::Vector2f v);
 	sf::Vector2f GetGravity() const;
 	void SetGravityEnabled(bool enabled);
@@ -30,7 +28,6 @@ public:
 	[[nodiscard]] std::shared_ptr<IsotropicInverseSquareField> GetIsotropicInverseSquareField() const;
 
 private:
-	void UpdateSubStep(const sf::Time& dt);
 	static bool CheckBboxIntersection(const AbstractBody* body1, const AbstractBody* body2);
 	static std::optional<IntersectionDetails> DetectIntersection(const shared_ptr<SceneNode>& n1,
 	                                                             const shared_ptr<SceneNode>& n2);
@@ -45,7 +42,6 @@ private:
 	FindSegmentCircleIntersectionPoint(const Segment& seg, const sf::Vector2f& circleCenter, float radius);
 	static void ResolveCollision(const IntersectionDetails& collision);
 	std::list<std::weak_ptr<SceneNode>> _bodies;
-	int _subStepsCount = 1;
 	sf::Vector2f _gravity = {0, 400};
 	bool _isGravityEnabled = false;
 	std::shared_ptr<IsotropicInverseSquareField> _inverseSquareField = std::make_shared<IsotropicInverseSquareField>();

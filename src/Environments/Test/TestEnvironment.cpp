@@ -3,7 +3,6 @@
 #include "Engine/App/EngineContext.h"
 #include "Engine/App/UserInput.h"
 #include "Engine/App/Utils.h"
-#include "Engine/Behaviour/FpsCounterBehaviour.h"
 #include "Engine/Behaviour/Physics/BodyPullHandler.h"
 #include "Engine/Behaviour/Physics/CollisionBehaviour.h"
 #include "Engine/Behaviour/Physics/InverseSquareFieldSourceBehaviour.h"
@@ -27,7 +26,6 @@ void TestEnvironment::Setup() {
 		std::exit(EXIT_FAILURE);
 	}
 	Utils::MaximizeWindow(*mainWindow);
-	engine.GetPhysicsHandler()->SetSubstepCount(2);
 	engine.GetPhysicsHandler()->SetGravity({0, 1000});
 	engine.SetScene(BuildScene());
 	ConfigureInput();
@@ -80,7 +78,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	}
 
 	/* circles */
-	constexpr int circlesCount = 20;
+	constexpr int circlesCount = 200;
 	for (int i = 0; i < circlesCount; ++i) {
 		auto node = CreateShapeBodyNode<sf::CircleShape>();
 		node->SetName(fmt::format("circle_{}", i));
@@ -89,7 +87,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		bool isAttractive = true;
 
 		auto* circle = dynamic_cast<sf::CircleShape*>(node->FindShapeCollider()->GetBaseShape());
-		float radius = 50.f;
+		float radius = 20.f;
 		circle->setRadius(radius);
 		// constexpr float pointsCountConstant = 3.f;
 		// auto pointsCount = static_cast<size_t>(pointsCountConstant * (7 + radius / 8));
@@ -122,7 +120,6 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 
 		scene->AddChild(std::move(node));
 	}
-	scene->AddChild(CreateFpsCounterNode());
 	auto bodyPull = CreateBodyPullOverlay();
 	scene->AddChild(std::move(bodyPull.node));
 	EngineContext::GetInstance().SetBodyPullHandler(bodyPull.handler);

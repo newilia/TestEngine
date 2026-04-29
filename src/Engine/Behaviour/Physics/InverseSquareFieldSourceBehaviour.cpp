@@ -58,7 +58,7 @@ void InverseSquareFieldSourceBehaviour::OnUpdate(const sf::Time& dt) {
 	if (const auto ph = EngineContext::GetInstance().GetPhysicsHandler()) {
 		if (auto field = ph->GetIsotropicInverseSquareField()) {
 			sf::Vector2f a = field->EvaluateAcceleration(self);
-			const float sec = EngineContext::GetInstance().GetSimDt().asSeconds();
+			const float sec = dt.asSeconds();
 			if (sec > 0.f) {
 				rb->_velocity += a * sec;
 			}

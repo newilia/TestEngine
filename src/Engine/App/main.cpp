@@ -9,6 +9,8 @@
 #include <imgui-SFML.h>
 #include <imgui.h>
 
+#include <algorithm>
+
 namespace {
 	// Uses ImGui IO flags from the previous frame (after the last ImGui::SFML::Update), which is
 	// the usual pattern for deciding whether application code should see mouse/keyboard events.
@@ -29,6 +31,7 @@ namespace {
 		return true;
 	}
 } // namespace
+
 #ifdef _CONSOLE
 int main() {
 #else
@@ -92,14 +95,38 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 		ImGui::SFML::Update(*window, engine.GetFrameDt());
 
-		auto dt = engine.GetSimDt();
-		if (dt.asSeconds() > 0.1f) {
-			dt = sf::seconds(0.1f);
-		}
-		scene->UpdateRec(dt);
+		engine.BeginLogicFrame();
+
+		const std::uint32_t tickHz = engine.GetTargetTickRateHz();
+		unsigned logicTicks = 0;
+
 		if (!engine.IsSimPaused()) {
-			engine.GetPhysicsHandler()->Update(dt);
+			auto* ph = engine.GetPhysicsHandler().get();
+			if (tickHz == 0) {
+				const float rawSec = engine.GetRawFrameDt().asSeconds();
+				const float dtSec = std::min(0.1f, rawSec * engine.GetSimSpeedMultiplier());
+				const sf::Time dt = sf::seconds(dtSec);
+				engine.SetLastLogicStepDt(dt);
+				scene->UpdateRec(dt);
+				ph->Update(dt);
+				logicTicks = 1;
+			}
+			else {
+				const double stepSec = 1.0 / static_cast<double>(tickHz);
+				constexpr unsigned kMaxSimTicksPerFrame = 16u;
+				while (logicTicks < kMaxSimTicksPerFrame && engine.TryConsumeLogicAccumulator(stepSec)) {
+					const sf::Time dt = sf::seconds(static_cast<float>(stepSec));
+					engine.SetLastLogicStepDt(dt);
+					scene->UpdateRec(dt);
+					ph->Update(dt);
+					++logicTicks;
+				}
+			}
 		}
+		engine.SetLogicTicksLastFrame(logicTicks);
+
+		const sf::Time realFrameDt = engine.GetRawFrameDt();
+		scene->NotifyPresentRec(realFrameDt);
 
 		Engine::Editor::GetInstance().Update(engine.GetFrameDt().asSeconds());
 		Engine::Editor::GetInstance().Draw();

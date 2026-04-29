@@ -4,7 +4,6 @@
 #include "Engine/App/EngineContext.h"
 #include "Engine/App/UserInput.h"
 #include "Engine/App/Utils.h"
-#include "Engine/Behaviour/FpsCounterBehaviour.h"
 #include "Engine/Behaviour/Physics/CollisionBehaviour.h"
 #include "Engine/Behaviour/Physics/IntersectionDetails.h"
 #include "Engine/Behaviour/Physics/OverlappingBehaviour.h"
@@ -42,7 +41,6 @@ void PongEnvironment::Setup() {
 	// sf::VideoMode videoMode(800, 600);
 	engine.CreateMainWindow(videoMode, "Pong", sf::Style::None);
 	engine.GetMainWindow()->setMouseCursorVisible(false);
-	engine.GetPhysicsHandler()->SetSubstepCount(2);
 	engine.GetPhysicsHandler()->SetGravity({0, 1000});
 	engine.SetDebugEnabled(false);
 	// engine.GetMainWindow()->setFramerateLimit(40.f);
@@ -225,7 +223,6 @@ std::shared_ptr<Scene> PongEnvironment::BuildScene() {
 	AddBall(scene.get());
 	AddUserPlatform(scene.get());
 	AddAiPlatform(scene.get());
-	scene->AddChild(CreateFpsCounterNode());
 	return scene;
 }
 
