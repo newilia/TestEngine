@@ -13,3 +13,5 @@ void Behaviour::OnEnabled(bool /*isEnabled*/) {}
 void Behaviour::OnVisible(bool /*isVisible*/) {}
 
 void Behaviour::OnUpdate(const sf::Time& /*dt*/) {}
+
+void Behaviour::OnPresent(const sf::Time& /*realFrameDt*/) {}

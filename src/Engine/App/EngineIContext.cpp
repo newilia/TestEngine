@@ -77,6 +77,27 @@ std::uint32_t EngineContext::GetFramerateLimit() const {
 	return _framerateLimit;
 }
 
+std::uint32_t EngineContext::GetTargetTickRateHz() const {
+	return _targetTickRateHz;
+}
+
+void EngineContext::SetTargetTickRateHz(std::uint32_t hz) {
+	_targetTickRateHz = hz;
+}
+
+unsigned EngineContext::GetLogicTicksLastFrame() const {
+	return _logicTicksLastFrame;
+}
+
+void EngineContext::SetVerticalSyncEnabled(bool enabled) {
+	_verticalSyncEnabled = enabled;
+	ApplyWindowFrameSettings();
+}
+
+bool EngineContext::IsVerticalSyncEnabled() const {
+	return _verticalSyncEnabled;
+}
+
 EngineContext::EngineContext() {
 	_userInput = make_shared<UserInput>();
 	_physicsHandler = make_shared<PhysicsHandler>();
@@ -103,8 +124,7 @@ sf::Time EngineContext::GetSimDt() const {
 	if (_isSimPaused) {
 		return sf::Time();
 	}
-	auto dt = GetFrameDt() * _simSpeedMultiplier;
-	return dt;
+	return _lastLogicStepDt;
 }
 
 sf::Time EngineContext::GetFrameDt(bool ignoreFixed) const {
@@ -114,15 +134,55 @@ sf::Time EngineContext::GetFrameDt(bool ignoreFixed) const {
 	return _frameTime;
 }
 
+sf::Time EngineContext::GetRawFrameDt() const {
+	return _frameTime;
+}
+
 void EngineContext::OnStartFrame() {
 	_frameTime = _frameClock.getElapsedTime();
 	_frameClock.restart();
 }
 
+void EngineContext::BeginLogicFrame() {
+	_lastLogicStepDt = sf::Time();
+	_logicTicksLastFrame = 0;
+	if (!_isSimPaused) {
+		_logicAccumulatorSec +=
+		    static_cast<double>(GetRawFrameDt().asSeconds()) * static_cast<double>(_simSpeedMultiplier);
+	}
+}
+
+bool EngineContext::TryConsumeLogicAccumulator(double stepSeconds) {
+	if (stepSeconds <= 0.0) {
+		return false;
+	}
+	if (_logicAccumulatorSec + 1e-12 >= stepSeconds) {
+		_logicAccumulatorSec -= stepSeconds;
+		return true;
+	}
+	return false;
+}
+
+void EngineContext::SetLastLogicStepDt(const sf::Time& dt) {
+	_lastLogicStepDt = dt;
+}
+
+void EngineContext::SetLogicTicksLastFrame(unsigned n) {
+	_logicTicksLastFrame = n;
+}
+
+void EngineContext::ApplyWindowFrameSettings() {
+	if (!_mainWindow) {
+		return;
+	}
+	_mainWindow->setVerticalSyncEnabled(_verticalSyncEnabled);
+	_mainWindow->setFramerateLimit(_framerateLimit);
+}
+
 std::shared_ptr<sf::RenderWindow> EngineContext::CreateMainWindow(sf::VideoMode mode, const sf::String& title,
                                                                   std::uint32_t style, sf::State state) {
 	_mainWindow = std::make_shared<sf::RenderWindow>(mode, title, style, state);
-	_mainWindow->setFramerateLimit(_framerateLimit);
+	ApplyWindowFrameSettings();
 	return _mainWindow;
 }
 

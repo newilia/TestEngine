@@ -135,6 +135,18 @@ void SceneNode::UpdateRec(const sf::Time& dt) {
 	}
 }
 
+void SceneNode::NotifyPresentRec(const sf::Time& realFrameDt) {
+	if (!_isEnabled || !_isVisible) {
+		return;
+	}
+	for (auto& b : _behaviours) {
+		b->OnPresent(realFrameDt);
+	}
+	for (auto& child : _children) {
+		child->NotifyPresentRec(realFrameDt);
+	}
+}
+
 void SceneNode::RemoveFromParent() {
 	if (auto parent = GetParent()) {
 		parent->RemoveChild(this);
@@ -191,7 +203,7 @@ shared_ptr<SceneNode> SceneNode::FindChild(const std::string& id, bool recursive
 	return nullptr;
 }
 
-bool SceneNode::HasChild(std::shared_ptr<SceneNode>& child) {
+bool SceneNode::HasChild(const std::shared_ptr<SceneNode>& child) {
 	auto it = std::find(_children.begin(), _children.end(), child);
 	return it != _children.end();
 }

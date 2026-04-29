@@ -34,6 +34,9 @@ public:
 	void Update(const sf::Time& dt) override; // TODO remove
 	void UpdateRec(const sf::Time& dt);       // TODO rename to Update()
 
+	/// After simulation ticks, once per frame before draw (HUD / frame-synced behaviours).
+	void NotifyPresentRec(const sf::Time& realFrameDt);
+
 	/// Called once per node when this subtree enters the active scene (`NotifyLifecycleInitRecursive`).
 	/// Graph changes (`AddChild`) do not call this; use `NotifyLifecycleInitRecursive` after the subtree is ready.
 	virtual void OnInit();
@@ -50,7 +53,7 @@ public:
 	void AddChild(const std::shared_ptr<SceneNode>& child);
 	void RemoveChild(SceneNode* child);
 	shared_ptr<SceneNode> FindChild(const std::string& id, bool recursively);
-	bool HasChild(std::shared_ptr<SceneNode>& child);
+	bool HasChild(const std::shared_ptr<SceneNode>& child);
 	std::vector<shared_ptr<SceneNode>> FindChildren(const std::string& id, bool recursively);
 	void SetVisual(shared_ptr<Visual>&& visual);
 	void SetSortingStrategy(const shared_ptr<SortingStrategy>& sorting);
@@ -139,6 +142,7 @@ private:
 	[[nodiscard]] bool IsInActiveScene() const;
 	[[nodiscard]] shared_ptr<SceneNode> GetSubtreeRoot() const;
 
+private:
 	/// @property(name="Name")
 	std::string _name;
 	weak_ptr<SceneNode> _parent;
@@ -147,6 +151,8 @@ private:
 	bool _isEnabled = true;
 	/// @property(name="Visible", setter=SetVisible)
 	bool _isVisible = true;
+
+private:
 	shared_ptr<Visual> _visual;
 	shared_ptr<SortingStrategy> _sortingStrategy;
 	std::vector<shared_ptr<Behaviour>> _behaviours;

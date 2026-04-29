@@ -20,23 +20,6 @@
 
 void PhysicsHandler::Update(const sf::Time& dt) {
 	Utils::RemoveExpiredPointers(_bodies);
-	for (int i = 0; i < _subStepsCount; ++i) {
-		UpdateSubStep(dt / static_cast<float>(_subStepsCount));
-	}
-}
-
-void PhysicsHandler::RegisterBody(shared_ptr<SceneNode> body) {
-	_bodies.emplace_back(body);
-}
-
-void PhysicsHandler::UnregisterBody(SceneNode* body) {
-	_bodies.remove_if([body](const std::weak_ptr<SceneNode>& w) {
-		auto locked = w.lock();
-		return !locked || locked.get() == body;
-	});
-}
-
-void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 	// motion step
 	for (auto& wBody : _bodies) {
 		auto body = wBody.lock();
@@ -126,24 +109,17 @@ void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 			}
 		}
 	}
+}
 
-	if (EngineContext::GetInstance().IsDebugEnabled()) {
-		// float systemEnergy = 0.f;
-		// sf::Vector2f systemImpulse;
-		// for (auto& wBody : _bodies) {
-		//	if (auto body = wBody.lock()) {
-		//		if (body->getPhysicalComponent()->isImmovable()) {
-		//			continue;
-		//		}
-		//		auto v = body->getPhysicalComponent()->_velocity;
-		//		auto v_s = Utils::Length(v);
-		//		auto m = body->getPhysicalComponent()->_mass;
-		//		systemImpulse += v * m;
-		//		systemEnergy += m * v_s * v_s;
-		//	}
-		// }
-		// fmt::println("E = {}, P = {}", systemEnergy, Utils::ToString(systemImpulse));
-	}
+void PhysicsHandler::RegisterBody(shared_ptr<SceneNode> body) {
+	_bodies.emplace_back(body);
+}
+
+void PhysicsHandler::UnregisterBody(SceneNode* body) {
+	_bodies.remove_if([body](const std::weak_ptr<SceneNode>& w) {
+		auto locked = w.lock();
+		return !locked || locked.get() == body;
+	});
 }
 
 bool PhysicsHandler::CheckBboxIntersection(const AbstractBody* body1, const AbstractBody* body2) {
@@ -605,14 +581,6 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 
 const std::list<std::weak_ptr<SceneNode>>& PhysicsHandler::GetAllBodies() const {
 	return _bodies;
-}
-
-void PhysicsHandler::SetSubstepCount(int count) {
-	_subStepsCount = count;
-}
-
-int PhysicsHandler::GetSubstepCount() const {
-	return _subStepsCount;
 }
 
 void PhysicsHandler::SetGravity(const sf::Vector2f v) {

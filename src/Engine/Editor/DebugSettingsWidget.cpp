@@ -24,17 +24,45 @@ namespace Engine {
 		}
 
 		ImGui::SeparatorText("Timing");
+		bool vsync = engine.IsVerticalSyncEnabled();
+		if (ImGui::Checkbox("VSync", &vsync)) {
+			engine.SetVerticalSyncEnabled(vsync);
+		}
+		ImGui::SameLine();
+		ImGui::TextDisabled("(sync to display; pair with Max FPS 0)");
+
 		int fpsLimit = static_cast<int>(engine.GetFramerateLimit());
 		if (ImGui::DragInt("Max FPS (window)", &fpsLimit, 1, 0, 10000)) {
 			fpsLimit = std::max(0, fpsLimit);
 			engine.SetFramerateLimit(static_cast<std::uint32_t>(fpsLimit));
 		}
 		ImGui::SameLine();
-		ImGui::TextDisabled("(0 = unlimited)");
+		ImGui::TextDisabled("(0 = off; meaningful when VSync is off)");
 
-		ImGui::Text("Frame dt: %.5f s", static_cast<double>(engine.GetFrameDt().asSeconds()));
-		ImGui::Text("Sim dt:   %.5f s", static_cast<double>(engine.GetSimDt().asSeconds()));
-		ImGui::Text("Frame dt (raw): %.5f s", static_cast<double>(engine.GetFrameDt(true).asSeconds()));
+		int tickHz = static_cast<int>(engine.GetTargetTickRateHz());
+		if (ImGui::DragInt("Logic tick rate (Hz)", &tickHz, 10, 0, 10000)) {
+			tickHz = std::max(0, tickHz);
+			engine.SetTargetTickRateHz(static_cast<std::uint32_t>(tickHz));
+		}
+		ImGui::SameLine();
+		ImGui::TextDisabled("(0 = unlimited: one variable step per frame)");
+
+		ImGui::Text("Frame dt (ImGui / fixed): %.3f s", static_cast<double>(engine.GetFrameDt().asSeconds()));
+		ImGui::Text("Frame dt (raw wall):      %.3f s", static_cast<double>(engine.GetRawFrameDt().asSeconds()));
+		ImGui::Text("Last logic step dt:       %.3f s", static_cast<double>(engine.GetSimDt().asSeconds()));
+		ImGui::Text("Logic ticks last frame:   %u", engine.GetLogicTicksLastFrame());
+
+		{
+			const double rawSec = static_cast<double>(engine.GetRawFrameDt().asSeconds());
+			if (rawSec > 1e-9) {
+				const double fps = 1.0 / rawSec;
+				const double tickHz = static_cast<double>(engine.GetLogicTicksLastFrame()) / rawSec;
+				ImGui::Text("FPS = %.0f | Tick = %.0f (instant)", fps, tickHz);
+			}
+			else {
+				ImGui::Text("FPS = — | Tick = — (instant)");
+			}
+		}
 
 		const bool hadFixed = engine.GetFixedFrameTime().has_value();
 		bool useFixed = hadFixed;
@@ -64,10 +92,6 @@ namespace Engine {
 			float gxy[2] = {g.x, g.y};
 			if (ImGui::DragFloat2("Gravity (px/s^2)", gxy, 10.f, -50000.f, 50000.f, "%.1f")) {
 				ph->SetGravity({gxy[0], gxy[1]});
-			}
-			int subs = ph->GetSubstepCount();
-			if (ImGui::SliderInt("Physics substeps / frame", &subs, 1, 16)) {
-				ph->SetSubstepCount(std::max(1, subs));
 			}
 			ImGui::Text("Registered bodies: %d", static_cast<int>(ph->GetAllBodies().size()));
 		}

@@ -21,6 +21,8 @@ class SceneNode;
 /// - **OnEnabled** / **OnVisible**: invoked when this node's local `SetEnabled` / `SetVisible` changes the
 ///   stored flag (not when a parent disables the subtree). Handlers should tolerate repeated calls with the
 ///   same value if the editor writes the same state.
+/// - **OnPresent**: once per displayed frame after all simulation ticks, before scene draw; use for HUD that
+///   must follow render rate rather than logic tick count.
 class Behaviour : public EntityOnNode
 {
 	friend class SceneNode;
@@ -35,6 +37,7 @@ public:
 	virtual void OnEnabled(bool isEnabled);
 	virtual void OnVisible(bool isVisible);
 	virtual void OnUpdate(const sf::Time& dt);
+	virtual void OnPresent(const sf::Time& realFrameDt);
 
 private:
 	bool _wasInited = false;

@@ -21,13 +21,14 @@ public:
 	explicit FpsCounterBehaviour(std::shared_ptr<sf::Text> text);
 	void OnInit() override;
 	void OnUpdate(const sf::Time& dt) override;
+	void OnPresent(const sf::Time& realFrameDt) override;
 	void OnDeinit() override;
 
 private:
 	/// @property(readonly=true, name="FPS", tooltip="Smoothed frames per second (read-only).")
 	float _fps = 0.f;
 	/// @property(name="Filter", minValue=0.0, maxValue=1.0, step=0.001, dragSpeed=0.001, tooltip="Exponential smoothing
-	/// factor for FPS display.")
+	/// for FPS / tick readout.")
 	float _smoothFactor = 0.98f;
 	/// @property(name="Demo offset (px)")
 	sf::Vector2f _demoOffset{0.f, 0.f};
@@ -35,6 +36,8 @@ private:
 	sf::Vector3f _demoVec3{0.f, 0.f, 0.f};
 	/// @property(name="Text color")
 	sf::Color _textColor{255, 255, 255, 255};
+
+	float _tickHz = 0.f;
 	std::shared_ptr<sf::Text> _text;
 	bool _ownsDisplayVisual = false;
 };

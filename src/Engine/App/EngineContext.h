@@ -28,9 +28,23 @@ public:
 	void SetSimSpeedMultiplier(float val);
 	bool IsSimPaused() const;
 	void SetSimPaused(bool paused);
+	/// Last per-tick simulation step (fixed `1/targetHz` or variable when unlimited). Zero if no tick this frame.
 	sf::Time GetSimDt() const;
 	sf::Time GetFrameDt(bool ignoreFixed = false) const;
 	void OnStartFrame();
+
+	/// Wall-clock frame delta (ignores debug fixed frame dt). Use for logic accumulator and HUD FPS.
+	sf::Time GetRawFrameDt() const;
+
+	/// Target logic update rate in Hz. 0 = one variable step per frame (`GetRawFrameDt` * speed, capped).
+	[[nodiscard]] std::uint32_t GetTargetTickRateHz() const;
+	void SetTargetTickRateHz(std::uint32_t hz);
+
+	/// Logic ticks executed in the current frame (after `RunSimulationTicksForFrame` / main loop sim block).
+	[[nodiscard]] unsigned GetLogicTicksLastFrame() const;
+
+	void SetVerticalSyncEnabled(bool enabled);
+	[[nodiscard]] bool IsVerticalSyncEnabled() const;
 	std::shared_ptr<sf::RenderWindow> CreateMainWindow(sf::VideoMode mode, const sf::String& title,
 	                                                   std::uint32_t style = sf::Style::Default,
 	                                                   sf::State state = sf::State::Windowed);
@@ -51,7 +65,20 @@ public:
 
 	void SetFramerateLimit(std::uint32_t maxFps);
 
+	/// Call once per frame before stepping simulation: advances accumulator when not paused; clears last-step dt.
+	void BeginLogicFrame();
+
+	/// Try to consume one fixed logic step of `stepSeconds` from the accumulator. Returns false if not enough time.
+	bool TryConsumeLogicAccumulator(double stepSeconds);
+
+	/// Sets the simulation step dt for behaviours / `GetSimDt` until the next tick (main loop only).
+	void SetLastLogicStepDt(const sf::Time& dt);
+
+	void SetLogicTicksLastFrame(unsigned n);
+
 private:
+	void ApplyWindowFrameSettings();
+
 	shared_ptr<sf::RenderWindow> _mainWindow;
 	shared_ptr<Scene> _scene;
 	shared_ptr<UserInput> _userInput;
@@ -63,7 +90,12 @@ private:
 	std::optional<sf::Time> _fixedFrameTime;
 	float _simSpeedMultiplier = 1.f;
 	bool _isSimPaused = false;
-	bool _isDebugDrawEnabled = true;
+	bool _isDebugDrawEnabled = false;
 	float _fieldForceDebugArrowScale = 0.02f;
-	std::uint32_t _framerateLimit = 1000;
+	std::uint32_t _framerateLimit = 0;
+	bool _verticalSyncEnabled = true;
+	std::uint32_t _targetTickRateHz = 200;
+	double _logicAccumulatorSec = 0.;
+	sf::Time _lastLogicStepDt;
+	unsigned _logicTicksLastFrame = 0;
 };
