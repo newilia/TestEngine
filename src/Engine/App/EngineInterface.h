@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 
 class BodyPullHandler;
 
@@ -54,6 +55,8 @@ public:
 
 	void ResetFixedFrameTime() { _fixedFrameTime.reset(); }
 
+	[[nodiscard]] std::optional<sf::Time> GetFixedFrameTime() const { return _fixedFrameTime; }
+
 	bool IsDebugEnabled() const { return _isDebugDrawEnabled; }
 
 	void SetDebugEnabled(bool enabled) { _isDebugDrawEnabled = enabled; }
@@ -62,6 +65,11 @@ public:
 	float GetFieldForceDebugArrowScale() const { return _fieldForceDebugArrowScale; }
 
 	void SetFieldForceDebugArrowScale(float scale) { _fieldForceDebugArrowScale = scale >= 0.f ? scale : 0.f; }
+
+	/// SFML window cap (FPS). 0 disables limiting (`setFramerateLimit`).
+	[[nodiscard]] std::uint32_t GetFramerateLimit() const { return _framerateLimit; }
+
+	void SetFramerateLimit(std::uint32_t maxFps);
 
 private:
 	shared_ptr<sf::RenderWindow> _mainWindow;
@@ -77,4 +85,5 @@ private:
 	bool _isSimPaused = false;
 	bool _isDebugDrawEnabled = true;
 	float _fieldForceDebugArrowScale = 0.02f;
+	std::uint32_t _framerateLimit = 1000;
 };

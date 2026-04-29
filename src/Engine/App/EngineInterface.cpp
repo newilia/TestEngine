@@ -47,5 +47,13 @@ void EngineContext::OnStartFrame() {
 std::shared_ptr<sf::RenderWindow> EngineContext::CreateMainWindow(sf::VideoMode mode, const sf::String& title,
                                                                   std::uint32_t style, sf::State state) {
 	_mainWindow = std::make_shared<sf::RenderWindow>(mode, title, style, state);
+	_mainWindow->setFramerateLimit(_framerateLimit);
 	return _mainWindow;
+}
+
+void EngineContext::SetFramerateLimit(std::uint32_t maxFps) {
+	_framerateLimit = maxFps;
+	if (_mainWindow) {
+		_mainWindow->setFramerateLimit(maxFps);
+	}
 }
