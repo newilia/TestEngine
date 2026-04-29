@@ -1,7 +1,7 @@
 #include "PongEnvironment.h"
 
 #include "AiPlatformController.h"
-#include "Engine/App/EngineInterface.h"
+#include "Engine/App/EngineContext.h"
 #include "Engine/App/UserInput.h"
 #include "Engine/App/Utils.h"
 #include "Engine/Behaviour/FpsCounterBehaviour.h"
@@ -32,12 +32,12 @@ static weak_ptr<PongBall> sBall;
 
 namespace {
 	sf::Vector2f GetScreenSize() {
-		return sf::Vector2f(EngineContext::Instance().GetMainWindow()->getSize());
+		return sf::Vector2f(EngineContext::GetInstance().GetMainWindow()->getSize());
 	}
 } // namespace
 
 void PongEnvironment::Setup() {
-	EngineContext& engine = EngineContext::Instance();
+	EngineContext& engine = EngineContext::GetInstance();
 	auto videoMode = sf::VideoMode::getFullscreenModes()[0];
 	// sf::VideoMode videoMode(800, 600);
 	engine.CreateMainWindow(videoMode, "Pong", sf::Style::None);
@@ -181,7 +181,7 @@ void PongEnvironment::AddUserPlatform(Scene* scene) {
 	platform->Init();
 	scene->AddChild(platform->GetNode());
 
-	EngineContext::Instance().GetUserInput()->AttachEventHandler(
+	EngineContext::GetInstance().GetUserInput()->AttachEventHandler(
 	    createDelegate<PongPlatform, sf::Event>(platform, [platform = std::weak_ptr(platform)](sf::Event event) {
 		    if (auto c = dynamic_pointer_cast<UserPlatformController>(platform.lock()->GetController())) {
 			    c->HandleEvent(event);
@@ -230,7 +230,7 @@ std::shared_ptr<Scene> PongEnvironment::BuildScene() {
 }
 
 void PongEnvironment::ConfigureGlobalInput() {
-	auto ei = &EngineContext::Instance();
+	auto ei = &EngineContext::GetInstance();
 	auto userInput = ei->GetUserInput();
 	auto scene = ei->GetScene();
 
@@ -250,5 +250,5 @@ void PongEnvironment::ConfigureGlobalInput() {
 }
 
 void PongEnvironment::OnLose() {
-	EngineContext::Instance().SetScene(BuildScene());
+	EngineContext::GetInstance().SetScene(BuildScene());
 }

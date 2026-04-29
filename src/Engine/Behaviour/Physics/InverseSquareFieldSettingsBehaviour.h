@@ -10,7 +10,6 @@ class InverseSquareFieldSettingsBehaviour : public Behaviour
 public:
 	void OnInit() override;
 	void OnUpdate(const sf::Time& dt) override;
-
 	/// @property(name="Field strength scale", minValue=0.0, maxValue=1000000.0, step=1, dragSpeed=2, tooltip="Global
 	/// scalar for inverse-square central field in world space.")
 	float _strengthScale = 50.f;

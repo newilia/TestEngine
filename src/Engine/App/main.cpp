@@ -1,4 +1,4 @@
-#include "Engine/App/EngineInterface.h"
+#include "Engine/App/EngineContext.h"
 #include "Engine/App/UserInput.h"
 #include "Engine/Editor/Editor.h"
 #include "Environments/Pong/PongEnvironment.h"
@@ -42,7 +42,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	// PongEnvironment env;
 	env.Setup();
 
-	EngineContext& engine = EngineContext::Instance();
+	EngineContext& engine = EngineContext::GetInstance();
 	bool imguiInitialized = false;
 	while (true) {
 		auto window = engine.GetMainWindow();
@@ -80,7 +80,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 				window->setView(
 				    sf::View(sf::FloatRect({0.f, 0.f}, {static_cast<float>(sz.x), static_cast<float>(sz.y)})));
 			}
-			Engine::Editor::GetInstance()->OnEvent(event);
+			Engine::Editor::GetInstance().OnEvent(event);
 			if (ShouldForwardEventToGame(event)) {
 				engine.GetUserInput()->HandleEvent(event);
 			}
@@ -101,8 +101,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 			engine.GetPhysicsHandler()->Update(dt);
 		}
 
-		Engine::Editor::GetInstance()->Update(engine.GetFrameDt().asSeconds());
-		Engine::Editor::GetInstance()->Draw();
+		Engine::Editor::GetInstance().Update(engine.GetFrameDt().asSeconds());
+		Engine::Editor::GetInstance().Draw();
 
 		window->draw(*scene);
 		ImGui::SFML::Render(*window);

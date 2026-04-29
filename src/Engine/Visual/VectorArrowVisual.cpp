@@ -4,6 +4,29 @@
 
 #include <SFML/Graphics/RenderTarget.hpp>
 
+VectorArrow::VectorArrow() = default;
+
+VectorArrow::VectorArrow(const sf::Vector2f& start, const sf::Vector2f& end, const sf::Color& color)
+    : _start(start), _end(end), _color(color) {}
+
+VectorArrow::~VectorArrow() = default;
+
+void VectorArrow::SetStartPos(const sf::Vector2f& start) {
+	_start = start;
+}
+
+void VectorArrow::SetEndPos(const sf::Vector2f& end) {
+	_end = end;
+}
+
+void VectorArrow::SetColor(const sf::Color& color) {
+	_color = color;
+}
+
+void VectorArrow::EnableArrowHead(bool enable) {
+	_arrowHeadEnabled = enable;
+}
+
 void VectorArrow::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	if (_start == _end) {
 		return;

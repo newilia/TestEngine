@@ -10,7 +10,6 @@ class AbstractBody
 {
 public:
 	virtual ~AbstractBody() = default;
-
 	virtual sf::FloatRect GetBbox() const = 0;
 	virtual size_t GetPointCount() const = 0;
 	virtual sf::Vector2f GetPointGlobal(std::size_t index) const = 0;

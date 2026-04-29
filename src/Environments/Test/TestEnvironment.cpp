@@ -1,6 +1,6 @@
 #include "TestEnvironment.h"
 
-#include "Engine/App/EngineInterface.h"
+#include "Engine/App/EngineContext.h"
 #include "Engine/App/UserInput.h"
 #include "Engine/App/Utils.h"
 #include "Engine/Behaviour/FpsCounterBehaviour.h"
@@ -21,7 +21,7 @@ using std::make_shared;
 using std::shared_ptr;
 
 void TestEnvironment::Setup() {
-	EngineContext& engine = EngineContext::Instance();
+	EngineContext& engine = EngineContext::GetInstance();
 	const auto mainWindow = engine.CreateMainWindow(sf::VideoMode({1920, 1080}), "Test scene");
 	if (!mainWindow) {
 		std::exit(EXIT_FAILURE);
@@ -35,7 +35,7 @@ void TestEnvironment::Setup() {
 
 std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	auto scene = make_shared<Scene>();
-	auto viewSize = EngineContext::Instance().GetMainWindow()->getView().getSize();
+	auto viewSize = EngineContext::GetInstance().GetMainWindow()->getView().getSize();
 	float commonRestitution = 0.f;
 	float commonFriction = 500.f;
 	bool isAttractive = true;
@@ -125,12 +125,12 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	scene->AddChild(CreateFpsCounterNode());
 	auto bodyPull = CreateBodyPullOverlay();
 	scene->AddChild(std::move(bodyPull.node));
-	EngineContext::Instance().SetBodyPullHandler(bodyPull.handler);
+	EngineContext::GetInstance().SetBodyPullHandler(bodyPull.handler);
 	return scene;
 }
 
 void TestEnvironment::ConfigureInput() {
-	auto ei = &EngineContext::Instance();
+	auto ei = &EngineContext::GetInstance();
 	auto userInput = ei->GetUserInput();
 
 	userInput->AttachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {

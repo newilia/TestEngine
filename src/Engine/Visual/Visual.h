@@ -15,15 +15,11 @@ public:
 
 	virtual bool HitTest(sf::Vector2f windowPosition) const = 0;
 
-	virtual void OnTap(sf::Vector2f windowPosition) { (void)windowPosition; }
-
-	void SetTapHandlingEnabled(bool enabled) { _tapHandlingEnabled = enabled; }
-
-	bool IsTapHandlingEnabled() const { return _tapHandlingEnabled; }
-
-	void SetTransparentToTap(bool transparent) { _transparentToTap = transparent; }
-
-	bool IsTransparentToTap() const { return _transparentToTap; }
+	virtual void OnTap(sf::Vector2f windowPosition);
+	void SetTapHandlingEnabled(bool enabled);
+	bool IsTapHandlingEnabled() const;
+	void SetTransparentToTap(bool transparent);
+	bool IsTransparentToTap() const;
 
 private:
 	bool _tapHandlingEnabled = false;

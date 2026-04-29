@@ -19,6 +19,5 @@ private:
 	// void onMouseMove(const sf::Event::MouseMoveEvent& event);
 	// void onKeyPress(const sf::Event::KeyEvent& key);
 	// void onKeyRelease(const sf::Event::KeyEvent& key);
-
 	std::set<std::unique_ptr<IDelegate<sf::Event>>> _eventHandlers;
 };

@@ -7,7 +7,6 @@ class ShapeVisualBehaviour : public Behaviour
 {
 public:
 	void OnInit() override;
-
 	void OnDeinit() override;
 
 private:

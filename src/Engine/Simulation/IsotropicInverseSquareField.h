@@ -22,17 +22,14 @@ public:
 	[[nodiscard]] sf::Vector2f
 	EvaluateAcceleration(const shared_ptr<InverseSquareFieldSourceBehaviour>& receiver) const;
 
-	[[nodiscard]] float GetGlobalStrengthScale() const { return _globalStrengthScale; }
+	[[nodiscard]] float GetGlobalStrengthScale() const;
+	void SetGlobalStrengthScale(float v);
 
-	void SetGlobalStrengthScale(float v) { _globalStrengthScale = v; }
+	[[nodiscard]] bool GetUseMassCoupling() const;
+	void SetUseMassCoupling(bool v);
 
-	[[nodiscard]] bool GetUseMassCoupling() const { return _useMassCoupling; }
-
-	void SetUseMassCoupling(bool v) { _useMassCoupling = v; }
-
-	[[nodiscard]] float GetSofteningEps() const { return _softeningEps; }
-
-	void SetSofteningEps(float e) { _softeningEps = e; }
+	[[nodiscard]] float GetSofteningEps() const;
+	void SetSofteningEps(float e);
 
 private:
 	mutable std::list<std::weak_ptr<InverseSquareFieldSourceBehaviour>> _sources;

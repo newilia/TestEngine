@@ -1,13 +1,13 @@
 #include "ShapeColliderBehaviourBase.h"
 
-#include "Engine/App/EngineInterface.h"
+#include "Engine/App/EngineContext.h"
 #include "Engine/Simulation/PhysicsHandler.h"
 #include "ShapeColliderBehaviourBase_gen.hpp"
 
 ShapeColliderBehaviourBase::~ShapeColliderBehaviourBase() {
 	if (_registered) {
 		if (auto n = GetNode()) {
-			if (auto ph = EngineContext::Instance().GetPhysicsHandler()) {
+			if (auto ph = EngineContext::GetInstance().GetPhysicsHandler()) {
 				ph->UnregisterBody(n.get());
 			}
 		}
@@ -20,7 +20,7 @@ void ShapeColliderBehaviourBase::OnInit() {
 		return;
 	}
 	if (auto n = GetNode()) {
-		if (auto ph = EngineContext::Instance().GetPhysicsHandler()) {
+		if (auto ph = EngineContext::GetInstance().GetPhysicsHandler()) {
 			ph->RegisterBody(n);
 			_registered = true;
 		}
@@ -32,7 +32,7 @@ void ShapeColliderBehaviourBase::OnDeinit() {
 		return;
 	}
 	if (auto n = GetNode()) {
-		if (auto ph = EngineContext::Instance().GetPhysicsHandler()) {
+		if (auto ph = EngineContext::GetInstance().GetPhysicsHandler()) {
 			ph->UnregisterBody(n.get());
 		}
 	}

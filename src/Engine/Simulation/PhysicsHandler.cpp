@@ -1,6 +1,6 @@
 #include "PhysicsHandler.h"
 
-#include "Engine/App/EngineInterface.h"
+#include "Engine/App/EngineContext.h"
 #include "Engine/App/Utils.h"
 #include "Engine/Behaviour/Physics/AbstractBody.h"
 #include "Engine/Behaviour/Physics/CollisionBehaviour.h"
@@ -127,7 +127,7 @@ void PhysicsHandler::UpdateSubStep(const sf::Time& dt) {
 		}
 	}
 
-	if (EngineContext::Instance().IsDebugEnabled()) {
+	if (EngineContext::GetInstance().IsDebugEnabled()) {
 		// float systemEnergy = 0.f;
 		// sf::Vector2f systemImpulse;
 		// for (auto& wBody : _bodies) {
@@ -306,8 +306,8 @@ std::optional<IntersectionDetails> PhysicsHandler::DetectCircleCircleIntersectio
 		result.intersection.end.x = x0 - b * mult;
 		result.intersection.end.y = y0 + a * mult;
 	}
-	if (EngineContext::Instance().IsDebugEnabled()) {
-		if (auto wnd = EngineContext::Instance().GetMainWindow()) {
+	if (EngineContext::GetInstance().IsDebugEnabled()) {
+		if (auto wnd = EngineContext::GetInstance().GetMainWindow()) {
 			wnd->draw(CreateCircle(result.intersection.start, 2, sf::Color::White));
 			wnd->draw(CreateCircle(result.intersection.end, 2, sf::Color::White));
 		}
@@ -459,8 +459,8 @@ PhysicsHandler::FindSegmentCircleIntersectionPoint(const Segment& seg, const sf:
 		*result.p2 += circleCenter;
 	}
 
-	if (EngineContext::Instance().IsDebugEnabled()) {
-		if (auto window = EngineContext::Instance().GetMainWindow()) {
+	if (EngineContext::GetInstance().IsDebugEnabled()) {
+		if (auto window = EngineContext::GetInstance().GetMainWindow()) {
 			window->draw(CreateCircle(result.p1, 2.f, sf::Color::White));
 			if (result.p2) {
 				window->draw(CreateCircle(*result.p2, 2.f, sf::Color::White));
@@ -556,8 +556,8 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 		auto isNan = Utils::IsNan(b1RigidBody->_velocity) || Utils::IsNan(b2RigidBody->_velocity);
 		assert(!isNan);
 
-		if (EngineContext::Instance().IsDebugEnabled()) {
-			if (auto window = EngineContext::Instance().GetMainWindow()) {
+		if (EngineContext::GetInstance().IsDebugEnabled()) {
+			if (auto window = EngineContext::GetInstance().GetMainWindow()) {
 				{
 					VectorArrow force1(body1->GetPosGlobal(), body1->GetPosGlobal() + dv1);
 					if (auto* collider = body1->FindShapeCollider()) {
@@ -584,8 +584,8 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 		}
 	}
 
-	if (EngineContext::Instance().IsDebugEnabled()) {
-		if (auto window = EngineContext::Instance().GetMainWindow()) {
+	if (EngineContext::GetInstance().IsDebugEnabled()) {
+		if (auto window = EngineContext::GetInstance().GetMainWindow()) {
 			const sf::Vector2f middlePoint((collision.intersection.start + collision.intersection.end) * 0.5f);
 
 			{ // collision segment
@@ -601,4 +601,36 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 			window->draw(Utils::CreateCircle(middlePoint, 2, sf::Color::White));
 		}
 	}
+}
+
+const std::list<std::weak_ptr<SceneNode>>& PhysicsHandler::GetAllBodies() const {
+	return _bodies;
+}
+
+void PhysicsHandler::SetSubstepCount(int count) {
+	_subStepsCount = count;
+}
+
+int PhysicsHandler::GetSubstepCount() const {
+	return _subStepsCount;
+}
+
+void PhysicsHandler::SetGravity(const sf::Vector2f v) {
+	_gravity = v;
+}
+
+sf::Vector2f PhysicsHandler::GetGravity() const {
+	return _gravity;
+}
+
+void PhysicsHandler::SetGravityEnabled(bool enabled) {
+	_isGravityEnabled = enabled;
+}
+
+bool PhysicsHandler::IsGravityEnabled() const {
+	return _isGravityEnabled;
+}
+
+std::shared_ptr<IsotropicInverseSquareField> PhysicsHandler::GetIsotropicInverseSquareField() const {
+	return _inverseSquareField;
 }

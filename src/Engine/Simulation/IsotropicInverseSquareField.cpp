@@ -84,3 +84,27 @@ IsotropicInverseSquareField::EvaluateAcceleration(const shared_ptr<InverseSquare
 	}
 	return acc;
 }
+
+float IsotropicInverseSquareField::GetGlobalStrengthScale() const {
+	return _globalStrengthScale;
+}
+
+void IsotropicInverseSquareField::SetGlobalStrengthScale(float v) {
+	_globalStrengthScale = v;
+}
+
+bool IsotropicInverseSquareField::GetUseMassCoupling() const {
+	return _useMassCoupling;
+}
+
+void IsotropicInverseSquareField::SetUseMassCoupling(bool v) {
+	_useMassCoupling = v;
+}
+
+float IsotropicInverseSquareField::GetSofteningEps() const {
+	return _softeningEps;
+}
+
+void IsotropicInverseSquareField::SetSofteningEps(float e) {
+	_softeningEps = e;
+}

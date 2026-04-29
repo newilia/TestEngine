@@ -4,6 +4,14 @@
 
 AiPlatformController::AiPlatformController(PongPlatform* platform) : UserPlatformController(platform) {}
 
+void AiPlatformController::SetReactionDelay(const sf::Time& delay) {
+	_reactionDelay = delay;
+}
+
+void AiPlatformController::SetObservePeriod(const sf::Time& period) {
+	_observePeriod = period;
+}
+
 void AiPlatformController::BeginObserve(const std::weak_ptr<PongPlatform>& opponentPlatform,
                                         const std::weak_ptr<PongBall>& ball) {
 	_opponentPlatform = opponentPlatform;

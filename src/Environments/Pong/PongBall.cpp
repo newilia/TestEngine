@@ -31,6 +31,26 @@ namespace {
 
 PongBall::PongBall(std::shared_ptr<SceneNode> node) : _node(std::move(node)) {}
 
+std::shared_ptr<SceneNode> PongBall::GetNode() const {
+	return _node;
+}
+
+float PongBall::GetMaxSpeed() const {
+	return _targetSpeed;
+}
+
+void PongBall::SetMaxSpeed(float maxSpeed) {
+	_targetSpeed = maxSpeed;
+}
+
+float PongBall::GetSpeedDampingFactor() const {
+	return _speedDampingFactor;
+}
+
+void PongBall::SetSpeedDampingFactor(float speedDampingFactor) {
+	_speedDampingFactor = speedDampingFactor;
+}
+
 void PongBall::SetupBehaviours() {
 	_node->AddBehaviour(std::make_shared<PongBallDampingBehaviour>(weak_from_this()));
 }

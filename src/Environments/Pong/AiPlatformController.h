@@ -14,9 +14,8 @@ public:
 	explicit AiPlatformController(PongPlatform* platform);
 	void Update(const sf::Time& dt) override;
 
-	void SetReactionDelay(const sf::Time& delay) { _reactionDelay = delay; }
-
-	void SetObservePeriod(const sf::Time& period) { _observePeriod = period; }
+	void SetReactionDelay(const sf::Time& delay);
+	void SetObservePeriod(const sf::Time& period);
 
 	void BeginObserve(const std::weak_ptr<PongPlatform>& opponentPlatform, const std::weak_ptr<PongBall>& ball);
 	void SetAggressivenessParams(float aggression, const sf::Time& changePeriod);

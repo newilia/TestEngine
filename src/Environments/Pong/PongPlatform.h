@@ -23,18 +23,18 @@ public:
 	void SetShapeDimensions(sf::Vector2f size, float curveness, float rotationDeg);
 	void Update(const sf::Time& dt);
 
-	std::shared_ptr<SceneNode> GetNode() const { return _node; }
+	std::shared_ptr<SceneNode> GetNode() const;
 
 	sf::ConvexShape* GetShape() const;
 	sf::FloatRect GetBbox() const;
 
-	sf::Vector2f GetPosGlobal() const { return _node->GetPosGlobal(); }
+	sf::Vector2f GetPosGlobal() const;
 
-	void SetName(const std::string& name) { _node->SetName(name); }
+	void SetName(const std::string& name);
 
-	shared_ptr<PlatformControllerBase> GetController() const { return _controller; }
+	shared_ptr<PlatformControllerBase> GetController() const;
 
-	void SetController(const shared_ptr<PlatformControllerBase>& controller) { _controller = controller; }
+	void SetController(const shared_ptr<PlatformControllerBase>& controller);
 
 private:
 	std::shared_ptr<SceneNode> _node;

@@ -14,34 +14,20 @@ class BodyPullHandler;
 class EngineContext : public Singleton<EngineContext>
 {
 public:
-	[[nodiscard]] static EngineContext& Instance() { return *GetInstance(); }
-
 	EngineContext();
 	~EngineContext() override;
 	void Init();
-
-	auto GetScene() { return _scene; }
-
+	shared_ptr<Scene> GetScene() const;
 	void SetScene(const shared_ptr<Scene>& scene);
-
-	auto GetUserInput() { return _userInput; }
-
-	auto GetPhysicsHandler() { return _physicsHandler; }
-
-	auto GetFontManager() { return _fontManager; }
-
-	auto GetBodyPullHandler() { return _bodyPullHandler; }
-
-	void SetBodyPullHandler(const shared_ptr<BodyPullHandler>& handler) { _bodyPullHandler = handler; }
-
-	float GetSimSpeedMultiplier() const { return _simSpeedMultiplier; }
-
-	void SetSimSpeedMultiplier(float val) { _simSpeedMultiplier = val; }
-
-	bool IsSimPaused() const { return _isSimPaused; }
-
-	void SetSimPaused(bool paused) { _isSimPaused = paused; }
-
+	shared_ptr<UserInput> GetUserInput() const;
+	shared_ptr<PhysicsHandler> GetPhysicsHandler() const;
+	shared_ptr<FontManager> GetFontManager() const;
+	shared_ptr<BodyPullHandler> GetBodyPullHandler() const;
+	void SetBodyPullHandler(const shared_ptr<BodyPullHandler>& handler);
+	float GetSimSpeedMultiplier() const;
+	void SetSimSpeedMultiplier(float val);
+	bool IsSimPaused() const;
+	void SetSimPaused(bool paused);
 	sf::Time GetSimDt() const;
 	sf::Time GetFrameDt(bool ignoreFixed = false) const;
 	void OnStartFrame();
@@ -49,25 +35,19 @@ public:
 	                                                   std::uint32_t style = sf::Style::Default,
 	                                                   sf::State state = sf::State::Windowed);
 
-	sf::RenderWindow* GetMainWindow() const { return _mainWindow.get(); }
-
-	void SetFixedFrameTime(const sf::Time& time) { _fixedFrameTime = time; }
-
-	void ResetFixedFrameTime() { _fixedFrameTime.reset(); }
-
-	[[nodiscard]] std::optional<sf::Time> GetFixedFrameTime() const { return _fixedFrameTime; }
-
-	bool IsDebugEnabled() const { return _isDebugDrawEnabled; }
-
-	void SetDebugEnabled(bool enabled) { _isDebugDrawEnabled = enabled; }
+	sf::RenderWindow* GetMainWindow() const;
+	void SetFixedFrameTime(const sf::Time& time);
+	void ResetFixedFrameTime();
+	[[nodiscard]] std::optional<sf::Time> GetFixedFrameTime() const;
+	bool IsDebugEnabled() const;
+	void SetDebugEnabled(bool enabled);
 
 	/// World-space force arrows: endpoint = pos + (m * a) * scale (inverse-square field on entities).
-	float GetFieldForceDebugArrowScale() const { return _fieldForceDebugArrowScale; }
-
-	void SetFieldForceDebugArrowScale(float scale) { _fieldForceDebugArrowScale = scale >= 0.f ? scale : 0.f; }
+	float GetFieldForceDebugArrowScale() const;
+	void SetFieldForceDebugArrowScale(float scale);
 
 	/// SFML window cap (FPS). 0 disables limiting (`setFramerateLimit`).
-	[[nodiscard]] std::uint32_t GetFramerateLimit() const { return _framerateLimit; }
+	[[nodiscard]] std::uint32_t GetFramerateLimit() const;
 
 	void SetFramerateLimit(std::uint32_t maxFps);
 

@@ -17,17 +17,15 @@ public:
 	explicit PongBall(std::shared_ptr<SceneNode> node);
 	void SetupBehaviours();
 
-	std::shared_ptr<SceneNode> GetNode() const { return _node; }
+	std::shared_ptr<SceneNode> GetNode() const;
 
 	sf::CircleShape* GetShape() const;
 
-	float GetMaxSpeed() const { return _targetSpeed; }
+	float GetMaxSpeed() const;
+	void SetMaxSpeed(float maxSpeed);
 
-	void SetMaxSpeed(float maxSpeed) { _targetSpeed = maxSpeed; }
-
-	float GetSpeedDampingFactor() const { return _speedDampingFactor; }
-
-	void SetSpeedDampingFactor(float speedDampingFactor) { _speedDampingFactor = speedDampingFactor; }
+	float GetSpeedDampingFactor() const;
+	void SetSpeedDampingFactor(float speedDampingFactor);
 
 private:
 	std::shared_ptr<SceneNode> _node;

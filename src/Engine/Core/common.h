@@ -21,5 +21,5 @@ struct Segment
 	Segment(sf::Vector2f start, sf::Vector2f end) : start(start), end(end) {};
 	sf::Vector2f start, end;
 
-	sf::Vector2f getDirVector() const { return end - start; }
+	sf::Vector2f getDirVector() const;
 };

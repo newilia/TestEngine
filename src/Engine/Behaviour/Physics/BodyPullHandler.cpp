@@ -1,7 +1,7 @@
 #include "BodyPullHandler.h"
 
 #include "BodyPullHandler_gen.hpp"
-#include "Engine/App/EngineInterface.h"
+#include "Engine/App/EngineContext.h"
 #include "Engine/App/Utils.h"
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
@@ -29,6 +29,10 @@ namespace {
 BodyPullHandler::BodyPullHandler(std::shared_ptr<VectorArrowVisual> arrowVisual)
     : _arrowVisual(std::move(arrowVisual)) {}
 
+void BodyPullHandler::EnableDebugDraw(bool enable) {
+	_isDebugDrawEnabled = enable;
+}
+
 BodyPullSetup CreateBodyPullOverlay() {
 	auto root = std::make_shared<SceneNode>();
 	root->SetName("body_pull");
@@ -49,7 +53,7 @@ void BodyPullHandler::StartPull(sf::Vector2f mousePos) {
 }
 
 void BodyPullHandler::StartPull(sf::Vector2f mousePos, UserPullBehaviour::PullMode pullMode) {
-	auto physicsHandler = EngineContext::Instance().GetPhysicsHandler();
+	auto physicsHandler = EngineContext::GetInstance().GetPhysicsHandler();
 	if (!physicsHandler) {
 		return;
 	}
