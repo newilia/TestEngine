@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Core/Singleton.h"
+#include "Engine/Editor/DebugSettingsWidget.h"
 #include "Engine/Editor/NodeInspectorWidget.h"
 #include "Engine/Editor/SceneHierarchyWidget.h"
 
@@ -32,6 +33,7 @@ namespace Engine {
 		bool _isOpen = true;
 		SceneHierarchyWidget _sceneHierarchyWidget{};
 		NodeInspectorWidget _nodeInspectorWidget{};
+		DebugSettingsWidget _debugSettingsWidget{};
 	};
 
 } // namespace Engine

@@ -14,6 +14,7 @@ namespace {
 	constexpr const char kEditorDockSpaceId[] = "EditorDockSpace";
 	constexpr const char kSceneWindowTitle[] = "Scene";
 	constexpr const char kInspectorWindowTitle[] = "Inspector";
+	constexpr const char kDebugWindowTitle[] = "Debug";
 
 	// Apply a Left | Center | Right split once when the dock root has no saved split and no docked
 	// windows yet (first launch or cleared dock state). If ini already restored a split or any
@@ -36,12 +37,15 @@ namespace {
 
 		ImGuiID id_left = 0;
 		ImGuiID id_right = 0;
+		ImGuiID id_bottom = 0;
 		ImGuiID id_main = dockspace_id;
 		ImGui::DockBuilderSplitNode(id_main, ImGuiDir_Left, 0.22f, &id_left, &id_main);
 		ImGui::DockBuilderSplitNode(id_main, ImGuiDir_Right, 0.30f, &id_right, &id_main);
+		ImGui::DockBuilderSplitNode(id_main, ImGuiDir_Down, 0.20f, &id_bottom, &id_main);
 
 		ImGui::DockBuilderDockWindow(kSceneWindowTitle, id_left);
 		ImGui::DockBuilderDockWindow(kInspectorWindowTitle, id_right);
+		ImGui::DockBuilderDockWindow(kDebugWindowTitle, id_bottom);
 		ImGui::DockBuilderFinish(dockspace_id);
 		layout_finished = true;
 	}
@@ -113,6 +117,21 @@ namespace Engine {
 
 		if (ImGui::Begin(kInspectorWindowTitle, nullptr, ImGuiWindowFlags_None)) {
 			_nodeInspectorWidget.Draw(GetSelectedNode());
+		}
+		ImGui::End();
+
+		if (ImGui::Begin(kDebugWindowTitle, nullptr, ImGuiWindowFlags_None)) {
+			if (ImGui::BeginTabBar("DebugTabBar", ImGuiTabBarFlags_None)) {
+				if (ImGui::BeginTabItem("Settings")) {
+					_debugSettingsWidget.Draw();
+					ImGui::EndTabItem();
+				}
+				if (ImGui::BeginTabItem("Style")) {
+					ImGui::ShowStyleEditor();
+					ImGui::EndTabItem();
+				}
+				ImGui::EndTabBar();
+			}
 		}
 		ImGui::End();
 	}

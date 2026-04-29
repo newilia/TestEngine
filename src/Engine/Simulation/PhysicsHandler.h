@@ -5,10 +5,12 @@
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Updatable.h"
 #include "Engine/Core/common.h"
+#include "IsotropicInverseSquareField.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
 
 #include <list>
+#include <memory>
 #include <optional>
 
 class PhysicsHandler : public Updatable
@@ -31,6 +33,10 @@ public:
 
 	bool IsGravityEnabled() const { return _isGravityEnabled; }
 
+	[[nodiscard]] std::shared_ptr<IsotropicInverseSquareField> GetIsotropicInverseSquareField() const {
+		return _inverseSquareField;
+	}
+
 private:
 	void UpdateSubStep(const sf::Time& dt);
 	static bool CheckBboxIntersection(const AbstractBody* body1, const AbstractBody* body2);
@@ -50,4 +56,5 @@ private:
 	int _subStepsCount = 1;
 	sf::Vector2f _gravity = {0, 400};
 	bool _isGravityEnabled = false;
+	std::shared_ptr<IsotropicInverseSquareField> _inverseSquareField = std::make_shared<IsotropicInverseSquareField>();
 };
