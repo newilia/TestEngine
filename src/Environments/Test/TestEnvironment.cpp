@@ -208,7 +208,7 @@ void TestEnvironment::ConfigureInput() {
 	userInput->AttachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			if (key->code == sf::Keyboard::Key::D) {
-				ei->SetDebugEnabled(!ei->IsDebugEnabled());
+				ei->SetDebugEnabled(!ei->IsDebugDrawEnabled());
 			}
 		}
 	}));

@@ -28,20 +28,17 @@ public:
 	void SetSimSpeedMultiplier(float val);
 	bool IsSimPaused() const;
 	void SetSimPaused(bool paused);
-	/// Last per-tick simulation step (fixed `1/targetHz` or variable when unlimited). Zero if no tick this frame.
-	sf::Time GetSimDt() const;
-	sf::Time GetFrameDt(bool ignoreFixed = false) const;
-	void OnStartFrame();
 
-	/// Wall-clock frame delta (ignores debug fixed frame dt). Use for logic accumulator and HUD FPS.
-	sf::Time GetRawFrameDt() const;
+	void OnStartPresentFrame();
+	void OnStartUpdateTick();
 
-	/// Target logic update rate in Hz. 0 = one variable step per frame (`GetRawFrameDt` * speed, capped).
+	sf::Time GetSimTickDt() const;
+	sf::Time GetWallTickDt() const;
+	sf::Time GetFrameDt() const;
+
+	/// Target logic update rate in Hz. 0 = one variable step per main-loop iteration (`wallDelta * speed`, capped).
 	[[nodiscard]] std::uint32_t GetTargetTickRateHz() const;
 	void SetTargetTickRateHz(std::uint32_t hz);
-
-	/// Logic ticks executed in the current frame (after `RunSimulationTicksForFrame` / main loop sim block).
-	[[nodiscard]] unsigned GetLogicTicksLastFrame() const;
 
 	void SetVerticalSyncEnabled(bool enabled);
 	[[nodiscard]] bool IsVerticalSyncEnabled() const;
@@ -50,31 +47,18 @@ public:
 	                                                   sf::State state = sf::State::Windowed);
 
 	sf::RenderWindow* GetMainWindow() const;
-	void SetFixedFrameTime(const sf::Time& time);
-	void ResetFixedFrameTime();
-	[[nodiscard]] std::optional<sf::Time> GetFixedFrameTime() const;
-	bool IsDebugEnabled() const;
+	bool IsDebugDrawEnabled() const;
 	void SetDebugEnabled(bool enabled);
 
 	/// World-space force arrows: endpoint = pos + (m * a) * scale (inverse-square field on entities).
 	float GetFieldForceDebugArrowScale() const;
 	void SetFieldForceDebugArrowScale(float scale);
 
-	/// SFML window cap (FPS). 0 disables limiting (`setFramerateLimit`).
+	void SetFramerateLimit(std::uint32_t maxFps);
 	[[nodiscard]] std::uint32_t GetFramerateLimit() const;
 
-	void SetFramerateLimit(std::uint32_t maxFps);
-
-	/// Call once per frame before stepping simulation: advances accumulator when not paused; clears last-step dt.
-	void BeginLogicFrame();
-
-	/// Try to consume one fixed logic step of `stepSeconds` from the accumulator. Returns false if not enough time.
-	bool TryConsumeLogicAccumulator(double stepSeconds);
-
-	/// Sets the simulation step dt for behaviours / `GetSimDt` until the next tick (main loop only).
-	void SetLastLogicStepDt(const sf::Time& dt);
-
-	void SetLogicTicksLastFrame(unsigned n);
+	void SetFramerateLimitEnabled(bool enabled);
+	bool IsFramerateLimitEnabled() const;
 
 private:
 	void ApplyWindowFrameSettings();
@@ -87,15 +71,14 @@ private:
 	shared_ptr<BodyPullHandler> _bodyPullHandler;
 	sf::Clock _frameClock;
 	sf::Time _frameTime;
-	std::optional<sf::Time> _fixedFrameTime;
+	sf::Clock _tickClock;
+	sf::Time _tickTime;
 	float _simSpeedMultiplier = 1.f;
 	bool _isSimPaused = false;
 	bool _isDebugDrawEnabled = false;
 	float _fieldForceDebugArrowScale = 0.02f;
-	std::uint32_t _framerateLimit = 0;
-	bool _verticalSyncEnabled = true;
-	std::uint32_t _targetTickRateHz = 200;
-	double _logicAccumulatorSec = 0.;
-	sf::Time _lastLogicStepDt;
-	unsigned _logicTicksLastFrame = 0;
+	std::uint32_t _framerateLimit = 100;
+	bool _isFramerateLimitEnabled = false;
+	bool _verticalSyncEnabled = false;
+	std::uint32_t _targetTickRateHz = 500;
 };

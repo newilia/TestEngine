@@ -114,8 +114,8 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 		child->draw(target, states);
 	}
 
-	if (EngineContext::GetInstance().IsDebugEnabled()) {
-		if (auto debugBehaviour = FindBehaviour<PhysicsDebugBehaviour>()) {
+	if (EngineContext::GetInstance().IsDebugDrawEnabled()) {
+		if (auto debugBehaviour = FindBehaviour<PhysicsDebugBehaviour>()) { // todo fix (некрасиво)
 			debugBehaviour->DebugDraw(target, states);
 		}
 	}
