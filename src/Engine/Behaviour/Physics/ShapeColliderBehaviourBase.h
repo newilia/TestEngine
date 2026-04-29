@@ -12,7 +12,8 @@ class ShapeColliderBehaviourBase : public Behaviour, public AbstractBody
 	META_CLASS()
 public:
 	~ShapeColliderBehaviourBase() override;
-	void OnAttached() override;
+	void OnInit() override;
+	void OnDeinit() override;
 	sf::FloatRect GetBbox() const override;
 	size_t GetPointCount() const override;
 	sf::Vector2f GetPointGlobal(std::size_t index) const override;

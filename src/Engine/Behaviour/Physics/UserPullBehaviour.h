@@ -16,8 +16,6 @@ public:
 		VELOCITY,
 	};
 
-	void OnAttached() override {}
-
 	~UserPullBehaviour() override = default;
 	sf::Vector2f GetPullVector() const;
 	/// @property

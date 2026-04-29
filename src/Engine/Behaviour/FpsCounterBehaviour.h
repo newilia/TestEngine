@@ -20,9 +20,9 @@ class FpsCounterBehaviour : public Behaviour
 public:
 	explicit FpsCounterBehaviour(std::shared_ptr<sf::Text> text);
 
-	void OnAttached() override;
-
+	void OnInit() override;
 	void OnUpdate(const sf::Time& dt) override;
+	void OnDeinit() override;
 
 private:
 	/// @property(readonly=true, name="FPS", tooltip="Smoothed frames per second (read-only).")
@@ -37,6 +37,7 @@ private:
 	/// @property(name="Text color")
 	sf::Color _textColor{255, 255, 255, 255};
 	std::shared_ptr<sf::Text> _text;
+	bool _ownsDisplayVisual = false;
 };
 
 /// Обычная SceneNode с sf::Text и FpsCounterBehaviour.

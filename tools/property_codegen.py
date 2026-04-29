@@ -529,7 +529,16 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                 "sf::Vector3f": f"[this](sf::Vector3f v) {{ {p.member} = v; }}",
                 "sf::Color": f"[this](sf::Color c) {{ {p.member} = c; }}",
             }
-            set_lambda = setters_ro[p.cpp_type] if readonly else setters_rw[p.cpp_type]
+            setter_method = a.get("setter")
+            if (
+                isinstance(setter_method, str)
+                and setter_method
+                and not readonly
+                and p.cpp_type == "bool"
+            ):
+                set_lambda = f"[this](bool v) {{ this->{setter_method}(v); }}"
+            else:
+                set_lambda = setters_ro[p.cpp_type] if readonly else setters_rw[p.cpp_type]
             fid = member_to_field_id(p.member)
             label_esc = cpp_escape_string(default_label(p.member, a))
             if p.cpp_type == "float":

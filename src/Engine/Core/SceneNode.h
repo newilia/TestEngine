@@ -22,11 +22,11 @@ using std::make_shared;
 using std::shared_ptr;
 using std::weak_ptr;
 
-class SceneNode final : public enable_shared_from_this<SceneNode>,
-                        public Updatable,
-                        public sf::Drawable,
-                        public sf::Transformable,
-                        public Engine::IPropertiesProvider
+class SceneNode : public enable_shared_from_this<SceneNode>,
+                  public Updatable,
+                  public sf::Drawable,
+                  public sf::Transformable,
+                  public Engine::IPropertiesProvider
 {
 	META_CLASS()
 public:
@@ -36,7 +36,12 @@ public:
 
 	void UpdateRec(const sf::Time& dt); // TODO rename to Update()
 
-	void Init() {} // Todo init members
+	/// Called once per node when this subtree enters the active scene (`NotifyLifecycleInitRecursive`).
+	/// Graph changes (`AddChild`) do not call this; use `NotifyLifecycleInitRecursive` after the subtree is ready.
+	virtual void OnInit() {}
+
+	/// Symmetric to `OnInit` when leaving the active scene or before the subtree is torn down.
+	virtual void OnDeinit() {}
 
 	void RemoveFromParent();
 
@@ -67,8 +72,15 @@ public:
 
 	template <typename T>
 	void RemoveBehaviour() {
-		std::erase_if(_behaviours,
-		              [](const shared_ptr<Behaviour>& b) { return std::dynamic_pointer_cast<T>(b) != nullptr; });
+		for (auto it = _behaviours.begin(); it != _behaviours.end();) {
+			if (std::dynamic_pointer_cast<T>(*it)) {
+				DetachBehaviourForRemove(*it);
+				it = _behaviours.erase(it);
+			}
+			else {
+				++it;
+			}
+		}
 	}
 
 	/// Searches the node for any attached entity: visual, sorting, or behaviour.
@@ -117,20 +129,38 @@ public:
 	sf::Vector2f GetPosGlobal() const;
 	void SetPosGlobal(sf::Vector2f pos);
 
+	void SetEnabled(bool isEnabled);
+	void SetVisible(bool isVisible);
+
+	[[nodiscard]] bool IsEnabled() const { return _isEnabled; }
+
+	[[nodiscard]] bool IsVisible() const { return _isVisible; }
+
+	/// Invoked by `EngineContext::SetScene` or explicitly after attaching a subtree. Does not run from `AddChild`.
+	void NotifyLifecycleInitRecursive();
+	/// Post-order teardown for this subtree.
+	void NotifyLifecycleDeinitRecursive();
+
 protected:
 	void SetParent(shared_ptr<SceneNode>&& parent) { _parent = parent; }
+
+private:
+	void DetachBehaviourForRemove(const shared_ptr<Behaviour>& b);
+	[[nodiscard]] bool IsInActiveScene() const;
+	[[nodiscard]] shared_ptr<SceneNode> GetSubtreeRoot() const;
 
 	/// @property(name="Name")
 	std::string _name;
 	weak_ptr<SceneNode> _parent;
 	std::vector<shared_ptr<SceneNode>> _children;
-	/// @property(name="Enabled")
+	/// @property(name="Enabled", setter=SetEnabled)
 	bool _isEnabled = true;
-	/// @property(name="Visible")
+	/// @property(name="Visible", setter=SetVisible)
 	bool _isVisible = true;
 	shared_ptr<Visual> _visual;
 	shared_ptr<SortingStrategy> _sortingStrategy;
 	std::vector<shared_ptr<Behaviour>> _behaviours;
+	bool _wasNodeLifecycleInited = false;
 };
 
 inline ShapeColliderBehaviourBase* SceneNode::FindShapeCollider() const {

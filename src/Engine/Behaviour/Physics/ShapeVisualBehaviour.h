@@ -6,5 +6,10 @@
 class ShapeVisualBehaviour : public Behaviour
 {
 public:
-	void OnAttached() override;
+	void OnInit() override;
+
+	void OnDeinit() override;
+
+private:
+	bool _ownsShapeVisual = false;
 };

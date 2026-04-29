@@ -1,13 +1,12 @@
 #pragma once
 
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Core/common.h"
 
 #include <SFML/System/Vector2.hpp>
 
 #include <memory>
 #include <optional>
-
-struct Segment;
 
 struct IntersectionDetails
 {
