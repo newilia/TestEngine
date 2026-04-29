@@ -54,7 +54,7 @@ void FpsCounterBehaviour::OnDeinit() {
 
 void FpsCounterBehaviour::OnUpdate(const sf::Time& dt) {
 	(void)dt;
-	auto frameTime = EngineContext::Instance().GetFrameDt(true);
+	auto frameTime = EngineContext::Instance().GetFrameDt(false);
 	float newFps = 1.f / frameTime.asSeconds();
 	if (_fps == 0.f) {
 		_fps = newFps;

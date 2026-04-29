@@ -25,6 +25,8 @@ public:
 
 	void SetSubstepCount(int count) { _subStepsCount = count; }
 
+	[[nodiscard]] int GetSubstepCount() const { return _subStepsCount; }
+
 	void SetGravity(const sf::Vector2f v) { _gravity = v; }
 
 	sf::Vector2f GetGravity() const { return _gravity; }

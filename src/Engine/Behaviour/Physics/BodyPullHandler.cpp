@@ -6,7 +6,25 @@
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 
+#include <algorithm>
 #include <memory>
+
+namespace {
+
+	constexpr float kBasePullStrength = 100000.f;
+
+	UserPullBehaviour::PullMode PullModeFromIndex(int index) {
+		switch (std::clamp(index, 0, 2)) {
+		case 0:
+			return UserPullBehaviour::PullMode::POSITION;
+		case 1:
+			return UserPullBehaviour::PullMode::FORCE;
+		default:
+			return UserPullBehaviour::PullMode::VELOCITY;
+		}
+	}
+
+} // namespace
 
 BodyPullHandler::BodyPullHandler(std::shared_ptr<VectorArrowVisual> arrowVisual)
     : _arrowVisual(std::move(arrowVisual)) {}
@@ -24,6 +42,10 @@ BodyPullSetup CreateBodyPullOverlay() {
 	auto handler = std::make_shared<BodyPullHandler>(arrowVis);
 	root->AddBehaviour(handler);
 	return {root, handler};
+}
+
+void BodyPullHandler::StartPull(sf::Vector2f mousePos) {
+	StartPull(mousePos, PullModeFromIndex(_defaultPullModeIndex));
 }
 
 void BodyPullHandler::StartPull(sf::Vector2f mousePos, UserPullBehaviour::PullMode pullMode) {
@@ -51,6 +73,7 @@ void BodyPullHandler::StartPull(sf::Vector2f mousePos, UserPullBehaviour::PullMo
 		pullComponent->_localSourcePoint = mousePos - body->GetPosGlobal();
 		pullComponent->_globalDestPoint = mousePos;
 		pullComponent->_mode = pullMode;
+		pullComponent->_pullingStrength = kBasePullStrength * _pullForceScale;
 		_pullingBody = body;
 		break;
 	}
