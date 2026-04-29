@@ -4,7 +4,7 @@
 #include "Engine/Visual/MakeShapeVisual.h"
 #include "ShapeColliderBehaviourBase.h"
 
-void ShapeVisualBehaviour::OnAttached() {
+void ShapeVisualBehaviour::OnInit() {
 	auto node = GetNode();
 	if (!node) {
 		return;
@@ -16,5 +16,16 @@ void ShapeVisualBehaviour::OnAttached() {
 	auto visual = MakeShapeVisual(collider->GetBaseShape());
 	if (visual) {
 		node->SetVisual(std::move(visual));
+		_ownsShapeVisual = true;
 	}
+}
+
+void ShapeVisualBehaviour::OnDeinit() {
+	if (!_ownsShapeVisual) {
+		return;
+	}
+	if (auto node = GetNode()) {
+		node->SetVisual(nullptr);
+	}
+	_ownsShapeVisual = false;
 }

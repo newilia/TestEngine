@@ -1,9 +1,9 @@
 #pragma once
 #include "Engine/App/FontManager.h"
 #include "Engine/App/UserInput.h"
-#include "Engine/Behaviour/Physics/PhysicsHandler.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/Singleton.h"
+#include "Engine/Simulation/PhysicsHandler.h"
 
 #include <cstdint>
 #include <memory>
@@ -21,7 +21,7 @@ public:
 
 	auto GetScene() { return _scene; }
 
-	void SetScene(const shared_ptr<Scene>& scene) { _scene = scene; }
+	void SetScene(const shared_ptr<Scene>& scene);
 
 	auto GetUserInput() { return _userInput; }
 
@@ -45,8 +45,8 @@ public:
 	sf::Time GetFrameDt(bool ignoreFixed = false) const;
 	void OnStartFrame();
 	std::shared_ptr<sf::RenderWindow> CreateMainWindow(sf::VideoMode mode, const sf::String& title,
-	                                             std::uint32_t style = sf::Style::Default,
-	                                             sf::State state = sf::State::Windowed);
+	                                                   std::uint32_t style = sf::Style::Default,
+	                                                   sf::State state = sf::State::Windowed);
 
 	sf::RenderWindow* GetMainWindow() const { return _mainWindow.get(); }
 

@@ -12,8 +12,6 @@ struct IntersectionDetails;
 class OverlappingBehaviour : public Behaviour
 {
 public:
-	void OnAttached() override {}
-
 	std::bitset<8> _overlappingGroups;
 	std::vector<std::shared_ptr<IDelegate<const IntersectionDetails&>>> _overlappingCallbacks;
 };

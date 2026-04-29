@@ -1,17 +1,16 @@
 #include "PhysicsHandler.h"
 
-#include "AbstractBody.h"
 #include "Engine/App/EngineInterface.h"
 #include "Engine/App/Utils.h"
+#include "Engine/Behaviour/Physics/AbstractBody.h"
 #include "Engine/Behaviour/Physics/CollisionBehaviour.h"
+#include "Engine/Behaviour/Physics/IntersectionDetails.h"
 #include "Engine/Behaviour/Physics/OverlappingBehaviour.h"
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
+#include "Engine/Behaviour/Physics/ShapeColliderBehaviourBase.h"
 #include "Engine/Behaviour/Physics/UserPullBehaviour.h"
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Core/common.h"
 #include "Engine/Visual/VectorArrowVisual.h"
-#include "IntersectionDetails.h"
-#include "ShapeColliderBehaviourBase.h"
 #include "fmt/format.h"
 
 #include <SFML/Graphics/CircleShape.hpp>

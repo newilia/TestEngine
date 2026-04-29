@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <memory>
 
 namespace {
 
@@ -99,6 +100,11 @@ void SceneNode::RemoveChild(SceneNode* child) {
 	auto it = std::ranges::find_if(_children.begin(), _children.end(),
 	                               [child](const auto& ptr) { return ptr.get() == child; });
 	if (it != _children.end()) {
+		shared_ptr<SceneNode> node = *it;
+		if (node->IsInActiveScene()) {
+			node->NotifyLifecycleDeinitRecursive();
+		}
+		node->SetParent(nullptr);
 		_children.erase(it);
 	}
 }
@@ -144,6 +150,83 @@ void SceneNode::AddBehaviour(shared_ptr<Behaviour> behaviour) {
 	behaviour->AttachTo(shared_from_this());
 	_behaviours.push_back(std::move(behaviour));
 	_behaviours.back()->OnAttached();
+}
+
+void SceneNode::SetEnabled(bool isEnabled) {
+	if (_isEnabled == isEnabled) {
+		return;
+	}
+	_isEnabled = isEnabled;
+	for (auto& b : _behaviours) {
+		b->OnEnabled(isEnabled);
+	}
+}
+
+void SceneNode::SetVisible(bool isVisible) {
+	if (_isVisible == isVisible) {
+		return;
+	}
+	_isVisible = isVisible;
+	for (auto& b : _behaviours) {
+		b->OnVisible(isVisible);
+	}
+}
+
+shared_ptr<SceneNode> SceneNode::GetSubtreeRoot() const {
+	auto cur = std::const_pointer_cast<SceneNode>(shared_from_this());
+	while (auto p = cur->GetParent()) {
+		cur = std::move(p);
+	}
+	return cur;
+}
+
+bool SceneNode::IsInActiveScene() const {
+	auto active = EngineContext::Instance().GetScene();
+	if (!active) {
+		return false;
+	}
+	auto root = GetSubtreeRoot();
+	return root && root.get() == active.get();
+}
+
+void SceneNode::NotifyLifecycleInitRecursive() {
+	if (!_wasNodeLifecycleInited) {
+		OnInit();
+		_wasNodeLifecycleInited = true;
+	}
+	for (auto& b : _behaviours) {
+		if (!b->_wasInited) {
+			b->OnInit();
+			b->_wasInited = true;
+		}
+	}
+	for (auto& c : _children) {
+		c->NotifyLifecycleInitRecursive();
+	}
+}
+
+void SceneNode::NotifyLifecycleDeinitRecursive() {
+	for (auto& c : _children) {
+		c->NotifyLifecycleDeinitRecursive();
+	}
+	for (auto& b : _behaviours) {
+		if (b->_wasInited) {
+			b->OnDeinit();
+			b->_wasInited = false;
+		}
+	}
+	if (_wasNodeLifecycleInited) {
+		OnDeinit();
+		_wasNodeLifecycleInited = false;
+	}
+}
+
+void SceneNode::DetachBehaviourForRemove(const shared_ptr<Behaviour>& b) {
+	if (b->_wasInited) {
+		b->OnDeinit();
+		b->_wasInited = false;
+	}
+	b->OnDetached();
 }
 
 shared_ptr<SceneNode> SceneNode::FindTopMostTapTarget(sf::Vector2f windowPosition) {

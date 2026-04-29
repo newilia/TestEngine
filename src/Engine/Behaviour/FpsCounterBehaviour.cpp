@@ -30,7 +30,7 @@ std::shared_ptr<SceneNode> CreateFpsCounterNode() {
 
 FpsCounterBehaviour::FpsCounterBehaviour(std::shared_ptr<sf::Text> text) : _text(std::move(text)) {}
 
-void FpsCounterBehaviour::OnAttached() {
+void FpsCounterBehaviour::OnInit() {
 	if (!_text) {
 		return;
 	}
@@ -38,7 +38,18 @@ void FpsCounterBehaviour::OnAttached() {
 	auto visual = std::make_shared<TextVisual>(_text);
 	if (auto node = GetNode()) {
 		node->SetVisual(std::move(visual));
+		_ownsDisplayVisual = true;
 	}
+}
+
+void FpsCounterBehaviour::OnDeinit() {
+	if (!_ownsDisplayVisual) {
+		return;
+	}
+	if (auto node = GetNode()) {
+		node->SetVisual(nullptr);
+	}
+	_ownsDisplayVisual = false;
 }
 
 void FpsCounterBehaviour::OnUpdate(const sf::Time& dt) {

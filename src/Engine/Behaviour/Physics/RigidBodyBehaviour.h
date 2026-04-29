@@ -11,8 +11,6 @@ class RigidBodyBehaviour : public Behaviour
 {
 	META_CLASS()
 public:
-	void OnAttached() override {}
-
 	/// @property(tooltip="Infinity = immovable; use SetImmovable() in code, or set mass in inspector.")
 	float _mass = 1.f;
 	/// @property

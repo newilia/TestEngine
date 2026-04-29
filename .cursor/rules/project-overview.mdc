@@ -1,0 +1,48 @@
+---
+description: TestEngine stack, src layout, includes — onboarding context
+alwaysApply: true
+---
+
+# TestEngine — project context
+
+## Stack
+
+- **C++20**, single **`TestEngine`** target (CMake `WIN32` on Windows — entry via `WinMain`; see `main.cpp`).
+- **Build:** CMake 3.28+; build directory is usually **`build`** (not inside source roots). Details: [`BUILD.md`](BUILD.md).
+- **Dependencies:** SFML, Dear ImGui + **ImGui-SFML**, **fmt** (`third-party/`). Python 3 is required at **configure** time (codegen).
+
+## `src/` layout
+
+| Area | Role |
+|------|------|
+| **`Engine/App/`** | Entry (`main.cpp`), `EngineInterface`, input, fonts |
+| **`Engine/Core/`** | Scene, nodes (`SceneNode`), properties/reflection (`MetaClass`, `IPropertiesProvider`, property trees) |
+| **`Engine/Behaviour/`** | Base `Behaviour` → components on nodes; subfolders by domain (e.g. `Physics/`) |
+| **`Engine/Visual/`** | Rendering (shapes, text, arrows, etc.) |
+| **`Engine/Editor/`** | ImGui editor widgets (hierarchy, inspector, property tree) |
+| **`Engine/Simulation/`** | Simulation glue (e.g. physics — `PhysicsHandler`) |
+| **`Environments/<Name>/`** | Demos/games (**`Test`**, **`Pong`**); active environment is chosen in `main.cpp` (`TestEnvironment` / `PongEnvironment`) |
+| **`Codegen/`** | Generated `*_gen.hpp` for the editor — **do not edit by hand**; see [`property-codegen.mdc`](property-codegen.mdc) |
+
+Sources are collected with **`file(GLOB_RECURSE ... src/**/*.cpp)`** — after adding a **new** `.cpp`, run **CMake configure** again.
+
+## Includes
+
+Include roots: **`src/`** and **`src/Codegen/`**. Quote paths relative to those roots, for example:
+
+```cpp
+#include "Engine/Core/SceneNode.h"
+#include "Environments/Pong/PongEnvironment.h"
+```
+
+## Code idioms
+
+- **`Scene` / `SceneNode`**: entity hierarchy; nodes carry **`Behaviour`**s and visuals.
+- **`EntityOnNode`**: binds an entity to a node; common base for behaviours.
+- Editor and inspector rely on **`IPropertiesProvider`** and generated property trees — read the **property-codegen** rule before adding reflected fields.
+
+## Related rules
+
+- Build verification after edits: **`debug-build-verify.mdc`**; build details: **`BUILD.md`**.
+- Commit message format: **`commit-messages.mdc`**.
+- Property generation: **`property-codegen.mdc`**.

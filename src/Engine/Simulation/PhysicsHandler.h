@@ -1,10 +1,10 @@
 #pragma once
 
-#include "AbstractBody.h"
+#include "Engine/Behaviour/Physics/AbstractBody.h"
+#include "Engine/Behaviour/Physics/IntersectionDetails.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Updatable.h"
 #include "Engine/Core/common.h"
-#include "IntersectionDetails.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
 

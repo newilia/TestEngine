@@ -8,7 +8,5 @@
 class PhysicsDebugBehaviour : public Behaviour
 {
 public:
-	void OnAttached() override {}
-
 	void DebugDraw(sf::RenderTarget& target, sf::RenderStates states) const; // todo move out of behaviour?
 };
