@@ -1,6 +1,6 @@
 #include "Engine/Editor/DebugSettingsWidget.h"
 
-#include "Engine/App/EngineInterface.h"
+#include "Engine/App/EngineContext.h"
 
 #include <SFML/System/Time.hpp>
 
@@ -11,7 +11,7 @@
 namespace Engine {
 
 	void DebugSettingsWidget::Draw() const {
-		auto& engine = EngineContext::Instance();
+		auto& engine = EngineContext::GetInstance();
 
 		ImGui::SeparatorText("Simulation");
 		bool simEnabled = !engine.IsSimPaused();

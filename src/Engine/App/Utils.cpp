@@ -193,6 +193,14 @@ float Utils::CalcTriangleArea(float a, float b, float c) {
 	return sqrt(p * (p - a) * (p - b) * (p - c));
 }
 
+bool Utils::IsZero(float val) {
+	return std::abs(val) <= std::numeric_limits<float>::epsilon();
+}
+
+float Utils::Sq(float val) {
+	return val * val;
+}
+
 std::optional<std::pair<float, std::optional<float>>> Utils::SolveQuadraticEquation(float a, float b, float c) {
 	float D = Sq(b) - 4 * a * c;
 	if (D > std::numeric_limits<float>::epsilon()) {

@@ -20,24 +20,14 @@ public:
 	void Update(const sf::Time& dt) override;
 	void RegisterBody(shared_ptr<SceneNode> body);
 	void UnregisterBody(SceneNode* body);
-
-	const auto& GetAllBodies() { return _bodies; }
-
-	void SetSubstepCount(int count) { _subStepsCount = count; }
-
-	[[nodiscard]] int GetSubstepCount() const { return _subStepsCount; }
-
-	void SetGravity(const sf::Vector2f v) { _gravity = v; }
-
-	sf::Vector2f GetGravity() const { return _gravity; }
-
-	void SetGravityEnabled(bool enabled) { _isGravityEnabled = enabled; }
-
-	bool IsGravityEnabled() const { return _isGravityEnabled; }
-
-	[[nodiscard]] std::shared_ptr<IsotropicInverseSquareField> GetIsotropicInverseSquareField() const {
-		return _inverseSquareField;
-	}
+	const std::list<std::weak_ptr<SceneNode>>& GetAllBodies() const;
+	void SetSubstepCount(int count);
+	[[nodiscard]] int GetSubstepCount() const;
+	void SetGravity(const sf::Vector2f v);
+	sf::Vector2f GetGravity() const;
+	void SetGravityEnabled(bool enabled);
+	bool IsGravityEnabled() const;
+	[[nodiscard]] std::shared_ptr<IsotropicInverseSquareField> GetIsotropicInverseSquareField() const;
 
 private:
 	void UpdateSubStep(const sf::Time& dt);

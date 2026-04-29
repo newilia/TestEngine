@@ -46,13 +46,9 @@ namespace Utils {
 	sf::Vector2f FindCenterOfMass(const sf::Shape* shape);
 	float CalcTriangleArea(float a, float b, float c); // Heron formula
 
-	inline bool IsZero(float val) {
-		return std::abs(val) <= std::numeric_limits<float>::epsilon();
-	}
+	bool IsZero(float val);
 
-	inline float Sq(float val) {
-		return val * val;
-	}
+	float Sq(float val);
 
 	std::optional<std::pair<float, std::optional<float>>> SolveQuadraticEquation(float a, float b, float c);
 	sf::CircleShape CreateCircle(const sf::Vector2f& pos, float radius, sf::Color color);

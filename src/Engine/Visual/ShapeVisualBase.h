@@ -8,11 +8,11 @@
 class ShapeVisualBase : public Visual
 {
 public:
-	explicit ShapeVisualBase(sf::Shape* shape) : _shape(shape) {}
+	explicit ShapeVisualBase(sf::Shape* shape);
 
 	void Draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
-	sf::Shape* GetShape() const { return _shape; }
+	sf::Shape* GetShape() const;
 
 private:
 	sf::Shape* _shape = nullptr;

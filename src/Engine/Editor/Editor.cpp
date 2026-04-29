@@ -1,6 +1,6 @@
 #include "Engine/Editor/Editor.h"
 
-#include "Engine/App/EngineInterface.h"
+#include "Engine/App/EngineContext.h"
 #include "Engine/Core/Scene.h"
 
 #include <SFML/Window/Event.hpp>
@@ -111,7 +111,7 @@ namespace Engine {
 		ImGui::End();
 
 		if (ImGui::Begin(kSceneWindowTitle, nullptr, ImGuiWindowFlags_None)) {
-			_sceneHierarchyWidget.Draw(EngineContext::Instance().GetScene());
+			_sceneHierarchyWidget.Draw(EngineContext::GetInstance().GetScene());
 		}
 		ImGui::End();
 

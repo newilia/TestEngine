@@ -7,20 +7,16 @@
 class VectorArrow : public sf::Drawable
 {
 public:
-	VectorArrow() = default;
+	VectorArrow();
 
-	VectorArrow(const sf::Vector2f& start, const sf::Vector2f& end, const sf::Color& color = sf::Color::White)
-	    : _start(start), _end(end), _color(color) {}
+	VectorArrow(const sf::Vector2f& start, const sf::Vector2f& end, const sf::Color& color = sf::Color::White);
 
-	~VectorArrow() override = default;
+	~VectorArrow() override;
 
-	void SetStartPos(const sf::Vector2f& start) { _start = start; }
-
-	void SetEndPos(const sf::Vector2f& end) { _end = end; }
-
-	void SetColor(const sf::Color& color) { _color = color; }
-
-	void EnableArrowHead(bool enable) { _arrowHeadEnabled = enable; }
+	void SetStartPos(const sf::Vector2f& start);
+	void SetEndPos(const sf::Vector2f& end);
+	void SetColor(const sf::Color& color);
+	void EnableArrowHead(bool enable);
 
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 

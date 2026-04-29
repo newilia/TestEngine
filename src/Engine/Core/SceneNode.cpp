@@ -1,6 +1,6 @@
 #include "SceneNode.h"
 
-#include "Engine/App/EngineInterface.h"
+#include "Engine/App/EngineContext.h"
 #include "Engine/Behaviour/Physics/PhysicsDebugBehaviour.h"
 #include "SceneNode_gen.hpp"
 
@@ -27,6 +27,77 @@ namespace {
 
 } // namespace
 
+void SceneNode::Update(const sf::Time& /*dt*/) {}
+
+void SceneNode::OnInit() {}
+
+void SceneNode::OnDeinit() {}
+
+void SceneNode::SetName(const std::string& name) {
+	_name = name;
+}
+
+const std::string& SceneNode::GetName() const {
+	return _name;
+}
+
+shared_ptr<SceneNode> SceneNode::GetParent() const {
+	return _parent.lock();
+}
+
+const std::vector<shared_ptr<SceneNode>>& SceneNode::GetChildren() const {
+	return _children;
+}
+
+shared_ptr<Visual> SceneNode::GetVisual() const {
+	return _visual;
+}
+
+shared_ptr<SortingStrategy> SceneNode::GetSortingStrategy() const {
+	return _sortingStrategy;
+}
+
+const std::vector<shared_ptr<Behaviour>>& SceneNode::GetBehaviours() const {
+	return _behaviours;
+}
+
+bool SceneNode::IsEnabled() const {
+	return _isEnabled;
+}
+
+bool SceneNode::IsVisible() const {
+	return _isVisible;
+}
+
+void SceneNode::SetParent(const shared_ptr<SceneNode>& parent) {
+	_parent = parent;
+}
+
+ShapeColliderBehaviourBase* SceneNode::FindShapeCollider() const {
+	for (auto& b : _behaviours) {
+		if (auto s = std::dynamic_pointer_cast<ShapeColliderBehaviourBase>(b)) {
+			return s.get();
+		}
+	}
+	return nullptr;
+}
+
+sf::Vector2f SceneNode::GetPosGlobal() const {
+	if (auto* c = FindShapeCollider()) {
+		return c->GetPosGlobal();
+	}
+	return getPosition();
+}
+
+void SceneNode::SetPosGlobal(sf::Vector2f pos) {
+	if (auto* c = FindShapeCollider()) {
+		c->SetPosGlobal(pos);
+	}
+	else {
+		setPosition(pos);
+	}
+}
+
 void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	if (!_isEnabled || !_isVisible) {
 		return;
@@ -43,7 +114,7 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 		child->draw(target, states);
 	}
 
-	if (EngineContext::Instance().IsDebugEnabled()) {
+	if (EngineContext::GetInstance().IsDebugEnabled()) {
 		if (auto debugBehaviour = FindBehaviour<PhysicsDebugBehaviour>()) {
 			debugBehaviour->DebugDraw(target, states);
 		}
@@ -77,23 +148,18 @@ void SceneNode::SetVisual(shared_ptr<Visual>&& visual) {
 	}
 }
 
-void SceneNode::SetSortingStrategy(shared_ptr<SortingStrategy>&& sorting) {
-	_sortingStrategy = std::move(sorting);
+void SceneNode::SetSortingStrategy(const shared_ptr<SortingStrategy>& sorting) {
+	_sortingStrategy = sorting;
 	if (_sortingStrategy) {
 		_sortingStrategy->AttachTo(shared_from_this());
 	}
 }
 
-void SceneNode::AddChild(std::shared_ptr<SceneNode>&& child) {
+void SceneNode::AddChild(const std::shared_ptr<SceneNode>& child) {
 	assert(!HasChild(child));
 
 	_children.push_back(child);
 	child->SetParent(shared_from_this());
-}
-
-void SceneNode::AddChild(SceneNode&& child) {
-	child.SetParent(shared_from_this());
-	_children.push_back(make_shared<SceneNode>(child));
 }
 
 void SceneNode::RemoveChild(SceneNode* child) {
@@ -181,7 +247,7 @@ shared_ptr<SceneNode> SceneNode::GetSubtreeRoot() const {
 }
 
 bool SceneNode::IsInActiveScene() const {
-	auto active = EngineContext::Instance().GetScene();
+	auto active = EngineContext::GetInstance().GetScene();
 	if (!active) {
 		return false;
 	}

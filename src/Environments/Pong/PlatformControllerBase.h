@@ -10,9 +10,8 @@ namespace sf {
 class PlatformControllerBase : public Updatable
 {
 public:
-	explicit PlatformControllerBase(PongPlatform* platform) : _platform(platform) {}
-
-	virtual void Init() {}
+	explicit PlatformControllerBase(PongPlatform* platform);
+	virtual void Init();
 
 protected:
 	PongPlatform* _platform = nullptr;

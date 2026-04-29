@@ -66,3 +66,23 @@ void PongPlatform::Update(const sf::Time& dt) {
 		_controller->Update(dt);
 	}
 }
+
+std::shared_ptr<SceneNode> PongPlatform::GetNode() const {
+	return _node;
+}
+
+sf::Vector2f PongPlatform::GetPosGlobal() const {
+	return _node->GetPosGlobal();
+}
+
+void PongPlatform::SetName(const std::string& name) {
+	_node->SetName(name);
+}
+
+shared_ptr<PlatformControllerBase> PongPlatform::GetController() const {
+	return _controller;
+}
+
+void PongPlatform::SetController(const shared_ptr<PlatformControllerBase>& controller) {
+	_controller = controller;
+}

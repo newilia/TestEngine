@@ -17,7 +17,6 @@ public:
 	void OnInit() override;
 	void OnDeinit() override;
 	void OnUpdate(const sf::Time& dt) override;
-
 	/// @property
 	bool _isEnabled = true;
 	/// @property(minValue=-100.0, maxValue=100.0, step=0.5, dragSpeed=0.1, tooltip="Negative: attraction; positive:

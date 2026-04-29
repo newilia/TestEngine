@@ -1,6 +1,6 @@
 #include "PhysicsDebugBehaviour.h"
 
-#include "Engine/App/EngineInterface.h"
+#include "Engine/App/EngineContext.h"
 #include "Engine/App/FontManager.h"
 #include "Engine/Behaviour/Physics/InverseSquareFieldSourceBehaviour.h"
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
@@ -13,7 +13,7 @@
 #include <cmath>
 
 void PhysicsDebugBehaviour::DebugDraw(sf::RenderTarget& target, sf::RenderStates states) const {
-	if (!EngineContext::Instance().IsDebugEnabled()) {
+	if (!EngineContext::GetInstance().IsDebugEnabled()) {
 		return;
 	}
 	auto node = GetNode();
@@ -25,7 +25,7 @@ void PhysicsDebugBehaviour::DebugDraw(sf::RenderTarget& target, sf::RenderStates
 		return;
 	}
 
-	auto font = EngineContext::Instance().GetFontManager()->GetDefaultFont();
+	auto font = EngineContext::GetInstance().GetFontManager()->GetDefaultFont();
 	sf::Text text(*font, "", 15);
 	text.setFillColor(sf::Color::White);
 	text.setOutlineColor(sf::Color::Black);
@@ -42,12 +42,12 @@ void PhysicsDebugBehaviour::DebugDraw(sf::RenderTarget& target, sf::RenderStates
 	if (auto fieldSrc = node->FindBehaviour<InverseSquareFieldSourceBehaviour>()) {
 		if (fieldSrc->_isEnabled && !rigidBody->IsImmovable() && std::isfinite(rigidBody->_mass) &&
 		    rigidBody->_mass > 0.f) {
-			auto ph = EngineContext::Instance().GetPhysicsHandler();
+			auto ph = EngineContext::GetInstance().GetPhysicsHandler();
 			auto field = ph ? ph->GetIsotropicInverseSquareField() : nullptr;
 			if (field) {
 				const sf::Vector2f a = field->EvaluateAcceleration(fieldSrc);
 				const sf::Vector2f force = a * rigidBody->_mass;
-				const float s = EngineContext::Instance().GetFieldForceDebugArrowScale();
+				const float s = EngineContext::GetInstance().GetFieldForceDebugArrowScale();
 				const float vx = force.x * s;
 				const float vy = force.y * s;
 				const float visualLen2 = vx * vx + vy * vy;

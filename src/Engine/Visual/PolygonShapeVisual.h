@@ -7,6 +7,5 @@ class PolygonShapeVisual : public ShapeVisualBase
 {
 public:
 	explicit PolygonShapeVisual(sf::Shape* shape);
-
 	bool HitTest(sf::Vector2f windowPosition) const override;
 };

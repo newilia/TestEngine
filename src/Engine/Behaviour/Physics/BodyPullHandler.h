@@ -22,7 +22,7 @@ class BodyPullHandler : public Behaviour
 public:
 	explicit BodyPullHandler(std::shared_ptr<VectorArrowVisual> arrowVisual);
 
-	void EnableDebugDraw(bool enable) { _isDebugDrawEnabled = enable; }
+	void EnableDebugDraw(bool enable);
 
 	void StartPull(sf::Vector2f mousePos);
 	void StartPull(sf::Vector2f mousePos, UserPullBehaviour::PullMode pullMode);

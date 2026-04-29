@@ -4,11 +4,11 @@ template <typename T>
 class Singleton
 {
 public:
-	static T* GetInstance() {
+	static T& GetInstance() {
 		if (!_instance) {
 			_instance = new T();
 		}
-		return _instance;
+		return *_instance;
 	}
 
 	static void Destroy() {
@@ -27,6 +27,5 @@ private:
 	Singleton& operator=(const Singleton&) = delete;
 	Singleton(Singleton&&) = delete;
 	Singleton& operator=(Singleton&&) = delete;
-
 	inline static T* _instance = nullptr;
 };

@@ -1,6 +1,6 @@
 #include "FpsCounterBehaviour.h"
 
-#include "Engine/App/EngineInterface.h"
+#include "Engine/App/EngineContext.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Visual/TextVisual.h"
 #include "FpsCounterBehaviour_gen.hpp"
@@ -15,7 +15,7 @@ std::shared_ptr<SceneNode> CreateFpsCounterNode() {
 	auto node = std::make_shared<SceneNode>();
 	node->SetName("Fps");
 
-	EngineContext& engine = EngineContext::Instance();
+	EngineContext& engine = EngineContext::GetInstance();
 	auto* font = engine.GetFontManager()->GetDefaultFont();
 	assert(font);
 
@@ -54,7 +54,7 @@ void FpsCounterBehaviour::OnDeinit() {
 
 void FpsCounterBehaviour::OnUpdate(const sf::Time& dt) {
 	(void)dt;
-	auto frameTime = EngineContext::Instance().GetFrameDt(false);
+	auto frameTime = EngineContext::GetInstance().GetFrameDt(false);
 	float newFps = 1.f / frameTime.asSeconds();
 	if (_fps == 0.f) {
 		_fps = newFps;

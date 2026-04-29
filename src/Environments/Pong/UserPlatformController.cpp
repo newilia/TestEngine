@@ -4,6 +4,20 @@
 #include "PongPlatform.h"
 #include "SFML/Window/Event.hpp"
 
+UserPlatformController::UserPlatformController(PongPlatform* platform) : PlatformControllerBase(platform) {}
+
+void UserPlatformController::SetVerticalFreedomFactor(float val) {
+	_verticalMoveFactor = val;
+}
+
+void UserPlatformController::SetVelocityFactor(float val) {
+	_speedFactor = val;
+}
+
+void UserPlatformController::SetVelLimit(sf::Vector2f val) {
+	_velLimit = val;
+}
+
 void UserPlatformController::Init() {
 	_targetPos = _defaultPos = _platform->GetPosGlobal();
 }

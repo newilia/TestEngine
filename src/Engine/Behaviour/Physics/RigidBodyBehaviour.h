@@ -24,7 +24,6 @@ public:
 	/// @property
 	float _friction = 0.5f;
 
-	void SetImmovable() { _mass = std::numeric_limits<float>::infinity(); }
-
-	bool IsImmovable() const { return _mass == std::numeric_limits<float>::infinity(); }
+	void SetImmovable();
+	bool IsImmovable() const;
 };

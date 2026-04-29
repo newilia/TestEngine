@@ -15,7 +15,6 @@ public:
 		FORCE,
 		VELOCITY,
 	};
-
 	~UserPullBehaviour() override = default;
 	sf::Vector2f GetPullVector() const;
 	/// @property

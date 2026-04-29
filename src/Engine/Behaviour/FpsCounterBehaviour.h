@@ -19,7 +19,6 @@ class FpsCounterBehaviour : public Behaviour
 	META_CLASS()
 public:
 	explicit FpsCounterBehaviour(std::shared_ptr<sf::Text> text);
-
 	void OnInit() override;
 	void OnUpdate(const sf::Time& dt) override;
 	void OnDeinit() override;
