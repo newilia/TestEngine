@@ -6,7 +6,6 @@
 #include "Environments/Test/TestEnvironment.h"
 
 #include <SFML/Graphics.hpp>
-#include <SFML/System/Sleep.hpp>
 
 #include <fmt/format.h>
 #include <imgui-SFML.h>
@@ -118,9 +117,10 @@ namespace {
 	}
 
 	/// Returns false if the window was closed. ImGui-SFML APIs require Init first (`imguiSfmlReady`).
-	[[nodiscard]] bool PollAndDispatchEvents(EngineContext& engine, sf::RenderWindow& window, bool imguiSfmlReady) {
+	[[nodiscard]] bool PollAndDispatchEvents(EngineContext& engine, sf::RenderWindow& window) {
+		bool isImGuiInitialized = engine.IsImGuiInitialized();
 		while (auto ev = window.pollEvent()) {
-			if (imguiSfmlReady) {
+			if (isImGuiInitialized) {
 				ImGui::SFML::ProcessEvent(window, *ev);
 			}
 			sf::Event event = *ev;
@@ -134,7 +134,7 @@ namespace {
 				    sf::View(sf::FloatRect({0.f, 0.f}, {static_cast<float>(sz.x), static_cast<float>(sz.y)})));
 			}
 			Engine::Editor::GetInstance().OnEvent(event);
-			const bool forwardToGame = !imguiSfmlReady || ShouldForwardEventToGame(event);
+			const bool forwardToGame = !isImGuiInitialized || ShouldForwardEventToGame(event);
 			bool consumed = false;
 			if (forwardToGame) {
 				consumed = Engine::Editor::GetInstance().GetEditorToolManager().ProcessEvent(event);
@@ -146,46 +146,50 @@ namespace {
 		return window.isOpen();
 	}
 
-	[[nodiscard]] bool UpdateTick(EngineContext& engine, const std::shared_ptr<Scene>& scene, const sf::Time& dt) {
+	bool UpdateTick() {
+		auto& engine = EngineContext::GetInstance();
 		if (engine.IsSimPaused()) {
 			return false;
 		}
 		engine.OnStartUpdateTick();
 		auto simulatedDt = engine.GetSimTickDt();
 
-		auto* ph = engine.GetPhysicsProcessor().get();
-		scene->UpdateRec(simulatedDt);
-		ph->Update(simulatedDt);
+		if (auto scene = engine.GetScene()) {
+			scene->UpdateRec(simulatedDt);
+		}
+		engine.GetPhysicsProcessor()->Update(simulatedDt);
 		return true;
 	}
 
-	[[nodiscard]] bool PresentFrame(const sf::Time& dt, EngineContext& engine, sf::RenderWindow& window,
-	                                const std::shared_ptr<Scene>& scene, bool& imguiInitialized) {
-		/* TODO move out of here */
-		{
-			if (!imguiInitialized) {
-				if (!ImGui::SFML::Init(window)) {
-					return false;
-				}
-				ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-				imguiInitialized = true;
-			}
+	bool PresentFrame() {
+		auto& engine = EngineContext::GetInstance();
+		auto window = engine.GetMainWindow();
+
+		engine.TryInitImGui();
+
+		if (!window) {
+			return false;
+		}
+		auto scene = engine.GetScene();
+		if (!scene) {
+			return false;
 		}
 
 		engine.OnStartPresentFrame();
-		window.clear();
-		ImGui::SFML::Update(window, engine.GetFrameDt());
+		auto dt = engine.GetFrameDt();
 
-		scene->NotifyPresentRec(engine.GetFrameDt());
+		window->clear();
+		ImGui::SFML::Update(*window, dt);
+		scene->NotifyPresentRec(dt);
 
-		Engine::Editor::GetInstance().GetEditorToolManager().OnPresent(engine.GetFrameDt());
+		auto& editor = Engine::Editor::GetInstance();
+		editor.GetEditorToolManager().OnPresent(dt);
+		editor.Update(dt.asSeconds());
+		editor.Draw();
 
-		Engine::Editor::GetInstance().Update(engine.GetFrameDt().asSeconds());
-		Engine::Editor::GetInstance().Draw();
-
-		window.draw(*scene);
-		ImGui::SFML::Render(window);
-		window.display();
+		window->draw(*scene);
+		ImGui::SFML::Render(*window);
+		window->display();
 		return true;
 	}
 
@@ -208,30 +212,21 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 #endif
 
 	EngineContext& engine = EngineContext::GetInstance();
-	bool isImGuiInitialized = false;
 
 	const auto targetTickPeriod = [&engine]() {
 		auto period = sf::seconds(1.f / engine.GetTargetTickRateHz());
 		return period;
 	};
-	PeriodicTaskExecutor tickExecutor(targetTickPeriod, [&engine, &isImGuiInitialized](const sf::Time& dt) {
-		auto scene = engine.GetScene();
-		if (scene) {
-			(void)UpdateTick(engine, scene, dt);
-		}
-	});
+	PeriodicTaskExecutor tickExecutor(targetTickPeriod, [](const sf::Time& dt) { UpdateTick(); });
 
 	const auto targetFramePeriod = [&engine]() {
+		if (!engine.IsFramerateLimitEnabled()) {
+			return sf::Time::Zero;
+		}
 		auto period = sf::seconds(1.f / engine.GetFramerateLimit());
 		return period;
 	};
-	PeriodicTaskExecutor presentExecutor(targetFramePeriod, [&engine, &isImGuiInitialized](const sf::Time& dt) {
-		auto window = engine.GetMainWindow();
-		auto scene = engine.GetScene();
-		if (window && scene) {
-			(void)PresentFrame(dt, engine, *window, scene, isImGuiInitialized);
-		}
-	});
+	PeriodicTaskExecutor presentExecutor(targetFramePeriod, [](const sf::Time& dt) { PresentFrame(); });
 
 	sf::Clock mainLoopClock;
 
@@ -244,7 +239,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 			break;
 		}
 
-		if (!PollAndDispatchEvents(engine, *window, isImGuiInitialized)) {
+		if (!PollAndDispatchEvents(engine, *window)) {
 			break;
 		}
 
@@ -253,7 +248,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		presentExecutor.Update(dt);
 	}
 
-	if (isImGuiInitialized) {
+	if (engine.IsImGuiInitialized()) {
 		ImGui::SFML::Shutdown();
 	}
 

@@ -15,6 +15,9 @@ public:
 	EngineContext();
 	~EngineContext() override;
 	void Init();
+	void TryInitImGui();
+	bool IsImGuiInitialized() const;
+
 	shared_ptr<Scene> GetScene() const;
 	void SetScene(const shared_ptr<Scene>& scene);
 	shared_ptr<UserInput> GetUserInput() const;
@@ -66,6 +69,7 @@ public:
 private:
 	void ApplyWindowFrameSettings();
 
+	bool _isImGuiInitialized = false;
 	shared_ptr<sf::RenderWindow> _mainWindow;
 	shared_ptr<Scene> _scene;
 	shared_ptr<UserInput> _userInput;
