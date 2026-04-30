@@ -32,8 +32,8 @@ class SceneNode : public enable_shared_from_this<SceneNode>,
 	META_CLASS()
 public:
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
-	void Update(const sf::Time& dt) override; // TODO remove
-	void UpdateRec(const sf::Time& dt);       // TODO rename to Update()
+	void Run(const sf::Time& dt) override; // TODO remove
+	void UpdateRec(const sf::Time& dt);    // TODO rename to Run()
 
 	/// After simulation ticks, once per frame before draw (HUD / frame-synced behaviours).
 	void NotifyPresentRec(const sf::Time& realFrameDt);

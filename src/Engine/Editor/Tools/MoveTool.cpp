@@ -28,7 +28,7 @@ bool MoveTool::processEvent(const sf::Event& event) {
 	};
 
 	auto tryBegin = [&](sf::Vector2f pos) -> bool {
-		auto scene = EngineContext::GetInstance().GetScene();
+		auto scene = Engine::MainContext::GetInstance().GetScene();
 		auto picked = PickSceneNodeAt(scene, pos);
 		if (!picked) {
 			_dragging = false;

@@ -21,7 +21,7 @@
 #include <optional>
 #include <vector>
 
-void PhysicsProcessor::Update(const sf::Time& dt) {
+void PhysicsProcessor::Run(const sf::Time& dt) {
 	Utils::RemoveExpiredPointers(_bodies);
 	// motion step
 	for (auto& wBody : _bodies) {
@@ -330,8 +330,8 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectCircleCircleIntersect
 		result.intersection.end.x = x0 - b * mult;
 		result.intersection.end.y = y0 + a * mult;
 	}
-	if (EngineContext::GetInstance().IsDebugDrawEnabled()) {
-		if (auto wnd = EngineContext::GetInstance().GetMainWindow()) {
+	if (Engine::MainContext::GetInstance().IsDebugDrawEnabled()) {
+		if (auto wnd = Engine::MainContext::GetInstance().GetMainWindow()) {
 			wnd->draw(CreateCircle(result.intersection.start, 2, sf::Color::White));
 			wnd->draw(CreateCircle(result.intersection.end, 2, sf::Color::White));
 		}
@@ -484,8 +484,8 @@ PhysicsProcessor::FindSegmentCircleIntersectionPoint(const Segment& seg, const s
 		*result.p2 += circleCenter;
 	}
 
-	if (EngineContext::GetInstance().IsDebugDrawEnabled()) {
-		if (auto window = EngineContext::GetInstance().GetMainWindow()) {
+	if (Engine::MainContext::GetInstance().IsDebugDrawEnabled()) {
+		if (auto window = Engine::MainContext::GetInstance().GetMainWindow()) {
 			window->draw(CreateCircle(result.p1, 2.f, sf::Color::White));
 			if (result.p2) {
 				window->draw(CreateCircle(*result.p2, 2.f, sf::Color::White));
@@ -581,8 +581,8 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 		auto isNan = Utils::IsNan(b1RigidBody->_velocity) || Utils::IsNan(b2RigidBody->_velocity);
 		assert(!isNan);
 
-		if (EngineContext::GetInstance().IsDebugDrawEnabled()) {
-			if (auto window = EngineContext::GetInstance().GetMainWindow()) {
+		if (Engine::MainContext::GetInstance().IsDebugDrawEnabled()) {
+			if (auto window = Engine::MainContext::GetInstance().GetMainWindow()) {
 				{
 					VectorArrow force1(body1->GetPosGlobal(), body1->GetPosGlobal() + dv1);
 					if (auto* collider = body1->FindShapeCollider()) {
@@ -609,8 +609,8 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 		}
 	}
 
-	if (EngineContext::GetInstance().IsDebugDrawEnabled()) {
-		if (auto window = EngineContext::GetInstance().GetMainWindow()) {
+	if (Engine::MainContext::GetInstance().IsDebugDrawEnabled()) {
+		if (auto window = Engine::MainContext::GetInstance().GetMainWindow()) {
 			const sf::Vector2f middlePoint((collision.intersection.start + collision.intersection.end) * 0.5f);
 
 			{ // collision segment

@@ -7,7 +7,7 @@ class PeriodicTaskExecutor
 {
 public:
 	explicit PeriodicTaskExecutor(std::function<sf::Time()> getPeriod, std::function<void(const sf::Time& dt)> task);
-	bool Update(sf::Time dt);
+	bool Run(sf::Time dt);
 
 private:
 	std::function<sf::Time()> _getPeriod;

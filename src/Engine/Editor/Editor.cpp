@@ -70,9 +70,9 @@ namespace Engine {
 		return _isOpen;
 	}
 
-	void Editor::Update(float /*dt*/) {
-		EngineContext::GetInstance().SetHierarchySelectedForViewport(_isOpen ? _sceneHierarchyWidget.GetSelected()
-		                                                                     : nullptr);
+	void Editor::Run(float /*dt*/) {
+		Engine::MainContext::GetInstance().SetHierarchySelectedForViewport(_isOpen ? _sceneHierarchyWidget.GetSelected()
+		                                                                           : nullptr);
 	}
 
 	std::shared_ptr<SceneNode> Editor::GetSelectedNode() const {
@@ -132,7 +132,7 @@ namespace Engine {
 		ImGui::End();
 
 		if (ImGui::Begin(kSceneWindowTitle, nullptr, ImGuiWindowFlags_None)) {
-			_sceneHierarchyWidget.Draw(EngineContext::GetInstance().GetScene());
+			_sceneHierarchyWidget.Draw(Engine::MainContext::GetInstance().GetScene());
 		}
 		ImGui::End();
 

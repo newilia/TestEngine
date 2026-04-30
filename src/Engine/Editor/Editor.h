@@ -22,7 +22,7 @@ namespace Engine {
 		void Toggle();
 		void SetIsOpen(bool isOpen);
 		bool IsOpen() const;
-		void Update(float dt);
+		void Run(float dt);
 		void Draw();
 		void OnEvent(const sf::Event& event);
 		void OnResize(const sf::Vector2u& size);

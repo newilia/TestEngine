@@ -11,7 +11,7 @@
 namespace Engine {
 
 	void DebugSettingsWidget::Draw() const {
-		auto& engine = EngineContext::GetInstance();
+		auto& engine = Engine::MainContext::GetInstance();
 
 		ImGui::SeparatorText("Simulation");
 		bool simEnabled = !engine.IsSimPaused();
@@ -43,19 +43,19 @@ namespace Engine {
 		ImGui::SameLine();
 		ImGui::TextDisabled("(0 = off; meaningful when VSync is off)");
 
-		int tickHz = static_cast<int>(engine.GetTargetTickRateHz());
+		int tickHz = static_cast<int>(engine.GetTargetTickRate());
 		if (ImGui::DragInt("Logic tick rate (Hz)", &tickHz, 10, 0, 10000)) {
 			tickHz = std::max(0, tickHz);
-			engine.SetTargetTickRateHz(static_cast<std::uint32_t>(tickHz));
+			engine.SetTargetTickRate(static_cast<std::uint32_t>(tickHz));
 		}
 		ImGui::SameLine();
 		ImGui::TextDisabled("(0 = unlimited: one variable step per frame)");
 
 		ImGui::Text("Frame dt: %.3f s (%.1f fps)", static_cast<double>(engine.GetFrameDt().asSeconds()),
-		            engine.GetFps());
+		            engine.GetCurrentFps());
 
 		ImGui::Text("Tick dt:  %.3f s (%.1f fps)", static_cast<double>(engine.GetSimTickDt().asSeconds()),
-		            engine.GetTickRate());
+		            engine.GetCurrentTickRate());
 
 		if (const auto ph = engine.GetPhysicsProcessor()) {
 			ImGui::SeparatorText("Physics");
@@ -74,7 +74,7 @@ namespace Engine {
 		ImGui::SeparatorText("Debug & field");
 		bool debugDraw = engine.IsDebugDrawEnabled();
 		if (ImGui::Checkbox("Debug draw (velocities, labels, ...)", &debugDraw)) {
-			engine.SetDebugEnabled(debugDraw);
+			engine.SetDebugDrawEnabled(debugDraw);
 		}
 		float forceArrowScale = engine.GetFieldForceDebugArrowScale();
 		if (ImGui::SliderFloat("Field force arrow scale", &forceArrowScale, 1e-5f, 20.f, "%.5f",

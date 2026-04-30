@@ -7,7 +7,7 @@
 ShapeColliderBehaviourBase::~ShapeColliderBehaviourBase() {
 	if (_registered) {
 		if (auto n = GetNode()) {
-			if (auto ph = EngineContext::GetInstance().GetPhysicsProcessor()) {
+			if (auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
 				ph->UnregisterBody(n.get());
 			}
 		}
@@ -20,7 +20,7 @@ void ShapeColliderBehaviourBase::OnInit() {
 		return;
 	}
 	if (auto n = GetNode()) {
-		if (auto ph = EngineContext::GetInstance().GetPhysicsProcessor()) {
+		if (auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
 			ph->RegisterBody(n);
 			_registered = true;
 		}
@@ -32,7 +32,7 @@ void ShapeColliderBehaviourBase::OnDeinit() {
 		return;
 	}
 	if (auto n = GetNode()) {
-		if (auto ph = EngineContext::GetInstance().GetPhysicsProcessor()) {
+		if (auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
 			ph->UnregisterBody(n.get());
 		}
 	}
