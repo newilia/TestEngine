@@ -61,7 +61,11 @@ namespace {
 			}
 			Engine::Editor::GetInstance().OnEvent(event);
 			const bool forwardToGame = !imguiSfmlReady || ShouldForwardEventToGame(event);
+			bool consumed = false;
 			if (forwardToGame) {
+				consumed = Engine::Editor::GetInstance().GetEditorToolManager().ProcessEvent(event);
+			}
+			if (forwardToGame && !consumed) {
 				engine.GetUserInput()->HandleEvent(event);
 			}
 		}
@@ -100,6 +104,8 @@ namespace {
 
 		scene->NotifyPresentRec(engine.GetFrameDt());
 
+		Engine::Editor::GetInstance().GetEditorToolManager().OnPresent(engine.GetFrameDt());
+
 		Engine::Editor::GetInstance().Update(engine.GetFrameDt().asSeconds());
 		Engine::Editor::GetInstance().Draw();
 
@@ -135,7 +141,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	PeriodicTaskExecutor tickExecutor(targetTickPeriod, [&engine, &isImGuiInitialized](const sf::Time& dt) {
 		auto scene = engine.GetScene();
 		if (scene) {
-			UpdateTick(engine, scene, dt);
+			(void)UpdateTick(engine, scene, dt);
 		}
 	});
 
@@ -147,7 +153,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		auto window = engine.GetMainWindow();
 		auto scene = engine.GetScene();
 		if (window && scene) {
-			PresentFrame(dt, engine, *window, scene, isImGuiInitialized);
+			(void)PresentFrame(dt, engine, *window, scene, isImGuiInitialized);
 		}
 	});
 

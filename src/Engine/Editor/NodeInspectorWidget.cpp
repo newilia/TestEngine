@@ -8,6 +8,7 @@
 #include "Engine/Sorting/SortingStrategy.h"
 #include "Engine/Visual/Visual.h"
 
+#include <fmt/format.h>
 #include <imgui.h>
 
 #include <string>
@@ -50,8 +51,8 @@ namespace Engine {
 			if (!behaviour) {
 				continue;
 			}
-			const std::string title = std::string("Behaviour: ") + typeid(*behaviour).name();
-			DrawIPropertiesProviderBlock(title.c_str(), dynamic_cast<IPropertiesProvider*>(behaviour.get()),
+			const std::string behTitle = fmt::format("Behaviour ({})", typeid(*behaviour).name());
+			DrawIPropertiesProviderBlock(behTitle.c_str(), dynamic_cast<IPropertiesProvider*>(behaviour.get()),
 			                             _propertyDrawer);
 		}
 	}

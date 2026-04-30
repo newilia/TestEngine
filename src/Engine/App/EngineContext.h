@@ -9,8 +9,6 @@
 #include <memory>
 #include <optional>
 
-class BodyPullHandler;
-
 class EngineContext : public Singleton<EngineContext>
 {
 public:
@@ -22,8 +20,6 @@ public:
 	shared_ptr<UserInput> GetUserInput() const;
 	shared_ptr<PhysicsProcessor> GetPhysicsProcessor() const;
 	shared_ptr<FontManager> GetFontManager() const;
-	shared_ptr<BodyPullHandler> GetBodyPullHandler() const;
-	void SetBodyPullHandler(const shared_ptr<BodyPullHandler>& handler);
 	float GetSimSpeedMultiplier() const;
 	void SetSimSpeedMultiplier(float val);
 	bool IsSimPaused() const;
@@ -71,7 +67,6 @@ private:
 	shared_ptr<UserInput> _userInput;
 	shared_ptr<PhysicsProcessor> _physicsProcessor;
 	shared_ptr<FontManager> _fontManager;
-	shared_ptr<BodyPullHandler> _bodyPullHandler;
 	sf::Clock _frameClock;
 	sf::Time _frameTime;
 	sf::Clock _tickClock;
