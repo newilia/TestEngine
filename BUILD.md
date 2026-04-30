@@ -39,7 +39,7 @@ cmake --build build --config Release
 
 Полный лог по каждому заголовку: `python tools/property_codegen.py --root . --verbose` (в CMake по умолчанию без `--verbose`, в конце — сводка).
 
-После добавления **нового** `src/**/*.cpp` выполните шаг конфигурации CMake (`cmake -S . -B build -A x64` или скрипт `__gen_solution.cmd`), иначе список исходников из `GLOB_RECURSE` может не обновиться до следующей полной перегенерации.
+Список `src/**/*.cpp` и заголовков подхватывается при следующей сборке или конфигурации: в `CMakeLists.txt` для них задан `CONFIGURE_DEPENDS` (перезапуск configure при изменении дерева файлов).
 
 ## Visual Studio
 
