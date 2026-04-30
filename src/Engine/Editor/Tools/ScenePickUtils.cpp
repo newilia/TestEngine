@@ -14,7 +14,7 @@ std::shared_ptr<SceneNode> PickSceneNodeAt(const std::shared_ptr<Scene>& scene, 
 	if (auto hit = scene->FindTopMostTapTarget(windowPosition)) {
 		return hit;
 	}
-	auto physicsProcessor = EngineContext::GetInstance().GetPhysicsProcessor();
+	auto physicsProcessor = Engine::MainContext::GetInstance().GetPhysicsProcessor();
 	if (!physicsProcessor) {
 		return nullptr;
 	}

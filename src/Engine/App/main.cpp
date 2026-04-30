@@ -1,4 +1,5 @@
 #include "Engine/App/EngineContext.h"
+#include "Engine/App/MainLoop.h"
 #include "Engine/App/UserInput.h"
 #include "Engine/Core/PeriodicTaskExecutor.h"
 #include "Engine/Editor/Editor.h"
@@ -88,109 +89,6 @@ namespace {
 		}
 		}
 	}
-
-	// Uses ImGui IO flags from the previous frame (after the last ImGui::SFML::Update), which is
-	// the usual pattern for deciding whether application code should see mouse/keyboard events.
-	[[nodiscard]] bool ShouldForwardEventToGame(const sf::Event& event) {
-		const ImGuiIO& io = ImGui::GetIO();
-		if (event.is<sf::Event::MouseButtonPressed>() || event.is<sf::Event::MouseButtonReleased>() ||
-		    event.is<sf::Event::MouseMoved>() || event.is<sf::Event::MouseMovedRaw>() ||
-		    event.is<sf::Event::MouseWheelScrolled>() || event.is<sf::Event::TouchBegan>() ||
-		    event.is<sf::Event::TouchMoved>() || event.is<sf::Event::TouchEnded>()) {
-			return !io.WantCaptureMouse;
-		}
-		if (event.is<sf::Event::KeyPressed>() || event.is<sf::Event::KeyReleased>()) {
-			return !io.WantCaptureKeyboard;
-		}
-		if (event.is<sf::Event::TextEntered>()) {
-			return !io.WantTextInput;
-		}
-		return true;
-	}
-
-	[[nodiscard]] float GetPresentationPeriodSec(const EngineContext& engine) {
-		const std::uint32_t limit = engine.GetFramerateLimit();
-		if (limit > 0u) {
-			return 1.f / static_cast<float>(limit);
-		}
-		return 1.f / 60.f;
-	}
-
-	/// Returns false if the window was closed. ImGui-SFML APIs require Init first (`imguiSfmlReady`).
-	[[nodiscard]] bool PollAndDispatchEvents(EngineContext& engine, sf::RenderWindow& window) {
-		bool isImGuiInitialized = engine.IsImGuiInitialized();
-		while (auto ev = window.pollEvent()) {
-			if (isImGuiInitialized) {
-				ImGui::SFML::ProcessEvent(window, *ev);
-			}
-			sf::Event event = *ev;
-			if (event.is<sf::Event::Closed>()) {
-				window.close();
-				return false;
-			}
-			if (const auto* resized = event.getIf<sf::Event::Resized>()) {
-				const auto sz = resized->size;
-				window.setView(
-				    sf::View(sf::FloatRect({0.f, 0.f}, {static_cast<float>(sz.x), static_cast<float>(sz.y)})));
-			}
-			Engine::Editor::GetInstance().OnEvent(event);
-			const bool forwardToGame = !isImGuiInitialized || ShouldForwardEventToGame(event);
-			bool consumed = false;
-			if (forwardToGame) {
-				consumed = Engine::Editor::GetInstance().GetEditorToolManager().ProcessEvent(event);
-			}
-			if (forwardToGame && !consumed) {
-				engine.GetUserInput()->HandleEvent(event);
-			}
-		}
-		return window.isOpen();
-	}
-
-	bool UpdateTick() {
-		auto& engine = EngineContext::GetInstance();
-		if (engine.IsSimPaused()) {
-			return false;
-		}
-		engine.OnStartUpdateTick();
-		auto simulatedDt = engine.GetSimTickDt();
-
-		if (auto scene = engine.GetScene()) {
-			scene->UpdateRec(simulatedDt);
-		}
-		engine.GetPhysicsProcessor()->Update(simulatedDt);
-		return true;
-	}
-
-	bool PresentFrame() {
-		auto& engine = EngineContext::GetInstance();
-		auto window = engine.GetMainWindow();
-
-		if (!window) {
-			return false;
-		}
-		auto scene = engine.GetScene();
-		if (!scene) {
-			return false;
-		}
-
-		engine.OnStartPresentFrame();
-		auto dt = engine.GetFrameDt();
-
-		window->clear();
-		ImGui::SFML::Update(*window, dt);
-		scene->NotifyPresentRec(dt);
-
-		auto& editor = Engine::Editor::GetInstance();
-		editor.GetEditorToolManager().OnPresent(dt);
-		editor.Update(dt.asSeconds());
-		editor.Draw();
-
-		window->draw(*scene);
-		ImGui::SFML::Render(*window);
-		window->display();
-		return true;
-	}
-
 } // namespace
 
 #ifdef _CONSOLE
@@ -209,47 +107,12 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	RunAppEnvironment(ParseEnvFromCmdLine(lpCmdLine ? std::string_view(lpCmdLine) : std::string_view{}));
 #endif
 
-	EngineContext& engine = EngineContext::GetInstance();
-	engine.Init();
+	Engine::MainContext::GetInstance().Init();
 
-	const auto targetTickPeriod = [&engine]() {
-		auto period = sf::seconds(1.f / engine.GetTargetTickRateHz());
-		return period;
-	};
-	PeriodicTaskExecutor tickExecutor(targetTickPeriod, [](const sf::Time& dt) { UpdateTick(); });
+	Engine::MainLoop mainLoop;
+	mainLoop.Run();
 
-	const auto targetFramePeriod = [&engine]() {
-		if (!engine.IsFramerateLimitEnabled()) {
-			return sf::Time::Zero;
-		}
-		auto period = sf::seconds(1.f / engine.GetFramerateLimit());
-		return period;
-	};
-	PeriodicTaskExecutor presentExecutor(targetFramePeriod, [](const sf::Time& dt) { PresentFrame(); });
-
-	sf::Clock mainLoopClock;
-
-	while (true) {
-		auto window = engine.GetMainWindow();
-		if (!window) {
-			return EXIT_FAILURE;
-		}
-		if (!window->isOpen()) {
-			break;
-		}
-
-		if (!PollAndDispatchEvents(engine, *window)) {
-			break;
-		}
-
-		auto dt = mainLoopClock.restart();
-		tickExecutor.Update(dt);
-		presentExecutor.Update(dt);
-	}
-
-	if (engine.IsImGuiInitialized()) {
-		ImGui::SFML::Shutdown();
-	}
+	Engine::MainContext::GetInstance().Shutdown();
 
 	return EXIT_SUCCESS;
 }

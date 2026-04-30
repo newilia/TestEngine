@@ -8,7 +8,7 @@ PeriodicTaskExecutor::PeriodicTaskExecutor(std::function<sf::Time()> getPeriod,
 	_task = std::move(task);
 }
 
-bool PeriodicTaskExecutor::Update(sf::Time dt) {
+bool PeriodicTaskExecutor::Run(sf::Time dt) {
 	_accumulated += dt;
 	const auto period = _getPeriod();
 	if (_accumulated >= period) {

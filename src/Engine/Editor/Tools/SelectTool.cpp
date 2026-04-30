@@ -11,7 +11,7 @@ SelectTool::SelectTool(SelectCallback onSelect) : _onSelect(std::move(onSelect))
 
 bool SelectTool::processEvent(const sf::Event& event) {
 	auto applyPick = [this](sf::Vector2f pos) -> bool {
-		auto scene = EngineContext::GetInstance().GetScene();
+		auto scene = Engine::MainContext::GetInstance().GetScene();
 		auto picked = PickSceneNodeAt(scene, pos);
 		_onSelect(picked);
 		return true;

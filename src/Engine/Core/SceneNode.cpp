@@ -51,7 +51,7 @@ namespace {
 
 	void DrawHierarchySelectionHighlightIfSelected(const SceneNode& node, sf::RenderTarget& target,
 	                                               sf::RenderStates states) {
-		const auto selected = EngineContext::GetInstance().GetHierarchySelectedForViewport();
+		const auto selected = Engine::MainContext::GetInstance().GetHierarchySelectedForViewport();
 		if (!selected || selected.get() != &node) {
 			return;
 		}
@@ -89,7 +89,7 @@ namespace {
 
 } // namespace
 
-void SceneNode::Update(const sf::Time& /*dt*/) {}
+void SceneNode::Run(const sf::Time& /*dt*/) {}
 
 void SceneNode::OnInit() {}
 
@@ -185,7 +185,7 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 		child->draw(target, states);
 	}
 
-	if (EngineContext::GetInstance().IsDebugDrawEnabled()) {
+	if (Engine::MainContext::GetInstance().IsDebugDrawEnabled()) {
 		if (auto debugBehaviour = FindBehaviour<PhysicsDebugBehaviour>()) { // todo fix (некрасиво)
 			debugBehaviour->DebugDraw(target, states);
 		}
@@ -199,7 +199,7 @@ void SceneNode::UpdateRec(const sf::Time& dt) {
 		return;
 	}
 
-	Update(dt);
+	Run(dt);
 	for (auto& b : _behaviours) {
 		b->OnUpdate(dt);
 	}
@@ -332,7 +332,7 @@ shared_ptr<SceneNode> SceneNode::GetSubtreeRoot() const {
 }
 
 bool SceneNode::IsInActiveScene() const {
-	auto active = EngineContext::GetInstance().GetScene();
+	auto active = Engine::MainContext::GetInstance().GetScene();
 	if (!active) {
 		return false;
 	}

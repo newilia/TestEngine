@@ -31,18 +31,18 @@ static weak_ptr<PongBall> sBall;
 
 namespace {
 	sf::Vector2f GetScreenSize() {
-		return sf::Vector2f(EngineContext::GetInstance().GetMainWindow()->getSize());
+		return sf::Vector2f(Engine::MainContext::GetInstance().GetMainWindow()->getSize());
 	}
 } // namespace
 
 void PongEnvironment::Setup() {
-	EngineContext& engine = EngineContext::GetInstance();
+	auto& engine = Engine::MainContext::GetInstance();
 	auto videoMode = sf::VideoMode::getFullscreenModes()[0];
 	// sf::VideoMode videoMode(800, 600);
 	engine.CreateMainWindow(videoMode, "Pong", sf::Style::None);
 	engine.GetMainWindow()->setMouseCursorVisible(false);
 	engine.GetPhysicsProcessor()->SetGravity({0, 1000});
-	engine.SetDebugEnabled(false);
+	engine.SetDebugDrawEnabled(false);
 	// engine.GetMainWindow()->setFramerateLimit(40.f);
 	engine.SetScene(BuildScene());
 	ConfigureGlobalInput();
@@ -180,7 +180,7 @@ void PongEnvironment::AddUserPlatform(Scene* scene) {
 	platform->Init();
 	scene->AddChild(platform->GetNode());
 
-	EngineContext::GetInstance().GetUserInput()->AttachEventHandler(
+	Engine::MainContext::GetInstance().GetUserInput()->AttachEventHandler(
 	    createDelegate<PongPlatform, sf::Event>(platform, [platform = std::weak_ptr(platform)](sf::Event event) {
 		    if (auto c = dynamic_pointer_cast<UserPlatformController>(platform.lock()->GetController())) {
 			    c->HandleEvent(event);
@@ -228,7 +228,7 @@ std::shared_ptr<Scene> PongEnvironment::BuildScene() {
 }
 
 void PongEnvironment::ConfigureGlobalInput() {
-	auto engineContext = &EngineContext::GetInstance();
+	auto engineContext = &Engine::MainContext::GetInstance();
 	auto userInput = engineContext->GetUserInput();
 	auto scene = engineContext->GetScene();
 
@@ -238,7 +238,7 @@ void PongEnvironment::ConfigureGlobalInput() {
 				engineContext->SetScene(BuildScene());
 			}
 			else if (key->code == sf::Keyboard::Key::D) {
-				engineContext->SetDebugEnabled(!engineContext->IsDebugDrawEnabled());
+				engineContext->SetDebugDrawEnabled(!engineContext->IsDebugDrawEnabled());
 			}
 			else if (key->code == sf::Keyboard::Key::Escape) {
 				std::exit(EXIT_SUCCESS);
@@ -248,5 +248,5 @@ void PongEnvironment::ConfigureGlobalInput() {
 }
 
 void PongEnvironment::OnLose() {
-	EngineContext::GetInstance().SetScene(BuildScene());
+	Engine::MainContext::GetInstance().SetScene(BuildScene());
 }

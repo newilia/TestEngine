@@ -9,86 +9,98 @@
 #include <memory>
 #include <optional>
 
-class EngineContext : public Singleton<EngineContext>
-{
-public:
-	EngineContext();
-	~EngineContext() override;
-	void Init();
-	bool IsImGuiInitialized() const;
+namespace Engine {
 
-	shared_ptr<Scene> GetScene() const;
-	void SetScene(const shared_ptr<Scene>& scene);
-	shared_ptr<UserInput> GetUserInput() const;
-	shared_ptr<PhysicsProcessor> GetPhysicsProcessor() const;
-	shared_ptr<FontManager> GetFontManager() const;
-	float GetSimSpeedMultiplier() const;
-	void SetSimSpeedMultiplier(float val);
-	bool IsSimPaused() const;
-	void SetSimPaused(bool paused);
+	class MainContext : public Singleton<MainContext>
+	{
+	public:
+		MainContext();
+		~MainContext() override;
 
-	void OnStartPresentFrame();
-	void OnStartUpdateTick();
+		void Init();
+		void Shutdown();
+		bool IsImGuiInitialized() const;
 
-	sf::Time GetSimTickDt() const;
-	sf::Time GetWallTickDt() const;
-	sf::Time GetFrameDt() const;
+		shared_ptr<Scene> GetScene() const;
+		void SetScene(const shared_ptr<Scene>& scene);
+		shared_ptr<UserInput> GetUserInput() const;
+		shared_ptr<PhysicsProcessor> GetPhysicsProcessor() const;
+		shared_ptr<FontManager> GetFontManager() const;
 
-	/// Target logic update rate in Hz. 0 = one variable step per main-loop iteration (`wallDelta * speed`, capped).
-	[[nodiscard]] std::uint32_t GetTargetTickRateHz() const;
-	void SetTargetTickRateHz(std::uint32_t hz);
+		std::shared_ptr<sf::RenderWindow> CreateMainWindow(sf::VideoMode mode, const sf::String& title,
+		                                                   std::uint32_t style = sf::Style::Default,
+		                                                   sf::State state = sf::State::Windowed);
 
-	void SetVerticalSyncEnabled(bool enabled);
-	[[nodiscard]] bool IsVerticalSyncEnabled() const;
-	std::shared_ptr<sf::RenderWindow> CreateMainWindow(sf::VideoMode mode, const sf::String& title,
-	                                                   std::uint32_t style = sf::Style::Default,
-	                                                   sf::State state = sf::State::Windowed);
+		sf::RenderWindow* GetMainWindow() const;
 
-	sf::RenderWindow* GetMainWindow() const;
-	bool IsDebugDrawEnabled() const;
-	void SetDebugEnabled(bool enabled);
+		float GetSimSpeedMultiplier() const;
+		void SetSimSpeedMultiplier(float val);
 
-	/// World-space force arrows: endpoint = pos + (m * a) * scale (inverse-square field on entities).
-	float GetFieldForceDebugArrowScale() const;
-	void SetFieldForceDebugArrowScale(float scale);
+		bool IsSimPaused() const;
+		void SetSimPaused(bool paused);
 
-	void SetFramerateLimit(std::uint32_t maxFps);
-	[[nodiscard]] std::uint32_t GetFramerateLimit() const;
+		void OnStartPresentFrame();
+		void OnStartUpdateTick();
 
-	void SetFramerateLimitEnabled(bool enabled);
-	bool IsFramerateLimitEnabled() const;
+		// in-game dt for logic update, affected by speed multiplier
+		sf::Time GetSimTickDt() const;
+		// wall-clock dt for logic update
+		sf::Time GetWallTickDt() const;
+		// wall-clock dt for frame presentation
+		sf::Time GetFrameDt() const;
 
-	[[nodiscard]] float GetFps() const;
-	[[nodiscard]] float GetTickRate() const;
+		/// Target logic update rate in Hz
+		std::uint32_t GetTargetTickRate() const;
+		void SetTargetTickRate(std::uint32_t hz);
 
-	/// Editor hierarchy selection propagated for viewport overlay (outline). Cleared each frame via editor.
-	void SetHierarchySelectedForViewport(const shared_ptr<Scene>& node);
-	[[nodiscard]] shared_ptr<Scene> GetHierarchySelectedForViewport() const;
+		void SetVerticalSyncEnabled(bool enabled);
+		bool IsVerticalSyncEnabled() const;
 
-private:
-	void ApplyWindowFrameSettings();
+		bool IsDebugDrawEnabled() const;
+		void SetDebugDrawEnabled(bool enabled);
 
-	bool _isImGuiInitialized = false;
-	shared_ptr<sf::RenderWindow> _mainWindow;
-	shared_ptr<Scene> _scene;
-	shared_ptr<UserInput> _userInput;
-	shared_ptr<PhysicsProcessor> _physicsProcessor;
-	shared_ptr<FontManager> _fontManager;
-	sf::Clock _frameClock;
-	sf::Time _frameTime;
-	sf::Clock _tickClock;
-	sf::Time _tickTime;
-	float _simSpeedMultiplier = 1.f;
-	bool _isSimPaused = false;
-	bool _isDebugDrawEnabled = false;
-	float _fieldForceDebugArrowScale = 0.02f;
-	std::uint32_t _framerateLimit = 100;
-	bool _isFramerateLimitEnabled = false;
-	bool _verticalSyncEnabled = false;
-	std::uint32_t _targetTickRateHz = 500;
-	float _fps = 0.f;
-	float _tickRate = 0.f;
-	bool _haveFps = false;
-	bool _haveTickRate = false;
-	std::weak_ptr<Scene> _hierarchySelectedForViewport;
-};
+		/// World-space force arrows: endpoint = pos + (m * a) * scale (inverse-square field on entities).
+		float GetFieldForceDebugArrowScale() const;
+		void SetFieldForceDebugArrowScale(float scale);
+
+		std::uint32_t GetFramerateLimit() const;
+		void SetFramerateLimit(std::uint32_t maxFps);
+
+		bool IsFramerateLimitEnabled() const;
+		void SetFramerateLimitEnabled(bool enabled);
+
+		float GetCurrentFps() const;
+		float GetCurrentTickRate() const;
+
+		/// Editor hierarchy selection propagated for viewport overlay (outline). Cleared each frame via editor.
+		void SetHierarchySelectedForViewport(const shared_ptr<Scene>& node);
+		shared_ptr<Scene> GetHierarchySelectedForViewport() const;
+
+	private:
+		void ApplyWindowFrameSettings();
+
+		shared_ptr<sf::RenderWindow> _mainWindow;
+		shared_ptr<Scene> _scene;
+		shared_ptr<UserInput> _userInput;
+		shared_ptr<PhysicsProcessor> _physicsProcessor;
+		shared_ptr<FontManager> _fontManager;
+		sf::Clock _frameClock;
+		sf::Time _frameTime;
+		sf::Clock _tickClock;
+		sf::Time _tickTime;
+		float _simSpeedMultiplier = 1.f;
+		bool _isSimPaused = false;
+		bool _isDebugDrawEnabled = false;
+		bool _isImGuiInitialized = false;
+		float _fieldForceDebugArrowScale = 0.02f;
+		std::uint32_t _framerateLimit = 100;
+		bool _isFramerateLimitEnabled = false;
+		bool _verticalSyncEnabled = false;
+		std::uint32_t _targetTickRateHz = 500;
+		float _fps = 0.f;
+		float _tickRate = 0.f;
+		bool _haveFps = false;
+		bool _haveTickRate = false;
+		std::weak_ptr<Scene> _hierarchySelectedForViewport;
+	};
+} // namespace Engine

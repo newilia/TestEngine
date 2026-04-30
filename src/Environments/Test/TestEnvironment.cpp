@@ -20,7 +20,7 @@ using std::make_shared;
 using std::shared_ptr;
 
 void TestEnvironment::Setup() {
-	EngineContext& engine = EngineContext::GetInstance();
+	auto& engine = Engine::MainContext::GetInstance();
 	const auto mainWindow = engine.CreateMainWindow(sf::VideoMode({1920, 1080}), "Test scene");
 	if (!mainWindow) {
 		std::exit(EXIT_FAILURE);
@@ -33,7 +33,7 @@ void TestEnvironment::Setup() {
 
 std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	auto scene = make_shared<Scene>();
-	auto viewSize = EngineContext::GetInstance().GetMainWindow()->getView().getSize();
+	auto viewSize = Engine::MainContext::GetInstance().GetMainWindow()->getView().getSize();
 	float commonRestitution = 0.f;
 	float commonFriction = 500.f;
 	bool isAttractive = true;
@@ -127,7 +127,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 }
 
 void TestEnvironment::ConfigureInput() {
-	auto ei = &EngineContext::GetInstance();
+	auto ei = &Engine::MainContext::GetInstance();
 	auto userInput = ei->GetUserInput();
 
 	userInput->AttachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
@@ -184,7 +184,7 @@ void TestEnvironment::ConfigureInput() {
 	userInput->AttachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			if (key->code == sf::Keyboard::Key::D) {
-				ei->SetDebugEnabled(!ei->IsDebugDrawEnabled());
+				ei->SetDebugDrawEnabled(!ei->IsDebugDrawEnabled());
 			}
 		}
 	}));

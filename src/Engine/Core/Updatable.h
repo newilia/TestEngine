@@ -7,5 +7,5 @@ class Updatable
 public:
 	virtual ~Updatable() {}
 
-	virtual void Update(const sf::Time& dt) = 0;
+	virtual void Run(const sf::Time& dt) = 0;
 };

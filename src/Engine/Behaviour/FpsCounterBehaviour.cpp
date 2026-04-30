@@ -15,11 +15,11 @@ std::shared_ptr<SceneNode> CreateFpsCounterNode() {
 	auto node = std::make_shared<SceneNode>();
 	node->SetName("Fps");
 
-	EngineContext& engine = EngineContext::GetInstance();
-	auto* font = engine.GetFontManager()->GetDefaultFont();
+	auto& context = Engine::MainContext::GetInstance();
+	auto* font = context.GetFontManager()->GetDefaultFont();
 	assert(font);
 
-	sf::Vector2f pos = {engine.GetMainWindow()->getSize().x - 220.f, 0.f};
+	sf::Vector2f pos = {context.GetMainWindow()->getSize().x - 220.f, 0.f};
 	auto text = std::make_shared<sf::Text>(*font, "", 15);
 	text->setFillColor(sf::Color::White);
 	text->setPosition(pos);
@@ -52,13 +52,11 @@ void FpsCounterBehaviour::OnDeinit() {
 	_ownsDisplayVisual = false;
 }
 
-void FpsCounterBehaviour::OnUpdate(const sf::Time& /*dt*/) {}
-
-void FpsCounterBehaviour::OnPresent(const sf::Time& realFrameDt) {
-	// todo get tickHz from EngineContext when available (needs to be set there first)
-
+void FpsCounterBehaviour::OnUpdate(const sf::Time&) {
 	if (_text) {
-		_text->setString(fmt::format("FPS = {:.0f} | Tick = {:.0f}", _fps, _tickHz));
+		auto fps = Engine::MainContext::GetInstance().GetCurrentFps();
+		auto tickRate = Engine::MainContext::GetInstance().GetCurrentTickRate();
+		_text->setString(fmt::format("FPS = {:.0f} | Tick = {:.0f}", fps, tickRate));
 		_text->setFillColor(_textColor);
 	}
 }

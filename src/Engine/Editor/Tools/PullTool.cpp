@@ -35,7 +35,7 @@ void PullTool::SetArrowVisual(std::shared_ptr<VectorArrowVisual> arrow) {
 }
 
 std::shared_ptr<SceneNode> PullTool::StartPull(sf::Vector2f mousePos, UserPullBehaviour::PullMode pullMode) {
-	auto physicsProcessor = EngineContext::GetInstance().GetPhysicsProcessor();
+	auto physicsProcessor = Engine::MainContext::GetInstance().GetPhysicsProcessor();
 	if (!physicsProcessor) {
 		return nullptr;
 	}
