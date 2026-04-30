@@ -1,5 +1,8 @@
 #include "EngineContext.h"
 
+#include <imgui-SFML.h>
+#include <imgui.h>
+
 #include <cmath>
 
 namespace {
@@ -112,6 +115,20 @@ void EngineContext::SetScene(const shared_ptr<Scene>& scene) {
 }
 
 void EngineContext::Init() {}
+
+void EngineContext::TryInitImGui() {
+	if (!_isImGuiInitialized) {
+		if (!ImGui::SFML::Init(*_mainWindow)) {
+			return;
+		}
+		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+		_isImGuiInitialized = true;
+	}
+}
+
+bool EngineContext::IsImGuiInitialized() const {
+	return _isImGuiInitialized;
+}
 
 sf::Time EngineContext::GetSimTickDt() const {
 	if (_isSimPaused) {
