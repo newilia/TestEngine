@@ -114,9 +114,7 @@ void EngineContext::SetScene(const shared_ptr<Scene>& scene) {
 	}
 }
 
-void EngineContext::Init() {}
-
-void EngineContext::TryInitImGui() {
+void EngineContext::Init() {
 	if (!_isImGuiInitialized) {
 		if (!ImGui::SFML::Init(*_mainWindow)) {
 			return;
