@@ -2,6 +2,7 @@
 
 #include "Engine/App/EngineContext.h"
 #include "Engine/Core/Scene.h"
+#include "Engine/Core/SceneNode.h"
 
 #include <SFML/Window/Event.hpp>
 
@@ -14,6 +15,7 @@ namespace {
 	constexpr const char kEditorDockSpaceId[] = "EditorDockSpace";
 	constexpr const char kSceneWindowTitle[] = "Scene";
 	constexpr const char kInspectorWindowTitle[] = "Inspector";
+	constexpr const char kToolsWindowTitle[] = "Tools";
 	constexpr const char kDebugWindowTitle[] = "Debug";
 
 	// Apply a Left | Center | Right split once when the dock root has no saved split and no docked
@@ -38,12 +40,16 @@ namespace {
 		ImGuiID id_left = 0;
 		ImGuiID id_right = 0;
 		ImGuiID id_bottom = 0;
+		ImGuiID id_left_top = 0;
+		ImGuiID id_left_bottom = 0;
 		ImGuiID id_main = dockspace_id;
 		ImGui::DockBuilderSplitNode(id_main, ImGuiDir_Left, 0.22f, &id_left, &id_main);
+		ImGui::DockBuilderSplitNode(id_left, ImGuiDir_Down, 0.32f, &id_left_bottom, &id_left_top);
 		ImGui::DockBuilderSplitNode(id_main, ImGuiDir_Right, 0.30f, &id_right, &id_main);
 		ImGui::DockBuilderSplitNode(id_main, ImGuiDir_Down, 0.20f, &id_bottom, &id_main);
 
-		ImGui::DockBuilderDockWindow(kSceneWindowTitle, id_left);
+		ImGui::DockBuilderDockWindow(kSceneWindowTitle, id_left_top);
+		ImGui::DockBuilderDockWindow(kToolsWindowTitle, id_left_bottom);
 		ImGui::DockBuilderDockWindow(kInspectorWindowTitle, id_right);
 		ImGui::DockBuilderDockWindow(kDebugWindowTitle, id_bottom);
 		ImGui::DockBuilderFinish(dockspace_id);
@@ -72,6 +78,18 @@ namespace Engine {
 
 	void Editor::ClearNodeSelection() {
 		_sceneHierarchyWidget.ClearSelection();
+	}
+
+	void Editor::SetSelectedNode(std::shared_ptr<SceneNode> node) {
+		_sceneHierarchyWidget.Select(std::move(node));
+	}
+
+	EditorToolManager& Editor::GetEditorToolManager() {
+		return *_editorToolManager;
+	}
+
+	const EditorToolManager& Editor::GetEditorToolManager() const {
+		return *_editorToolManager;
 	}
 
 	void Editor::Draw() {
@@ -112,6 +130,11 @@ namespace Engine {
 
 		if (ImGui::Begin(kSceneWindowTitle, nullptr, ImGuiWindowFlags_None)) {
 			_sceneHierarchyWidget.Draw(EngineContext::GetInstance().GetScene());
+		}
+		ImGui::End();
+
+		if (ImGui::Begin(kToolsWindowTitle, nullptr, ImGuiWindowFlags_None)) {
+			_editorToolsWidget.Draw(GetEditorToolManager());
 		}
 		ImGui::End();
 

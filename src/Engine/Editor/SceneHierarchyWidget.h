@@ -12,6 +12,7 @@ namespace Engine {
 	public:
 		[[nodiscard]] std::shared_ptr<SceneNode> GetSelected() const;
 		void ClearSelection();
+		void Select(std::shared_ptr<SceneNode> node);
 		/// Renders the hierarchy and optional "no scene" state; may clear selection when `scene` is null.
 		void Draw(const std::shared_ptr<Scene>& scene);
 

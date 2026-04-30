@@ -1,7 +1,5 @@
 #include "EngineContext.h"
 
-#include "Engine/Behaviour/Physics/BodyPullHandler.h"
-
 #include <cmath>
 
 namespace {
@@ -34,14 +32,6 @@ shared_ptr<PhysicsProcessor> EngineContext::GetPhysicsProcessor() const {
 
 shared_ptr<FontManager> EngineContext::GetFontManager() const {
 	return _fontManager;
-}
-
-shared_ptr<BodyPullHandler> EngineContext::GetBodyPullHandler() const {
-	return _bodyPullHandler;
-}
-
-void EngineContext::SetBodyPullHandler(const shared_ptr<BodyPullHandler>& handler) {
-	_bodyPullHandler = handler;
 }
 
 float EngineContext::GetSimSpeedMultiplier() const {

@@ -11,6 +11,10 @@ namespace Engine {
 		_selectedNode.reset();
 	}
 
+	void SceneHierarchyWidget::Select(std::shared_ptr<SceneNode> node) {
+		_selectedNode = std::move(node);
+	}
+
 	void SceneHierarchyWidget::DrawNode(SceneNode& node, const char* emptyNamePlaceholder, int depth) {
 		const std::string& name = node.GetName();
 		const char* displayCStr = name.empty() ? emptyNamePlaceholder : name.c_str();

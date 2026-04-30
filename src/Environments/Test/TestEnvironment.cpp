@@ -3,13 +3,13 @@
 #include "Engine/App/EngineContext.h"
 #include "Engine/App/UserInput.h"
 #include "Engine/App/Utils.h"
-#include "Engine/Behaviour/Physics/BodyPullHandler.h"
 #include "Engine/Behaviour/Physics/CollisionBehaviour.h"
 #include "Engine/Behaviour/Physics/InverseSquareFieldSourceBehaviour.h"
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Behaviour/Physics/ShapeColliderBehaviour.h"
-#include "Engine/Behaviour/Physics/UserPullBehaviour.h"
 #include "Engine/Core/Scene.h"
+#include "Engine/Editor/Editor.h"
+#include "Engine/Editor/Tools/PullTool.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "fmt/format.h"
 
@@ -120,23 +120,15 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 
 		scene->AddChild(std::move(node));
 	}
-	auto bodyPull = CreateBodyPullOverlay();
-	scene->AddChild(std::move(bodyPull.node));
-	EngineContext::GetInstance().SetBodyPullHandler(bodyPull.handler);
+	auto pull = CreatePullVisualOverlay();
+	scene->AddChild(std::move(pull.root));
+	Engine::Editor::GetInstance().GetEditorToolManager().BindPullArrow(std::move(pull.arrowVisual));
 	return scene;
 }
 
 void TestEnvironment::ConfigureInput() {
 	auto ei = &EngineContext::GetInstance();
 	auto userInput = ei->GetUserInput();
-
-	userInput->AttachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
-		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
-			if (key->code == sf::Keyboard::Key::R) {
-				ei->SetScene(BuildScene());
-			}
-		}
-	}));
 
 	userInput->AttachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
 		if (const auto* touch = event.getIf<sf::Event::TouchBegan>()) {
@@ -147,29 +139,13 @@ void TestEnvironment::ConfigureInput() {
 			return;
 		}
 		if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
+			if (pressed->button != sf::Mouse::Button::Left) {
+				return;
+			}
 			sf::Vector2f mousePos(static_cast<float>(pressed->position.x), static_cast<float>(pressed->position.y));
-			if (pressed->button == sf::Mouse::Button::Left) {
-				bool tapConsumed = false;
-				if (auto scene = ei->GetScene()) {
-					tapConsumed = scene->DispatchTapAt(mousePos);
-				}
-				if (!tapConsumed) {
-					ei->GetBodyPullHandler()->StartPull(mousePos, UserPullBehaviour::PullMode::FORCE);
-				}
+			if (auto scene = ei->GetScene()) {
+				scene->DispatchTapAt(mousePos);
 			}
-			else if (pressed->button == sf::Mouse::Button::Right) {
-				ei->GetBodyPullHandler()->StartPull(mousePos, UserPullBehaviour::PullMode::POSITION);
-			}
-			else if (pressed->button == sf::Mouse::Button::Middle) {
-				ei->GetBodyPullHandler()->StartPull(mousePos, UserPullBehaviour::PullMode::VELOCITY);
-			}
-		}
-		else if (event.is<sf::Event::MouseButtonReleased>()) {
-			ei->GetBodyPullHandler()->StopPull();
-		}
-		else if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
-			ei->GetBodyPullHandler()->SetPullDestination(
-			    sf::Vector2f(static_cast<float>(moved->position.x), static_cast<float>(moved->position.y)));
 		}
 	}));
 

@@ -1,7 +1,10 @@
 #pragma once
 
+#include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Singleton.h"
 #include "Engine/Editor/DebugSettingsWidget.h"
+#include "Engine/Editor/EditorToolManager.h"
+#include "Engine/Editor/EditorToolsWidget.h"
 #include "Engine/Editor/NodeInspectorWidget.h"
 #include "Engine/Editor/SceneHierarchyWidget.h"
 
@@ -28,12 +31,18 @@ namespace Engine {
 		void OnMouseMove(const sf::Vector2i& position);
 		[[nodiscard]] std::shared_ptr<SceneNode> GetSelectedNode() const;
 		void ClearNodeSelection();
+		void SetSelectedNode(std::shared_ptr<SceneNode> node);
+
+		[[nodiscard]] EditorToolManager& GetEditorToolManager();
+		[[nodiscard]] const EditorToolManager& GetEditorToolManager() const;
 
 	private:
 		bool _isOpen = true;
 		SceneHierarchyWidget _sceneHierarchyWidget{};
 		NodeInspectorWidget _nodeInspectorWidget{};
+		EditorToolsWidget _editorToolsWidget{};
 		DebugSettingsWidget _debugSettingsWidget{};
+		std::unique_ptr<EditorToolManager> _editorToolManager{std::make_unique<EditorToolManager>()};
 	};
 
 } // namespace Engine
