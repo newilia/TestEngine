@@ -185,6 +185,10 @@ namespace Engine {
 	void Editor::OnKeyPress(const sf::Keyboard::Key& key) {
 		if (key == sf::Keyboard::Key::F1) {
 			Toggle();
+			return;
+		}
+		if (_isOpen && !ImGui::GetIO().WantCaptureKeyboard && GetEditorToolManager().TryActivateToolViaDigitKey(key)) {
+			return;
 		}
 	}
 

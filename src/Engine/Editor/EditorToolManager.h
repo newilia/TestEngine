@@ -4,8 +4,11 @@
 
 #include <SFML/System/Time.hpp>
 #include <SFML/Window/Event.hpp>
+#include <SFML/Window/Keyboard.hpp>
 
 #include <memory>
+#include <optional>
+#include <string>
 
 class PullTool;
 class VectorArrowVisual;
@@ -32,6 +35,13 @@ public:
 	[[nodiscard]] PullTool* GetPullTool() { return _pullTool; }
 
 	static constexpr int kToolCount = 4;
+
+	[[nodiscard]] static std::optional<int> TryToolIndexFromDigitKey(sf::Keyboard::Key key);
+
+	[[nodiscard]] static std::string FormatToolPaletteLabel(int toolIndex, const char* displayName);
+
+	/// Main keyboard row digits 1–9 then 0; applies only while index is below `kToolCount`.
+	[[nodiscard]] bool TryActivateToolViaDigitKey(sf::Keyboard::Key key);
 
 private:
 	int _activeToolIndex = 0;
