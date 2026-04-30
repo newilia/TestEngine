@@ -15,7 +15,7 @@ namespace {
 
 		void OnUpdate(const sf::Time& dt) override {
 			if (auto p = _platform.lock()) {
-				p->Run(dt);
+				p->Update(dt);
 			}
 		}
 	};
@@ -61,9 +61,9 @@ void PongPlatform::SetShapeDimensions(sf::Vector2f size, float curvature, float 
 	shape->setRotation(sf::degrees(rotationDeg));
 }
 
-void PongPlatform::Run(const sf::Time& dt) {
+void PongPlatform::Update(const sf::Time& dt) {
 	if (_controller) {
-		_controller->Run(dt);
+		_controller->Update(dt);
 	}
 }
 

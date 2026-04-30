@@ -34,7 +34,7 @@ void UserPlatformController::HandleEvent(const sf::Event& event) {
 	}
 }
 
-void UserPlatformController::Run(const sf::Time& dt) {
+void UserPlatformController::Update(const sf::Time& dt) {
 	auto vel = (_targetPos - _platform->GetShape()->getPosition()) * _speedFactor;
 	vel.x = std::clamp(vel.x, -_velLimit.x, _velLimit.x);
 	vel.y = std::clamp(vel.y, -_velLimit.y, _velLimit.y);

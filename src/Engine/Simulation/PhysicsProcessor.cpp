@@ -8,7 +8,6 @@
 #include "Engine/Behaviour/Physics/OverlappingBehaviour.h"
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Behaviour/Physics/ShapeColliderBehaviourBase.h"
-#include "Engine/Behaviour/Physics/UserPullBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Visual/VectorArrowVisual.h"
 #include "fmt/format.h"
@@ -21,7 +20,7 @@
 #include <optional>
 #include <vector>
 
-void PhysicsProcessor::Run(const sf::Time& dt) {
+void PhysicsProcessor::Update(const sf::Time& dt) {
 	Utils::RemoveExpiredPointers(_bodies);
 	// motion step
 	for (auto& wBody : _bodies) {
@@ -30,33 +29,13 @@ void PhysicsProcessor::Run(const sf::Time& dt) {
 			continue;
 		}
 		auto rigidBody = body->RequireBehaviour<RigidBodyBehaviour>();
-		auto pullComp = body->FindBehaviour<UserPullBehaviour>();
 		auto pos = body->GetPosGlobal();
 
-		sf::Vector2f forceSum = [&]() {
-			sf::Vector2f force;
-			if (pullComp && pullComp->_mode == UserPullBehaviour::PullMode::FORCE) {
-				force += pullComp->GetPullVector() * pullComp->_pullingStrength;
-			}
-			return force;
-		}();
-
-		rigidBody->_velocity += forceSum / rigidBody->_mass * dt.asSeconds();
 		if (_isGravityEnabled && !rigidBody->IsImmovable()) {
 			rigidBody->_velocity += _gravity * dt.asSeconds();
 		}
 
 		pos += rigidBody->_velocity * dt.asSeconds();
-
-		if (pullComp) {
-			if (pullComp->_mode == UserPullBehaviour::PullMode::POSITION) {
-				pos += pullComp->GetPullVector();
-				rigidBody->_velocity = {};
-			}
-			else if (pullComp->_mode == UserPullBehaviour::PullMode::VELOCITY) {
-				rigidBody->_velocity = pullComp->GetPullVector();
-			}
-		}
 		body->SetPosGlobal(pos);
 	}
 

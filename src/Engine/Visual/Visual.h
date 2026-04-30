@@ -12,10 +12,10 @@ public:
 	~Visual() override = default;
 
 	virtual void Draw(sf::RenderTarget& target, sf::RenderStates states) const = 0;
-
 	virtual bool HitTest(sf::Vector2f windowPosition) const = 0;
 
-	virtual void OnTap(sf::Vector2f windowPosition);
+	virtual void OnTap(sf::Vector2f windowPosition) {}
+
 	void SetTapHandlingEnabled(bool enabled);
 	bool IsTapHandlingEnabled() const;
 	void SetTransparentToTap(bool transparent);

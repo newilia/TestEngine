@@ -94,7 +94,7 @@ namespace Engine {
 		bool _isImGuiInitialized = false;
 		float _fieldForceDebugArrowScale = 0.02f;
 		std::uint32_t _framerateLimit = 100;
-		bool _isFramerateLimitEnabled = false;
+		bool _isFramerateLimitEnabled = true;
 		bool _verticalSyncEnabled = false;
 		std::uint32_t _targetTickRateHz = 500;
 		float _fps = 0.f;
