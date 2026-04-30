@@ -10,7 +10,7 @@
 #include "Engine/Behaviour/Physics/ShapeColliderBehaviour.h"
 #include "Engine/Behaviour/Physics/UserPullBehaviour.h"
 #include "Engine/Core/Scene.h"
-#include "Engine/Simulation/PhysicsHandler.h"
+#include "Engine/Simulation/PhysicsProcessor.h"
 #include "fmt/format.h"
 
 #include <memory>
@@ -26,7 +26,7 @@ void TestEnvironment::Setup() {
 		std::exit(EXIT_FAILURE);
 	}
 	Utils::MaximizeWindow(*mainWindow);
-	engine.GetPhysicsHandler()->SetGravity({0, 1000});
+	engine.GetPhysicsProcessor()->SetGravity({0, 1000});
 	engine.SetScene(BuildScene());
 	ConfigureInput();
 }
@@ -200,7 +200,7 @@ void TestEnvironment::ConfigureInput() {
 	userInput->AttachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			if (key->code == sf::Keyboard::Key::G) {
-				ei->GetPhysicsHandler()->SetGravityEnabled(!ei->GetPhysicsHandler()->IsGravityEnabled());
+				ei->GetPhysicsProcessor()->SetGravityEnabled(!ei->GetPhysicsProcessor()->IsGravityEnabled());
 			}
 		}
 	}));

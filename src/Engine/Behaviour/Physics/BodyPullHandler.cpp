@@ -53,11 +53,11 @@ void BodyPullHandler::StartPull(sf::Vector2f mousePos) {
 }
 
 void BodyPullHandler::StartPull(sf::Vector2f mousePos, UserPullBehaviour::PullMode pullMode) {
-	auto physicsHandler = EngineContext::GetInstance().GetPhysicsHandler();
-	if (!physicsHandler) {
+	auto physicsProcessor = EngineContext::GetInstance().GetPhysicsProcessor();
+	if (!physicsProcessor) {
 		return;
 	}
-	auto bodies = physicsHandler->GetAllBodies();
+	auto bodies = physicsProcessor->GetAllBodies();
 	for (auto wBody : bodies) {
 		auto body = wBody.lock();
 		if (!body) {

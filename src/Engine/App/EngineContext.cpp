@@ -28,8 +28,8 @@ shared_ptr<UserInput> EngineContext::GetUserInput() const {
 	return _userInput;
 }
 
-shared_ptr<PhysicsHandler> EngineContext::GetPhysicsHandler() const {
-	return _physicsHandler;
+shared_ptr<PhysicsProcessor> EngineContext::GetPhysicsProcessor() const {
+	return _physicsProcessor;
 }
 
 shared_ptr<FontManager> EngineContext::GetFontManager() const {
@@ -103,7 +103,7 @@ bool EngineContext::IsVerticalSyncEnabled() const {
 
 EngineContext::EngineContext() {
 	_userInput = make_shared<UserInput>();
-	_physicsHandler = make_shared<PhysicsHandler>();
+	_physicsProcessor = make_shared<PhysicsProcessor>();
 	_fontManager = make_shared<FontManager>();
 }
 

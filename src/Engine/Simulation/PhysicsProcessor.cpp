@@ -1,4 +1,4 @@
-#include "PhysicsHandler.h"
+#include "PhysicsProcessor.h"
 
 #include "Engine/App/EngineContext.h"
 #include "Engine/App/Utils.h"
@@ -18,7 +18,7 @@
 #include <cassert>
 #include <optional>
 
-void PhysicsHandler::Update(const sf::Time& dt) {
+void PhysicsProcessor::Update(const sf::Time& dt) {
 	Utils::RemoveExpiredPointers(_bodies);
 	// motion step
 	for (auto& wBody : _bodies) {
@@ -107,24 +107,24 @@ void PhysicsHandler::Update(const sf::Time& dt) {
 	}
 }
 
-void PhysicsHandler::RegisterBody(shared_ptr<SceneNode> body) {
+void PhysicsProcessor::RegisterBody(shared_ptr<SceneNode> body) {
 	_bodies.emplace_back(body);
 }
 
-void PhysicsHandler::UnregisterBody(SceneNode* body) {
+void PhysicsProcessor::UnregisterBody(SceneNode* body) {
 	_bodies.remove_if([body](const std::weak_ptr<SceneNode>& w) {
 		auto locked = w.lock();
 		return !locked || locked.get() == body;
 	});
 }
 
-bool PhysicsHandler::CheckBboxIntersection(const AbstractBody* body1, const AbstractBody* body2) {
+bool PhysicsProcessor::CheckBboxIntersection(const AbstractBody* body1, const AbstractBody* body2) {
 	auto&& bb1 = body1->GetBbox();
 	auto&& bb2 = body2->GetBbox();
 	return bb1.findIntersection(bb2).has_value();
 }
 
-std::optional<IntersectionDetails> PhysicsHandler::DetectIntersection(const shared_ptr<SceneNode>& n1,
+std::optional<IntersectionDetails> PhysicsProcessor::DetectIntersection(const shared_ptr<SceneNode>& n1,
                                                                       const shared_ptr<SceneNode>& n2) {
 	if (!n1 || !n2) {
 		assert(false);
@@ -173,7 +173,7 @@ std::optional<IntersectionDetails> PhysicsHandler::DetectIntersection(const shar
 	return std::nullopt;
 }
 
-std::optional<IntersectionDetails> PhysicsHandler::DetectPolygonPolygonIntersection(const AbstractBody* body1,
+std::optional<IntersectionDetails> PhysicsProcessor::DetectPolygonPolygonIntersection(const AbstractBody* body1,
                                                                                     const AbstractBody* body2) {
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
@@ -213,7 +213,7 @@ std::optional<IntersectionDetails> PhysicsHandler::DetectPolygonPolygonIntersect
 	return result;
 }
 
-std::optional<IntersectionDetails> PhysicsHandler::DetectCirclePolygonIntersection(const sf::CircleShape* circle,
+std::optional<IntersectionDetails> PhysicsProcessor::DetectCirclePolygonIntersection(const sf::CircleShape* circle,
                                                                                    const AbstractBody* body) {
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
@@ -248,7 +248,7 @@ std::optional<IntersectionDetails> PhysicsHandler::DetectCirclePolygonIntersecti
 	return result;
 }
 
-std::optional<IntersectionDetails> PhysicsHandler::DetectCircleCircleIntersection(const sf::CircleShape* circle1,
+std::optional<IntersectionDetails> PhysicsProcessor::DetectCircleCircleIntersection(const sf::CircleShape* circle1,
                                                                                   const sf::CircleShape* circle2) {
 	using namespace Utils;
 	auto r1 = circle1->getRadius();
@@ -287,7 +287,7 @@ std::optional<IntersectionDetails> PhysicsHandler::DetectCircleCircleIntersectio
 	return result;
 }
 
-std::optional<SegmentIntersectionPoints> PhysicsHandler::FindSegmentsIntersectionPoint(const Segment& segA,
+std::optional<SegmentIntersectionPoints> PhysicsProcessor::FindSegmentsIntersectionPoint(const Segment& segA,
                                                                                        const Segment& segB) {
 	assert(segA.start != segA.end);
 	assert(segB.start != segB.end);
@@ -367,7 +367,7 @@ std::optional<SegmentIntersectionPoints> PhysicsHandler::FindSegmentsIntersectio
 }
 
 std::optional<SegmentIntersectionPoints>
-PhysicsHandler::FindSegmentCircleIntersectionPoint(const Segment& seg, const sf::Vector2f& circleCenter, float radius) {
+PhysicsProcessor::FindSegmentCircleIntersectionPoint(const Segment& seg, const sf::Vector2f& circleCenter, float radius) {
 	using namespace Utils;
 	SegmentIntersectionPoints result;
 	auto s = seg;
@@ -442,7 +442,7 @@ PhysicsHandler::FindSegmentCircleIntersectionPoint(const Segment& seg, const sf:
 	return result;
 }
 
-void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
+void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 	auto body1 = collision.wNode1.lock();
 	auto body2 = collision.wNode2.lock();
 	if (!body1 || !body2) {
@@ -575,26 +575,26 @@ void PhysicsHandler::ResolveCollision(const IntersectionDetails& collision) {
 	}
 }
 
-const std::list<std::weak_ptr<SceneNode>>& PhysicsHandler::GetAllBodies() const {
+const std::list<std::weak_ptr<SceneNode>>& PhysicsProcessor::GetAllBodies() const {
 	return _bodies;
 }
 
-void PhysicsHandler::SetGravity(const sf::Vector2f v) {
+void PhysicsProcessor::SetGravity(const sf::Vector2f v) {
 	_gravity = v;
 }
 
-sf::Vector2f PhysicsHandler::GetGravity() const {
+sf::Vector2f PhysicsProcessor::GetGravity() const {
 	return _gravity;
 }
 
-void PhysicsHandler::SetGravityEnabled(bool enabled) {
+void PhysicsProcessor::SetGravityEnabled(bool enabled) {
 	_isGravityEnabled = enabled;
 }
 
-bool PhysicsHandler::IsGravityEnabled() const {
+bool PhysicsProcessor::IsGravityEnabled() const {
 	return _isGravityEnabled;
 }
 
-std::shared_ptr<IsotropicInverseSquareField> PhysicsHandler::GetIsotropicInverseSquareField() const {
+std::shared_ptr<IsotropicInverseSquareField> PhysicsProcessor::GetIsotropicInverseSquareField() const {
 	return _inverseSquareField;
 }

@@ -5,7 +5,7 @@
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Simulation/IsotropicInverseSquareField.h"
-#include "Engine/Simulation/PhysicsHandler.h"
+#include "Engine/Simulation/PhysicsProcessor.h"
 #include "InverseSquareFieldSourceBehaviour_gen.hpp"
 
 void InverseSquareFieldSourceBehaviour::OnInit() {
@@ -22,7 +22,7 @@ void InverseSquareFieldSourceBehaviour::OnInit() {
 	node->RequireBehaviour<PhysicsDebugBehaviour>();
 	if (const auto self = node->FindBehaviour<InverseSquareFieldSourceBehaviour>()) {
 		_self = self;
-		if (const auto ph = EngineContext::GetInstance().GetPhysicsHandler()) {
+		if (const auto ph = EngineContext::GetInstance().GetPhysicsProcessor()) {
 			if (auto field = ph->GetIsotropicInverseSquareField()) {
 				field->Register(self);
 			}
@@ -31,7 +31,7 @@ void InverseSquareFieldSourceBehaviour::OnInit() {
 }
 
 void InverseSquareFieldSourceBehaviour::OnDeinit() {
-	if (const auto ph = EngineContext::GetInstance().GetPhysicsHandler()) {
+	if (const auto ph = EngineContext::GetInstance().GetPhysicsProcessor()) {
 		if (auto field = ph->GetIsotropicInverseSquareField()) {
 			if (const auto self = _self.lock()) {
 				field->Unregister(self);
@@ -55,7 +55,7 @@ void InverseSquareFieldSourceBehaviour::OnUpdate(const sf::Time& dt) {
 	if (!rb || rb->IsImmovable() || !std::isfinite(rb->_mass) || rb->_mass <= 0.f) {
 		return;
 	}
-	if (const auto ph = EngineContext::GetInstance().GetPhysicsHandler()) {
+	if (const auto ph = EngineContext::GetInstance().GetPhysicsProcessor()) {
 		if (auto field = ph->GetIsotropicInverseSquareField()) {
 			sf::Vector2f a = field->EvaluateAcceleration(self);
 			const float sec = dt.asSeconds();

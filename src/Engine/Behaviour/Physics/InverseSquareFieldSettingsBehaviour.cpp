@@ -2,7 +2,7 @@
 
 #include "Engine/App/EngineContext.h"
 #include "Engine/Simulation/IsotropicInverseSquareField.h"
-#include "Engine/Simulation/PhysicsHandler.h"
+#include "Engine/Simulation/PhysicsProcessor.h"
 #include "InverseSquareFieldSettingsBehaviour_gen.hpp"
 
 #include <memory>
@@ -15,7 +15,7 @@ std::shared_ptr<SceneNode> CreateInverseSquareFieldTuningNode() {
 }
 
 void InverseSquareFieldSettingsBehaviour::OnInit() {
-	if (const auto ph = EngineContext::GetInstance().GetPhysicsHandler()) {
+	if (const auto ph = EngineContext::GetInstance().GetPhysicsProcessor()) {
 		if (const auto field = ph->GetIsotropicInverseSquareField()) {
 			_strengthScale = field->GetGlobalStrengthScale();
 			_useMassCoupling = field->GetUseMassCoupling();
@@ -25,7 +25,7 @@ void InverseSquareFieldSettingsBehaviour::OnInit() {
 
 void InverseSquareFieldSettingsBehaviour::OnUpdate(const sf::Time& dt) {
 	(void)dt;
-	if (const auto ph = EngineContext::GetInstance().GetPhysicsHandler()) {
+	if (const auto ph = EngineContext::GetInstance().GetPhysicsProcessor()) {
 		if (auto field = ph->GetIsotropicInverseSquareField()) {
 			field->SetGlobalStrengthScale(_strengthScale);
 			field->SetUseMassCoupling(_useMassCoupling);

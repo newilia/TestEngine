@@ -57,7 +57,7 @@ namespace Engine {
 		ImGui::Text("Tick dt:  %.3f s (%.1f fps)", static_cast<double>(engine.GetSimTickDt().asSeconds()),
 		            engine.GetTickRate());
 
-		if (const auto ph = engine.GetPhysicsHandler()) {
+		if (const auto ph = engine.GetPhysicsProcessor()) {
 			ImGui::SeparatorText("Physics");
 			bool gravOn = ph->IsGravityEnabled();
 			if (ImGui::Checkbox("World gravity", &gravOn)) {
@@ -81,7 +81,7 @@ namespace Engine {
 		                       ImGuiSliderFlags_Logarithmic)) {
 			engine.SetFieldForceDebugArrowScale(forceArrowScale);
 		}
-		if (const auto ph = engine.GetPhysicsHandler()) {
+		if (const auto ph = engine.GetPhysicsProcessor()) {
 			if (auto field = ph->GetIsotropicInverseSquareField()) {
 				float strength = field->GetGlobalStrengthScale();
 				if (ImGui::DragFloat("Inverse-square field strength", &strength, 2.f, 0.f, 1.0e6f, "%.2f")) {

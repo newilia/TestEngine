@@ -5,7 +5,7 @@
 #include "Engine/Behaviour/Physics/InverseSquareFieldSourceBehaviour.h"
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Simulation/PhysicsHandler.h"
+#include "Engine/Simulation/PhysicsProcessor.h"
 #include "Engine/Visual/VectorArrowVisual.h"
 
 #include <fmt/format.h>
@@ -42,7 +42,7 @@ void PhysicsDebugBehaviour::DebugDraw(sf::RenderTarget& target, sf::RenderStates
 	if (auto fieldSrc = node->FindBehaviour<InverseSquareFieldSourceBehaviour>()) {
 		if (fieldSrc->_isEnabled && !rigidBody->IsImmovable() && std::isfinite(rigidBody->_mass) &&
 		    rigidBody->_mass > 0.f) {
-			auto ph = EngineContext::GetInstance().GetPhysicsHandler();
+			auto ph = EngineContext::GetInstance().GetPhysicsProcessor();
 			auto field = ph ? ph->GetIsotropicInverseSquareField() : nullptr;
 			if (field) {
 				const sf::Vector2f a = field->EvaluateAcceleration(fieldSrc);
