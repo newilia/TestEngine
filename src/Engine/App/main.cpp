@@ -12,10 +12,84 @@
 #include <imgui-SFML.h>
 #include <imgui.h>
 
-#include <algorithm>
-#include <iostream>
+#include <cctype>
+#include <string_view>
 
 namespace {
+
+	enum class AppEnvironmentKind
+	{
+		Test,
+		Pong
+	};
+
+	[[nodiscard]] bool EqualsIgnoreCaseAscii(std::string_view a, std::string_view b) {
+		if (a.size() != b.size()) {
+			return false;
+		}
+		for (size_t i = 0; i < a.size(); ++i) {
+			if (std::tolower(static_cast<unsigned char>(a[i])) != std::tolower(static_cast<unsigned char>(b[i]))) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	[[nodiscard]] AppEnvironmentKind ParseEnvFromArgv(int argc, char** argv) {
+		constexpr std::string_view prefix = "--env=";
+		for (int i = 1; i < argc; ++i) {
+			std::string_view arg(argv[i]);
+			if (arg.size() >= prefix.size() && arg.substr(0, prefix.size()) == prefix) {
+				const std::string_view value = arg.substr(prefix.size());
+				if (EqualsIgnoreCaseAscii(value, "pong")) {
+					return AppEnvironmentKind::Pong;
+				}
+				if (EqualsIgnoreCaseAscii(value, "test")) {
+					return AppEnvironmentKind::Test;
+				}
+			}
+		}
+		return AppEnvironmentKind::Test;
+	}
+
+	[[nodiscard]] AppEnvironmentKind ParseEnvFromCmdLine(std::string_view fullLine) {
+		constexpr std::string_view key = "--env=";
+		size_t pos = 0;
+		while (pos < fullLine.size()) {
+			const size_t found = fullLine.find(key, pos);
+			if (found == std::string_view::npos) {
+				break;
+			}
+			size_t valStart = found + key.size();
+			size_t valEnd = valStart;
+			while (valEnd < fullLine.size() && !std::isspace(static_cast<unsigned char>(fullLine[valEnd]))) {
+				++valEnd;
+			}
+			const std::string_view value = fullLine.substr(valStart, valEnd - valStart);
+			if (EqualsIgnoreCaseAscii(value, "pong")) {
+				return AppEnvironmentKind::Pong;
+			}
+			if (EqualsIgnoreCaseAscii(value, "test")) {
+				return AppEnvironmentKind::Test;
+			}
+			pos = valEnd;
+		}
+		return AppEnvironmentKind::Test;
+	}
+
+	void RunAppEnvironment(AppEnvironmentKind kind) {
+		switch (kind) {
+		case AppEnvironmentKind::Test:
+			TestEnvironment::Setup();
+			return;
+		case AppEnvironmentKind::Pong: {
+			PongEnvironment pong;
+			pong.Setup();
+			return;
+		}
+		}
+	}
+
 	// Uses ImGui IO flags from the previous frame (after the last ImGui::SFML::Update), which is
 	// the usual pattern for deciding whether application code should see mouse/keyboard events.
 	[[nodiscard]] bool ShouldForwardEventToGame(const sf::Event& event) {
@@ -118,7 +192,7 @@ namespace {
 } // namespace
 
 #ifdef _CONSOLE
-int main() {
+int main(int argc, char** argv) {
 #else
 #define NOMINMAX
 #include <windows.h>
@@ -127,9 +201,11 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 #endif
 	_set_error_mode(_OUT_TO_MSGBOX);
 
-	TestEnvironment env;
-	// PongEnvironment env;
-	env.Setup();
+#ifdef _CONSOLE
+	RunAppEnvironment(ParseEnvFromArgv(argc, argv));
+#else
+	RunAppEnvironment(ParseEnvFromCmdLine(lpCmdLine ? std::string_view(lpCmdLine) : std::string_view{}));
+#endif
 
 	EngineContext& engine = EngineContext::GetInstance();
 	bool isImGuiInitialized = false;

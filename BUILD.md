@@ -10,7 +10,7 @@
 |--------|----------|
 | `__gen_solution.cmd` | `cmake -S . -B build -A x64`, при успехе пытается открыть `build\TestEngine.slnx` (если есть; иначе в `build` смотрите `TestEngine.slnx` — откройте вручную) |
 | `_build_release.cmd` / `_build_debug.cmd` | `cmake --build build` с `Release` или `Debug` |
-| `_run_release.cmd` / `_run_debug.cmd` | Запуск `TestEngine.exe` с **рабочим каталогом = корень репо** |
+| `_run_release.cmd` / `_run_debug.cmd` | Запуск `TestEngine.exe` с **рабочим каталогом = корень репо**; аргументы для exe (например `--env=pong`) задавайте вручную при запуске или в настройках отладки VS |
 | `__clean.cmd` | Полностью **удаляет** каталог `build` (если есть) |
 
 Параллельная сборка, например: `_build_release.cmd -j 8` (аргументы передаются в `cmake --build`).
@@ -25,6 +25,23 @@ cmake --build build --config Release
 Первый шаг: генератор (часто Visual Studio). Если `cmake` не находит Visual Studio, укажите `-G` сами, см. `cmake --help` (Generators). Для Visual Studio / Ninja **Multi-Config** тип (Release/Debug) задаётся **при сборке** (`--config`), а не одним `CMAKE_BUILD_TYPE` в чистом виде.
 
 **Где exe:** `build/bin/Release/TestEngine.exe` и `build/bin/Debug/TestEngine.exe`.
+
+## Демо-среда (`--env=`)
+
+По умолчанию запускается **Test**. Чтобы выбрать среду без правки кода:
+
+- `--env=test` — [`TestEnvironment`](src/Environments/Test/TestEnvironment.h)
+- `--env=pong` — [`PongEnvironment`](src/Environments/Pong/PongEnvironment.h)
+
+Пример:
+
+```text
+build\bin\Debug\TestEngine.exe --env=pong
+```
+
+В Visual Studio: **TestEngine** → свойства → **Debugging** → **Command Arguments**, например `--env=pong`.
+
+При сборке с макросом `_CONSOLE` те же флаги передаются через `main(argc, argv)`.
 
 ## clangd и `compile_commands.json`
 
