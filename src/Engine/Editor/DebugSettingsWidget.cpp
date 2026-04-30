@@ -51,15 +51,11 @@ namespace Engine {
 		ImGui::SameLine();
 		ImGui::TextDisabled("(0 = unlimited: one variable step per frame)");
 
-		if (engine.GetFrameDt().asSeconds() > 0.f) {
-			ImGui::Text("Frame dt:      %.3f s (%d fps)", static_cast<double>(engine.GetFrameDt().asSeconds()),
-			            static_cast<int>(1.0 / engine.GetFrameDt().asSeconds()));
-		}
+		ImGui::Text("Frame dt: %.3f s (%.1f fps)", static_cast<double>(engine.GetFrameDt().asSeconds()),
+		            engine.GetFps());
 
-		if (engine.GetSimTickDt().asSeconds() > 0.f) {
-			ImGui::Text("Tick dt:       %.3f s (%d fps)", static_cast<double>(engine.GetSimTickDt().asSeconds()),
-			            static_cast<int>(1.0 / engine.GetSimTickDt().asSeconds()));
-		}
+		ImGui::Text("Tick dt:  %.3f s (%.1f fps)", static_cast<double>(engine.GetSimTickDt().asSeconds()),
+		            engine.GetTickRate());
 
 		if (const auto ph = engine.GetPhysicsHandler()) {
 			ImGui::SeparatorText("Physics");
