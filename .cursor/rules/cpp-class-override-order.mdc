@@ -1,0 +1,43 @@
+---
+description: Class declaration layout — override members before others per access section
+globs: src/**/*.h, src/**/*.hpp
+alwaysApply: false
+---
+
+# Class member order: overrides first (per access section)
+
+When declaring a class in a header, **within each access-specifier block** (`public:`, `protected:`, `private:`), list **virtual overrides** (member functions with `override` / `override final`) **above** other **member functions** in that same block.
+
+- Applies **separately** to each access section: do not reorder members across `public` / `protected` / `private`.
+- **Not** overriders (constructors, destructors, `static` methods, ordinary methods, operators) stay **below** the override group in that section.
+- Nested types, enums, and data members: keep consistent with surrounding code in the file; this rule is about **override vs non-override** member function ordering.
+
+```cpp
+// ✅ GOOD — overrides grouped at top of public: , then other methods
+class Derived : public Base {
+public:
+    void onUpdate() override;
+    void draw() const override;
+
+    void localHelper();
+    explicit Derived(Scene& scene);
+
+private:
+    bool hitTest(sf::Vector2f p) const override;
+    void resetCaches();
+    int m_id = 0;
+};
+```
+
+```cpp
+// ❌ BAD — overrides mixed below non-overriden methods in the same section
+class Derived : public Base {
+public:
+    void localHelper();
+    void onUpdate() override;
+};
+```
+
+---
+
+Do **not** reorder generated code (`src/Codegen/*_gen.hpp`) or third-party sources.
