@@ -30,7 +30,8 @@ public:
 private:
 	static bool CheckBboxIntersection(const AbstractBody* body1, const AbstractBody* body2);
 	static std::optional<IntersectionDetails> DetectIntersection(const shared_ptr<SceneNode>& n1,
-	                                                             const shared_ptr<SceneNode>& n2);
+	                                                             const shared_ptr<SceneNode>& n2, AbstractBody* c1,
+	                                                             AbstractBody* c2, bool bboxAlreadyVerified);
 	static std::optional<IntersectionDetails> DetectPolygonPolygonIntersection(const AbstractBody* body1,
 	                                                                           const AbstractBody* body2);
 	static std::optional<IntersectionDetails> DetectCirclePolygonIntersection(const sf::CircleShape* circle,
