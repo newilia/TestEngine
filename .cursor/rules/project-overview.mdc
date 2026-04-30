@@ -21,7 +21,7 @@ alwaysApply: true
 | **`Engine/Visual/`** | Rendering (shapes, text, arrows, etc.) |
 | **`Engine/Editor/`** | ImGui editor widgets (hierarchy, inspector, property tree) |
 | **`Engine/Simulation/`** | Simulation glue (e.g. physics — `PhysicsHandler`) |
-| **`Environments/<Name>/`** | Demos/games (**`Test`**, **`Pong`**); active environment is chosen in `main.cpp` (`TestEnvironment` / `PongEnvironment`) |
+| **`Environments/<Name>/`** | Demos/games (**`Test`**, **`Pong`**); default **Test**, switch with `--env=test` / `--env=pong` (see `BUILD.md`, `main.cpp`) |
 | **`Codegen/`** | Generated `*_gen.hpp` for the editor — **do not edit by hand**; see [`property-codegen.mdc`](property-codegen.mdc) |
 
 Sources are collected with **`file(GLOB_RECURSE ... CONFIGURE_DEPENDS ... src/**/*.cpp)`** — new `.cpp` files are detected on the next configure/build pass.
