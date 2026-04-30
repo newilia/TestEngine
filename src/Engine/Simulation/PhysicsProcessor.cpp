@@ -15,8 +15,11 @@
 
 #include <SFML/Graphics/CircleShape.hpp>
 
+#include <algorithm>
 #include <cassert>
+#include <deque>
 #include <optional>
+#include <vector>
 
 void PhysicsProcessor::Update(const sf::Time& dt) {
 	Utils::RemoveExpiredPointers(_bodies);
@@ -57,24 +60,81 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 		body->SetPosGlobal(pos);
 	}
 
-	// handle intersections
-	for (auto it1 = _bodies.begin(); it1 != _bodies.end(); ++it1) {
-		auto b1 = it1->lock();
-		if (!b1) {
+	// handle intersections — sweep-and-prune broad phase, then masks + narrow phase
+	struct BodySweepEntry
+	{
+		std::shared_ptr<SceneNode> node;
+		ShapeColliderBehaviourBase* collider = nullptr;
+		float minX = 0.f;
+		float maxX = 0.f;
+		/// Same ordering as iteration over `_bodies` in the old all-pairs loop (outer = first).
+		size_t listOrder = 0;
+	};
+
+	auto bboxXExtents = [](const sf::FloatRect& bb) {
+		float x0 = bb.position.x;
+		float x1 = bb.position.x + bb.size.x;
+		if (x0 > x1) {
+			std::swap(x0, x1);
+		}
+		return std::pair{x0, x1};
+	};
+	auto pairNeedsNarrowPhase = [](const SceneNode& n1, const SceneNode& n2) {
+		auto c1 = n1.FindBehaviour<CollisionBehaviour>();
+		auto c2 = n2.FindBehaviour<CollisionBehaviour>();
+		auto o1 = n1.FindBehaviour<OverlappingBehaviour>();
+		auto o2 = n2.FindBehaviour<OverlappingBehaviour>();
+		const bool collisionPair = c1 && c2 && (c1->_collisionGroups & c2->_collisionGroups).any();
+		const bool overlapPair = o1 && o2 && (o1->_overlappingGroups & o2->_overlappingGroups).any();
+		return collisionPair || overlapPair;
+	};
+
+	std::vector<BodySweepEntry> sweepEntries;
+	sweepEntries.reserve(_bodies.size());
+	size_t bodyListIndex = 0;
+	for (auto& wBody : _bodies) {
+		auto node = wBody.lock();
+		if (!node) {
+			++bodyListIndex;
 			continue;
 		}
+		auto* collider = node->FindShapeCollider();
+		if (!collider) {
+			++bodyListIndex;
+			continue;
+		}
+		auto [minX, maxX] = bboxXExtents(collider->GetBbox());
+		sweepEntries.push_back({std::move(node), collider, minX, maxX, bodyListIndex});
+		++bodyListIndex;
+	}
 
-		for (auto it2 = std::next(it1); it2 != _bodies.end(); ++it2) {
-			auto b2 = it2->lock();
-			if (!b2) {
+	std::sort(sweepEntries.begin(), sweepEntries.end(),
+	          [](const BodySweepEntry& a, const BodySweepEntry& b) { return a.minX < b.minX; });
+
+	std::deque<size_t> active;
+	for (size_t i = 0; i < sweepEntries.size(); ++i) {
+		while (!active.empty() && sweepEntries[active.front()].maxX < sweepEntries[i].minX) {
+			active.pop_front();
+		}
+		for (size_t aj : active) {
+			auto& eA = sweepEntries[aj];
+			auto& eB = sweepEntries[i];
+			if (!CheckBboxIntersection(eA.collider, eB.collider)) {
 				continue;
 			}
-
-			if (auto intersection = DetectIntersection(b1, b2)) {
-				auto b1Collision = b1->FindBehaviour<CollisionBehaviour>();
-				auto b2Collision = b2->FindBehaviour<CollisionBehaviour>();
-				auto b1RigidBody = b1->RequireBehaviour<RigidBodyBehaviour>();
-				auto b2RigidBody = b2->RequireBehaviour<RigidBodyBehaviour>();
+			if (!pairNeedsNarrowPhase(*eA.node, *eB.node)) {
+				continue;
+			}
+			const bool aIsFirstInBodyList = eA.listOrder < eB.listOrder;
+			auto& nFirst = aIsFirstInBodyList ? eA.node : eB.node;
+			auto& nSecond = aIsFirstInBodyList ? eB.node : eA.node;
+			auto* cFirst = aIsFirstInBodyList ? eA.collider : eB.collider;
+			auto* cSecond = aIsFirstInBodyList ? eB.collider : eA.collider;
+			if (auto intersection = DetectIntersection(nFirst, nSecond, cFirst, cSecond, true)) {
+				auto b1Collision = nFirst->FindBehaviour<CollisionBehaviour>();
+				auto b2Collision = nSecond->FindBehaviour<CollisionBehaviour>();
+				auto b1RigidBody = nFirst->RequireBehaviour<RigidBodyBehaviour>();
+				auto b2RigidBody = nSecond->RequireBehaviour<RigidBodyBehaviour>();
 				if (b1Collision && b2Collision && b1RigidBody && b2RigidBody &&
 				    (b1Collision->_collisionGroups & b2Collision->_collisionGroups).any()) {
 					if (!b1RigidBody->IsImmovable() || !b2RigidBody->IsImmovable()) {
@@ -84,14 +144,15 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 					}
 				}
 
-				auto b1Overlapping = b1->FindBehaviour<OverlappingBehaviour>();
-				auto b2Overlapping = b2->FindBehaviour<OverlappingBehaviour>();
+				auto b1Overlapping = nFirst->FindBehaviour<OverlappingBehaviour>();
+				auto b2Overlapping = nSecond->FindBehaviour<OverlappingBehaviour>();
 				if (b1Overlapping && b2Overlapping &&
 				    (b1Overlapping->_overlappingGroups & b2Overlapping->_overlappingGroups).any()) {
 					b1Overlapping->_overlappingCallbacks.Emit(*intersection);
 				}
 			}
 		}
+		active.push_back(i);
 	}
 }
 
@@ -113,18 +174,18 @@ bool PhysicsProcessor::CheckBboxIntersection(const AbstractBody* body1, const Ab
 }
 
 std::optional<IntersectionDetails> PhysicsProcessor::DetectIntersection(const shared_ptr<SceneNode>& n1,
-                                                                        const shared_ptr<SceneNode>& n2) {
+                                                                        const shared_ptr<SceneNode>& n2,
+                                                                        AbstractBody* c1, AbstractBody* c2,
+                                                                        bool bboxAlreadyVerified) {
 	if (!n1 || !n2) {
 		assert(false);
 		return std::nullopt;
 	}
-	auto* c1 = n1->FindShapeCollider();
-	auto* c2 = n2->FindShapeCollider();
 	if (!c1 || !c2) {
 		return std::nullopt;
 	}
 
-	if (!CheckBboxIntersection(c1, c2)) {
+	if (!bboxAlreadyVerified && !CheckBboxIntersection(c1, c2)) {
 		return std::nullopt;
 	}
 
@@ -133,28 +194,31 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectIntersection(const sh
 		r.wNode2 = n2;
 	};
 
-	if (auto* circ1 = dynamic_cast<sf::CircleShape*>(c1->GetBaseShape())) {
-		if (auto* circ2 = dynamic_cast<sf::CircleShape*>(c2->GetBaseShape())) {
+	auto* col1 = static_cast<ShapeColliderBehaviourBase*>(c1);
+	auto* col2 = static_cast<ShapeColliderBehaviourBase*>(c2);
+
+	if (auto* circ1 = dynamic_cast<sf::CircleShape*>(col1->GetBaseShape())) {
+		if (auto* circ2 = dynamic_cast<sf::CircleShape*>(col2->GetBaseShape())) {
 			if (auto r = DetectCircleCircleIntersection(circ1, circ2)) {
 				assignNodes(*r);
 				return r;
 			}
 			return std::nullopt;
 		}
-		if (auto r = DetectCirclePolygonIntersection(circ1, c2)) {
+		if (auto r = DetectCirclePolygonIntersection(circ1, col2)) {
 			assignNodes(*r);
 			return r;
 		}
 		return std::nullopt;
 	}
-	if (auto* circ2 = dynamic_cast<sf::CircleShape*>(c2->GetBaseShape())) {
-		if (auto r = DetectCirclePolygonIntersection(circ2, c1)) {
+	if (auto* circ2 = dynamic_cast<sf::CircleShape*>(col2->GetBaseShape())) {
+		if (auto r = DetectCirclePolygonIntersection(circ2, col1)) {
 			assignNodes(*r);
 			return r;
 		}
 		return std::nullopt;
 	}
-	if (auto r = DetectPolygonPolygonIntersection(c1, c2)) {
+	if (auto r = DetectPolygonPolygonIntersection(col1, col2)) {
 		assignNodes(*r);
 		return r;
 	}
