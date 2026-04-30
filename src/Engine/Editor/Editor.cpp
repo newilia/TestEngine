@@ -187,6 +187,9 @@ namespace Engine {
 			Toggle();
 			return;
 		}
+		if (key == sf::Keyboard::Key::Space) {
+			MainContext::GetInstance().ToggleSimPaused();
+		}
 		if (_isOpen && !ImGui::GetIO().WantCaptureKeyboard && GetEditorToolManager().TryActivateToolViaDigitKey(key)) {
 			return;
 		}

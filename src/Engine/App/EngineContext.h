@@ -38,6 +38,7 @@ namespace Engine {
 
 		bool IsSimPaused() const;
 		void SetSimPaused(bool paused);
+		void ToggleSimPaused();
 
 		void OnStartPresentFrame();
 		void OnStartUpdateTick();

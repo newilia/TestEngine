@@ -53,6 +53,11 @@ namespace Engine {
 
 	void MainContext::SetSimPaused(bool paused) {
 		_isSimPaused = paused;
+		_tickClock.reset();
+	}
+
+	void MainContext::ToggleSimPaused() {
+		SetSimPaused(!_isSimPaused);
 	}
 
 	sf::RenderWindow* MainContext::GetMainWindow() const {
