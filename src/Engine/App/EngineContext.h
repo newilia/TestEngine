@@ -59,6 +59,10 @@ public:
 	[[nodiscard]] float GetFps() const;
 	[[nodiscard]] float GetTickRate() const;
 
+	/// Editor hierarchy selection propagated for viewport overlay (outline). Cleared each frame via editor.
+	void SetHierarchySelectedForViewport(const shared_ptr<Scene>& node);
+	[[nodiscard]] shared_ptr<Scene> GetHierarchySelectedForViewport() const;
+
 private:
 	void ApplyWindowFrameSettings();
 
@@ -83,4 +87,5 @@ private:
 	float _tickRate = 0.f;
 	bool _haveFps = false;
 	bool _haveTickRate = false;
+	std::weak_ptr<Scene> _hierarchySelectedForViewport;
 };

@@ -3,13 +3,74 @@
 #include "Engine/App/EngineContext.h"
 #include "Engine/Behaviour/Physics/PhysicsDebugBehaviour.h"
 #include "Engine/Core/Transform.h"
+#include "Engine/Visual/ShapeVisualBase.h"
+#include "Engine/Visual/TextVisual.h"
 #include "SceneNode_gen.hpp"
+
+#include <SFML/Graphics/CircleShape.hpp>
+#include <SFML/Graphics/RectangleShape.hpp>
 
 #include <algorithm>
 #include <cassert>
 #include <memory>
+#include <optional>
 
 namespace {
+
+	constexpr float kSelectionOutlinePadPx = 3.f;
+	constexpr float kSelectionOutlineThickness = 2.f;
+	const sf::Color kSelectionOutlineColor(120u, 190u, 255u, 220u);
+	constexpr float kSelectionFallbackHalfSize = 6.f;
+
+	void DrawAabbOutline(sf::RenderTarget& target, sf::RenderStates states, const sf::FloatRect& bounds) {
+		sf::RectangleShape frame;
+		frame.setPosition({bounds.position.x - kSelectionOutlinePadPx, bounds.position.y - kSelectionOutlinePadPx});
+		frame.setSize({bounds.size.x + 2.f * kSelectionOutlinePadPx, bounds.size.y + 2.f * kSelectionOutlinePadPx});
+		frame.setFillColor(sf::Color::Transparent);
+		frame.setOutlineColor(kSelectionOutlineColor);
+		frame.setOutlineThickness(kSelectionOutlineThickness);
+		target.draw(frame, states);
+	}
+
+	std::optional<sf::FloatRect> TryGetHierarchySelectionBounds(const SceneNode& node) {
+		if (auto sv = std::dynamic_pointer_cast<ShapeVisualBase>(node.GetVisual())) {
+			if (sf::Shape* shape = sv->GetShape()) {
+				return shape->getGlobalBounds();
+			}
+		}
+		if (auto tv = std::dynamic_pointer_cast<TextVisual>(node.GetVisual())) {
+			if (const sf::Text* text = tv->GetText()) {
+				return text->getGlobalBounds();
+			}
+		}
+		if (auto* c = node.FindShapeCollider()) {
+			return c->GetBbox();
+		}
+		return std::nullopt;
+	}
+
+	void DrawHierarchySelectionHighlightIfSelected(const SceneNode& node, sf::RenderTarget& target,
+	                                               sf::RenderStates states) {
+		const auto selected = EngineContext::GetInstance().GetHierarchySelectedForViewport();
+		if (!selected || selected.get() != &node) {
+			return;
+		}
+		if (const std::optional<sf::FloatRect> bb = TryGetHierarchySelectionBounds(node)) {
+			const sf::FloatRect& b = *bb;
+			if (b.size.x > 0.f && b.size.y > 0.f) {
+				DrawAabbOutline(target, states, b);
+				return;
+			}
+		}
+		const sf::Vector2f pos = node.GetPosGlobal();
+		sf::CircleShape marker(kSelectionFallbackHalfSize);
+		marker.setOrigin({kSelectionFallbackHalfSize, kSelectionFallbackHalfSize});
+		marker.setPosition(pos);
+		marker.setFillColor(sf::Color::Transparent);
+		marker.setOutlineColor(kSelectionOutlineColor);
+		marker.setOutlineThickness(kSelectionOutlineThickness);
+		target.draw(marker, states);
+	}
 
 	void SortChildrenByDrawOrder(std::vector<shared_ptr<SceneNode>>& nodes) {
 		std::stable_sort(nodes.begin(), nodes.end(),
@@ -129,6 +190,8 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 			debugBehaviour->DebugDraw(target, states);
 		}
 	}
+
+	DrawHierarchySelectionHighlightIfSelected(*this, target, states);
 }
 
 void SceneNode::UpdateRec(const sf::Time& dt) {

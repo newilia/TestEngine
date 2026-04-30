@@ -19,6 +19,7 @@ namespace Engine {
 	private:
 		void DrawNode(SceneNode& node, const char* emptyNamePlaceholder, int depth);
 		std::weak_ptr<SceneNode> _selectedNode;
+		bool _scrollSelectionIntoViewPending = false;
 	};
 
 } // namespace Engine

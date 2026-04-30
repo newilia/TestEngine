@@ -11,15 +11,17 @@
 #include <utility>
 
 EditorToolManager::EditorToolManager() {
-	auto select = std::make_unique<SelectTool>(
-	    [](std::shared_ptr<SceneNode> node) { Engine::Editor::GetInstance().SetSelectedNode(std::move(node)); });
-	auto pull = std::make_unique<PullTool>();
+	const auto setHierarchySelection = [](std::shared_ptr<SceneNode> node) {
+		Engine::Editor::GetInstance().SetSelectedNode(std::move(node));
+	};
+	auto select = std::make_unique<SelectTool>(setHierarchySelection);
+	auto pull = std::make_unique<PullTool>(setHierarchySelection);
 	_pullTool = pull.get();
 
 	_tools[0] = std::make_unique<TapTool>();
 	_tools[1] = std::move(select);
 	_tools[2] = std::move(pull);
-	_tools[3] = std::make_unique<MoveTool>();
+	_tools[3] = std::make_unique<MoveTool>(setHierarchySelection);
 }
 
 void EditorToolManager::SetActiveToolIndex(int index) {

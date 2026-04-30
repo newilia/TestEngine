@@ -181,3 +181,11 @@ float EngineContext::GetFps() const {
 float EngineContext::GetTickRate() const {
 	return _haveTickRate ? _tickRate : 0.f;
 }
+
+void EngineContext::SetHierarchySelectedForViewport(const shared_ptr<Scene>& node) {
+	_hierarchySelectedForViewport = node;
+}
+
+shared_ptr<Scene> EngineContext::GetHierarchySelectedForViewport() const {
+	return _hierarchySelectedForViewport.lock();
+}

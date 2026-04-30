@@ -17,6 +17,8 @@ namespace {
 
 } // namespace
 
+PullTool::PullTool(SelectTool::SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
+
 UserPullBehaviour::PullMode PullTool::PullModeFromIndex(int index) {
 	switch (std::clamp(index, 0, 2)) {
 	case 0:
@@ -32,10 +34,10 @@ void PullTool::SetArrowVisual(std::shared_ptr<VectorArrowVisual> arrow) {
 	_arrowVisual = std::move(arrow);
 }
 
-void PullTool::StartPull(sf::Vector2f mousePos, UserPullBehaviour::PullMode pullMode) {
+std::shared_ptr<SceneNode> PullTool::StartPull(sf::Vector2f mousePos, UserPullBehaviour::PullMode pullMode) {
 	auto physicsProcessor = EngineContext::GetInstance().GetPhysicsProcessor();
 	if (!physicsProcessor) {
-		return;
+		return nullptr;
 	}
 	for (auto wBody : physicsProcessor->GetAllBodies()) {
 		auto body = wBody.lock();
@@ -58,8 +60,9 @@ void PullTool::StartPull(sf::Vector2f mousePos, UserPullBehaviour::PullMode pull
 		pullComponent->_mode = pullMode;
 		pullComponent->_pullingStrength = kBasePullStrength * _pullForceScale;
 		_pullingBody = body;
-		break;
+		return body;
 	}
+	return nullptr;
 }
 
 void PullTool::StopPull() {
@@ -86,7 +89,7 @@ bool PullTool::processEvent(const sf::Event& event) {
 		if (pressed->button == sf::Mouse::Button::Left) {
 			const auto pos = toVec(pressed->position);
 			_isDragging = true;
-			StartPull(pos, PullModeFromIndex(_pullModeIndex));
+			_onSelect(StartPull(pos, PullModeFromIndex(_pullModeIndex)));
 			return true;
 		}
 	}
@@ -94,7 +97,7 @@ bool PullTool::processEvent(const sf::Event& event) {
 		if (touch->finger == 0) {
 			const auto pos = sf::Vector2f(static_cast<float>(touch->position.x), static_cast<float>(touch->position.y));
 			_isDragging = true;
-			StartPull(pos, PullModeFromIndex(_pullModeIndex));
+			_onSelect(StartPull(pos, PullModeFromIndex(_pullModeIndex)));
 			return true;
 		}
 	}

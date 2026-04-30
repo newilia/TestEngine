@@ -3,6 +3,7 @@
 #include "Engine/Behaviour/Physics/UserPullBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Editor/Tools/IEditorTool.h"
+#include "Engine/Editor/Tools/SelectTool.h"
 #include "Engine/Visual/VectorArrowVisual.h"
 
 #include <SFML/System/Time.hpp>
@@ -15,6 +16,8 @@
 class PullTool final : public IEditorTool
 {
 public:
+	explicit PullTool(SelectTool::SelectCallback onSelect);
+
 	void SetArrowVisual(std::shared_ptr<VectorArrowVisual> arrow);
 
 	void SetPullForceScale(float v) { _pullForceScale = v; }
@@ -34,11 +37,12 @@ public:
 	void onPresent(const sf::Time& dt) override;
 
 private:
-	void StartPull(sf::Vector2f mousePos, UserPullBehaviour::PullMode pullMode);
+	[[nodiscard]] std::shared_ptr<SceneNode> StartPull(sf::Vector2f mousePos, UserPullBehaviour::PullMode pullMode);
 	void StopPull();
 	void SetPullDestination(sf::Vector2f dest) const;
 	static UserPullBehaviour::PullMode PullModeFromIndex(int index);
 
+	SelectTool::SelectCallback _onSelect;
 	float _pullForceScale = 1.f;
 	int _pullModeIndex = 1;
 	bool _debugArrowEnabled = true;
