@@ -20,6 +20,8 @@ namespace {
 
 } // namespace
 
+MoveTool::MoveTool(SelectTool::SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
+
 bool MoveTool::processEvent(const sf::Event& event) {
 	auto toVec = [](sf::Vector2i p) {
 		return sf::Vector2f(static_cast<float>(p.x), static_cast<float>(p.y));
@@ -31,8 +33,10 @@ bool MoveTool::processEvent(const sf::Event& event) {
 		if (!picked) {
 			_dragging = false;
 			_grabbed.reset();
+			_onSelect(nullptr);
 			return true;
 		}
+		_onSelect(picked);
 		if (auto rb = picked->FindBehaviour<RigidBodyBehaviour>()) {
 			if (rb->IsImmovable()) {
 				return true;

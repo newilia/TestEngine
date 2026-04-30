@@ -9,9 +9,15 @@ namespace Engine {
 
 	void SceneHierarchyWidget::ClearSelection() {
 		_selectedNode.reset();
+		_scrollSelectionIntoViewPending = false;
 	}
 
 	void SceneHierarchyWidget::Select(std::shared_ptr<SceneNode> node) {
+		const SceneNode* const prevPtr = _selectedNode.lock().get();
+		const SceneNode* const nextPtr = node.get();
+		if (prevPtr != nextPtr) {
+			_scrollSelectionIntoViewPending = (nextPtr != nullptr);
+		}
 		_selectedNode = std::move(node);
 	}
 
@@ -38,7 +44,11 @@ namespace Engine {
 
 		const bool isOpen = ImGui::TreeNodeEx(id, nodeFlags, "%s", displayCStr);
 		if (ImGui::IsItemClicked()) {
-			_selectedNode = node.shared_from_this();
+			Select(node.shared_from_this());
+		}
+		if (_selectedNode.lock().get() == &node && _scrollSelectionIntoViewPending) {
+			ImGui::SetScrollHereY(0.5f);
+			_scrollSelectionIntoViewPending = false;
 		}
 		if (isOpen) {
 			if (hasChildren) {
