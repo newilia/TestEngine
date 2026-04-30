@@ -13,10 +13,10 @@
 #include <memory>
 #include <optional>
 
-class PhysicsHandler : public Updatable
+class PhysicsProcessor : public Updatable
 {
 public:
-	~PhysicsHandler() override = default;
+	~PhysicsProcessor() override = default;
 	void Update(const sf::Time& dt) override;
 	void RegisterBody(shared_ptr<SceneNode> body);
 	void UnregisterBody(SceneNode* body);

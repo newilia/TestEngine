@@ -14,7 +14,7 @@ class SceneNode;
 /// - **OnAttached**: the behaviour is on a node (`GetNode()` works). Use for wiring to other
 ///   components on the **same** node (e.g. find a collider). Do not register with global subsystems here.
 /// - **OnInit**: the node subtree is under the active scene root (`EngineContext::GetScene()`). Use for
-///   `PhysicsHandler`, fonts, and other engine-wide setup.
+///   `PhysicsProcessor`, fonts, and other engine-wide setup.
 /// - **OnDeinit**: reverse of `OnInit` (unregister from subsystems). Only runs if `OnInit` ran.
 /// - **OnDetached**: the behaviour is about to be removed from the node's list; `GetNode()` is still valid
 ///   for the duration of the call. Runs after `OnDeinit` when both apply.

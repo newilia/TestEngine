@@ -75,7 +75,7 @@ namespace {
 		engine.OnStartUpdateTick();
 		auto simulatedDt = engine.GetSimTickDt();
 
-		auto* ph = engine.GetPhysicsHandler().get();
+		auto* ph = engine.GetPhysicsProcessor().get();
 		scene->UpdateRec(simulatedDt);
 		ph->Update(simulatedDt);
 		return true;

@@ -11,7 +11,7 @@
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Behaviour/Physics/ShapeColliderBehaviour.h"
 #include "Engine/Core/Scene.h"
-#include "Engine/Simulation/PhysicsHandler.h"
+#include "Engine/Simulation/PhysicsProcessor.h"
 #include "PongBall.h"
 #include "PongPlatform.h"
 #include "UserPlatformController.h"
@@ -41,7 +41,7 @@ void PongEnvironment::Setup() {
 	// sf::VideoMode videoMode(800, 600);
 	engine.CreateMainWindow(videoMode, "Pong", sf::Style::None);
 	engine.GetMainWindow()->setMouseCursorVisible(false);
-	engine.GetPhysicsHandler()->SetGravity({0, 1000});
+	engine.GetPhysicsProcessor()->SetGravity({0, 1000});
 	engine.SetDebugEnabled(false);
 	// engine.GetMainWindow()->setFramerateLimit(40.f);
 	engine.SetScene(BuildScene());
