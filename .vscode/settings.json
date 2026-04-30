@@ -10,6 +10,9 @@
 		"editor.insertSpaces": false,
 		"editor.defaultFormatter": "ms-vscode.cpptools"
 	},
+	"clangd.arguments": [
+		"--compile-commands-dir=${workspaceFolder}/build"
+	],
 	"files.exclude": {
 		"**/build": true
 	}
