@@ -2,6 +2,7 @@
 
 #include "Engine/App/EngineContext.h"
 #include "Engine/Behaviour/Physics/PhysicsDebugBehaviour.h"
+#include "Engine/Core/Transform.h"
 #include "SceneNode_gen.hpp"
 
 #include <algorithm>
@@ -53,6 +54,15 @@ shared_ptr<Visual> SceneNode::GetVisual() const {
 	return _visual;
 }
 
+shared_ptr<Transform> SceneNode::GetTransform() const {
+	if (!_transform) {
+		auto self = std::static_pointer_cast<SceneNode>(const_cast<SceneNode*>(this)->shared_from_this());
+		_transform = std::make_shared<Transform>();
+		_transform->AttachTo(self);
+	}
+	return _transform;
+}
+
 shared_ptr<SortingStrategy> SceneNode::GetSortingStrategy() const {
 	return _sortingStrategy;
 }
@@ -86,7 +96,7 @@ sf::Vector2f SceneNode::GetPosGlobal() const {
 	if (auto* c = FindShapeCollider()) {
 		return c->GetPosGlobal();
 	}
-	return getPosition();
+	return GetTransform()->getPosition();
 }
 
 void SceneNode::SetPosGlobal(sf::Vector2f pos) {
@@ -94,7 +104,7 @@ void SceneNode::SetPosGlobal(sf::Vector2f pos) {
 		c->SetPosGlobal(pos);
 	}
 	else {
-		setPosition(pos);
+		GetTransform()->setPosition(pos);
 	}
 }
 
@@ -115,7 +125,7 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	}
 
 	if (EngineContext::GetInstance().IsDebugDrawEnabled()) {
-		if (auto debugBehaviour = FindBehaviour<PhysicsDebugBehaviour>()) { // todo fix (некрасиво)
+		if (auto debugBehaviour = FindBehaviour<PhysicsDebugBehaviour>()) { // todo fix (РЅРµРєСЂР°СЃРёРІРѕ)
 			debugBehaviour->DebugDraw(target, states);
 		}
 	}

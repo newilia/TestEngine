@@ -22,10 +22,11 @@ using std::make_shared;
 using std::shared_ptr;
 using std::weak_ptr;
 
+class Transform;
+
 class SceneNode : public enable_shared_from_this<SceneNode>,
                   public Updatable,
                   public sf::Drawable,
-                  public sf::Transformable,
                   public Engine::IPropertiesProvider
 {
 	META_CLASS()
@@ -59,6 +60,7 @@ public:
 	void SetSortingStrategy(const shared_ptr<SortingStrategy>& sorting);
 
 	shared_ptr<Visual> GetVisual() const;
+	shared_ptr<Transform> GetTransform() const;
 	shared_ptr<SortingStrategy> GetSortingStrategy() const;
 	const std::vector<shared_ptr<Behaviour>>& GetBehaviours() const;
 
@@ -77,9 +79,12 @@ public:
 		}
 	}
 
-	/// Searches the node for any attached entity: visual, sorting, or behaviour.
+	/// Searches the node for any attached entity: transform, visual, sorting, or behaviour.
 	template <typename T>
 	shared_ptr<T> FindEntity() const {
+		if (auto t = std::dynamic_pointer_cast<T>(GetTransform())) {
+			return t;
+		}
 		if (auto v = std::dynamic_pointer_cast<T>(_visual)) {
 			return v;
 		}
@@ -153,6 +158,7 @@ private:
 	bool _isVisible = true;
 
 private:
+	mutable shared_ptr<Transform> _transform;
 	shared_ptr<Visual> _visual;
 	shared_ptr<SortingStrategy> _sortingStrategy;
 	std::vector<shared_ptr<Behaviour>> _behaviours;
