@@ -26,6 +26,19 @@ cmake --build build --config Release
 
 **Где exe:** `build/bin/Release/TestEngine.exe` и `build/bin/Debug/TestEngine.exe`.
 
+## clangd и `compile_commands.json`
+
+В [`CMakeLists.txt`](CMakeLists.txt) задано `CMAKE_EXPORT_COMPILE_COMMANDS`: для генераторов **Ninja** и **Makefile** CMake кладёт `compile_commands.json` в каталог сборки. Для типичного генератора **Visual Studio** (`-A x64`) CMake этот файл **не** записывает — ограничение CMake.
+
+В [`.vscode/settings.json`](.vscode/settings.json) для расширения clangd указано `--compile-commands-dir=${workspaceFolder}/build`. Если файла нет, либо переключите конфигурацию на Ninja в отдельный каталог (нужен [Ninja](https://ninja-build.org/) в PATH), например:
+
+```bash
+cmake -S . -B build-ninja -G Ninja -DCMAKE_BUILD_TYPE=Debug
+cmake --build build-ninja
+```
+
+и смените путь в настройках на `${workspaceFolder}/build-ninja`, либо пользуйтесь встроенной интеграцией C++ (CMake Tools / MSVC) без clangd.
+
 ## Codegen (дерево свойств)
 
 Скрипт [`tools/property_codegen.py`](tools/property_codegen.py) генерирует заголовки `src/Codegen/<ИмяИсходника>_gen.hpp` из тегов `META_CLASS()` и `/// @property` в `src/**/*.h`. Каталог `src/Codegen/` в `.gitignore`; при сборке `TestEngine` цель **`Codegen`** запускается автоматически первой (`add_dependencies`).
