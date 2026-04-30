@@ -4,6 +4,7 @@
 #include "Engine/Core/IPropertiesProvider.h"
 #include "Engine/Core/PropertyTree.h"
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Core/Transform.h"
 #include "Engine/Sorting/SortingStrategy.h"
 #include "Engine/Visual/Visual.h"
 
@@ -36,17 +37,7 @@ namespace Engine {
 		}
 		DrawIPropertiesProviderBlock("SceneNode", dynamic_cast<IPropertiesProvider*>(node.get()), _propertyDrawer);
 
-		{
-			ImGui::SeparatorText("Transform");
-			const sf::Vector2f local = node->getPosition();
-			const sf::Vector2f world = node->GetPosGlobal();
-			const sf::Vector2f scale = node->getScale();
-			ImGui::Text("Local position:  (%.2f, %.2f)", static_cast<double>(local.x), static_cast<double>(local.y));
-			ImGui::Text("Global position: (%.2f, %.2f)", static_cast<double>(world.x), static_cast<double>(world.y));
-			ImGui::Text("Scale: (%.3f, %.3f)", static_cast<double>(scale.x), static_cast<double>(scale.y));
-			const double rotDeg = static_cast<double>(node->getRotation().asDegrees());
-			ImGui::Text("Rotation: %.2f deg", rotDeg);
-		}
+		DrawIPropertiesProviderBlock("Transform", node->GetTransform().get(), _propertyDrawer);
 
 		if (const auto visual = node->GetVisual()) {
 			DrawIPropertiesProviderBlock("Visual", dynamic_cast<IPropertiesProvider*>(visual.get()), _propertyDrawer);
