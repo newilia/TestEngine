@@ -165,8 +165,6 @@ namespace {
 		auto& engine = EngineContext::GetInstance();
 		auto window = engine.GetMainWindow();
 
-		engine.TryInitImGui();
-
 		if (!window) {
 			return false;
 		}
@@ -212,6 +210,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 #endif
 
 	EngineContext& engine = EngineContext::GetInstance();
+	engine.Init();
 
 	const auto targetTickPeriod = [&engine]() {
 		auto period = sf::seconds(1.f / engine.GetTargetTickRateHz());

@@ -15,7 +15,6 @@ public:
 	EngineContext();
 	~EngineContext() override;
 	void Init();
-	void TryInitImGui();
 	bool IsImGuiInitialized() const;
 
 	shared_ptr<Scene> GetScene() const;
