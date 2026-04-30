@@ -24,7 +24,7 @@ alwaysApply: true
 | **`Environments/<Name>/`** | Demos/games (**`Test`**, **`Pong`**); active environment is chosen in `main.cpp` (`TestEnvironment` / `PongEnvironment`) |
 | **`Codegen/`** | Generated `*_gen.hpp` for the editor — **do not edit by hand**; see [`property-codegen.mdc`](property-codegen.mdc) |
 
-Sources are collected with **`file(GLOB_RECURSE ... src/**/*.cpp)`** — after adding a **new** `.cpp`, run **CMake configure** again.
+Sources are collected with **`file(GLOB_RECURSE ... CONFIGURE_DEPENDS ... src/**/*.cpp)`** — new `.cpp` files are detected on the next configure/build pass.
 
 ## Includes
 

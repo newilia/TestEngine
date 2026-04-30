@@ -12,7 +12,7 @@ Editor property trees for classes inheriting `Engine::IPropertiesProvider` (e.g.
 
 **Types in this repo that use codegen (non-exhaustive):** `SceneNode`, `FpsCounterBehaviour`, `RigidBodyBehaviour`, `ShapeColliderBehaviourBase`, `UserPullBehaviour`. Not every `Behaviour` subclass has reflectable scalars (e.g. `CollisionBehaviour` / `OverlappingBehaviour` use `std::bitset` and delegates; `PhysicsDebugBehaviour` / `ShapeVisualBehaviour` have no data; Pong-local anonymous behaviours stay without `META_CLASS`).
 
-Adding a **new** `src/**.cpp` that only includes `*_gen.hpp` requires re-running **CMake configure** once so `file(GLOB_RECURSE ... *.cpp)` picks it up.
+Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONFIGURE_DEPENDS` on the source glob in `CMakeLists.txt` (same as other `src/**/*.cpp` files).
 
 ## Author workflow
 
