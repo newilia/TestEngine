@@ -60,6 +60,9 @@ public:
 	void SetFramerateLimitEnabled(bool enabled);
 	bool IsFramerateLimitEnabled() const;
 
+	[[nodiscard]] float GetFps() const;
+	[[nodiscard]] float GetTickRate() const;
+
 private:
 	void ApplyWindowFrameSettings();
 
@@ -81,4 +84,8 @@ private:
 	bool _isFramerateLimitEnabled = false;
 	bool _verticalSyncEnabled = false;
 	std::uint32_t _targetTickRateHz = 500;
+	float _fps = 0.f;
+	float _tickRate = 0.f;
+	bool _haveFps = false;
+	bool _haveTickRate = false;
 };

@@ -2,6 +2,24 @@
 
 #include "Engine/Behaviour/Physics/BodyPullHandler.h"
 
+#include <cmath>
+
+namespace {
+	constexpr float kRateSmoothing = 0.92f;
+
+	void AccumulateSmoothedRate(float instantaneous, float& smoothed, bool& valid) {
+		if (!std::isfinite(instantaneous) || instantaneous <= 0.f) {
+			return;
+		}
+		if (!valid) {
+			smoothed = instantaneous;
+			valid = true;
+			return;
+		}
+		smoothed = smoothed * kRateSmoothing + instantaneous * (1.f - kRateSmoothing);
+	}
+} // namespace
+
 shared_ptr<Scene> EngineContext::GetScene() const {
 	return _scene;
 }
@@ -123,11 +141,21 @@ sf::Time EngineContext::GetFrameDt() const {
 void EngineContext::OnStartPresentFrame() {
 	_frameTime = _frameClock.getElapsedTime();
 	_frameClock.restart();
+	const float dtSec = _frameTime.asSeconds();
+	if (dtSec > 0.f) {
+		const float instantaneous = 1.f / dtSec;
+		AccumulateSmoothedRate(instantaneous, _fps, _haveFps);
+	}
 }
 
 void EngineContext::OnStartUpdateTick() {
 	_tickTime = _tickClock.getElapsedTime();
 	_tickClock.restart();
+	const float dtSec = _tickTime.asSeconds();
+	if (dtSec > 0.f) {
+		const float instantaneous = 1.f / dtSec;
+		AccumulateSmoothedRate(instantaneous, _tickRate, _haveTickRate);
+	}
 }
 
 void EngineContext::ApplyWindowFrameSettings() {
@@ -154,4 +182,12 @@ void EngineContext::SetFramerateLimitEnabled(bool enabled) {
 
 bool EngineContext::IsFramerateLimitEnabled() const {
 	return _isFramerateLimitEnabled;
+}
+
+float EngineContext::GetFps() const {
+	return _haveFps ? _fps : 0.f;
+}
+
+float EngineContext::GetTickRate() const {
+	return _haveTickRate ? _tickRate : 0.f;
 }
