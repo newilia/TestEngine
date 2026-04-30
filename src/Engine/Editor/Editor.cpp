@@ -70,7 +70,7 @@ namespace Engine {
 		return _isOpen;
 	}
 
-	void Editor::Run(float /*dt*/) {
+	void Editor::Update(float /*dt*/) {
 		Engine::MainContext::GetInstance().SetHierarchySelectedForViewport(_isOpen ? _sceneHierarchyWidget.GetSelected()
 		                                                                           : nullptr);
 	}

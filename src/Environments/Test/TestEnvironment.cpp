@@ -115,7 +115,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		rb->_friction = commonFriction;
 
 		auto fieldBeh = std::make_shared<InverseSquareFieldSourceBehaviour>();
-		fieldBeh->_attraction = 10000 * (isAttractive ? -1 : 1);
+		fieldBeh->_attraction = 100 * (isAttractive ? -1 : 1);
 		node->AddBehaviour(std::move(fieldBeh));
 
 		scene->AddChild(std::move(node));

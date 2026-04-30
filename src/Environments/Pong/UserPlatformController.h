@@ -17,7 +17,7 @@ public:
 
 	void Init() override;
 	void HandleEvent(const sf::Event& event);
-	void Run(const sf::Time& dt) override;
+	void Update(const sf::Time& dt) override;
 
 	void SetVerticalFreedomFactor(float val);
 	void SetVelocityFactor(float val);

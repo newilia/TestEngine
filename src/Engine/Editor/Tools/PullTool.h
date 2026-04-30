@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Engine/Behaviour/Physics/UserPullBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Editor/Tools/IEditorTool.h"
 #include "Engine/Editor/Tools/SelectTool.h"
@@ -12,39 +11,32 @@
 
 #include <memory>
 
-/// LMB pull using mode and strength from the Tools panel (replaces `BodyPullHandler` behaviour).
 class PullTool final : public IEditorTool
 {
 public:
 	explicit PullTool(SelectTool::SelectCallback onSelect);
 
+	bool processEvent(const sf::Event& event) override;
+	void onPresent(const sf::Time& dt) override;
+
 	void SetArrowVisual(std::shared_ptr<VectorArrowVisual> arrow);
 
 	void SetPullForceScale(float v) { _pullForceScale = v; }
 
-	[[nodiscard]] float GetPullForceScale() const { return _pullForceScale; }
+	float GetPullForceScale() const { return _pullForceScale; }
 
-	/// 0 = Position, 1 = Force, 2 = Velocity
-	void SetPullModeIndex(int index) { _pullModeIndex = index; }
-
-	[[nodiscard]] int GetPullModeIndex() const { return _pullModeIndex; }
+	bool IsDebugArrowEnabled() const { return _debugArrowEnabled; }
 
 	void SetDebugArrowEnabled(bool v) { _debugArrowEnabled = v; }
 
-	[[nodiscard]] bool IsDebugArrowEnabled() const { return _debugArrowEnabled; }
-
-	[[nodiscard]] bool processEvent(const sf::Event& event) override;
-	void onPresent(const sf::Time& dt) override;
-
 private:
-	[[nodiscard]] std::shared_ptr<SceneNode> StartPull(sf::Vector2f mousePos, UserPullBehaviour::PullMode pullMode);
+	std::shared_ptr<SceneNode> OnTap(sf::Vector2f mousePos);
 	void StopPull();
-	void SetPullDestination(sf::Vector2f dest) const;
-	static UserPullBehaviour::PullMode PullModeFromIndex(int index);
+	void SetPullDestination(const sf::Vector2f& dest);
 
 	SelectTool::SelectCallback _onSelect;
 	float _pullForceScale = 1.f;
-	int _pullModeIndex = 1;
+	sf::Vector2f _destination;
 	bool _debugArrowEnabled = true;
 	std::weak_ptr<VectorArrowVisual> _arrowVisual;
 	std::weak_ptr<SceneNode> _pullingBody;
@@ -58,4 +50,4 @@ struct PullVisualSetup
 };
 
 /// Root `body_pull` + child arrow visual (no behaviour — pull lives in `PullTool`).
-[[nodiscard]] PullVisualSetup CreatePullVisualOverlay();
+PullVisualSetup CreatePullVisualOverlay();

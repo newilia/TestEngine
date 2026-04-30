@@ -17,7 +17,7 @@ class PhysicsProcessor : public Updatable
 {
 public:
 	~PhysicsProcessor() override = default;
-	void Run(const sf::Time& dt) override;
+	void Update(const sf::Time& dt) override;
 	void RegisterBody(shared_ptr<SceneNode> body);
 	void UnregisterBody(SceneNode* body);
 	const std::list<std::weak_ptr<SceneNode>>& GetAllBodies() const;

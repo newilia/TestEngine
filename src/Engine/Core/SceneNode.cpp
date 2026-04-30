@@ -89,7 +89,7 @@ namespace {
 
 } // namespace
 
-void SceneNode::Run(const sf::Time& /*dt*/) {}
+void SceneNode::Update(const sf::Time& /*dt*/) {}
 
 void SceneNode::OnInit() {}
 
@@ -199,7 +199,7 @@ void SceneNode::UpdateRec(const sf::Time& dt) {
 		return;
 	}
 
-	Run(dt);
+	Update(dt);
 	for (auto& b : _behaviours) {
 		b->OnUpdate(dt);
 	}

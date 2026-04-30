@@ -21,7 +21,7 @@ public:
 	void RegisterTickBehaviour();
 	void Init();
 	void SetShapeDimensions(sf::Vector2f size, float curveness, float rotationDeg);
-	void Run(const sf::Time& dt);
+	void Update(const sf::Time& dt);
 
 	std::shared_ptr<SceneNode> GetNode() const;
 

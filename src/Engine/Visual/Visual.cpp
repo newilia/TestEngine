@@ -1,9 +1,5 @@
 #include "Engine/Visual/Visual.h"
 
-void Visual::OnTap(sf::Vector2f windowPosition) {
-	(void)windowPosition;
-}
-
 void Visual::SetTapHandlingEnabled(bool enabled) {
 	_tapHandlingEnabled = enabled;
 }

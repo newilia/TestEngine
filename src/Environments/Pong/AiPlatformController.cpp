@@ -52,7 +52,7 @@ void AiPlatformController::MovePlatformTowardsBall() {
 	_targetPos.x = _curExState.ballPos.x * (1.f - steadyRatio) + _defaultPos.x * steadyRatio;
 }
 
-void AiPlatformController::Run(const sf::Time& dt) {
+void AiPlatformController::Update(const sf::Time& dt) {
 	if (_observeTimer.getElapsedTime() > _observePeriod) {
 		_observeTimer.restart();
 		ObserveState();
@@ -76,5 +76,5 @@ void AiPlatformController::Run(const sf::Time& dt) {
 		}
 	}
 
-	UserPlatformController::Run(dt);
+	UserPlatformController::Update(dt);
 }

@@ -29,19 +29,6 @@ namespace Engine {
 		case 2: {
 			auto* pull = tools.GetPullTool();
 			if (pull) {
-				int mode = pull->GetPullModeIndex();
-				ImGui::TextUnformatted("Pull mode");
-				if (ImGui::RadioButton("Position snap", mode == 0)) {
-					mode = 0;
-				}
-				if (ImGui::RadioButton("Force", mode == 1)) {
-					mode = 1;
-				}
-				if (ImGui::RadioButton("Set velocity", mode == 2)) {
-					mode = 2;
-				}
-				pull->SetPullModeIndex(mode);
-
 				float scale = pull->GetPullForceScale();
 				if (ImGui::SliderFloat("Pull force scale", &scale, 0.01f, 100.f, "%.3f")) {
 					pull->SetPullForceScale(scale);

@@ -14,7 +14,7 @@
 
 namespace Engine {
 
-	void MainLoop::Run() {
+	void MainLoop::Update() {
 		MainContext& engine = Engine::MainContext::GetInstance();
 		auto dt = _clock.restart();
 
@@ -49,8 +49,8 @@ namespace Engine {
 			}
 
 			auto dt = mainLoopClock.restart();
-			tickExecutor.Run(dt);
-			presentExecutor.Run(dt);
+			tickExecutor.Update(dt);
+			presentExecutor.Update(dt);
 		}
 	}
 
@@ -118,7 +118,7 @@ namespace Engine {
 		if (auto scene = engine.GetScene()) {
 			scene->UpdateRec(simulatedDt);
 		}
-		engine.GetPhysicsProcessor()->Run(simulatedDt);
+		engine.GetPhysicsProcessor()->Update(simulatedDt);
 		return true;
 	}
 
@@ -143,7 +143,7 @@ namespace Engine {
 
 		auto& editor = Engine::Editor::GetInstance();
 		editor.GetEditorToolManager().OnPresent(dt);
-		editor.Run(dt.asSeconds());
+		editor.Update(dt.asSeconds());
 		editor.Draw();
 
 		window->draw(*scene);
