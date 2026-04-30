@@ -14,7 +14,8 @@ namespace Engine {
 		const char* names[] = {"Tap", "Select", "Pull", "Move"};
 		int active = tools.GetActiveToolIndex();
 		for (int i = 0; i < EditorToolManager::kToolCount; ++i) {
-			if (ImGui::RadioButton(names[i], active == i)) {
+			const std::string label = EditorToolManager::FormatToolPaletteLabel(i, names[i]);
+			if (ImGui::RadioButton(label.c_str(), active == i)) {
 				tools.SetActiveToolIndex(i);
 				active = i;
 			}
