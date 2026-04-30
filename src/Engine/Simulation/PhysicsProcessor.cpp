@@ -79,16 +79,8 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 				    (b1Collision->_collisionGroups & b2Collision->_collisionGroups).any()) {
 					if (!b1RigidBody->IsImmovable() || !b2RigidBody->IsImmovable()) {
 						ResolveCollision(*intersection);
-						for (auto callback : b1Collision->_collisionCallbacks) {
-							if (callback) {
-								callback->operator()(*intersection);
-							}
-						}
-						for (auto callback : b2Collision->_collisionCallbacks) {
-							if (callback) {
-								callback->operator()(*intersection);
-							}
-						}
+						b1Collision->_collisionCallbacks.Emit(*intersection);
+						b2Collision->_collisionCallbacks.Emit(*intersection);
 					}
 				}
 
@@ -96,11 +88,7 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 				auto b2Overlapping = b2->FindBehaviour<OverlappingBehaviour>();
 				if (b1Overlapping && b2Overlapping &&
 				    (b1Overlapping->_overlappingGroups & b2Overlapping->_overlappingGroups).any()) {
-					for (auto callback : b1Overlapping->_overlappingCallbacks) {
-						if (callback) {
-							callback->operator()(*intersection);
-						}
-					}
+					b1Overlapping->_overlappingCallbacks.Emit(*intersection);
 				}
 			}
 		}
@@ -125,7 +113,7 @@ bool PhysicsProcessor::CheckBboxIntersection(const AbstractBody* body1, const Ab
 }
 
 std::optional<IntersectionDetails> PhysicsProcessor::DetectIntersection(const shared_ptr<SceneNode>& n1,
-                                                                      const shared_ptr<SceneNode>& n2) {
+                                                                        const shared_ptr<SceneNode>& n2) {
 	if (!n1 || !n2) {
 		assert(false);
 		return std::nullopt;
@@ -174,7 +162,7 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectIntersection(const sh
 }
 
 std::optional<IntersectionDetails> PhysicsProcessor::DetectPolygonPolygonIntersection(const AbstractBody* body1,
-                                                                                    const AbstractBody* body2) {
+                                                                                      const AbstractBody* body2) {
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
 
@@ -214,7 +202,7 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectPolygonPolygonInterse
 }
 
 std::optional<IntersectionDetails> PhysicsProcessor::DetectCirclePolygonIntersection(const sf::CircleShape* circle,
-                                                                                   const AbstractBody* body) {
+                                                                                     const AbstractBody* body) {
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
 
@@ -249,7 +237,7 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectCirclePolygonIntersec
 }
 
 std::optional<IntersectionDetails> PhysicsProcessor::DetectCircleCircleIntersection(const sf::CircleShape* circle1,
-                                                                                  const sf::CircleShape* circle2) {
+                                                                                    const sf::CircleShape* circle2) {
 	using namespace Utils;
 	auto r1 = circle1->getRadius();
 	auto r2 = circle2->getRadius();
@@ -288,7 +276,7 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectCircleCircleIntersect
 }
 
 std::optional<SegmentIntersectionPoints> PhysicsProcessor::FindSegmentsIntersectionPoint(const Segment& segA,
-                                                                                       const Segment& segB) {
+                                                                                         const Segment& segB) {
 	assert(segA.start != segA.end);
 	assert(segB.start != segB.end);
 
@@ -367,7 +355,8 @@ std::optional<SegmentIntersectionPoints> PhysicsProcessor::FindSegmentsIntersect
 }
 
 std::optional<SegmentIntersectionPoints>
-PhysicsProcessor::FindSegmentCircleIntersectionPoint(const Segment& seg, const sf::Vector2f& circleCenter, float radius) {
+PhysicsProcessor::FindSegmentCircleIntersectionPoint(const Segment& seg, const sf::Vector2f& circleCenter,
+                                                     float radius) {
 	using namespace Utils;
 	SegmentIntersectionPoints result;
 	auto s = seg;

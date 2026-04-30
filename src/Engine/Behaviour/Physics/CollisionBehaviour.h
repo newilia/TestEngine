@@ -1,11 +1,9 @@
 #pragma once
 
 #include "Engine/Behaviour/Behaviour.h"
-#include "Engine/Core/Delegates.h"
+#include "Engine/Core/Signal.h"
 
 #include <bitset>
-#include <memory>
-#include <vector>
 
 struct IntersectionDetails;
 
@@ -13,5 +11,5 @@ class CollisionBehaviour : public Behaviour
 {
 public:
 	std::bitset<8> _collisionGroups;
-	std::vector<std::shared_ptr<IDelegate<const IntersectionDetails&>>> _collisionCallbacks;
+	Signal<const IntersectionDetails&> _collisionCallbacks;
 };

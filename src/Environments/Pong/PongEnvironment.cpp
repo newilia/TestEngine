@@ -147,7 +147,8 @@ void PongEnvironment::AddWalls(Scene* scene) {
 					    calledOnce = true;
 				    }
 			    });
-			wall->FindBehaviour<OverlappingBehaviour>()->_overlappingCallbacks.push_back(std::move(loseCallback));
+			static_cast<void>(
+			    wall->FindBehaviour<OverlappingBehaviour>()->_overlappingCallbacks.Connect(std::move(loseCallback)));
 		}
 		else {
 			rect->setFillColor(sf::Color(200, 200, 200, 255));
