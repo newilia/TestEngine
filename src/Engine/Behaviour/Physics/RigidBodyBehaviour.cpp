@@ -1,6 +1,6 @@
 #include "RigidBodyBehaviour.h"
 
-#include "RigidBodyBehaviour_gen.hpp"
+#include "RigidBodyBehaviour.generated.hpp"
 
 #include <limits>
 

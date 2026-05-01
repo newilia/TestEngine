@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Scan src/**/*.h for META_CLASS() and /// @property tags; emit src/Codegen/<Stem>_gen.hpp.
+Scan src/**/*.h for META_CLASS() and /// @property tags; emit src/Codegen/<Stem>.generated.hpp.
 """
 
 from __future__ import annotations
@@ -620,7 +620,7 @@ def main() -> int:
 
     for h in headers:
         rel = h.relative_to(root).as_posix()
-        out_path = codegen_dir / f"{h.stem}_gen.hpp"
+        out_path = codegen_dir / f"{h.stem}.generated.hpp"
         sig = file_signature(h)
         cached = cache_files.get(rel)
         if (

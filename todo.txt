@@ -4,7 +4,7 @@
 
 порефакторить input (включая редактор), починить понг
 
-поиск ноды под курсором: traverse scene with Visual::HitTest, return ordered list (top-to-bottom)
+поиск ноды под курсором: traverse scene with Visual::HitTest (PickSceneNodeAt() ?), return ordered list (top-to-bottom)
 
 перемещение камеры по ПКМ
 
@@ -19,3 +19,6 @@ todos в коде
 поревьюить инициализацию нод и сущностей
 
 PhysicsProcessor::Run(const sf::Time& dt) удаление протухших при итерации
+
+предкомпилированные заголовки
+
