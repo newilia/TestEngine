@@ -78,7 +78,7 @@ namespace Engine {
 		shared_ptr<Scene> GetHierarchySelectedForViewport() const;
 
 		void MoveCamera(const sf::Vector2i& delta);
-		void ZoomCamera(float zoomFactor);
+		void ZoomCamera(float zoomFactor, std::optional<sf::Vector2i> focusPixel = std::nullopt);
 
 	private:
 		void ApplyWindowFrameSettings();

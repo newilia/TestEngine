@@ -226,10 +226,18 @@ namespace Engine {
 		}
 	}
 
-	void MainContext::ZoomCamera(float zoomFactor) {
+	void MainContext::ZoomCamera(float zoomFactor, std::optional<sf::Vector2i> focusPixel) {
 		if (auto window = GetMainWindow()) {
 			auto view = window->getView();
-			view.zoom(zoomFactor);
+			if (focusPixel) {
+				const sf::Vector2f worldBefore = window->mapPixelToCoords(*focusPixel, view);
+				view.zoom(zoomFactor);
+				const sf::Vector2f worldAfter = window->mapPixelToCoords(*focusPixel, view);
+				view.move(worldBefore - worldAfter);
+			}
+			else {
+				view.zoom(zoomFactor);
+			}
 			window->setView(view);
 		}
 	}
