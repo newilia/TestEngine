@@ -123,8 +123,9 @@ public:
 	}
 
 	ShapeColliderBehaviourBase* FindShapeCollider() const;
-	shared_ptr<SceneNode> FindTopMostTapTarget(sf::Vector2f windowPosition);
-	bool DispatchTapAt(sf::Vector2f windowPosition);
+	/// `worldPoint` — в координатах сцены (как у `Visual::HitTest` / коллайдеров).
+	shared_ptr<SceneNode> FindTopMostTapTarget(const sf::Vector2f& worldPoint);
+	bool DispatchTapAt(const sf::Vector2f& worldPoint);
 	sf::Vector2f GetPosGlobal() const;
 	void SetPosGlobal(sf::Vector2f pos);
 

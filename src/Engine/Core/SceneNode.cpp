@@ -380,26 +380,24 @@ void SceneNode::DetachBehaviourForRemove(const shared_ptr<Behaviour>& b) {
 	b->OnDetached();
 }
 
-shared_ptr<SceneNode> SceneNode::FindTopMostTapTarget(sf::Vector2f windowPosition) {
+shared_ptr<SceneNode> SceneNode::FindTopMostTapTarget(const sf::Vector2f& worldPoint) {
 	std::vector<shared_ptr<SceneNode>> sorted = _children;
 	SortChildrenByDrawOrder(sorted);
 	for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
-		if (auto hit = (*it)->FindTopMostTapTarget(windowPosition)) {
+		if (auto hit = (*it)->FindTopMostTapTarget(worldPoint)) {
 			return hit;
 		}
 	}
-	if (_visual && _visual->IsTapHandlingEnabled() && _visual->HitTest(windowPosition)) {
-		if (!_visual->IsTransparentToTap()) {
-			return shared_from_this();
-		}
+	if (_visual && _visual->HitTest(worldPoint)) {
+		return shared_from_this();
 	}
 	return nullptr;
 }
 
-bool SceneNode::DispatchTapAt(sf::Vector2f windowPosition) {
-	if (auto hit = FindTopMostTapTarget(windowPosition)) {
+bool SceneNode::DispatchTapAt(const sf::Vector2f& worldPoint) {
+	if (auto hit = FindTopMostTapTarget(worldPoint)) {
 		if (auto v = hit->GetVisual()) {
-			v->OnTap(windowPosition);
+			v->OnTap(worldPoint);
 			return true;
 		}
 	}

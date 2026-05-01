@@ -30,7 +30,7 @@ public:
 	void SetDebugArrowEnabled(bool v) { _debugArrowEnabled = v; }
 
 private:
-	std::shared_ptr<SceneNode> OnTap(sf::Vector2f mousePos);
+	std::shared_ptr<SceneNode> OnTap(const sf::Vector2f& screenPixelPos);
 	void StopPull();
 	void SetPullDestination(const sf::Vector2f& dest);
 

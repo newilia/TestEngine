@@ -12,9 +12,10 @@ public:
 	~Visual() override = default;
 
 	virtual void Draw(sf::RenderTarget& target, sf::RenderStates states) const = 0;
-	virtual bool HitTest(sf::Vector2f windowPosition) const = 0;
+	/// `worldPoint` — в координатах сцены (`Utils::IsWorldPointInsideOf*`).
+	virtual bool HitTest(const sf::Vector2f& worldPoint) const = 0;
 
-	virtual void OnTap(sf::Vector2f windowPosition) {}
+	virtual void OnTap(const sf::Vector2f& worldPoint) {}
 
 	void SetTapHandlingEnabled(bool enabled);
 	bool IsTapHandlingEnabled() const;

@@ -31,7 +31,7 @@ bool MoveTool::processEvent(const sf::Event& event) {
 		return sf::Vector2f();
 	};
 
-	auto tryBegin = [&](sf::Vector2f pos) -> bool {
+	auto tryBegin = [&](const sf::Vector2f& pos) -> bool {
 		auto scene = Engine::MainContext::GetInstance().GetScene();
 		auto picked = PickSceneNodeAt(scene, pos);
 		if (!picked) {
@@ -51,7 +51,7 @@ bool MoveTool::processEvent(const sf::Event& event) {
 		return true;
 	};
 
-	auto moveTo = [&](sf::Vector2f pos) {
+	auto moveTo = [&](const sf::Vector2f& pos) {
 		auto node = _grabbed.lock();
 		if (!node) {
 			return;

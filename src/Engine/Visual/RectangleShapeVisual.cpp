@@ -4,6 +4,6 @@
 
 RectangleShapeVisual::RectangleShapeVisual(sf::RectangleShape* rect) : ShapeVisualBase(rect), _rect(rect) {}
 
-bool RectangleShapeVisual::HitTest(sf::Vector2f windowPosition) const {
-	return _rect && Utils::IsPointInsideOfShape(windowPosition, _rect);
+bool RectangleShapeVisual::HitTest(const sf::Vector2f& worldPoint) const {
+	return _rect && Utils::IsWorldPointInsideOfShape(worldPoint, _rect);
 }

@@ -27,17 +27,14 @@ namespace Utils {
 
 	sf::Vector2f Rotate(const sf::Vector2f& v, float angle);
 
-	bool IsPointInsideOfBody(const sf::Vector2f& point, const AbstractBody* body);
-	bool IsPointInsideOfTriangle(sf::Vector2f p, sf::Vector2f t1, sf::Vector2f t2, sf::Vector2f t3);
+	bool IsPointInsideOfTriangle(const sf::Vector2f& p, const sf::Vector2f& t1, const sf::Vector2f& t2,
+	                             const sf::Vector2f& t3);
 
-	/// Веерная триангуляция от первой вершины в мировых координатах (как у тела). Не вызывать для круга — см.
-	/// `IsPointInsideOfShape`.
-	bool IsPointInsideShapeByFan(const sf::Vector2f& point, const sf::Shape* shape);
-
-	/// Круг — только формула; прямоугольник — inverse transform + локальный rect; иначе веер.
-	bool IsPointInsideOfShape(const sf::Vector2f& point, const sf::Shape* shape);
-
-	bool IsPointInsideOfVisual(const sf::Vector2f& point, const Visual* visual);
+	/// Веерная триангуляция от первой вершины; Не для круга — см. `IsWorldPointInsideOfShape`.
+	bool IsWorldPointInsideOfShapeByFan(const sf::Vector2f& worldPoint, const sf::Shape* shape);
+	bool IsWorldPointInsideOfShape(const sf::Vector2f& worldPoint, const sf::Shape* shape);
+	bool IsWorldPointInsideOfVisual(const sf::Vector2f& worldPoint, const Visual* visual);
+	bool IsWorldPointInsideOfBody(const sf::Vector2f& worldPoint, const AbstractBody* body);
 
 	bool IsNan(const sf::Vector2f& v);
 
@@ -61,7 +58,7 @@ namespace Utils {
 		return std::dynamic_pointer_cast<T>((const_cast<U*>(ptr))->shared_from_this());
 	}
 
-	sf::Vector2f MapWindowPixelToWorld(const sf::RenderWindow& window, sf::Vector2i pixel);
-	sf::Vector2f MapWindowPixelToWorld(const sf::RenderWindow& window, sf::Vector2f pixel);
+	sf::Vector2f MapWindowPixelToWorld(const sf::RenderWindow& window, const sf::Vector2i& pixel);
+	sf::Vector2f MapWindowPixelToWorld(const sf::RenderWindow& window, const sf::Vector2f& pixel);
 
 } // namespace Utils

@@ -60,7 +60,7 @@ void VectorArrowVisual::Draw(sf::RenderTarget& target, sf::RenderStates states) 
 	target.draw(_arrow, states);
 }
 
-bool VectorArrowVisual::HitTest(sf::Vector2f /*windowPosition*/) const {
+bool VectorArrowVisual::HitTest(const sf::Vector2f& /*worldPoint*/) const {
 	return false;
 }
 

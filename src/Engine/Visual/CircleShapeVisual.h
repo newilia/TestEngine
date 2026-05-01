@@ -8,7 +8,7 @@ class CircleShapeVisual : public ShapeVisualBase
 {
 public:
 	explicit CircleShapeVisual(sf::CircleShape* circle);
-	bool HitTest(sf::Vector2f windowPosition) const override;
+	bool HitTest(const sf::Vector2f& worldPoint) const override;
 
 private:
 	sf::CircleShape* _circle = nullptr;

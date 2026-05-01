@@ -25,7 +25,7 @@ public:
 	sf::Vector2f GetGravity() const;
 	void SetGravityEnabled(bool enabled);
 	bool IsGravityEnabled() const;
-	[[nodiscard]] std::shared_ptr<AttractionField> GetAttractionField() const;
+	std::shared_ptr<AttractionField> GetAttractionField() const;
 
 private:
 	static bool CheckBboxIntersection(const AbstractBody* body1, const AbstractBody* body2);

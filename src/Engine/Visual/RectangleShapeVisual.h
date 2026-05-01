@@ -8,7 +8,7 @@ class RectangleShapeVisual : public ShapeVisualBase
 {
 public:
 	explicit RectangleShapeVisual(sf::RectangleShape* rect);
-	bool HitTest(sf::Vector2f windowPosition) const override;
+	bool HitTest(const sf::Vector2f& worldPoint) const override;
 
 private:
 	sf::RectangleShape* _rect = nullptr;

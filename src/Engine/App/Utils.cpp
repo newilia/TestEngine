@@ -18,13 +18,13 @@
 
 namespace {
 	template <typename GetVertex>
-	bool pointInsideConvexFan(const sf::Vector2f& point, std::size_t count, GetVertex&& getVertex) {
+	bool pointInsideConvexFan(const sf::Vector2f& worldPoint, std::size_t count, GetVertex&& getVertex) {
 		if (count < 3) {
 			return false;
 		}
 		auto t1 = getVertex(0);
 		for (std::size_t i = 0; i < count - 2; ++i) {
-			if (Utils::IsPointInsideOfTriangle(point, t1, getVertex(i + 1), getVertex(i + 2))) {
+			if (Utils::IsPointInsideOfTriangle(worldPoint, t1, getVertex(i + 1), getVertex(i + 2))) {
 				return true;
 			}
 		}
@@ -78,16 +78,16 @@ namespace Utils {
 		return result;
 	}
 
-	bool IsPointInsideShapeByFan(const sf::Vector2f& point, const sf::Shape* shape) {
+	bool IsWorldPointInsideOfShapeByFan(const sf::Vector2f& worldPoint, const sf::Shape* shape) {
 		if (!shape) {
 			return false;
 		}
-		return pointInsideConvexFan(point, shape->getPointCount(), [&](std::size_t i) {
+		return pointInsideConvexFan(worldPoint, shape->getPointCount(), [&](std::size_t i) {
 			return shape->getTransform().transformPoint(shape->getPoint(i));
 		});
 	}
 
-	bool IsPointInsideOfShape(const sf::Vector2f& point, const sf::Shape* shape) {
+	bool IsWorldPointInsideOfShape(const sf::Vector2f& worldPoint, const sf::Shape* shape) {
 		if (!shape) {
 			return false;
 		}
@@ -97,46 +97,47 @@ namespace Utils {
 			const sf::Vector2f center = tf.transformPoint(localCenter);
 			const float radius =
 			    Length(tf.transformPoint(localCenter + sf::Vector2f{circle->getRadius(), 0.f}) - center);
-			return Sq(point.x - center.x) + Sq(point.y - center.y) <= Sq(radius);
+			return Sq(worldPoint.x - center.x) + Sq(worldPoint.y - center.y) <= Sq(radius);
 		}
 		if (const auto* rect = dynamic_cast<const sf::RectangleShape*>(shape)) {
-			const sf::Vector2f local = rect->getInverseTransform().transformPoint(point);
+			const sf::Vector2f local = rect->getInverseTransform().transformPoint(worldPoint);
 			const sf::FloatRect localBounds({0.f, 0.f}, rect->getSize());
 			return localBounds.contains(local);
 		}
-		return IsPointInsideShapeByFan(point, shape);
+		return IsWorldPointInsideOfShapeByFan(worldPoint, shape);
 	}
 
-	bool IsPointInsideOfVisual(const sf::Vector2f& point, const Visual* visual) {
+	bool IsWorldPointInsideOfVisual(const sf::Vector2f& worldPoint, const Visual* visual) {
 		if (!visual) {
 			return false;
 		}
 		if (const auto* shapeVisual = dynamic_cast<const ShapeVisualBase*>(visual)) {
-			return IsPointInsideOfShape(point, shapeVisual->GetShape());
+			return IsWorldPointInsideOfShape(worldPoint, shapeVisual->GetShape());
 		}
 		if (const auto* fps = dynamic_cast<const TextVisual*>(visual)) {
 			if (const sf::Text* text = fps->GetText()) {
-				return text->getGlobalBounds().contains(point);
+				return text->getGlobalBounds().contains(worldPoint);
 			}
 			return false;
 		}
 		return false;
 	}
 
-	bool IsPointInsideOfBody(const sf::Vector2f& point, const AbstractBody* body) {
+	bool IsWorldPointInsideOfBody(const sf::Vector2f& worldPoint, const AbstractBody* body) {
 		if (!body) {
 			return false;
 		}
 		if (const auto* collider = dynamic_cast<const ShapeColliderBehaviourBase*>(body)) {
 			if (const sf::Shape* shape = collider->GetBaseShape()) {
-				return IsPointInsideOfShape(point, shape);
+				return IsWorldPointInsideOfShape(worldPoint, shape);
 			}
 		}
-		return pointInsideConvexFan(point, body->GetPointCount(),
+		return pointInsideConvexFan(worldPoint, body->GetPointCount(),
 		                            [&](std::size_t i) { return body->GetPointGlobal(i); });
 	}
 
-	bool IsPointInsideOfTriangle(sf::Vector2f p, sf::Vector2f t1, sf::Vector2f t2, sf::Vector2f t3) {
+	bool IsPointInsideOfTriangle(const sf::Vector2f& p, const sf::Vector2f& t1, const sf::Vector2f& t2,
+	                             const sf::Vector2f& t3) {
 		auto a = (t1.x - p.x) * (t2.y - t1.y) - (t2.x - t1.x) * (t1.y - p.y);
 		auto b = (t2.x - p.x) * (t3.y - t2.y) - (t3.x - t2.x) * (t2.y - p.y);
 		auto c = (t3.x - p.x) * (t1.y - t3.y) - (t1.x - t3.x) * (t3.y - p.y);
@@ -236,11 +237,11 @@ namespace Utils {
 #endif
 	}
 
-	sf::Vector2f MapWindowPixelToWorld(const sf::RenderWindow& window, sf::Vector2i pixel) {
+	sf::Vector2f MapWindowPixelToWorld(const sf::RenderWindow& window, const sf::Vector2i& pixel) {
 		return window.mapPixelToCoords(pixel);
 	}
 
-	sf::Vector2f MapWindowPixelToWorld(const sf::RenderWindow& window, sf::Vector2f pixel) {
+	sf::Vector2f MapWindowPixelToWorld(const sf::RenderWindow& window, const sf::Vector2f& pixel) {
 		return MapWindowPixelToWorld(window, sf::Vector2i(pixel));
 	}
 
