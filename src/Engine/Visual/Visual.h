@@ -19,10 +19,7 @@ public:
 
 	void SetTapHandlingEnabled(bool enabled);
 	bool IsTapHandlingEnabled() const;
-	void SetTransparentToTap(bool transparent);
-	bool IsTransparentToTap() const;
 
 private:
 	bool _tapHandlingEnabled = false;
-	bool _transparentToTap = false;
 };
