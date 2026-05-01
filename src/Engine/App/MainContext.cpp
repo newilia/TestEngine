@@ -187,6 +187,8 @@ namespace Engine {
 	                                                                std::uint32_t style, sf::State state) {
 		_mainWindow = std::make_shared<sf::RenderWindow>(mode, title, style, state);
 		ApplyWindowFrameSettings();
+		_mainWindowPixelSizeForView = _mainWindow->getSize();
+		_haveMainWindowPixelSizeForView = _mainWindowPixelSizeForView.x != 0u && _mainWindowPixelSizeForView.y != 0u;
 		return _mainWindow;
 	}
 
@@ -240,6 +242,32 @@ namespace Engine {
 			}
 			window->setView(view);
 		}
+	}
+
+	void MainContext::OnMainWindowResized(const sf::Vector2u& newPixelSize) {
+		if (!_mainWindow || newPixelSize.x == 0u || newPixelSize.y == 0u) {
+			return;
+		}
+		auto view = _mainWindow->getView();
+		const sf::Vector2f center = view.getCenter();
+		const sf::Vector2f viewSize = view.getSize();
+
+		sf::Vector2f adjustedSize = viewSize;
+		if (_haveMainWindowPixelSizeForView && _mainWindowPixelSizeForView.x != 0u &&
+		    _mainWindowPixelSizeForView.y != 0u) {
+			const float sx = static_cast<float>(newPixelSize.x) / static_cast<float>(_mainWindowPixelSizeForView.x);
+			const float sy = static_cast<float>(newPixelSize.y) / static_cast<float>(_mainWindowPixelSizeForView.y);
+			adjustedSize = {viewSize.x * sx, viewSize.y * sy};
+		}
+
+		sf::View adjusted(center, adjustedSize);
+		adjusted.setRotation(view.getRotation());
+		adjusted.setViewport(view.getViewport());
+		adjusted.setScissor(view.getScissor());
+		_mainWindow->setView(adjusted);
+
+		_mainWindowPixelSizeForView = newPixelSize;
+		_haveMainWindowPixelSizeForView = true;
 	}
 
 } // namespace Engine
