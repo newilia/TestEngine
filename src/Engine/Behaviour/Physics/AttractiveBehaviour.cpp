@@ -1,12 +1,12 @@
 #include "AttractiveBehaviour.h"
 
+#include "AttractiveBehaviour.generated.hpp"
 #include "Engine/App/EngineContext.h"
 #include "Engine/Behaviour/Physics/PhysicsDebugBehaviour.h"
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Simulation/AttractionField.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
-#include "AttractiveBehaviour_gen.hpp"
 
 void AttractiveBehaviour::OnInit() {
 	const auto node = GetNode();

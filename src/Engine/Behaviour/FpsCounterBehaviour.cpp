@@ -3,7 +3,7 @@
 #include "Engine/App/EngineContext.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Visual/TextVisual.h"
-#include "FpsCounterBehaviour_gen.hpp"
+#include "FpsCounterBehaviour.generated.hpp"
 
 #include <SFML/Graphics/Text.hpp>
 

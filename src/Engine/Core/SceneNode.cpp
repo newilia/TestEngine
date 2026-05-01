@@ -5,7 +5,7 @@
 #include "Engine/Core/Transform.h"
 #include "Engine/Visual/ShapeVisualBase.h"
 #include "Engine/Visual/TextVisual.h"
-#include "SceneNode_gen.hpp"
+#include "SceneNode.generated.hpp"
 
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
