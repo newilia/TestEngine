@@ -25,12 +25,13 @@ namespace Engine {
 		void Update(float dt);
 		void Draw();
 		void OnEvent(const sf::Event& event);
-		void OnResize(const sf::Vector2u& size);
-		void OnKeyPress(const sf::Keyboard::Key& key);
-		void OnKeyRelease(const sf::Keyboard::Key& key);
-		void OnMouseMove(const sf::Vector2i& position);
+		void OnResize(const sf::Event::Resized& e);
+		void OnKeyPress(const sf::Event::KeyPressed& e);
+		void OnKeyRelease(const sf::Event::KeyReleased& e);
+		void OnMouseMove(const sf::Event::MouseMoved& e);
 		void OnMouseButtonPressed(const sf::Event::MouseButtonPressed& e);
 		void OnMouseButtonReleased(const sf::Event::MouseButtonReleased& e);
+		void OnMouseWheelScrolled(const sf::Event::MouseWheelScrolled& e);
 
 		std::shared_ptr<SceneNode> GetSelectedNode() const;
 		void ClearNodeSelection();

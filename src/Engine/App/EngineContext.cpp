@@ -226,4 +226,12 @@ namespace Engine {
 		}
 	}
 
+	void MainContext::ZoomCamera(float zoomFactor) {
+		if (auto window = GetMainWindow()) {
+			auto view = window->getView();
+			view.zoom(zoomFactor);
+			window->setView(view);
+		}
+	}
+
 } // namespace Engine

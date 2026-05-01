@@ -41,11 +41,6 @@ bool MoveTool::processEvent(const sf::Event& event) {
 			return true;
 		}
 		_onSelect(picked);
-		if (auto rb = picked->FindBehaviour<RigidBodyBehaviour>()) {
-			if (rb->IsImmovable()) {
-				return true;
-			}
-		}
 		const sf::Vector2f nodePos = picked->GetPosGlobal();
 		_grabOffset = nodePos - pos;
 		_grabbed = picked;

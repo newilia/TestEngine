@@ -163,22 +163,20 @@ namespace Engine {
 	}
 
 	void Editor::OnEvent(const sf::Event& event) {
-		/* TODO pass whole sf::Event::struct */
-
 		if (const auto* e = event.getIf<sf::Event::Resized>()) {
-			OnResize(e->size);
+			OnResize(*e);
 			return;
 		}
 		if (const auto* e = event.getIf<sf::Event::KeyPressed>()) {
-			OnKeyPress(e->code);
+			OnKeyPress(*e);
 			return;
 		}
 		if (const auto* e = event.getIf<sf::Event::KeyReleased>()) {
-			OnKeyRelease(e->code);
+			OnKeyRelease(*e);
 			return;
 		}
 		if (const auto* e = event.getIf<sf::Event::MouseMoved>()) {
-			OnMouseMove(e->position);
+			OnMouseMove(*e);
 		}
 		if (const auto* e = event.getIf<sf::Event::MouseButtonPressed>()) {
 			OnMouseButtonPressed(*e);
@@ -186,30 +184,34 @@ namespace Engine {
 		if (const auto* e = event.getIf<sf::Event::MouseButtonReleased>()) {
 			OnMouseButtonReleased(*e);
 		}
+		if (const auto* e = event.getIf<sf::Event::MouseWheelScrolled>()) {
+			OnMouseWheelScrolled(*e);
+		}
 	}
 
-	void Editor::OnResize(const sf::Vector2u& /*size*/) {}
+	void Editor::OnResize(const sf::Event::Resized& /*e*/) {}
 
-	void Editor::OnKeyPress(const sf::Keyboard::Key& key) {
-		if (key == sf::Keyboard::Key::F1) {
+	void Editor::OnKeyPress(const sf::Event::KeyPressed& e) {
+		if (e.code == sf::Keyboard::Key::F1) {
 			Toggle();
 			return;
 		}
-		if (key == sf::Keyboard::Key::Space) {
+		if (e.code == sf::Keyboard::Key::Space) {
 			MainContext::GetInstance().ToggleSimPaused();
 		}
-		if (_isOpen && !ImGui::GetIO().WantCaptureKeyboard && GetEditorToolManager().TryActivateToolViaDigitKey(key)) {
+		if (_isOpen && !ImGui::GetIO().WantCaptureKeyboard &&
+		    GetEditorToolManager().TryActivateToolViaDigitKey(e.code)) {
 			return;
 		}
 	}
 
-	void Editor::OnKeyRelease(const sf::Keyboard::Key& /*key*/) {}
+	void Editor::OnKeyRelease(const sf::Event::KeyReleased& /*e*/) {}
 
-	void Editor::OnMouseMove(const sf::Vector2i& position) {
+	void Editor::OnMouseMove(const sf::Event::MouseMoved& e) {
 		if (_cameraMoveMouseOriginPos) {
-			const sf::Vector2i delta = position - *_cameraMoveMouseOriginPos;
+			const sf::Vector2i delta = e.position - *_cameraMoveMouseOriginPos;
 			MainContext::GetInstance().MoveCamera(-delta);
-			_cameraMoveMouseOriginPos = position;
+			_cameraMoveMouseOriginPos = e.position;
 		}
 	}
 
@@ -222,6 +224,13 @@ namespace Engine {
 	void Editor::OnMouseButtonReleased(const sf::Event::MouseButtonReleased& e) {
 		if (e.button == sf::Mouse::Button::Middle) {
 			_cameraMoveMouseOriginPos.reset();
+		}
+	}
+
+	void Editor::OnMouseWheelScrolled(const sf::Event::MouseWheelScrolled& e) {
+		if (e.wheel == sf::Mouse::Wheel::Vertical) {
+			auto zoomFactor = 1 - e.delta * 0.05f;
+			MainContext::GetInstance().ZoomCamera(zoomFactor);
 		}
 	}
 } // namespace Engine
