@@ -36,14 +36,14 @@ namespace Engine {
 		}
 
 		int fpsLimit = static_cast<int>(engine.GetFramerateLimit());
-		if (ImGui::DragInt("FPS limit", &fpsLimit, 1, 30, 200)) {
+		if (ImGui::SliderInt("FPS limit", &fpsLimit, 30, 200)) {
 			engine.SetFramerateLimit(static_cast<std::uint32_t>(fpsLimit));
 		}
 		ImGui::SameLine();
 		ImGui::TextDisabled("(0 = off; meaningful when VSync is off)");
 
 		int tickHz = static_cast<int>(engine.GetTargetTickRate());
-		if (ImGui::DragInt("Logic tick rate (Hz)", &tickHz, 10, 0, 10000)) {
+		if (ImGui::SliderInt("Logic tick rate (Hz)", &tickHz, 30, 500)) {
 			tickHz = std::max(0, tickHz);
 			engine.SetTargetTickRate(static_cast<std::uint32_t>(tickHz));
 		}
@@ -83,7 +83,7 @@ namespace Engine {
 		if (const auto ph = engine.GetPhysicsProcessor()) {
 			if (auto field = ph->GetAttractionField()) {
 				float strength = field->GetGlobalStrengthScale();
-				if (ImGui::DragFloat("Attraction field strength", &strength, 2.f, 0.f, 1.0e6f, "%.2f")) {
+				if (ImGui::DragFloat("Attraction field strength", &strength, 2.f, -10000.f, 10000, "%.2f")) {
 					field->SetGlobalStrengthScale(strength);
 				}
 				bool massCoupling = field->GetUseMassCoupling();
@@ -91,7 +91,7 @@ namespace Engine {
 					field->SetUseMassCoupling(massCoupling);
 				}
 				float softEps = field->GetSofteningEps();
-				if (ImGui::DragFloat("Field softening ε", &softEps, 0.25f, 0.1f, 1.0e3f, "%.2f")) {
+				if (ImGui::DragFloat("Field softening eps", &softEps, 0.25f, 0.1f, 1.0e3f, "%.2f")) {
 					field->SetSofteningEps(softEps);
 				}
 			}
