@@ -11,7 +11,7 @@ std::shared_ptr<SceneNode> PickSceneNodeAt(const std::shared_ptr<Scene>& scene, 
 	if (!scene) {
 		return nullptr;
 	}
-	if (auto hit = scene->FindTopMostTapTarget(worldPoint)) {
+	if (auto hit = scene->FindTopMostNodeAtPoint(worldPoint)) {
 		return hit;
 	}
 	auto physicsProcessor = Engine::MainContext::GetInstance().GetPhysicsProcessor();

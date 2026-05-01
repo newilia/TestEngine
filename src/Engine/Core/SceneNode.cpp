@@ -380,22 +380,34 @@ void SceneNode::DetachBehaviourForRemove(const shared_ptr<Behaviour>& b) {
 	b->OnDetached();
 }
 
-shared_ptr<SceneNode> SceneNode::FindTopMostTapTarget(const sf::Vector2f& worldPoint) {
+shared_ptr<SceneNode> SceneNode::FindTopMostNodeAtPoint(const sf::Vector2f& worldPoint, bool tapResponsiveOnly) {
 	std::vector<shared_ptr<SceneNode>> sorted = _children;
 	SortChildrenByDrawOrder(sorted);
 	for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
-		if (auto hit = (*it)->FindTopMostTapTarget(worldPoint)) {
+		if (auto hit = (*it)->FindTopMostNodeAtPoint(worldPoint, tapResponsiveOnly)) {
 			return hit;
 		}
 	}
-	if (_visual && _visual->HitTest(worldPoint)) {
+	if (_visual && _visual->HitTest(worldPoint) && (!tapResponsiveOnly || _visual->IsTapHandlingEnabled())) {
 		return shared_from_this();
 	}
 	return nullptr;
 }
 
+void SceneNode::FindNodesAtPoint(const sf::Vector2f& worldPoint, std::vector<shared_ptr<SceneNode>>& result,
+                                 bool tapResponsiveOnly) {
+	std::vector<shared_ptr<SceneNode>> sorted = _children;
+	SortChildrenByDrawOrder(sorted);
+	for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
+		(*it)->FindNodesAtPoint(worldPoint, result, tapResponsiveOnly);
+	}
+	if (_visual && _visual->HitTest(worldPoint) && (!tapResponsiveOnly || _visual->IsTapHandlingEnabled())) {
+		result.push_back(shared_from_this());
+	}
+}
+
 bool SceneNode::DispatchTapAt(const sf::Vector2f& worldPoint) {
-	if (auto hit = FindTopMostTapTarget(worldPoint)) {
+	if (auto hit = FindTopMostNodeAtPoint(worldPoint)) {
 		if (auto v = hit->GetVisual()) {
 			v->OnTap(worldPoint);
 			return true;

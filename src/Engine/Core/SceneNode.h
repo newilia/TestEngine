@@ -79,7 +79,6 @@ public:
 		}
 	}
 
-	/// Searches the node for any attached entity: transform, visual, sorting, or behaviour.
 	template <typename T>
 	shared_ptr<T> FindEntity() const {
 		if (auto t = std::dynamic_pointer_cast<T>(GetTransform())) {
@@ -99,7 +98,6 @@ public:
 		return nullptr;
 	}
 
-	/// Searches only the behaviour list (excludes node visual and sorting attachment).
 	template <typename T>
 	shared_ptr<T> FindBehaviour() const {
 		static_assert(std::is_base_of_v<Behaviour, T>, "FindBehaviour is only for Behaviour types");
@@ -122,9 +120,11 @@ public:
 		return created;
 	}
 
-	ShapeColliderBehaviourBase* FindShapeCollider() const;
-	/// `worldPoint` — в координатах сцены (как у `Visual::HitTest` / коллайдеров).
-	shared_ptr<SceneNode> FindTopMostTapTarget(const sf::Vector2f& worldPoint);
+	ShapeColliderBehaviourBase* FindShapeCollider() const; // todo remove
+
+	shared_ptr<SceneNode> FindTopMostNodeAtPoint(const sf::Vector2f& worldPoint, bool tapResponsiveOnly = false);
+	void FindNodesAtPoint(const sf::Vector2f& worldPoint, std::vector<shared_ptr<SceneNode>>& result,
+	                      bool tapResponsiveOnly = false);
 	bool DispatchTapAt(const sf::Vector2f& worldPoint);
 	sf::Vector2f GetPosGlobal() const;
 	void SetPosGlobal(sf::Vector2f pos);
@@ -132,12 +132,10 @@ public:
 	void SetEnabled(bool isEnabled);
 	void SetVisible(bool isVisible);
 
-	[[nodiscard]] bool IsEnabled() const;
-	[[nodiscard]] bool IsVisible() const;
+	bool IsEnabled() const;
+	bool IsVisible() const;
 
-	/// Invoked by `MainContext::SetScene` or explicitly after attaching a subtree. Does not run from `AddChild`.
 	void NotifyLifecycleInitRecursive();
-	/// Post-order teardown for this subtree.
 	void NotifyLifecycleDeinitRecursive();
 
 protected:
@@ -145,20 +143,20 @@ protected:
 
 private:
 	void DetachBehaviourForRemove(const shared_ptr<Behaviour>& b);
-	[[nodiscard]] bool IsInActiveScene() const;
-	[[nodiscard]] shared_ptr<SceneNode> GetSubtreeRoot() const;
+	bool IsInActiveScene() const;
+	shared_ptr<SceneNode> GetSubtreeRoot() const;
 
 private:
 	/// @property(name="Name")
 	std::string _name;
-	weak_ptr<SceneNode> _parent;
-	std::vector<shared_ptr<SceneNode>> _children;
 	/// @property(name="Enabled", setter=SetEnabled)
 	bool _isEnabled = true;
 	/// @property(name="Visible", setter=SetVisible)
 	bool _isVisible = true;
 
 private:
+	weak_ptr<SceneNode> _parent;
+	std::vector<shared_ptr<SceneNode>> _children;
 	mutable shared_ptr<Transform> _transform;
 	shared_ptr<Visual> _visual;
 	shared_ptr<SortingStrategy> _sortingStrategy;
