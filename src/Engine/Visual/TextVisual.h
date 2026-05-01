@@ -15,7 +15,7 @@ public:
 
 	void Draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
-	bool HitTest(sf::Vector2f windowPosition) const override;
+	bool HitTest(const sf::Vector2f& worldPoint) const override;
 
 	const sf::Text* GetText() const;
 

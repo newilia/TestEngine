@@ -22,7 +22,7 @@ void PullTool::SetArrowVisual(std::shared_ptr<VectorArrowVisual> arrow) {
 	_arrowVisual = std::move(arrow);
 }
 
-std::shared_ptr<SceneNode> PullTool::OnTap(sf::Vector2f screenMousePos) {
+std::shared_ptr<SceneNode> PullTool::OnTap(const sf::Vector2f& screenPixelPos) {
 	auto physicsProcessor = Engine::MainContext::GetInstance().GetPhysicsProcessor();
 	if (!physicsProcessor) {
 		return nullptr;
@@ -33,7 +33,7 @@ std::shared_ptr<SceneNode> PullTool::OnTap(sf::Vector2f screenMousePos) {
 		return nullptr;
 	}
 
-	const auto worldMousePos = Utils::MapWindowPixelToWorld(*window, screenMousePos);
+	const auto worldMousePos = Utils::MapWindowPixelToWorld(*window, screenPixelPos);
 
 	SetPullDestination(worldMousePos);
 
@@ -44,7 +44,7 @@ std::shared_ptr<SceneNode> PullTool::OnTap(sf::Vector2f screenMousePos) {
 			continue;
 		}
 		auto* collider = body->FindShapeCollider();
-		if (!collider || !Utils::IsPointInsideOfBody(worldMousePos, collider)) {
+		if (!collider || !Utils::IsWorldPointInsideOfBody(worldMousePos, collider)) {
 			continue;
 		}
 		auto rigidBody = body->FindBehaviour<RigidBodyBehaviour>();

@@ -8,7 +8,7 @@ class ConvexShapeVisual : public ShapeVisualBase
 {
 public:
 	explicit ConvexShapeVisual(sf::ConvexShape* convex);
-	bool HitTest(sf::Vector2f windowPosition) const override;
+	bool HitTest(const sf::Vector2f& worldPoint) const override;
 
 private:
 	sf::ConvexShape* _convex = nullptr;

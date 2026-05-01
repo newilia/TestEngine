@@ -16,6 +16,6 @@ void TextVisual::Draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	}
 }
 
-bool TextVisual::HitTest(sf::Vector2f windowPosition) const {
-	return Utils::IsPointInsideOfVisual(windowPosition, this);
+bool TextVisual::HitTest(const sf::Vector2f& worldPoint) const {
+	return Utils::IsWorldPointInsideOfVisual(worldPoint, this);
 }

@@ -7,11 +7,11 @@
 
 #include <memory>
 
-std::shared_ptr<SceneNode> PickSceneNodeAt(const std::shared_ptr<Scene>& scene, sf::Vector2f windowPosition) {
+std::shared_ptr<SceneNode> PickSceneNodeAt(const std::shared_ptr<Scene>& scene, const sf::Vector2f& worldPoint) {
 	if (!scene) {
 		return nullptr;
 	}
-	if (auto hit = scene->FindTopMostTapTarget(windowPosition)) {
+	if (auto hit = scene->FindTopMostTapTarget(worldPoint)) {
 		return hit;
 	}
 	auto physicsProcessor = Engine::MainContext::GetInstance().GetPhysicsProcessor();
@@ -24,7 +24,7 @@ std::shared_ptr<SceneNode> PickSceneNodeAt(const std::shared_ptr<Scene>& scene, 
 			continue;
 		}
 		auto* collider = body->FindShapeCollider();
-		if (!collider || !Utils::IsPointInsideOfBody(windowPosition, collider)) {
+		if (!collider || !Utils::IsWorldPointInsideOfBody(worldPoint, collider)) {
 			continue;
 		}
 		return body;

@@ -33,7 +33,7 @@ class VectorArrowVisual : public Visual
 {
 public:
 	void Draw(sf::RenderTarget& target, sf::RenderStates states) const override;
-	bool HitTest(sf::Vector2f windowPosition) const override;
+	bool HitTest(const sf::Vector2f& worldPoint) const override;
 	void SetStartPos(const sf::Vector2f& start);
 	void SetEndPos(const sf::Vector2f& end);
 	void SetColor(const sf::Color& color);

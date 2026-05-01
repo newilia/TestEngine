@@ -132,10 +132,14 @@ void TestEnvironment::ConfigureInput() {
 	auto userInput = ei->GetUserInput();
 
 	userInput->AttachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+		auto* window = ei->GetMainWindow();
+		if (!window) {
+			return;
+		}
 		if (const auto* touch = event.getIf<sf::Event::TouchBegan>()) {
-			sf::Vector2f pos(static_cast<float>(touch->position.x), static_cast<float>(touch->position.y));
+			const sf::Vector2f worldPos = Utils::MapWindowPixelToWorld(*window, touch->position);
 			if (auto scene = ei->GetScene()) {
-				scene->DispatchTapAt(pos);
+				scene->DispatchTapAt(worldPos);
 			}
 			return;
 		}
@@ -143,9 +147,9 @@ void TestEnvironment::ConfigureInput() {
 			if (pressed->button != sf::Mouse::Button::Left) {
 				return;
 			}
-			sf::Vector2f mousePos(static_cast<float>(pressed->position.x), static_cast<float>(pressed->position.y));
+			const sf::Vector2f worldPos = Utils::MapWindowPixelToWorld(*window, pressed->position);
 			if (auto scene = ei->GetScene()) {
-				scene->DispatchTapAt(mousePos);
+				scene->DispatchTapAt(worldPos);
 			}
 		}
 	}));
