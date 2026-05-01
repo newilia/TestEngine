@@ -3,7 +3,6 @@
 #include "Engine/App/MainContext.h"
 #include "Engine/App/Utils.h"
 #include "Engine/Core/Scene.h"
-#include "Engine/Editor/Tools/ScenePickUtils.h"
 
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/Mouse.hpp>
@@ -13,7 +12,7 @@ SelectTool::SelectTool(SelectCallback onSelect) : _onSelect(std::move(onSelect))
 bool SelectTool::processEvent(const sf::Event& event) {
 	auto applyPick = [this](const sf::Vector2f& worldPoint) -> bool {
 		auto scene = Engine::MainContext::GetInstance().GetScene();
-		auto picked = PickSceneNodeAt(scene, worldPoint);
+		auto picked = scene ? scene->FindTopMostNodeAtPoint(worldPoint) : nullptr;
 		_onSelect(picked);
 		return true;
 	};
