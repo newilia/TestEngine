@@ -9,7 +9,6 @@
 #include <algorithm>
 
 namespace Engine {
-
 	void DebugSettingsWidget::Draw() const {
 		auto& engine = Engine::MainContext::GetInstance();
 
@@ -82,9 +81,9 @@ namespace Engine {
 			engine.SetFieldForceDebugArrowScale(forceArrowScale);
 		}
 		if (const auto ph = engine.GetPhysicsProcessor()) {
-			if (auto field = ph->GetIsotropicInverseSquareField()) {
+			if (auto field = ph->GetAttractionField()) {
 				float strength = field->GetGlobalStrengthScale();
-				if (ImGui::DragFloat("Inverse-square field strength", &strength, 2.f, 0.f, 1.0e6f, "%.2f")) {
+				if (ImGui::DragFloat("Attraction field strength", &strength, 2.f, 0.f, 1.0e6f, "%.2f")) {
 					field->SetGlobalStrengthScale(strength);
 				}
 				bool massCoupling = field->GetUseMassCoupling();

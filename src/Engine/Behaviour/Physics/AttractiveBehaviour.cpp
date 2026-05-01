@@ -1,14 +1,14 @@
-#include "InverseSquareFieldSourceBehaviour.h"
+#include "AttractiveBehaviour.h"
 
 #include "Engine/App/EngineContext.h"
 #include "Engine/Behaviour/Physics/PhysicsDebugBehaviour.h"
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Simulation/IsotropicInverseSquareField.h"
+#include "Engine/Simulation/AttractionField.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
-#include "InverseSquareFieldSourceBehaviour_gen.hpp"
+#include "AttractiveBehaviour_gen.hpp"
 
-void InverseSquareFieldSourceBehaviour::OnInit() {
+void AttractiveBehaviour::OnInit() {
 	const auto node = GetNode();
 	if (!node) {
 		return;
@@ -20,19 +20,19 @@ void InverseSquareFieldSourceBehaviour::OnInit() {
 		return;
 	}
 	node->RequireBehaviour<PhysicsDebugBehaviour>();
-	if (const auto self = node->FindBehaviour<InverseSquareFieldSourceBehaviour>()) {
+	if (const auto self = node->FindBehaviour<AttractiveBehaviour>()) {
 		_self = self;
 		if (const auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
-			if (auto field = ph->GetIsotropicInverseSquareField()) {
+			if (auto field = ph->GetAttractionField()) {
 				field->Register(self);
 			}
 		}
 	}
 }
 
-void InverseSquareFieldSourceBehaviour::OnDeinit() {
+void AttractiveBehaviour::OnDeinit() {
 	if (const auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
-		if (auto field = ph->GetIsotropicInverseSquareField()) {
+		if (auto field = ph->GetAttractionField()) {
 			if (const auto self = _self.lock()) {
 				field->Unregister(self);
 			}
@@ -42,7 +42,7 @@ void InverseSquareFieldSourceBehaviour::OnDeinit() {
 	_self.reset();
 }
 
-void InverseSquareFieldSourceBehaviour::OnUpdate(const sf::Time& dt) {
+void AttractiveBehaviour::OnUpdate(const sf::Time& dt) {
 	(void)dt;
 	if (!_isEnabled) {
 		return;
@@ -56,7 +56,7 @@ void InverseSquareFieldSourceBehaviour::OnUpdate(const sf::Time& dt) {
 		return;
 	}
 	if (const auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
-		if (auto field = ph->GetIsotropicInverseSquareField()) {
+		if (auto field = ph->GetAttractionField()) {
 			sf::Vector2f a = field->EvaluateAcceleration(self);
 			const float sec = dt.asSeconds();
 			if (sec > 0.f) {

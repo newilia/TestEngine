@@ -1,12 +1,12 @@
-#include "IsotropicInverseSquareField.h"
+#include "AttractionField.h"
 
-#include "Engine/Behaviour/Physics/InverseSquareFieldSourceBehaviour.h"
+#include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 
 #include <cmath>
 
-void IsotropicInverseSquareField::Register(const shared_ptr<InverseSquareFieldSourceBehaviour>& s) {
+void AttractionField::Register(const shared_ptr<AttractiveBehaviour>& s) {
 	if (!s) {
 		return;
 	}
@@ -20,8 +20,8 @@ void IsotropicInverseSquareField::Register(const shared_ptr<InverseSquareFieldSo
 	_sources.push_back(s);
 }
 
-void IsotropicInverseSquareField::Unregister(const shared_ptr<InverseSquareFieldSourceBehaviour>& s) {
-	_sources.remove_if([&s](const std::weak_ptr<InverseSquareFieldSourceBehaviour>& w) { return w.lock() == s; });
+void AttractionField::Unregister(const shared_ptr<AttractiveBehaviour>& s) {
+	_sources.remove_if([&s](const std::weak_ptr<AttractiveBehaviour>& w) { return w.lock() == s; });
 }
 
 static float EffectiveSourceMass(const RigidBodyBehaviour& rb) {
@@ -32,8 +32,8 @@ static float EffectiveSourceMass(const RigidBodyBehaviour& rb) {
 }
 
 [[nodiscard]] sf::Vector2f
-IsotropicInverseSquareField::EvaluateAcceleration(const shared_ptr<InverseSquareFieldSourceBehaviour>& receiver) const {
-	_sources.remove_if([](const std::weak_ptr<InverseSquareFieldSourceBehaviour>& w) { return w.expired(); });
+AttractionField::EvaluateAcceleration(const shared_ptr<AttractiveBehaviour>& receiver) const {
+	_sources.remove_if([](const std::weak_ptr<AttractiveBehaviour>& w) { return w.expired(); });
 
 	if (!receiver) {
 		return {};
@@ -85,26 +85,26 @@ IsotropicInverseSquareField::EvaluateAcceleration(const shared_ptr<InverseSquare
 	return acc;
 }
 
-float IsotropicInverseSquareField::GetGlobalStrengthScale() const {
+float AttractionField::GetGlobalStrengthScale() const {
 	return _globalStrengthScale;
 }
 
-void IsotropicInverseSquareField::SetGlobalStrengthScale(float v) {
+void AttractionField::SetGlobalStrengthScale(float v) {
 	_globalStrengthScale = v;
 }
 
-bool IsotropicInverseSquareField::GetUseMassCoupling() const {
+bool AttractionField::GetUseMassCoupling() const {
 	return _useMassCoupling;
 }
 
-void IsotropicInverseSquareField::SetUseMassCoupling(bool v) {
+void AttractionField::SetUseMassCoupling(bool v) {
 	_useMassCoupling = v;
 }
 
-float IsotropicInverseSquareField::GetSofteningEps() const {
+float AttractionField::GetSofteningEps() const {
 	return _softeningEps;
 }
 
-void IsotropicInverseSquareField::SetSofteningEps(float e) {
+void AttractionField::SetSofteningEps(float e) {
 	_softeningEps = e;
 }

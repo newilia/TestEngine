@@ -1,11 +1,11 @@
 #pragma once
 
+#include "AttractionField.h"
 #include "Engine/Behaviour/Physics/AbstractBody.h"
 #include "Engine/Behaviour/Physics/IntersectionDetails.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Updatable.h"
 #include "Engine/Core/common.h"
-#include "IsotropicInverseSquareField.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
 
@@ -25,7 +25,7 @@ public:
 	sf::Vector2f GetGravity() const;
 	void SetGravityEnabled(bool enabled);
 	bool IsGravityEnabled() const;
-	[[nodiscard]] std::shared_ptr<IsotropicInverseSquareField> GetIsotropicInverseSquareField() const;
+	[[nodiscard]] std::shared_ptr<AttractionField> GetAttractionField() const;
 
 private:
 	static bool CheckBboxIntersection(const AbstractBody* body1, const AbstractBody* body2);
@@ -45,5 +45,5 @@ private:
 	std::list<std::weak_ptr<SceneNode>> _bodies;
 	sf::Vector2f _gravity = {0, 400};
 	bool _isGravityEnabled = false;
-	std::shared_ptr<IsotropicInverseSquareField> _inverseSquareField = std::make_shared<IsotropicInverseSquareField>();
+	std::shared_ptr<AttractionField> _inverseSquareField = std::make_shared<AttractionField>();
 };
