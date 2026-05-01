@@ -60,4 +60,8 @@ namespace Utils {
 	std::shared_ptr<T> SharedPtrCast(const U* ptr) {
 		return std::dynamic_pointer_cast<T>((const_cast<U*>(ptr))->shared_from_this());
 	}
+
+	sf::Vector2f MapWindowPixelToWorld(const sf::RenderWindow& window, sf::Vector2i pixel);
+	sf::Vector2f MapWindowPixelToWorld(const sf::RenderWindow& window, sf::Vector2f pixel);
+
 } // namespace Utils

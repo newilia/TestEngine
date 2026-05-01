@@ -23,28 +23,26 @@ public:
 	EditorToolManager(const EditorToolManager&) = delete;
 	EditorToolManager& operator=(const EditorToolManager&) = delete;
 
-	[[nodiscard]] int GetActiveToolIndex() const { return _activeToolIndex; }
+	int GetActiveToolIndex() const { return _activeToolIndex; }
 
 	void SetActiveToolIndex(int index);
 
-	[[nodiscard]] bool ProcessEvent(const sf::Event& event);
+	bool ProcessEvent(const sf::Event& event);
 	void OnPresent(const sf::Time& dt);
-
 	void BindPullArrow(std::shared_ptr<VectorArrowVisual> arrow);
 
-	[[nodiscard]] PullTool* GetPullTool() { return _pullTool; }
+	PullTool* GetPullTool() { return _pullTool; }
+
+	static std::optional<int> TryToolIndexFromDigitKey(sf::Keyboard::Key key);
+	static std::string FormatToolPaletteLabel(int toolIndex, const char* displayName);
+
+	/// Main keyboard row digits 1–9 then 0; applies only while index is below `kToolCount`.
+	bool TryActivateToolViaDigitKey(sf::Keyboard::Key key);
 
 	static constexpr int kToolCount = 4;
 
-	[[nodiscard]] static std::optional<int> TryToolIndexFromDigitKey(sf::Keyboard::Key key);
-
-	[[nodiscard]] static std::string FormatToolPaletteLabel(int toolIndex, const char* displayName);
-
-	/// Main keyboard row digits 1–9 then 0; applies only while index is below `kToolCount`.
-	[[nodiscard]] bool TryActivateToolViaDigitKey(sf::Keyboard::Key key);
-
 private:
 	int _activeToolIndex = 0;
-	std::unique_ptr<IEditorTool> _tools[kToolCount];
-	PullTool* _pullTool = nullptr;
+	std::unique_ptr<IEditorTool> _tools[kToolCount]; // TODO make dynamic
+	PullTool* _pullTool = nullptr;                   // TODO why is it here?
 };

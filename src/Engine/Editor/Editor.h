@@ -29,15 +29,19 @@ namespace Engine {
 		void OnKeyPress(const sf::Keyboard::Key& key);
 		void OnKeyRelease(const sf::Keyboard::Key& key);
 		void OnMouseMove(const sf::Vector2i& position);
-		[[nodiscard]] std::shared_ptr<SceneNode> GetSelectedNode() const;
+		void OnMouseButtonPressed(const sf::Event::MouseButtonPressed& e);
+		void OnMouseButtonReleased(const sf::Event::MouseButtonReleased& e);
+
+		std::shared_ptr<SceneNode> GetSelectedNode() const;
 		void ClearNodeSelection();
 		void SetSelectedNode(std::shared_ptr<SceneNode> node);
 
-		[[nodiscard]] EditorToolManager& GetEditorToolManager();
-		[[nodiscard]] const EditorToolManager& GetEditorToolManager() const;
+		EditorToolManager& GetEditorToolManager();
+		const EditorToolManager& GetEditorToolManager() const;
 
 	private:
 		bool _isOpen = true;
+		std::optional<sf::Vector2i> _cameraMoveMouseOriginPos; // nullopt when not moving
 		SceneHierarchyWidget _sceneHierarchyWidget{};
 		NodeInspectorWidget _nodeInspectorWidget{};
 		EditorToolsWidget _editorToolsWidget{};

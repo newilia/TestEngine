@@ -163,6 +163,8 @@ namespace Engine {
 	}
 
 	void Editor::OnEvent(const sf::Event& event) {
+		/* TODO pass whole sf::Event::struct */
+
 		if (const auto* e = event.getIf<sf::Event::Resized>()) {
 			OnResize(e->size);
 			return;
@@ -177,6 +179,12 @@ namespace Engine {
 		}
 		if (const auto* e = event.getIf<sf::Event::MouseMoved>()) {
 			OnMouseMove(e->position);
+		}
+		if (const auto* e = event.getIf<sf::Event::MouseButtonPressed>()) {
+			OnMouseButtonPressed(*e);
+		}
+		if (const auto* e = event.getIf<sf::Event::MouseButtonReleased>()) {
+			OnMouseButtonReleased(*e);
 		}
 	}
 
@@ -197,5 +205,23 @@ namespace Engine {
 
 	void Editor::OnKeyRelease(const sf::Keyboard::Key& /*key*/) {}
 
-	void Editor::OnMouseMove(const sf::Vector2i& /*position*/) {}
+	void Editor::OnMouseMove(const sf::Vector2i& position) {
+		if (_cameraMoveMouseOriginPos) {
+			const sf::Vector2i delta = position - *_cameraMoveMouseOriginPos;
+			MainContext::GetInstance().MoveCamera(-delta);
+			_cameraMoveMouseOriginPos = position;
+		}
+	}
+
+	void Editor::OnMouseButtonPressed(const sf::Event::MouseButtonPressed& e) {
+		if (e.button == sf::Mouse::Button::Middle) {
+			_cameraMoveMouseOriginPos = e.position;
+		}
+	}
+
+	void Editor::OnMouseButtonReleased(const sf::Event::MouseButtonReleased& e) {
+		if (e.button == sf::Mouse::Button::Middle) {
+			_cameraMoveMouseOriginPos.reset();
+		}
+	}
 } // namespace Engine

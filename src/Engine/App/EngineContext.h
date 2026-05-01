@@ -77,6 +77,8 @@ namespace Engine {
 		void SetHierarchySelectedForViewport(const shared_ptr<Scene>& node);
 		shared_ptr<Scene> GetHierarchySelectedForViewport() const;
 
+		void MoveCamera(const sf::Vector2i& delta);
+
 	private:
 		void ApplyWindowFrameSettings();
 
