@@ -33,8 +33,12 @@ Example of a **bad** subject:
 refactor: engine structure
 ```
 
-Example of a **good** subject:
+Examples of a **good** subject:
 
 ```
-reorganize src into Engine/Behaviour and move FontManager to App
+reorganize src into Engine/Behaviour, move FontManager to App
+feat: camera movement
+fix: fps drop when sim paused and fps limit is on
+fix: incorrect dt after sim unpause
+circle collision detection performance improvment
 ```
