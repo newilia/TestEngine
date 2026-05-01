@@ -27,6 +27,7 @@ namespace Engine {
 
 		switch (active) {
 		case 2: {
+			/* TODO move tool inpector to the tool itself */
 			auto* pull = tools.GetPullTool();
 			if (pull) {
 				float scale = pull->GetPullForceScale();

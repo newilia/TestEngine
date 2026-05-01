@@ -15,7 +15,8 @@ class MoveTool final : public IEditorTool
 public:
 	explicit MoveTool(SelectTool::SelectCallback onSelect);
 
-	[[nodiscard]] bool processEvent(const sf::Event& event) override;
+	bool processEvent(const sf::Event& event) override;
+	virtual void onPresent(const sf::Time& dt);
 
 private:
 	SelectTool::SelectCallback _onSelect;

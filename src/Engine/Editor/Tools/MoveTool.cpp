@@ -1,6 +1,7 @@
 #include "MoveTool.h"
 
 #include "Engine/App/EngineContext.h"
+#include "Engine/App/Utils.h"
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Editor/Tools/ScenePickUtils.h"
@@ -23,8 +24,11 @@ namespace {
 MoveTool::MoveTool(SelectTool::SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
 
 bool MoveTool::processEvent(const sf::Event& event) {
-	auto toVec = [](sf::Vector2i p) {
-		return sf::Vector2f(static_cast<float>(p.x), static_cast<float>(p.y));
+	auto toWorld = [&](sf::Vector2i pixel) -> sf::Vector2f {
+		if (auto mainWindow = Engine::MainContext::GetInstance().GetMainWindow()) {
+			return Utils::MapWindowPixelToWorld(*mainWindow, pixel);
+		}
+		return sf::Vector2f();
 	};
 
 	auto tryBegin = [&](sf::Vector2f pos) -> bool {
@@ -65,12 +69,12 @@ bool MoveTool::processEvent(const sf::Event& event) {
 
 	if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
 		if (pressed->button == sf::Mouse::Button::Left) {
-			return tryBegin(toVec(pressed->position));
+			return tryBegin(toWorld(pressed->position));
 		}
 	}
 	if (const auto* touch = event.getIf<sf::Event::TouchBegan>()) {
 		if (touch->finger == 0) {
-			return tryBegin(sf::Vector2f(static_cast<float>(touch->position.x), static_cast<float>(touch->position.y)));
+			return tryBegin(toWorld(touch->position));
 		}
 	}
 
@@ -90,16 +94,24 @@ bool MoveTool::processEvent(const sf::Event& event) {
 			}
 		}
 		if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
-			moveTo(toVec(moved->position));
+			moveTo(toWorld(moved->position));
 			return true;
 		}
 		if (const auto* tm = event.getIf<sf::Event::TouchMoved>()) {
 			if (tm->finger == 0) {
-				moveTo(sf::Vector2f(static_cast<float>(tm->position.x), static_cast<float>(tm->position.y)));
+				moveTo(toWorld(tm->position));
 				return true;
 			}
 		}
 	}
 
 	return false;
+}
+
+void MoveTool::onPresent(const sf::Time& dt) {
+	if (auto node = _grabbed.lock()) {
+		if (auto rb = node->FindBehaviour<RigidBodyBehaviour>()) {
+			ZeroMotion(rb.get());
+		}
+	}
 }

@@ -1,6 +1,8 @@
+переименовать EngineContext.h, .cpp -> MainContext.h, .cpp
+
 пофиксить падение фпс при остановке симуляции с Fps limit
 
-порефакторить input, починить понг
+порефакторить input (включая редактор), починить понг
 
 поиск ноды под курсором: traverse scene with Visual::HitTest, return ordered list (top-to-bottom)
 

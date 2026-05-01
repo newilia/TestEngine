@@ -218,4 +218,12 @@ namespace Engine {
 		return _hierarchySelectedForViewport.lock();
 	}
 
+	void MainContext::MoveCamera(const sf::Vector2i& delta) {
+		if (auto window = GetMainWindow()) {
+			auto view = window->getView();
+			view.move(static_cast<sf::Vector2f>(delta));
+			window->setView(view);
+		}
+	}
+
 } // namespace Engine
