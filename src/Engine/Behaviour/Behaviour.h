@@ -9,11 +9,11 @@ class SceneNode;
 /// Optional component on a `SceneNode`. The engine calls lifecycle methods in a fixed order;
 /// user code should treat them as engine-only entry points (do not call `OnInit`/`OnDeinit` yourself).
 ///
-/// - **Constructor**: store dependencies and default field values only; avoid `EngineContext` and
+/// - **Constructor**: store dependencies and default field values only; avoid `MainContext` and
 ///   other globals that may depend on scene activation order.
 /// - **OnAttached**: the behaviour is on a node (`GetNode()` works). Use for wiring to other
 ///   components on the **same** node (e.g. find a collider). Do not register with global subsystems here.
-/// - **OnInit**: the node subtree is under the active scene root (`EngineContext::GetScene()`). Use for
+/// - **OnInit**: the node subtree is under the active scene root (`MainContext::GetScene()`). Use for
 ///   `PhysicsProcessor`, fonts, and other engine-wide setup.
 /// - **OnDeinit**: reverse of `OnInit` (unregister from subsystems). Only runs if `OnInit` ran.
 /// - **OnDetached**: the behaviour is about to be removed from the node's list; `GetNode()` is still valid

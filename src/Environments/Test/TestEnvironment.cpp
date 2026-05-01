@@ -1,6 +1,6 @@
 #include "TestEnvironment.h"
 
-#include "Engine/App/EngineContext.h"
+#include "Engine/App/MainContext.h"
 #include "Engine/App/UserInput.h"
 #include "Engine/App/Utils.h"
 #include "Engine/Behaviour/Physics/AttractiveBehaviour.h"

@@ -1,6 +1,6 @@
 #include "Engine/Editor/DebugSettingsWidget.h"
 
-#include "Engine/App/EngineContext.h"
+#include "Engine/App/MainContext.h"
 
 #include <SFML/System/Time.hpp>
 
