@@ -4,7 +4,6 @@
 #include "Engine/App/Utils.h"
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Core/Scene.h"
-#include "Engine/Editor/Tools/ScenePickUtils.h"
 
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/Mouse.hpp>
@@ -33,7 +32,7 @@ bool MoveTool::processEvent(const sf::Event& event) {
 
 	auto tryBegin = [&](const sf::Vector2f& pos) -> bool {
 		auto scene = Engine::MainContext::GetInstance().GetScene();
-		auto picked = PickSceneNodeAt(scene, pos);
+		auto picked = scene ? scene->FindTopMostNodeAtPoint(pos) : nullptr;
 		if (!picked) {
 			_dragging = false;
 			_grabbed.reset();

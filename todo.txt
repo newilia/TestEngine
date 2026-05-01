@@ -6,8 +6,6 @@
 
 порефакторить input (включая редактор), починить понг
 
-поиск ноды под курсором: traverse scene with Visual::HitTest (PickSceneNodeAt() ?), return ordered list (top-to-bottom)
-
 персистентность редактора
 
 загрузка/сохранение сцены
