@@ -80,6 +80,8 @@ namespace Engine {
 		void MoveCamera(const sf::Vector2i& delta);
 		void ZoomCamera(float zoomFactor, std::optional<sf::Vector2i> focusPixel = std::nullopt);
 
+		void OnMainWindowResized(const sf::Vector2u& newPixelSize);
+
 	private:
 		void ApplyWindowFrameSettings();
 
@@ -106,5 +108,7 @@ namespace Engine {
 		bool _haveFps = false;
 		bool _haveTickRate = false;
 		std::weak_ptr<Scene> _hierarchySelectedForViewport;
+		sf::Vector2u _mainWindowPixelSizeForView{};
+		bool _haveMainWindowPixelSizeForView = false;
 	};
 } // namespace Engine
