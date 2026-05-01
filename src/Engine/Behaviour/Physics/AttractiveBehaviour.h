@@ -10,7 +10,7 @@
 
 class RigidBodyBehaviour;
 
-class InverseSquareFieldSourceBehaviour : public Behaviour
+class AttractiveBehaviour : public Behaviour
 {
 	META_CLASS()
 public:
@@ -25,5 +25,5 @@ public:
 
 private:
 	std::weak_ptr<RigidBodyBehaviour> _rigidBody;
-	std::weak_ptr<InverseSquareFieldSourceBehaviour> _self;
+	std::weak_ptr<AttractiveBehaviour> _self;
 };

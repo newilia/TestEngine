@@ -627,6 +627,6 @@ bool PhysicsProcessor::IsGravityEnabled() const {
 	return _isGravityEnabled;
 }
 
-std::shared_ptr<IsotropicInverseSquareField> PhysicsProcessor::GetIsotropicInverseSquareField() const {
+std::shared_ptr<AttractionField> PhysicsProcessor::GetAttractionField() const {
 	return _inverseSquareField;
 }

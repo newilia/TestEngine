@@ -60,7 +60,7 @@ namespace Engine {
 		bool IsDebugDrawEnabled() const;
 		void SetDebugDrawEnabled(bool enabled);
 
-		/// World-space force arrows: endpoint = pos + (m * a) * scale (inverse-square field on entities).
+		/// World-space force arrows: endpoint = pos + (m * a) * scale (attraction field on entities).
 		float GetFieldForceDebugArrowScale() const;
 		void SetFieldForceDebugArrowScale(float scale);
 

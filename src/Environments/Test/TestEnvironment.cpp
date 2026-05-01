@@ -3,8 +3,8 @@
 #include "Engine/App/EngineContext.h"
 #include "Engine/App/UserInput.h"
 #include "Engine/App/Utils.h"
+#include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
 #include "Engine/Behaviour/Physics/CollisionBehaviour.h"
-#include "Engine/Behaviour/Physics/InverseSquareFieldSourceBehaviour.h"
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Behaviour/Physics/ShapeColliderBehaviour.h"
 #include "Engine/Core/Scene.h"
@@ -34,8 +34,9 @@ void TestEnvironment::Setup() {
 std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	auto scene = make_shared<Scene>();
 	auto viewSize = Engine::MainContext::GetInstance().GetMainWindow()->getView().getSize();
-	float commonRestitution = 0.f;
+	float commonRestitution = 0.99f;
 	float commonFriction = 500.f;
+	float commonAttraction = 100.f;
 	bool isAttractive = true;
 
 	/* walls */
@@ -70,7 +71,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		rb->_restitution = commonRestitution;
 		rb->_friction = commonFriction;
 
-		auto fieldBeh = std::make_shared<InverseSquareFieldSourceBehaviour>();
+		auto fieldBeh = std::make_shared<AttractiveBehaviour>();
 		fieldBeh->_attraction = 10000 * (isAttractive ? -1 : 1);
 		node->AddBehaviour(std::move(fieldBeh));
 
@@ -114,8 +115,8 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		rb->_restitution = commonRestitution;
 		rb->_friction = commonFriction;
 
-		auto fieldBeh = std::make_shared<InverseSquareFieldSourceBehaviour>();
-		fieldBeh->_attraction = 100 * (isAttractive ? -1 : 1);
+		auto fieldBeh = std::make_shared<AttractiveBehaviour>();
+		fieldBeh->_attraction = commonAttraction * (isAttractive ? -1 : 1);
 		node->AddBehaviour(std::move(fieldBeh));
 
 		scene->AddChild(std::move(node));

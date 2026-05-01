@@ -74,6 +74,7 @@ namespace Engine {
 			}
 			if (const auto* resized = event.getIf<sf::Event::Resized>()) {
 				const auto sz = resized->size;
+				// TODO fix camera reset
 				window->setView(
 				    sf::View(sf::FloatRect({0.f, 0.f}, {static_cast<float>(sz.x), static_cast<float>(sz.y)})));
 			}

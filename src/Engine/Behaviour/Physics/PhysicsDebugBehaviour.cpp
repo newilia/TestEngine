@@ -2,7 +2,7 @@
 
 #include "Engine/App/EngineContext.h"
 #include "Engine/App/FontManager.h"
-#include "Engine/Behaviour/Physics/InverseSquareFieldSourceBehaviour.h"
+#include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
 #include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
@@ -39,11 +39,11 @@ void PhysicsDebugBehaviour::DebugDraw(sf::RenderTarget& target, sf::RenderStates
 	VectorArrow velArrow(node->GetPosGlobal(), node->GetPosGlobal() + rigidBody->_velocity);
 	target.draw(velArrow, states);
 
-	if (auto fieldSrc = node->FindBehaviour<InverseSquareFieldSourceBehaviour>()) {
+	if (auto fieldSrc = node->FindBehaviour<AttractiveBehaviour>()) {
 		if (fieldSrc->_isEnabled && !rigidBody->IsImmovable() && std::isfinite(rigidBody->_mass) &&
 		    rigidBody->_mass > 0.f) {
 			auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor();
-			auto field = ph ? ph->GetIsotropicInverseSquareField() : nullptr;
+			auto field = ph ? ph->GetAttractionField() : nullptr;
 			if (field) {
 				const sf::Vector2f a = field->EvaluateAcceleration(fieldSrc);
 				const sf::Vector2f force = a * rigidBody->_mass;
