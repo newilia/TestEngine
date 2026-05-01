@@ -1,12 +1,8 @@
-переименовать EngineContext.h, .cpp -> MainContext.h, .cpp
-
 пофиксить падение фпс при остановке симуляции с Fps limit
 
 порефакторить input (включая редактор), починить понг
 
 поиск ноды под курсором: traverse scene with Visual::HitTest (PickSceneNodeAt() ?), return ordered list (top-to-bottom)
-
-перемещение камеры по ПКМ
 
 персистентность редактора
 
@@ -14,11 +10,16 @@
 
 оптимизировать debug-draw
 
-todos в коде
+куча todos в коде
 
 поревьюить инициализацию нод и сущностей
 
-PhysicsProcessor::Run(const sf::Time& dt) удаление протухших при итерации
+PhysicsProcessor::Update(const sf::Time& dt) удаление протухших при итерации
 
 предкомпилированные заголовки
 
+пересмотреть неймспейсы Editor, Engine
+
+массовое выделение, массовое изменение свойств в инспекторе
+
+выделение объектов в области

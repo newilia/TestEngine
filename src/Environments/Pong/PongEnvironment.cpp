@@ -1,7 +1,7 @@
 #include "PongEnvironment.h"
 
 #include "AiPlatformController.h"
-#include "Engine/App/EngineContext.h"
+#include "Engine/App/MainContext.h"
 #include "Engine/App/UserInput.h"
 #include "Engine/App/Utils.h"
 #include "Engine/Behaviour/Physics/CollisionBehaviour.h"
@@ -228,17 +228,17 @@ std::shared_ptr<Scene> PongEnvironment::BuildScene() {
 }
 
 void PongEnvironment::ConfigureGlobalInput() {
-	auto engineContext = &Engine::MainContext::GetInstance();
-	auto userInput = engineContext->GetUserInput();
-	auto scene = engineContext->GetScene();
+	auto mainContext = &Engine::MainContext::GetInstance();
+	auto userInput = mainContext->GetUserInput();
+	auto scene = mainContext->GetScene();
 
-	userInput->AttachEventHandler(createDelegate<sf::Event>([this, engineContext](sf::Event event) {
+	userInput->AttachEventHandler(createDelegate<sf::Event>([this, mainContext](sf::Event event) {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			if (key->code == sf::Keyboard::Key::R) {
-				engineContext->SetScene(BuildScene());
+				mainContext->SetScene(BuildScene());
 			}
 			else if (key->code == sf::Keyboard::Key::D) {
-				engineContext->SetDebugDrawEnabled(!engineContext->IsDebugDrawEnabled());
+				mainContext->SetDebugDrawEnabled(!mainContext->IsDebugDrawEnabled());
 			}
 			else if (key->code == sf::Keyboard::Key::Escape) {
 				std::exit(EXIT_SUCCESS);

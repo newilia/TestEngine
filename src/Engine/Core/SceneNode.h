@@ -134,7 +134,7 @@ public:
 	[[nodiscard]] bool IsEnabled() const;
 	[[nodiscard]] bool IsVisible() const;
 
-	/// Invoked by `EngineContext::SetScene` or explicitly after attaching a subtree. Does not run from `AddChild`.
+	/// Invoked by `MainContext::SetScene` or explicitly after attaching a subtree. Does not run from `AddChild`.
 	void NotifyLifecycleInitRecursive();
 	/// Post-order teardown for this subtree.
 	void NotifyLifecycleDeinitRecursive();
