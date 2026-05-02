@@ -1,5 +1,6 @@
 #pragma once
 #include "Engine/Core/Scene.h"
+#include "Environments/EnvironmentBase.h"
 
 #include <memory>
 
@@ -7,11 +8,11 @@ namespace sf {
 	class Text;
 }
 
-class PongEnvironment
+class PongEnvironment : public EnvironmentBase
 {
 public:
-	void Setup();
-	~PongEnvironment();
+	~PongEnvironment() override;
+	void Setup() override;
 
 private:
 	std::shared_ptr<Scene> BuildScene();

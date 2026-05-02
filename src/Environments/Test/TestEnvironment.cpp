@@ -128,16 +128,16 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 }
 
 void TestEnvironment::ConfigureInput() {
-	auto ei = &Engine::MainContext::GetInstance();
+	auto mainContext = &Engine::MainContext::GetInstance();
 
-	std::make_shared<FunctionInputHandler>([ei](const sf::Event& event) {
-		auto* window = ei->GetMainWindow();
+	std::make_shared<FunctionInputHandler>([mainContext](const sf::Event& event) {
+		auto* window = mainContext->GetMainWindow();
 		if (!window) {
 			return;
 		}
 		if (const auto* touch = event.getIf<sf::Event::TouchBegan>()) {
 			const sf::Vector2f worldPos = Utils::MapWindowPixelToWorld(*window, touch->position);
-			if (auto scene = ei->GetScene()) {
+			if (auto scene = mainContext->GetScene()) {
 				scene->DispatchTapAt(worldPos);
 			}
 			return;
@@ -147,23 +147,23 @@ void TestEnvironment::ConfigureInput() {
 				return;
 			}
 			const sf::Vector2f worldPos = Utils::MapWindowPixelToWorld(*window, pressed->position);
-			if (auto scene = ei->GetScene()) {
+			if (auto scene = mainContext->GetScene()) {
 				scene->DispatchTapAt(worldPos);
 			}
 		}
 	})->Register();
 
-	std::make_shared<FunctionInputHandler>([ei](const sf::Event& event) {
+	std::make_shared<FunctionInputHandler>([mainContext](const sf::Event& event) {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			switch (key->code) {
 			case sf::Keyboard::Key::Equal:
-				ei->SetSimSpeedMultiplier(ei->GetSimSpeedMultiplier() * 2);
+				mainContext->SetSimSpeedMultiplier(mainContext->GetSimSpeedMultiplier() * 2);
 				break;
 			case sf::Keyboard::Key::Hyphen:
-				ei->SetSimSpeedMultiplier(ei->GetSimSpeedMultiplier() * 0.5f);
+				mainContext->SetSimSpeedMultiplier(mainContext->GetSimSpeedMultiplier() * 0.5f);
 				break;
 			case sf::Keyboard::Key::Num0:
-				ei->SetSimPaused(!ei->IsSimPaused());
+				mainContext->SetSimPaused(!mainContext->IsSimPaused());
 				break;
 			default:
 				break;
@@ -177,26 +177,27 @@ void TestEnvironment::ConfigureInput() {
 		}
 	})->Register();
 
-	std::make_shared<FunctionInputHandler>([ei](const sf::Event& event) {
+	std::make_shared<FunctionInputHandler>([mainContext](const sf::Event& event) {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			if (key->code == sf::Keyboard::Key::G) {
-				ei->GetPhysicsProcessor()->SetGravityEnabled(!ei->GetPhysicsProcessor()->IsGravityEnabled());
+				mainContext->GetPhysicsProcessor()->SetGravityEnabled(
+				    !mainContext->GetPhysicsProcessor()->IsGravityEnabled());
 			}
 		}
 	})->Register();
 
-	std::make_shared<FunctionInputHandler>([ei](const sf::Event& event) {
+	std::make_shared<FunctionInputHandler>([mainContext](const sf::Event& event) {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			if (key->code == sf::Keyboard::Key::D) {
-				ei->SetDebugDrawEnabled(!ei->IsDebugDrawEnabled());
+				mainContext->SetDebugDrawEnabled(!mainContext->IsDebugDrawEnabled());
 			}
 		}
 	})->Register();
 
-	std::make_shared<FunctionInputHandler>([ei](const sf::Event& event) {
+	std::make_shared<FunctionInputHandler>([this, mainContext](const sf::Event& event) {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			if (key->code == sf::Keyboard::Key::R) {
-				ei->SetScene(BuildScene());
+				mainContext->SetScene(BuildScene());
 			}
 		}
 	})->Register();

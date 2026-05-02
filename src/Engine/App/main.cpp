@@ -3,6 +3,7 @@
 #include "Engine/App/UserInput.h"
 #include "Engine/Core/PeriodicTaskExecutor.h"
 #include "Engine/Editor/Editor.h"
+#include "Environments/EnvironmentBase.h"
 #include "Environments/Pong/PongEnvironment.h"
 #include "Environments/Test/TestEnvironment.h"
 
@@ -77,17 +78,15 @@ namespace {
 		return AppEnvironmentKind::Test;
 	}
 
-	void RunAppEnvironment(AppEnvironmentKind kind) {
+	EnvironmentBase* CreateEnvironment(AppEnvironmentKind kind) {
 		switch (kind) {
 		case AppEnvironmentKind::Test:
-			TestEnvironment::Setup();
-			return;
+			return new TestEnvironment;
 		case AppEnvironmentKind::Pong: {
-			PongEnvironment pong;
-			pong.Setup();
-			return;
+			return new PongEnvironment;
 		}
 		}
+		return nullptr;
 	}
 } // namespace
 
@@ -102,10 +101,16 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	_set_error_mode(_OUT_TO_MSGBOX);
 
 #ifdef _CONSOLE
-	RunAppEnvironment(ParseEnvFromArgv(argc, argv));
+	auto envKind = ParseEnvFromArgv(argc, argv);
+	auto env = CreateEnvironment(envKind);
 #else
-	RunAppEnvironment(ParseEnvFromCmdLine(lpCmdLine ? std::string_view(lpCmdLine) : std::string_view{}));
+	auto envKind = ParseEnvFromCmdLine(lpCmdLine ? std::string_view(lpCmdLine) : std::string_view{});
+	auto env = CreateEnvironment(envKind);
 #endif
+	if (!env) {
+		exit(EXIT_FAILURE);
+	}
+	env->Setup();
 
 	Engine::MainContext::GetInstance().Init();
 
@@ -113,6 +118,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	mainLoop.Run();
 
 	Engine::MainContext::GetInstance().Shutdown();
+
+	delete env;
 
 	return EXIT_SUCCESS;
 }

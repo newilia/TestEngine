@@ -1,14 +1,16 @@
 #pragma once
 #include "Engine/Core/Scene.h"
+#include "Environments/EnvironmentBase.h"
 
 #include <memory>
 
-class TestEnvironment
+class TestEnvironment : public EnvironmentBase
 {
 public:
-	static void Setup();
+	~TestEnvironment() override = default;
+	void Setup() override;
 
 private:
-	static std::shared_ptr<Scene> BuildScene();
-	static void ConfigureInput();
+	std::shared_ptr<Scene> BuildScene();
+	void ConfigureInput();
 };
