@@ -42,4 +42,10 @@ RequireBehaviour c аргументами
 	
 локальные и глобальные трансформы
 
-enable_shared_from_this при наследовании от enable_shared_from_this
+перенести вызов Scene::DispatchTapAt в MainLoop/Scene?
+
+дублирование?
+	std::bitset<CollisionGroupsCount> _collisionGroups;
+	std::bitset<CollisionGroupsCount> _overlappingGroups;
+	Signal<const IntersectionDetails&> _collisionCallbacks;
+	Signal<const IntersectionDetails&> _overlappingCallbacks;

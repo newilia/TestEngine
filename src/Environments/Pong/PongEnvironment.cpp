@@ -1,7 +1,7 @@
 #include "PongEnvironment.h"
 
 #include "AiPlatformControllerBehaviour.h"
-#include "Engine/App/FunctionInputHandler.h"
+#include "Engine/App/FontManager.h"
 #include "Engine/App/MainContext.h"
 #include "Engine/App/Utils.h"
 #include "Engine/Behaviour/Physics/IntersectionDetails.h"
@@ -62,7 +62,21 @@ void PongEnvironment::Setup() {
 	engine.GetMainWindow()->setMouseCursorVisible(false);
 	engine.GetPhysicsProcessor()->SetGravity({0, 1000});
 	engine.SetScene(BuildScene());
-	ConfigureGlobalInput();
+}
+
+void PongEnvironment::OnEventsDispatcher(const sf::Event& event) {
+	if (auto e = event.getIf<sf::Event::KeyPressed>()) {
+		auto& mainContext = Engine::MainContext::GetInstance();
+		if (e->code == sf::Keyboard::Key::R) {
+			mainContext.SetScene(BuildScene());
+		}
+		else if (e->code == sf::Keyboard::Key::D) {
+			mainContext.SetDebugDrawEnabled(!mainContext.IsDebugDrawEnabled());
+		}
+		else if (e->code == sf::Keyboard::Key::Escape) {
+			std::exit(EXIT_SUCCESS);
+		}
+	}
 }
 
 void PongEnvironment::AddBall(Scene* scene) {
@@ -160,22 +174,22 @@ void PongEnvironment::AddWalls(Scene* scene) {
 		auto bodyBeh = wallNode->RequireBehaviour<PhysicsBodyBehaviour>();
 		bodyBeh->SetImmovable();
 		bodyBeh->_restitution = bodiesRestitution;
+
 		if (i < 2) {
 			rectShape->setFillColor(sf::Color(200, 200, 200, 50));
 			bodyBeh->_overlappingGroups.set(0, true);
+
 			if (i == 0) {
-				auto loseCallback = createDelegate<const IntersectionDetails&>([this](const IntersectionDetails&) {
-					OnLose();
-				});
-				static_cast<void>(wallNode->FindBehaviour<PhysicsBodyBehaviour>()->_overlappingCallbacks.Connect(
-				    std::move(loseCallback)));
+				[[maybe_unused]] auto connection =
+				    bodyBeh->_overlappingCallbacks.Connect([this](const IntersectionDetails&) {
+					    OnLose();
+				    });
 			}
 			else {
-				auto winCallback = createDelegate<const IntersectionDetails&>([this](const IntersectionDetails&) {
-					OnWin();
-				});
-				static_cast<void>(wallNode->FindBehaviour<PhysicsBodyBehaviour>()->_overlappingCallbacks.Connect(
-				    std::move(winCallback)));
+				[[maybe_unused]] auto connection =
+				    bodyBeh->_overlappingCallbacks.Connect([this](const IntersectionDetails&) {
+					    OnWin();
+				    });
 			}
 		}
 		else {
@@ -279,24 +293,6 @@ std::shared_ptr<Scene> PongEnvironment::BuildScene() {
 	AddAiPlatform(scene.get());
 	AddScoreboard(scene.get());
 	return scene;
-}
-
-void PongEnvironment::ConfigureGlobalInput() {
-	auto mainContext = &Engine::MainContext::GetInstance();
-
-	std::make_shared<FunctionInputHandler>([this, mainContext](const sf::Event& event) {
-		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
-			if (key->code == sf::Keyboard::Key::R) {
-				mainContext->SetScene(BuildScene());
-			}
-			else if (key->code == sf::Keyboard::Key::D) {
-				mainContext->SetDebugDrawEnabled(!mainContext->IsDebugDrawEnabled());
-			}
-			else if (key->code == sf::Keyboard::Key::Escape) {
-				std::exit(EXIT_SUCCESS);
-			}
-		}
-	})->Register();
 }
 
 void PongEnvironment::OnLose() {

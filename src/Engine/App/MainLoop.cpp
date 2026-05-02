@@ -1,8 +1,10 @@
 #include "MainLoop.h"
 
+#include "Engine/App/EventsDispatcher.h"
 #include "Engine/App/MainContext.h"
 #include "Engine/Core/PeriodicTaskExecutor.h"
 #include "Engine/Editor/Editor.h"
+#include "Engine/Simulation/PhysicsProcessor.h"
 
 #include <SFML/Graphics.hpp>
 
@@ -25,21 +27,21 @@ namespace Engine {
 
 		PeriodicTaskExecutor presentExecutor(
 		    []() {
-			    MainContext& engine = Engine::MainContext::GetInstance();
-			    if (!engine.IsFramerateLimitEnabled()) {
+			    MainContext& mainContext = Engine::MainContext::GetInstance();
+			    if (!mainContext.IsFramerateLimitEnabled()) {
 				    return sf::Time::Zero;
 			    }
-			    return sf::seconds(1.f / engine.GetFramerateLimit());
+			    return sf::seconds(1.f / mainContext.GetFramerateLimit());
 		    },
 		    [this](const sf::Time& dt) {
 			    PresentFrame();
 		    });
 
 		sf::Clock mainLoopClock;
-		MainContext& engine = Engine::MainContext::GetInstance();
+		MainContext& mainContext = Engine::MainContext::GetInstance();
 		{
 			while (true) {
-				const auto& window = engine.GetMainWindow();
+				const auto& window = mainContext.GetMainWindow();
 				if (!window) {
 					exit(EXIT_FAILURE);
 				}
@@ -59,13 +61,13 @@ namespace Engine {
 	}
 
 	bool MainLoop::PollAndDispatchEvents() {
-		auto& engine = Engine::MainContext::GetInstance();
-		const auto& window = engine.GetMainWindow();
+		auto& mainContext = Engine::MainContext::GetInstance();
+		const auto& window = mainContext.GetMainWindow();
 		if (!window) {
 			return false;
 		}
 
-		bool isImGuiInitialized = engine.IsImGuiInitialized();
+		bool isImGuiInitialized = mainContext.IsImGuiInitialized();
 
 		while (const auto& ev = window->pollEvent()) {
 			if (!ev) {
@@ -100,9 +102,9 @@ namespace Engine {
 	}
 
 	bool MainLoop::DispatchEvent(const sf::Event& event) {
-		auto& engine = Engine::MainContext::GetInstance();
-		bool isImGuiInitialized = engine.IsImGuiInitialized();
-		const auto& window = engine.GetMainWindow();
+		auto& mainContext = Engine::MainContext::GetInstance();
+		bool isImGuiInitialized = mainContext.IsImGuiInitialized();
+		const auto& window = mainContext.GetMainWindow();
 
 		if (event.is<sf::Event::Closed>()) {
 			window->close();
@@ -114,7 +116,7 @@ namespace Engine {
 		}
 
 		if (const auto* resized = event.getIf<sf::Event::Resized>()) {
-			engine.OnMainWindowResized(resized->size);
+			mainContext.OnMainWindowResized(resized->size);
 		}
 
 		auto& editor = Editor::GetInstance();
@@ -126,39 +128,39 @@ namespace Engine {
 
 		bool consumed = editor.GetEditorToolManager().ProcessEvent(event);
 		if (!consumed) {
-			engine.GetUserInput()->HandleEvent(event);
+			mainContext.GetEventsDispatcher()->DispatchEvent(event);
 		}
 		return true;
 	}
 
 	void MainLoop::UpdateTick() {
-		auto& engine = Engine::MainContext::GetInstance();
-		engine.OnStartUpdateTick();
+		auto& mainContext = Engine::MainContext::GetInstance();
+		mainContext.OnStartUpdateTick();
 
-		if (engine.IsSimPaused()) {
+		if (mainContext.IsSimPaused()) {
 			return;
 		}
-		auto simulatedDt = engine.GetSimTickDt();
-		if (auto scene = engine.GetScene()) {
+		auto simulatedDt = mainContext.GetSimTickDt();
+		if (auto scene = mainContext.GetScene()) {
 			scene->Update(simulatedDt);
 		}
-		engine.GetPhysicsProcessor()->Update(simulatedDt);
+		mainContext.GetPhysicsProcessor()->Update(simulatedDt);
 	}
 
 	bool MainLoop::PresentFrame() {
-		auto& engine = Engine::MainContext::GetInstance();
-		auto window = engine.GetMainWindow();
+		auto& mainContext = Engine::MainContext::GetInstance();
+		auto window = mainContext.GetMainWindow();
 
 		if (!window) {
 			return false;
 		}
-		auto scene = engine.GetScene();
+		auto scene = mainContext.GetScene();
 		if (!scene) {
 			return false;
 		}
 
-		engine.OnStartPresentFrame();
-		auto dt = engine.GetFrameDt();
+		mainContext.OnStartPresentFrame();
+		auto dt = mainContext.GetFrameDt();
 
 		window->clear();
 		ImGui::SFML::Update(*window, dt);

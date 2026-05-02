@@ -1,5 +1,9 @@
 #include "MainContext.h"
 
+#include "Engine/App/EventsDispatcher.h"
+#include "Engine/App/FontManager.h"
+#include "Engine/Simulation/PhysicsProcessor.h"
+
 #include <imgui-SFML.h>
 #include <imgui.h>
 
@@ -27,8 +31,8 @@ namespace Engine {
 		return _scene;
 	}
 
-	shared_ptr<UserInput> MainContext::GetUserInput() const {
-		return _userInput;
+	shared_ptr<EventsDispatcher> MainContext::GetEventsDispatcher() const {
+		return _eventsDispatcher;
 	}
 
 	shared_ptr<PhysicsProcessor> MainContext::GetPhysicsProcessor() const {
@@ -101,7 +105,7 @@ namespace Engine {
 	}
 
 	MainContext::MainContext() {
-		_userInput = make_shared<UserInput>();
+		_eventsDispatcher = make_shared<EventsDispatcher>();
 		_physicsProcessor = make_shared<PhysicsProcessor>();
 		_fontManager = make_shared<FontManager>();
 	}
@@ -119,7 +123,7 @@ namespace Engine {
 	}
 
 	void MainContext::Init() {
-		if (!_isImGuiInitialized) {
+		if (!_isImGuiInitialized && _mainWindow) {
 			if (!ImGui::SFML::Init(*_mainWindow)) {
 				return;
 			}

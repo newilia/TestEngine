@@ -13,7 +13,7 @@
 class PullTool;
 class VectorArrowVisual;
 
-/// Owns editor tools and routes input to the active tool before `UserInput`.
+/// Owns editor tools and routes input to the active tool before `EventsDispatcher`.
 class EditorToolManager
 {
 public:

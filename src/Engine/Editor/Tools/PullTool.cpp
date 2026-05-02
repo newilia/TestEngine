@@ -4,6 +4,7 @@
 #include "Engine/App/Utils.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/Scene.h"
+#include "Engine/Simulation/PhysicsProcessor.h"
 
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
