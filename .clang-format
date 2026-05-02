@@ -56,7 +56,7 @@ IncludeCategories:														# Regex -> Priority buckets; order: quoted local
     Priority: 4
 
 AllowShortBlocksOnASingleLine: Empty									# One-line `{}` blocks (Never, Empty, Always).
-AllowShortFunctionsOnASingleLine: None									# One-line bodies (None, InlineOnly, Empty, Inline, All, or nested Empty/Inline/Other).
+AllowShortFunctionsOnASingleLine: Empty									# One-line bodies (None, InlineOnly, Empty, Inline, All, or nested Empty/Inline/Other).
 AllowShortIfStatementsOnASingleLine: Never								# One-line if (Never, WithoutElse, OnlyFirstIf, AllIfsAndElse).
 AllowShortLambdasOnASingleLine: None									# One-line lambdas (None, Empty, Inline, All).
 AllowShortLoopsOnASingleLine: false										# If true, allow `while (x) y;` on one line (boolean).
