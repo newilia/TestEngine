@@ -56,6 +56,14 @@ bool EditorToolManager::TryActivateToolViaDigitKey(const sf::Keyboard::Key key) 
 	return true;
 }
 
+int EditorToolManager::GetActiveToolIndex() const {
+	return _activeToolIndex;
+}
+
+PullTool* EditorToolManager::GetPullTool() {
+	return _pullTool;
+}
+
 EditorToolManager::EditorToolManager() {
 	const auto setHierarchySelection = [](std::shared_ptr<SceneNode> node) {
 		Engine::Editor::GetInstance().SetSelectedNode(std::move(node));

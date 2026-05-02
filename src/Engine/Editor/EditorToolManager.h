@@ -23,9 +23,7 @@ public:
 	EditorToolManager(const EditorToolManager&) = delete;
 	EditorToolManager& operator=(const EditorToolManager&) = delete;
 
-	int GetActiveToolIndex() const {
-		return _activeToolIndex;
-	}
+	int GetActiveToolIndex() const;
 
 	void SetActiveToolIndex(int index);
 
@@ -33,9 +31,7 @@ public:
 	void OnPresent(const sf::Time& dt);
 	void BindPullArrow(std::shared_ptr<VectorArrowVisual> arrow);
 
-	PullTool* GetPullTool() {
-		return _pullTool;
-	}
+	PullTool* GetPullTool();
 
 	static std::optional<int> TryToolIndexFromDigitKey(sf::Keyboard::Key key);
 	static std::string FormatToolPaletteLabel(int toolIndex, const char* displayName);

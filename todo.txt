@@ -18,7 +18,7 @@ PhysicsProcessor::Update(const sf::Time& dt) удаление протухших
 
 предкомпилированные заголовки
 
-пересмотреть неймспейсы Editor, Engine
+пересмотреть неймспейсы Editor, Engine, Common (common.h), Utils
 
 множественное выделение нод:
 	ctrl, shift в иерархии
