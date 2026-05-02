@@ -11,8 +11,10 @@
 void AiPlatformControllerBehaviour::OnInit() {
 	Behaviour::OnInit();
 	if (auto p = GetNode()) {
-		_targetPos = p->GetPosGlobal();
-		_defaultPos = p->GetPosGlobal();
+		_targetPos = _defaultPos = p->GetPosGlobal();
+		ClampPongPlatformDesiredCenter(_targetPos, false, p);
+		ClampPongPlatformDesiredCenter(_defaultPos, false, p);
+		p->SetPosGlobal(_defaultPos);
 	}
 }
 
@@ -86,6 +88,8 @@ void AiPlatformControllerBehaviour::OnUpdate(const sf::Time& /*dt*/) {
 		return;
 	}
 
+	ClampPongPlatformToPlayfield(node, false);
+
 	if (_observeTimer.getElapsedTime().asSeconds() > _observePeriodSeconds) {
 		_observeTimer.restart();
 		ObserveState();
@@ -108,6 +112,8 @@ void AiPlatformControllerBehaviour::OnUpdate(const sf::Time& /*dt*/) {
 			React();
 		}
 	}
+
+	ClampPongPlatformDesiredCenter(_targetPos, false, node);
 
 	ApplyPongPlatformVelocityTowardsTarget(node, _targetPos, _speedFactor, _velLimit);
 }

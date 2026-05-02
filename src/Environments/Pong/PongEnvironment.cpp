@@ -13,7 +13,7 @@
 #include "Engine/Core/Scene.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "PongBall.h"
-#include "PongPlatform.h"
+#include "PongPlayfield.h"
 #include "UserPlatformControllerBehaviour.h"
 
 #include <utility>
@@ -26,12 +26,6 @@ constexpr float wallActualWidth = 200;
 constexpr float wallVisibleWidth = 10;
 static shared_ptr<SceneNode> sUserPlatform;
 static shared_ptr<PongBall> sBall;
-
-namespace {
-	sf::Vector2f GetScreenSize() {
-		return sf::Vector2f(Engine::MainContext::GetInstance().GetMainWindow()->getSize());
-	}
-} // namespace
 
 void PongEnvironment::Setup() {
 	auto& engine = Engine::MainContext::GetInstance();
@@ -49,7 +43,7 @@ void PongEnvironment::AddBall(Scene* scene) {
 	constexpr float speedDampingFactor = 0.1f;
 	const sf::Color color(40, 170, 255, 200);
 	const sf::Vector2f vel = {0, 500};
-	const sf::Vector2f pos = GetScreenSize() * 0.5f;
+	const sf::Vector2f pos = GetPongPlayfieldRect().getCenter();
 
 	auto ball = make_shared<PongBall>(CreateShapeBodyNode<sf::CircleShape>());
 	ball->SetupBehaviours();
@@ -97,6 +91,7 @@ shared_ptr<SceneNode> PongEnvironment::CreateDefaultPlatform(sf::Vector2f size, 
 
 	auto shape = dynamic_cast<sf::ConvexShape*>(node->FindShapeCollider()->GetBaseShape());
 	shape->setPointCount(pointCount);
+	// half-ellipse shape
 	for (int i = 0; i < pointCount; ++i) {
 		float x = (static_cast<float>(i) / (pointCount - 1) - 0.5f) * 2.0f;
 		float y = sqrt(1 - x * x * curvature);
@@ -118,18 +113,19 @@ shared_ptr<SceneNode> PongEnvironment::CreateDefaultPlatform(sf::Vector2f size, 
 }
 
 void PongEnvironment::AddWalls(Scene* scene) {
-	auto screenSize = GetScreenSize();
-	constexpr float wallOffset = wallActualWidth / 2 - wallVisibleWidth;
+	const auto field = GetPongPlayfieldRect();
+	const sf::Vector2f o = field.position;
+	const sf::Vector2f sz = field.size;
 
 	std::string wallNames[] = {"bottom", "top", "left", "right"};
-	sf::Vector2f wallSizes[] = {{screenSize.x, wallActualWidth},
-	                            {screenSize.x, wallActualWidth},
-	                            {wallActualWidth, screenSize.y},
-	                            {wallActualWidth, screenSize.y}};
-	sf::Vector2f wallPositions[] = {{screenSize.x / 2, screenSize.y + wallOffset},
-	                                {screenSize.x / 2, -wallOffset},
-	                                {-wallOffset, screenSize.y / 2},
-	                                {screenSize.x + wallOffset, screenSize.y / 2}};
+	sf::Vector2f wallSizes[] = {
+	    {sz.x, wallActualWidth}, {sz.x, wallActualWidth}, {wallActualWidth, sz.y}, {wallActualWidth, sz.y}};
+
+	constexpr float wallOffset = wallActualWidth / 2 - wallVisibleWidth;
+	sf::Vector2f wallPositions[] = {{o.x + sz.x / 2, o.y + sz.y + wallOffset},
+	                                {o.x + sz.x / 2, o.y - wallOffset},
+	                                {o.x - wallOffset, o.y + sz.y / 2},
+	                                {o.x + sz.x + wallOffset, o.y + sz.y / 2}};
 	for (int i = 0; i < 4; ++i) {
 		auto wall = CreateShapeBodyNode<sf::RectangleShape>();
 		wall->SetName(wallNames[i]);
@@ -163,20 +159,18 @@ void PongEnvironment::AddWalls(Scene* scene) {
 
 void PongEnvironment::AddUserPlatform(Scene* scene) {
 	const sf::Vector2f size(500.f, 70.f);
-	const auto screenSize = GetScreenSize();
-	const sf::Vector2f pos(screenSize.x * 0.5f, screenSize.y - wallVisibleWidth - 100);
+	const auto field = GetPongPlayfieldRect();
+	const sf::Vector2f pos(field.getCenter().x, field.position.y + field.size.y - wallVisibleWidth - 100);
 	const sf::Color color(220, 220, 20);
 
 	auto platformNode = CreateDefaultPlatform(size, pos, 180.f, color);
 	platformNode->SetName("User_platform");
 
-	constexpr float verticalMoveFactor = 0.95f;
 	constexpr float velFactor = 50.f;
 	const sf::Vector2f maxSpeed = {15000.f, 1000.f};
 
 	auto userBehaviour = std::make_shared<UserPlatformControllerBehaviour>();
 	platformNode->AddBehaviour(userBehaviour);
-	userBehaviour->_verticalMoveFactor = verticalMoveFactor;
 	userBehaviour->_velLimit = maxSpeed;
 	userBehaviour->_speedFactor = velFactor;
 
@@ -187,8 +181,8 @@ void PongEnvironment::AddUserPlatform(Scene* scene) {
 
 void PongEnvironment::AddAiPlatform(Scene* scene) {
 	const sf::Vector2f size(500.f, 70.f);
-	const auto screenSize = GetScreenSize();
-	const sf::Vector2f pos(screenSize.x * 0.5f, wallVisibleWidth + 100);
+	const auto field = GetPongPlayfieldRect();
+	const sf::Vector2f pos(field.getCenter().x, field.position.y + wallVisibleWidth + 100);
 	const sf::Color color(220, 220, 20);
 
 	auto platformNode = CreateDefaultPlatform(size, pos, 0.f, color);

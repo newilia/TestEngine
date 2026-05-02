@@ -20,8 +20,6 @@ public:
 	void OnUserInput(const sf::Event& event) override;
 
 	/* TODO incapsulation */
-	/// @property(minValue=0.f, maxValue=1.f, tooltip="Vertical movement curve vs mouse offset.")
-	float _verticalMoveFactor = 0.9f;
 	/// @property(minValue=0.f, maxValue=100000.f)
 	float _speedFactor = 50.f;
 	/// @property
