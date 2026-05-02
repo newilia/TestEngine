@@ -2,7 +2,7 @@
 
 #include "Engine/App/MainContext.h"
 #include "Engine/App/Utils.h"
-#include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
+#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/Scene.h"
 
 #include <SFML/Graphics/Color.hpp>
@@ -59,11 +59,11 @@ std::shared_ptr<SceneNode> PullTool::OnTap(const sf::Vector2f& screenPixelPos) {
 		if (!body) {
 			continue;
 		}
-		auto* collider = body->FindShapeCollider();
+		auto* collider = body->FindPhysicsBody();
 		if (!collider || !Utils::IsWorldPointInsideOfBody(worldMousePos, collider)) {
 			continue;
 		}
-		auto rigidBody = body->FindBehaviour<RigidBodyBehaviour>();
+		auto rigidBody = body->FindBehaviour<PhysicsBodyBehaviour>();
 		if (!rigidBody || rigidBody->IsImmovable()) {
 			continue;
 		}
@@ -161,7 +161,7 @@ void PullTool::onPresent(const sf::Time& dt) {
 	arrow->SetEndPos(_destination);
 	arrow->SetVisible(true);
 
-	if (auto rigidBody = body->FindBehaviour<RigidBodyBehaviour>()) {
+	if (auto rigidBody = body->FindBehaviour<PhysicsBodyBehaviour>()) {
 		auto pullVector = _destination - body->GetPosGlobal();
 		auto distance = Utils::Length(pullVector);
 		if (distance <= std::numeric_limits<float>::epsilon()) {

@@ -1,7 +1,7 @@
 #include "AttractionField.h"
 
 #include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
-#include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
+#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 
 #include <cmath>
@@ -26,7 +26,7 @@ void AttractionField::Unregister(const shared_ptr<AttractiveBehaviour>& s) {
 	});
 }
 
-static float EffectiveSourceMass(const RigidBodyBehaviour& rb) {
+static float EffectiveSourceMass(const PhysicsBodyBehaviour& rb) {
 	if (rb.IsImmovable() || !std::isfinite(rb._mass) || rb._mass <= 0.f) {
 		return 1.f;
 	}
@@ -51,7 +51,7 @@ AttractionField::EvaluateAcceleration(const shared_ptr<AttractiveBehaviour>& rec
 	sf::Vector2f acc{};
 	for (const auto& w : _sources) {
 		const auto other = w.lock();
-		if (!other || !other->_isEnabled || other == receiver) {
+		if (!other || !other->IsEnabled() || other == receiver) {
 			continue;
 		}
 		const auto otherNode = other->GetNode();
@@ -68,18 +68,18 @@ AttractionField::EvaluateAcceleration(const shared_ptr<AttractiveBehaviour>& rec
 		const float invR = 1.f / std::sqrt(r2);
 		const float invR3 = invR * invR * invR; // 1 / (d2+e2)^{3/2}
 
-		if (other->_attraction == 0.f) {
+		if (other->GetAttraction() == 0.f) {
 			continue;
 		}
-		const float t = std::abs(other->_attraction) / 100.f;
+		const float t = std::abs(other->GetAttraction()) / 100.f;
 		const float mag = std::pow(t, 1.2f);
 		// Negative _attraction: pull toward the source; positive: push away. d = posSource - posReceiver.
-		const float dir = (other->_attraction < 0.f) ? 1.f : -1.f;
+		const float dir = (other->GetAttraction() < 0.f) ? 1.f : -1.f;
 		const float scalar = _globalStrengthScale * mag * dir * invR3;
 
 		float sourceWeight = 1.f;
 		if (_useMassCoupling) {
-			if (const auto srb = otherNode->FindBehaviour<RigidBodyBehaviour>()) {
+			if (const auto srb = otherNode->FindBehaviour<PhysicsBodyBehaviour>()) {
 				sourceWeight = EffectiveSourceMass(*srb);
 			}
 		}

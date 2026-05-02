@@ -38,11 +38,8 @@ PhysicsProcessor::Update(const sf::Time& dt) удаление протухших
 
 RequireBehaviour c аргументами
 
-что за мешанина?
-	#include "Engine/Behaviour/Physics/CollisionBehaviour.h"
-	#include "Engine/Behaviour/Physics/IntersectionDetails.h"
-	#include "Engine/Behaviour/Physics/CollisionBehaviour.h"
-	#include "Engine/Behaviour/Physics/ShapeColliderBehaviourBase.h"
+удалить SceneNode::FindPhysicsBody()
 	
 локальные и глобальные трансформы
 
+enable_shared_from_this при наследовании от enable_shared_from_this

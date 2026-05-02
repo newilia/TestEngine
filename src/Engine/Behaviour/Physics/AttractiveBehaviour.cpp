@@ -2,8 +2,8 @@
 
 #include "AttractiveBehaviour.generated.hpp"
 #include "Engine/App/MainContext.h"
+#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Behaviour/Physics/PhysicsDebugBehaviour.h"
-#include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Simulation/AttractionField.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
@@ -13,12 +13,8 @@ void AttractiveBehaviour::OnInit() {
 	if (!node) {
 		return;
 	}
-	if (const auto rb = node->FindBehaviour<RigidBodyBehaviour>()) {
-		_rigidBody = rb;
-	}
-	else {
-		return;
-	}
+	_rigidBody = node->RequireBehaviour<PhysicsBodyBehaviour>();
+
 	node->RequireBehaviour<PhysicsDebugBehaviour>();
 	if (const auto self = node->FindBehaviour<AttractiveBehaviour>()) {
 		_self = self;
@@ -43,7 +39,6 @@ void AttractiveBehaviour::OnDeinit() {
 }
 
 void AttractiveBehaviour::OnUpdate(const sf::Time& dt) {
-	(void)dt;
 	if (!_isEnabled) {
 		return;
 	}
@@ -64,4 +59,16 @@ void AttractiveBehaviour::OnUpdate(const sf::Time& dt) {
 			}
 		}
 	}
+}
+
+bool AttractiveBehaviour::IsEnabled() const {
+	return _isEnabled;
+}
+
+float AttractiveBehaviour::GetAttraction() const {
+	return _attraction;
+}
+
+void AttractiveBehaviour::SetAttraction(float value) {
+	_attraction = value;
 }

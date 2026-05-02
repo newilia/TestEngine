@@ -10,7 +10,7 @@ namespace sf {
 	class CircleShape;
 }
 
-/// Игровой шарик: коллайдер и визуал задаются поведениями на одной ноде.
+// todo remove
 class PongBall : public std::enable_shared_from_this<PongBall>
 {
 public:

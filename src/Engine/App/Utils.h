@@ -1,5 +1,5 @@
 #pragma once
-#include "Engine/Behaviour/Physics/AbstractBody.h"
+class PhysicsBodyBehaviour;
 #include "SFML/Graphics.hpp"
 
 #include <limits>
@@ -36,7 +36,7 @@ namespace Utils {
 	bool IsWorldPointInsideOfShapeByFan(const sf::Vector2f& worldPoint, const sf::Shape* shape);
 	bool IsWorldPointInsideOfShape(const sf::Vector2f& worldPoint, const sf::Shape* shape);
 	bool IsWorldPointInsideOfVisual(const sf::Vector2f& worldPoint, const Visual* visual);
-	bool IsWorldPointInsideOfBody(const sf::Vector2f& worldPoint, const AbstractBody* body);
+	bool IsWorldPointInsideOfBody(const sf::Vector2f& worldPoint, const PhysicsBodyBehaviour* body);
 
 	bool IsNan(const sf::Vector2f& v);
 

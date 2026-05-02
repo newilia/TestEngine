@@ -4,9 +4,7 @@
 #include "Engine/App/MainContext.h"
 #include "Engine/App/Utils.h"
 #include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
-#include "Engine/Behaviour/Physics/CollisionBehaviour.h"
-#include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
-#include "Engine/Behaviour/Physics/ShapeColliderBehaviour.h"
+#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Editor/Editor.h"
 #include "Engine/Editor/Tools/PullTool.h"
@@ -54,11 +52,12 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	                                {viewSize.x + wallOffset, viewSize.y / 2}};
 
 	for (int i = 0; i < 4; ++i) {
-		auto node = CreateShapeBodyNode<sf::RectangleShape>();
-		node->RequireBehaviour<CollisionBehaviour>()->_collisionGroups.set(0, true);
+		auto node = CreatePhysicsBodyNode<sf::RectangleShape>();
+		node->RequireBehaviour<PhysicsBodyBehaviour>()->_collisionGroups.set(0, true);
+
 		node->SetName(wallNames[i]);
 
-		auto* rect = dynamic_cast<sf::RectangleShape*>(node->FindShapeCollider()->GetBaseShape());
+		auto* rect = dynamic_cast<sf::RectangleShape*>(node->FindPhysicsBody()->GetShape());
 		rect->setSize(wallSizes[i]);
 		rect->setOrigin(Utils::FindCenterOfMass(rect));
 		rect->setPosition(wallPositions[i]);
@@ -66,13 +65,13 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		rect->setOutlineColor(sf::Color(30, 255, 30, 120));
 		rect->setOutlineThickness(1.f);
 
-		auto rb = node->RequireBehaviour<RigidBodyBehaviour>();
+		auto rb = node->RequireBehaviour<PhysicsBodyBehaviour>();
 		rb->SetImmovable();
 		rb->_restitution = commonRestitution;
 		rb->_friction = commonFriction;
 
 		auto fieldBeh = std::make_shared<AttractiveBehaviour>();
-		fieldBeh->_attraction = 10000 * (isAttractive ? -1 : 1);
+		fieldBeh->SetAttraction(10000 * (isAttractive ? -1 : 1));
 		node->AddBehaviour(std::move(fieldBeh));
 
 		scene->AddChild(std::move(node));
@@ -81,18 +80,20 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	/* circles */
 	constexpr int circlesCount = 200;
 	for (int i = 0; i < circlesCount; ++i) {
-		auto node = CreateShapeBodyNode<sf::CircleShape>();
+		auto node = CreatePhysicsBodyNode<sf::CircleShape>();
 		node->SetName(fmt::format("circle_{}", i));
-		node->RequireBehaviour<CollisionBehaviour>()->_collisionGroups.set(0, true);
+		node->RequireBehaviour<PhysicsBodyBehaviour>()->_collisionGroups.set(0, true);
 
 		bool isAttractive = true;
 
-		auto* circle = dynamic_cast<sf::CircleShape*>(node->FindShapeCollider()->GetBaseShape());
+		auto* circle = dynamic_cast<sf::CircleShape*>(node->FindPhysicsBody()->GetShape());
 		float radius = 20.f;
 		circle->setRadius(radius);
-		// constexpr float pointsCountConstant = 3.f;
-		// auto pointsCount = static_cast<size_t>(pointsCountConstant * (7 + radius / 8));
-		// circle->setPointCount(pointsCount);
+
+		/* render optimization */
+		constexpr float pointsCountConstant = 3.f;
+		auto pointsCount = static_cast<size_t>(pointsCountConstant * (7 + radius / 8));
+		circle->setPointCount(pointsCount);
 
 		sf::Color color = isAttractive ? sf::Color(40, 170, 255, 200) : sf::Color(255, 100, 100, 200);
 		auto outlineColor = color;
@@ -110,13 +111,13 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		auto y = static_cast<float>(minY + rand() % (maxY - minY));
 		circle->setPosition(sf::Vector2f{x, y});
 
-		auto rb = node->RequireBehaviour<RigidBodyBehaviour>();
+		auto rb = node->RequireBehaviour<PhysicsBodyBehaviour>();
 		rb->_mass = 3.14f * radius * radius;
 		rb->_restitution = commonRestitution;
 		rb->_friction = commonFriction;
 
 		auto fieldBeh = std::make_shared<AttractiveBehaviour>();
-		fieldBeh->_attraction = commonAttraction * (isAttractive ? -1 : 1);
+		fieldBeh->SetAttraction(commonAttraction * (isAttractive ? -1 : 1));
 		node->AddBehaviour(std::move(fieldBeh));
 
 		scene->AddChild(std::move(node));

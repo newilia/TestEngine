@@ -1,6 +1,7 @@
 #include "AiPlatformControllerBehaviour.h"
 
 #include "AiPlatformControllerBehaviour.generated.hpp"
+#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "PongPlatform.h"
 
 #include <SFML/System/Time.hpp>
@@ -70,11 +71,11 @@ void AiPlatformControllerBehaviour::MovePlatformTowardsBall() {
 	if (!node) {
 		return;
 	}
-	auto* selfCollider = node->FindShapeCollider();
+	auto* selfCollider = node->FindPhysicsBody();
 	if (!selfCollider) {
 		return;
 	}
-	sf::Shape* selfShape = selfCollider->GetBaseShape();
+	sf::Shape* selfShape = selfCollider->GetShape();
 	float distanceToBall = 0.f;
 	if (auto ball = _ball.lock()) {
 		if (auto* ballShape = ball->GetShape()) {
@@ -86,8 +87,8 @@ void AiPlatformControllerBehaviour::MovePlatformTowardsBall() {
 
 	float steadyRatio = 0.f;
 	if (auto opponentPlatform = _opponentPlatform.lock()) {
-		if (auto* oppCollider = opponentPlatform->FindShapeCollider()) {
-			if (sf::Shape* oppShape = oppCollider->GetBaseShape()) {
+		if (auto* oppCollider = opponentPlatform->FindPhysicsBody()) {
+			if (sf::Shape* oppShape = oppCollider->GetShape()) {
 				const float distanceBetweenPlatforms = std::abs(selfShape->getPosition().y - oppShape->getPosition().y);
 				if (distanceBetweenPlatforms > 0.f) {
 					steadyRatio = 0.2f * std::clamp(distanceToBall / distanceBetweenPlatforms, 0.f, 1.f);

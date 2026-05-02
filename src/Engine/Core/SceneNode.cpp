@@ -1,6 +1,7 @@
 #include "SceneNode.h"
 
 #include "Engine/App/MainContext.h"
+#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Behaviour/Physics/PhysicsDebugBehaviour.h"
 #include "Engine/Core/Transform.h"
 #include "Engine/Visual/ShapeVisualBase.h"
@@ -43,7 +44,7 @@ namespace {
 				return text->getGlobalBounds();
 			}
 		}
-		if (auto* c = node.FindShapeCollider()) {
+		if (auto* c = node.FindPhysicsBody()) {
 			return c->GetBbox();
 		}
 		return std::nullopt;
@@ -142,24 +143,24 @@ void SceneNode::SetParent(const shared_ptr<SceneNode>& parent) {
 	_parent = parent;
 }
 
-ShapeColliderBehaviourBase* SceneNode::FindShapeCollider() const {
+PhysicsBodyBehaviour* SceneNode::FindPhysicsBody() const {
 	for (auto& b : _behaviours) {
-		if (auto s = std::dynamic_pointer_cast<ShapeColliderBehaviourBase>(b)) {
-			return s.get();
+		if (auto p = std::dynamic_pointer_cast<PhysicsBodyBehaviour>(b)) {
+			return p.get();
 		}
 	}
 	return nullptr;
 }
 
 sf::Vector2f SceneNode::GetPosGlobal() const {
-	if (auto* c = FindShapeCollider()) {
+	if (auto* c = FindPhysicsBody()) {
 		return c->GetPosGlobal();
 	}
 	return GetTransform()->getPosition();
 }
 
 void SceneNode::SetPosGlobal(sf::Vector2f pos) {
-	if (auto* c = FindShapeCollider()) {
+	if (auto* c = FindPhysicsBody()) {
 		c->SetPosGlobal(pos);
 	}
 	else {

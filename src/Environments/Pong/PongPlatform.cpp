@@ -1,7 +1,6 @@
 #include "PongPlatform.h"
 
-#include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
-#include "Engine/Behaviour/Physics/ShapeColliderBehaviourBase.h"
+#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "PongPlayfield.h"
 
 #include <algorithm>
@@ -53,15 +52,15 @@ void ApplyPongPlatformVelocityTowardsTarget(const std::shared_ptr<SceneNode>& pl
 	if (!platformNode) {
 		return;
 	}
-	auto* collider = platformNode->FindShapeCollider();
+	auto* collider = platformNode->FindPhysicsBody();
 	if (!collider) {
 		return;
 	}
-	auto shape = collider->GetBaseShape();
+	auto shape = collider->GetShape();
 	auto vel = (targetPos - shape->getPosition()) * speedFactor;
 	vel.x = std::clamp(vel.x, -velLimit.x, velLimit.x);
 	vel.y = std::clamp(vel.y, -velLimit.y, velLimit.y);
-	platformNode->RequireBehaviour<RigidBodyBehaviour>()->_velocity = vel;
+	platformNode->RequireBehaviour<PhysicsBodyBehaviour>()->_velocity = vel;
 }
 
 void ClampPongPlatformDesiredCenter(sf::Vector2f& center, bool isBottomPlayer,
@@ -69,7 +68,7 @@ void ClampPongPlatformDesiredCenter(sf::Vector2f& center, bool isBottomPlayer,
 	if (!platformNode) {
 		return;
 	}
-	auto* collider = platformNode->FindShapeCollider();
+	auto* collider = platformNode->FindPhysicsBody();
 	if (!collider) {
 		return;
 	}
@@ -89,7 +88,7 @@ void ClampPongPlatformToPlayfield(const std::shared_ptr<SceneNode>& platformNode
 	if (!platformNode) {
 		return;
 	}
-	auto* collider = platformNode->FindShapeCollider();
+	auto* collider = platformNode->FindPhysicsBody();
 	if (!collider) {
 		return;
 	}
