@@ -3,6 +3,8 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+.idea/
+
 # Dear ImGui (runtime layout state next to cwd)
 imgui.ini
 
