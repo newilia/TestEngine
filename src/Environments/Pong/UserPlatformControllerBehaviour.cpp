@@ -3,11 +3,12 @@
 #include "PongPlatform.h"
 #include "UserPlatformControllerBehaviour.generated.hpp"
 
-#include <cmath>
-
 void UserPlatformControllerBehaviour::OnInit() {
 	if (auto p = GetNode()) {
 		_targetPos = _defaultPos = p->GetPosGlobal();
+		ClampPongPlatformDesiredCenter(_targetPos, true, p);
+		ClampPongPlatformDesiredCenter(_defaultPos, true, p);
+		p->SetPosGlobal(_defaultPos);
 	}
 	InputHandlerBehaviourBase::OnInit();
 }
@@ -21,17 +22,18 @@ void UserPlatformControllerBehaviour::OnUpdate(const sf::Time& /*dt*/) {
 	if (!p) {
 		return;
 	}
+	ClampPongPlatformToPlayfield(p, true);
+	ClampPongPlatformDesiredCenter(_targetPos, true, p);
 	ApplyPongPlatformVelocityTowardsTarget(p, _targetPos, _speedFactor, _velLimit);
 }
 
 void UserPlatformControllerBehaviour::OnUserInput(const sf::Event& event) {
 	if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
-		float mouseYShift = static_cast<float>(moved->position.y) - _defaultPos.y;
-		float platformYShift = 0.f;
-		for (int i = 0; i < std::abs(mouseYShift); ++i) {
-			platformYShift += powf(_verticalMoveFactor, static_cast<float>(i));
+		auto p = GetNode();
+		if (!p) {
+			return;
 		}
-		_targetPos.x = static_cast<float>(moved->position.x);
-		_targetPos.y = _defaultPos.y + copysignf(platformYShift, mouseYShift);
+		_targetPos = sf::Vector2f(static_cast<float>(moved->position.x), static_cast<float>(moved->position.y));
+		ClampPongPlatformDesiredCenter(_targetPos, true, p);
 	}
 }
