@@ -1,7 +1,7 @@
 #include "TestEnvironment.h"
 
+#include "Engine/App/FunctionInputHandler.h"
 #include "Engine/App/MainContext.h"
-#include "Engine/App/UserInput.h"
 #include "Engine/App/Utils.h"
 #include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
 #include "Engine/Behaviour/Physics/CollisionBehaviour.h"
@@ -129,9 +129,8 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 
 void TestEnvironment::ConfigureInput() {
 	auto ei = &Engine::MainContext::GetInstance();
-	auto userInput = ei->GetUserInput();
 
-	userInput->AttachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+	std::make_shared<FunctionInputHandler>([ei](const sf::Event& event) {
 		auto* window = ei->GetMainWindow();
 		if (!window) {
 			return;
@@ -152,9 +151,9 @@ void TestEnvironment::ConfigureInput() {
 				scene->DispatchTapAt(worldPos);
 			}
 		}
-	}));
+	})->Register();
 
-	userInput->AttachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+	std::make_shared<FunctionInputHandler>([ei](const sf::Event& event) {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			switch (key->code) {
 			case sf::Keyboard::Key::Equal:
@@ -170,35 +169,35 @@ void TestEnvironment::ConfigureInput() {
 				break;
 			}
 		}
-	}));
+	})->Register();
 
-	userInput->AttachEventHandler(createDelegate<sf::Event>([](sf::Event event) {
+	std::make_shared<FunctionInputHandler>([](const sf::Event& event) {
 		if (event.is<sf::Event::Closed>()) {
 			std::exit(EXIT_SUCCESS);
 		}
-	}));
+	})->Register();
 
-	userInput->AttachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+	std::make_shared<FunctionInputHandler>([ei](const sf::Event& event) {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			if (key->code == sf::Keyboard::Key::G) {
 				ei->GetPhysicsProcessor()->SetGravityEnabled(!ei->GetPhysicsProcessor()->IsGravityEnabled());
 			}
 		}
-	}));
+	})->Register();
 
-	userInput->AttachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+	std::make_shared<FunctionInputHandler>([ei](const sf::Event& event) {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			if (key->code == sf::Keyboard::Key::D) {
 				ei->SetDebugDrawEnabled(!ei->IsDebugDrawEnabled());
 			}
 		}
-	}));
+	})->Register();
 
-	userInput->AttachEventHandler(createDelegate<sf::Event>([ei](sf::Event event) {
+	std::make_shared<FunctionInputHandler>([ei](const sf::Event& event) {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			if (key->code == sf::Keyboard::Key::R) {
 				ei->SetScene(BuildScene());
 			}
 		}
-	}));
+	})->Register();
 }

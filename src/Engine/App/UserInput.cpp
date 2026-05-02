@@ -1,50 +1,34 @@
 #include "UserInput.h"
 
-void UserInput::HandleEvent(const sf::Event& event) {
-	// switch (event.type) {
-	// case sf::Event::MouseButtonPressed:
-	//	onMouseButtonPress(event.mouseButton);
-	//	break;
-	// case sf::Event::MouseMoved:
-	//	onMouseMove(event.mouseMove);
-	//	break;
-	// case sf::Event::MouseButtonReleased:
-	//	onMouseButtonRelease(event.mouseButton);
-	//	break;
-	// case sf::Event::KeyPressed:
-	//	onKeyPress(event.key);
-	//	break;
-	// case sf::Event::KeyReleased:
-	//	onKeyRelease(event.key);
-	//	break;
-	// default:
-	//	break;
-	// }
+#include "InputHandlerBase.h"
 
-	for (auto it = _eventHandlers.begin(); it != _eventHandlers.end();) {
-		if (it->get()->expired()) {
-			it = _eventHandlers.erase(it);
-			continue;
+#include <algorithm>
+
+namespace Engine {
+	void UserInput::HandleEvent(const sf::Event& event) {
+		for (auto& h : _handlers) {
+			h->OnUserInput(event);
 		}
-		it++->get()->operator()(event);
 	}
-}
 
-void UserInput::AttachEventHandler(std::unique_ptr<IDelegate<sf::Event>>&& delegatePtr) {
-	_eventHandlers.emplace(std::move(delegatePtr));
-}
+	void UserInput::RegisterInputHandler(std::shared_ptr<InputHandlerBase> handler) {
+		if (!Verify(handler)) {
+			return;
+		}
+		for (const auto& existing : _handlers) {
+			if (existing == handler) {
+				return;
+			}
+		}
+		_handlers.push_back(std::move(handler));
+	}
 
-// void UserInput::onMouseButtonPress(const sf::Event::MouseButtonEvent& event) {
-// }
-//
-// void UserInput::onMouseButtonRelease(const sf::Event::MouseButtonEvent& event) {
-// }
-//
-// void UserInput::onMouseMove(const sf::Event::MouseMoveEvent& event) {
-// }
-//
-// void UserInput::onKeyPress(const sf::Event::KeyEvent& key) {
-// }
-//
-// void UserInput::onKeyRelease(const sf::Event::KeyEvent& key) {
-// }
+	void UserInput::UnregisterInputHandler(InputHandlerBase* handler) {
+		if (!handler) {
+			return;
+		}
+		std::erase_if(_handlers, [handler](const std::shared_ptr<InputHandlerBase>& p) {
+			return p.get() == handler;
+		});
+	}
+} // namespace Engine
