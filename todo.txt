@@ -35,3 +35,11 @@ PhysicsProcessor::Update(const sf::Time& dt) удаление протухших
 глобальные инклуды
 
 поддержать кодогенерацию для унаследованных и полиморфных классов
+
+RequireBehaviour c аргументами
+
+что за мешанина?
+	#include "Engine/Behaviour/Physics/CollisionBehaviour.h"
+	#include "Engine/Behaviour/Physics/IntersectionDetails.h"
+	#include "Engine/Behaviour/Physics/CollisionBehaviour.h"
+	#include "Engine/Behaviour/Physics/ShapeColliderBehaviourBase.h"
