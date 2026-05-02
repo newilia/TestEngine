@@ -17,10 +17,9 @@ void AttractiveBehaviour::OnInit() {
 
 	node->RequireBehaviour<PhysicsDebugBehaviour>();
 	if (const auto self = node->FindBehaviour<AttractiveBehaviour>()) {
-		_self = self;
 		if (const auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
 			if (auto field = ph->GetAttractionField()) {
-				field->Register(self);
+				field->Register(shared_from_this());
 			}
 		}
 	}
@@ -29,21 +28,14 @@ void AttractiveBehaviour::OnInit() {
 void AttractiveBehaviour::OnDeinit() {
 	if (const auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
 		if (auto field = ph->GetAttractionField()) {
-			if (const auto self = _self.lock()) {
-				field->Unregister(self);
-			}
+			field->Unregister(shared_from_this());
 		}
 	}
 	_rigidBody.reset();
-	_self.reset();
 }
 
 void AttractiveBehaviour::OnUpdate(const sf::Time& dt) {
 	if (!_isEnabled) {
-		return;
-	}
-	const auto self = _self.lock();
-	if (!self) {
 		return;
 	}
 	const auto rb = _rigidBody.lock();
@@ -52,7 +44,7 @@ void AttractiveBehaviour::OnUpdate(const sf::Time& dt) {
 	}
 	if (const auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
 		if (auto field = ph->GetAttractionField()) {
-			sf::Vector2f a = field->EvaluateAcceleration(self);
+			sf::Vector2f a = field->EvaluateAcceleration(shared_from_this());
 			const float sec = dt.asSeconds();
 			if (sec > 0.f) {
 				rb->_velocity += a * sec;

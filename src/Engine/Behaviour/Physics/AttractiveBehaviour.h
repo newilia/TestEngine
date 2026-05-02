@@ -10,7 +10,7 @@
 
 class PhysicsBodyBehaviour;
 
-class AttractiveBehaviour : public Behaviour
+class AttractiveBehaviour : public Behaviour, public std::enable_shared_from_this<AttractiveBehaviour>
 {
 	META_CLASS()
 public:
@@ -31,5 +31,4 @@ private:
 
 private:
 	std::weak_ptr<PhysicsBodyBehaviour> _rigidBody;
-	std::weak_ptr<AttractiveBehaviour> _self; // TODO remove this shit
 };

@@ -9,10 +9,9 @@ class SceneNode;
 class EntityOnNode : public Engine::IPropertiesProvider
 {
 public:
-	~EntityOnNode() override = default;
+	virtual ~EntityOnNode() = default;
 
 	void AttachTo(const std::shared_ptr<SceneNode>& node);
-
 	std::shared_ptr<SceneNode> GetNode() const;
 
 protected:
