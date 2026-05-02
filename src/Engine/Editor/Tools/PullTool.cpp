@@ -22,6 +22,22 @@ void PullTool::SetArrowVisual(std::shared_ptr<VectorArrowVisual> arrow) {
 	_arrowVisual = std::move(arrow);
 }
 
+void PullTool::SetPullForceScale(float v) {
+	_pullForceScale = v;
+}
+
+float PullTool::GetPullForceScale() const {
+	return _pullForceScale;
+}
+
+bool PullTool::IsDebugArrowEnabled() const {
+	return _debugArrowEnabled;
+}
+
+void PullTool::SetDebugArrowEnabled(bool v) {
+	_debugArrowEnabled = v;
+}
+
 std::shared_ptr<SceneNode> PullTool::OnTap(const sf::Vector2f& screenPixelPos) {
 	auto physicsProcessor = Engine::MainContext::GetInstance().GetPhysicsProcessor();
 	if (!physicsProcessor) {

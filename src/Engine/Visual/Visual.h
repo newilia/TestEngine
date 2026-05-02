@@ -15,7 +15,7 @@ public:
 	/// `worldPoint` — в координатах сцены (`Utils::IsWorldPointInsideOf*`).
 	virtual bool HitTest(const sf::Vector2f& worldPoint) const = 0;
 
-	virtual void OnTap(const sf::Vector2f& worldPoint) {}
+	virtual void OnTap(const sf::Vector2f& worldPoint);
 
 	void SetTapHandlingEnabled(bool enabled);
 	bool IsTapHandlingEnabled() const;

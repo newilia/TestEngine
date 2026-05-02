@@ -20,22 +20,10 @@ public:
 	void onPresent(const sf::Time& dt) override;
 
 	void SetArrowVisual(std::shared_ptr<VectorArrowVisual> arrow);
-
-	void SetPullForceScale(float v) {
-		_pullForceScale = v;
-	}
-
-	float GetPullForceScale() const {
-		return _pullForceScale;
-	}
-
-	bool IsDebugArrowEnabled() const {
-		return _debugArrowEnabled;
-	}
-
-	void SetDebugArrowEnabled(bool v) {
-		_debugArrowEnabled = v;
-	}
+	void SetPullForceScale(float v);
+	float GetPullForceScale() const;
+	bool IsDebugArrowEnabled() const;
+	void SetDebugArrowEnabled(bool v);
 
 private:
 	std::shared_ptr<SceneNode> OnTap(const sf::Vector2f& screenPixelPos);

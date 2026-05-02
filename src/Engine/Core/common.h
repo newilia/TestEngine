@@ -18,7 +18,7 @@ using std::weak_ptr;
 struct Segment
 {
 	Segment() = default;
-	Segment(sf::Vector2f start, sf::Vector2f end) : start(start), end(end) {};
+	Segment(sf::Vector2f start, sf::Vector2f end);
 	sf::Vector2f start, end;
 
 	sf::Vector2f getDirVector() const;
