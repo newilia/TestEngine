@@ -1,0 +1,78 @@
+#pragma once
+
+#include "Engine/Behaviour/Behaviour.h"
+#include "Engine/Core/MetaClass.h"
+#include "Engine/Core/Signal.h"
+
+#include <SFML/Graphics/CircleShape.hpp>
+#include <SFML/Graphics/ConvexShape.hpp>
+#include <SFML/Graphics/Rect.hpp>
+#include <SFML/Graphics/RectangleShape.hpp>
+
+#include <bitset>
+#include <cstddef>
+#include <limits>
+#include <memory>
+#include <variant>
+
+struct IntersectionDetails;
+class SceneNode;
+
+class PhysicsBodyBehaviour : public Behaviour
+{
+	META_CLASS()
+public:
+	static constexpr int CollisionGroupsCount = 8;
+
+	PhysicsBodyBehaviour();
+	explicit PhysicsBodyBehaviour(sf::CircleShape shape, bool attachVisualFromShape = true);
+	explicit PhysicsBodyBehaviour(sf::RectangleShape shape, bool attachVisualFromShape = true);
+	explicit PhysicsBodyBehaviour(sf::ConvexShape shape, bool attachVisualFromShape = true);
+
+	~PhysicsBodyBehaviour() override;
+	void OnInit() override;
+	void OnDeinit() override;
+
+	sf::Shape* GetShape();
+	const sf::Shape* GetShape() const;
+
+	sf::FloatRect GetBbox() const;
+	size_t GetPointCount() const;
+	sf::Vector2f GetPointGlobal(std::size_t index) const;
+	sf::Vector2f GetPosGlobal() const;
+	void SetPosGlobal(sf::Vector2f pos);
+
+	void SetImmovable();
+	bool IsImmovable() const;
+
+	/// @property(tooltip="Infinity = immovable; use SetImmovable() in code, or set mass in inspector.")
+	float _mass = 1.f;
+	/// @property
+	sf::Vector2f _velocity{};
+	/// @property(name="Angle (rad)")
+	float _angle = 0.f;
+	/// @property
+	float _angularSpeed = 0.f;
+	/// @property
+	float _restitution = 0.5f;
+	/// @property
+	float _friction = 0.5f;
+
+	std::bitset<CollisionGroupsCount> _collisionGroups;
+	std::bitset<CollisionGroupsCount> _overlappingGroups;
+
+	Signal<const IntersectionDetails&> _collisionCallbacks;
+	Signal<const IntersectionDetails&> _overlappingCallbacks;
+
+private:
+	/// @property(readonly=true, tooltip="Set when body is registered with the physics handler.")
+	bool _registered = false;
+
+	bool _attachVisualFromShape = false;
+	bool _ownsShapeVisual = false;
+
+	std::variant<sf::CircleShape, sf::RectangleShape, sf::ConvexShape> _shape;
+};
+
+template <typename TShape>
+std::shared_ptr<SceneNode> CreatePhysicsBodyNode(bool attachVisualFromShape = true);

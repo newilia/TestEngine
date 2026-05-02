@@ -2,7 +2,7 @@
 
 #include "Engine/App/MainContext.h"
 #include "Engine/App/Utils.h"
-#include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
+#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/Scene.h"
 
 #include <SFML/Window/Event.hpp>
@@ -10,7 +10,7 @@
 
 namespace {
 
-	void ZeroMotion(RigidBodyBehaviour* rb) {
+	void ZeroMotion(PhysicsBodyBehaviour* rb) {
 		if (!rb) {
 			return;
 		}
@@ -44,7 +44,7 @@ bool MoveTool::processEvent(const sf::Event& event) {
 		_grabOffset = nodePos - pos;
 		_grabbed = picked;
 		_dragging = true;
-		if (auto rb = picked->FindBehaviour<RigidBodyBehaviour>()) {
+		if (auto rb = picked->FindBehaviour<PhysicsBodyBehaviour>()) {
 			ZeroMotion(rb.get());
 		}
 		return true;
@@ -56,7 +56,7 @@ bool MoveTool::processEvent(const sf::Event& event) {
 			return;
 		}
 		node->SetPosGlobal(pos + _grabOffset);
-		if (auto rb = node->FindBehaviour<RigidBodyBehaviour>()) {
+		if (auto rb = node->FindBehaviour<PhysicsBodyBehaviour>()) {
 			ZeroMotion(rb.get());
 		}
 	};
@@ -104,7 +104,7 @@ bool MoveTool::processEvent(const sf::Event& event) {
 
 void MoveTool::onPresent(const sf::Time& dt) {
 	if (auto node = _grabbed.lock()) {
-		if (auto rb = node->FindBehaviour<RigidBodyBehaviour>()) {
+		if (auto rb = node->FindBehaviour<PhysicsBodyBehaviour>()) {
 			ZeroMotion(rb.get());
 		}
 	}

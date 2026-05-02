@@ -3,7 +3,7 @@
 #include "Engine/App/FontManager.h"
 #include "Engine/App/MainContext.h"
 #include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
-#include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
+#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "Engine/Visual/VectorArrowVisual.h"
@@ -20,7 +20,7 @@ void PhysicsDebugBehaviour::DebugDraw(sf::RenderTarget& target, sf::RenderStates
 	if (!node) {
 		return;
 	}
-	auto rigidBody = node->FindBehaviour<RigidBodyBehaviour>();
+	auto rigidBody = node->FindBehaviour<PhysicsBodyBehaviour>();
 	if (!rigidBody) {
 		return;
 	}
@@ -40,7 +40,7 @@ void PhysicsDebugBehaviour::DebugDraw(sf::RenderTarget& target, sf::RenderStates
 	target.draw(velArrow, states);
 
 	if (auto fieldSrc = node->FindBehaviour<AttractiveBehaviour>()) {
-		if (fieldSrc->_isEnabled && !rigidBody->IsImmovable() && std::isfinite(rigidBody->_mass) &&
+		if (fieldSrc->IsEnabled() && !rigidBody->IsImmovable() && std::isfinite(rigidBody->_mass) &&
 		    rigidBody->_mass > 0.f) {
 			auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor();
 			auto field = ph ? ph->GetAttractionField() : nullptr;

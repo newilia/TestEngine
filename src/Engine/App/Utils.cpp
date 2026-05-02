@@ -4,7 +4,7 @@
 #include <windows.h>
 #endif
 
-#include "Engine/Behaviour/Physics/ShapeColliderBehaviourBase.h"
+#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Visual/ShapeVisualBase.h"
 #include "Engine/Visual/TextVisual.h"
 #include "SFML/Graphics.hpp"
@@ -123,14 +123,12 @@ namespace Utils {
 		return false;
 	}
 
-	bool IsWorldPointInsideOfBody(const sf::Vector2f& worldPoint, const AbstractBody* body) {
+	bool IsWorldPointInsideOfBody(const sf::Vector2f& worldPoint, const PhysicsBodyBehaviour* body) {
 		if (!body) {
 			return false;
 		}
-		if (const auto* collider = dynamic_cast<const ShapeColliderBehaviourBase*>(body)) {
-			if (const sf::Shape* shape = collider->GetBaseShape()) {
-				return IsWorldPointInsideOfShape(worldPoint, shape);
-			}
+		if (const sf::Shape* shape = body->GetShape()) {
+			return IsWorldPointInsideOfShape(worldPoint, shape);
 		}
 		return pointInsideConvexFan(worldPoint, body->GetPointCount(), [&](std::size_t i) {
 			return body->GetPointGlobal(i);

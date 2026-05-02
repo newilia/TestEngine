@@ -1,8 +1,8 @@
 #pragma once
 
 #include "AttractionField.h"
-#include "Engine/Behaviour/Physics/AbstractBody.h"
 #include "Engine/Behaviour/Physics/IntersectionDetails.h"
+#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Updatable.h"
 #include "Engine/Core/common.h"
@@ -28,14 +28,15 @@ public:
 	std::shared_ptr<AttractionField> GetAttractionField() const;
 
 private:
-	static bool CheckBboxIntersection(const AbstractBody* body1, const AbstractBody* body2);
+	static bool CheckBboxIntersection(const PhysicsBodyBehaviour* body1, const PhysicsBodyBehaviour* body2);
 	static std::optional<IntersectionDetails> DetectIntersection(const shared_ptr<SceneNode>& n1,
-	                                                             const shared_ptr<SceneNode>& n2, AbstractBody* c1,
-	                                                             AbstractBody* c2, bool bboxAlreadyVerified);
-	static std::optional<IntersectionDetails> DetectPolygonPolygonIntersection(const AbstractBody* body1,
-	                                                                           const AbstractBody* body2);
+	                                                             const shared_ptr<SceneNode>& n2,
+	                                                             PhysicsBodyBehaviour* c1, PhysicsBodyBehaviour* c2,
+	                                                             bool bboxAlreadyVerified);
+	static std::optional<IntersectionDetails> DetectPolygonPolygonIntersection(const PhysicsBodyBehaviour* body1,
+	                                                                           const PhysicsBodyBehaviour* body2);
 	static std::optional<IntersectionDetails> DetectCirclePolygonIntersection(const sf::CircleShape* circle,
-	                                                                          const AbstractBody* polygon);
+	                                                                          const PhysicsBodyBehaviour* polygon);
 	static std::optional<IntersectionDetails> DetectCircleCircleIntersection(const sf::CircleShape* circle1,
 	                                                                         const sf::CircleShape* circle2);
 	static std::optional<SegmentIntersectionPoints> FindSegmentsIntersectionPoint(const Segment& e, const Segment& f);

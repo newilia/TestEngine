@@ -2,12 +2,8 @@
 
 #include "Engine/App/MainContext.h"
 #include "Engine/App/Utils.h"
-#include "Engine/Behaviour/Physics/AbstractBody.h"
-#include "Engine/Behaviour/Physics/CollisionBehaviour.h"
 #include "Engine/Behaviour/Physics/IntersectionDetails.h"
-#include "Engine/Behaviour/Physics/OverlappingBehaviour.h"
-#include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
-#include "Engine/Behaviour/Physics/ShapeColliderBehaviourBase.h"
+#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Visual/VectorArrowVisual.h"
 #include "fmt/format.h"
@@ -28,7 +24,7 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 		if (!body) {
 			continue;
 		}
-		auto rigidBody = body->RequireBehaviour<RigidBodyBehaviour>();
+		auto rigidBody = body->RequireBehaviour<PhysicsBodyBehaviour>();
 		auto pos = body->GetPosGlobal();
 
 		if (_isGravityEnabled && !rigidBody->IsImmovable()) {
@@ -43,7 +39,7 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 	struct BodySweepEntry
 	{
 		std::shared_ptr<SceneNode> node;
-		ShapeColliderBehaviourBase* collider = nullptr;
+		PhysicsBodyBehaviour* collider = nullptr;
 		float minX = 0.f;
 		float maxX = 0.f;
 		/// Same ordering as iteration over `_bodies` in the old all-pairs loop (outer = first).
@@ -59,12 +55,10 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 		return std::pair{x0, x1};
 	};
 	auto pairNeedsNarrowPhase = [](const SceneNode& n1, const SceneNode& n2) {
-		auto c1 = n1.FindBehaviour<CollisionBehaviour>();
-		auto c2 = n2.FindBehaviour<CollisionBehaviour>();
-		auto o1 = n1.FindBehaviour<OverlappingBehaviour>();
-		auto o2 = n2.FindBehaviour<OverlappingBehaviour>();
-		const bool collisionPair = c1 && c2 && (c1->_collisionGroups & c2->_collisionGroups).any();
-		const bool overlapPair = o1 && o2 && (o1->_overlappingGroups & o2->_overlappingGroups).any();
+		auto pb1 = n1.FindBehaviour<PhysicsBodyBehaviour>();
+		auto pb2 = n2.FindBehaviour<PhysicsBodyBehaviour>();
+		const bool collisionPair = pb1 && pb2 && (pb1->_collisionGroups & pb2->_collisionGroups).any();
+		const bool overlapPair = pb1 && pb2 && (pb1->_overlappingGroups & pb2->_overlappingGroups).any();
 		return collisionPair || overlapPair;
 	};
 
@@ -77,7 +71,7 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 			++bodyListIndex;
 			continue;
 		}
-		auto* collider = node->FindShapeCollider();
+		auto* collider = node->FindPhysicsBody();
 		if (!collider) {
 			++bodyListIndex;
 			continue;
@@ -111,24 +105,19 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 			auto* cFirst = aIsFirstInBodyList ? eA.collider : eB.collider;
 			auto* cSecond = aIsFirstInBodyList ? eB.collider : eA.collider;
 			if (auto intersection = DetectIntersection(nFirst, nSecond, cFirst, cSecond, true)) {
-				auto b1Collision = nFirst->FindBehaviour<CollisionBehaviour>();
-				auto b2Collision = nSecond->FindBehaviour<CollisionBehaviour>();
-				auto b1RigidBody = nFirst->RequireBehaviour<RigidBodyBehaviour>();
-				auto b2RigidBody = nSecond->RequireBehaviour<RigidBodyBehaviour>();
-				if (b1Collision && b2Collision && b1RigidBody && b2RigidBody &&
-				    (b1Collision->_collisionGroups & b2Collision->_collisionGroups).any()) {
-					if (!b1RigidBody->IsImmovable() || !b2RigidBody->IsImmovable()) {
+				auto b1Pb = nFirst->FindBehaviour<PhysicsBodyBehaviour>();
+				auto b2Pb = nSecond->FindBehaviour<PhysicsBodyBehaviour>();
+				if (b1Pb && b2Pb && (b1Pb->_collisionGroups & b2Pb->_collisionGroups).any()) {
+					if (!b1Pb->IsImmovable() || !b2Pb->IsImmovable()) {
 						ResolveCollision(*intersection);
-						b1Collision->_collisionCallbacks.Emit(*intersection);
-						b2Collision->_collisionCallbacks.Emit(*intersection);
+						b1Pb->_collisionCallbacks.Emit(*intersection);
+						b2Pb->_collisionCallbacks.Emit(*intersection);
 					}
 				}
 
-				auto b1Overlapping = nFirst->FindBehaviour<OverlappingBehaviour>();
-				auto b2Overlapping = nSecond->FindBehaviour<OverlappingBehaviour>();
-				if (b1Overlapping && b2Overlapping &&
-				    (b1Overlapping->_overlappingGroups & b2Overlapping->_overlappingGroups).any()) {
-					b1Overlapping->_overlappingCallbacks.Emit(*intersection);
+				if (b1Pb && b2Pb && (b1Pb->_overlappingGroups & b2Pb->_overlappingGroups).any()) {
+					b1Pb->_overlappingCallbacks.Emit(*intersection);
+					b2Pb->_overlappingCallbacks.Emit(*intersection);
 				}
 			}
 		}
@@ -147,16 +136,15 @@ void PhysicsProcessor::UnregisterBody(SceneNode* body) {
 	});
 }
 
-bool PhysicsProcessor::CheckBboxIntersection(const AbstractBody* body1, const AbstractBody* body2) {
+bool PhysicsProcessor::CheckBboxIntersection(const PhysicsBodyBehaviour* body1, const PhysicsBodyBehaviour* body2) {
 	auto&& bb1 = body1->GetBbox();
 	auto&& bb2 = body2->GetBbox();
 	return bb1.findIntersection(bb2).has_value();
 }
 
-std::optional<IntersectionDetails> PhysicsProcessor::DetectIntersection(const shared_ptr<SceneNode>& n1,
-                                                                        const shared_ptr<SceneNode>& n2,
-                                                                        AbstractBody* c1, AbstractBody* c2,
-                                                                        bool bboxAlreadyVerified) {
+std::optional<IntersectionDetails>
+PhysicsProcessor::DetectIntersection(const shared_ptr<SceneNode>& n1, const shared_ptr<SceneNode>& n2,
+                                     PhysicsBodyBehaviour* c1, PhysicsBodyBehaviour* c2, bool bboxAlreadyVerified) {
 	if (!n1 || !n2) {
 		assert(false);
 		return std::nullopt;
@@ -174,11 +162,11 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectIntersection(const sh
 		r.wNode2 = n2;
 	};
 
-	auto* col1 = static_cast<ShapeColliderBehaviourBase*>(c1);
-	auto* col2 = static_cast<ShapeColliderBehaviourBase*>(c2);
+	auto* col1 = c1;
+	auto* col2 = c2;
 
-	if (auto* circ1 = dynamic_cast<sf::CircleShape*>(col1->GetBaseShape())) {
-		if (auto* circ2 = dynamic_cast<sf::CircleShape*>(col2->GetBaseShape())) {
+	if (auto* circ1 = dynamic_cast<sf::CircleShape*>(col1->GetShape())) {
+		if (auto* circ2 = dynamic_cast<sf::CircleShape*>(col2->GetShape())) {
 			if (auto r = DetectCircleCircleIntersection(circ1, circ2)) {
 				assignNodes(*r);
 				return r;
@@ -191,7 +179,7 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectIntersection(const sh
 		}
 		return std::nullopt;
 	}
-	if (auto* circ2 = dynamic_cast<sf::CircleShape*>(col2->GetBaseShape())) {
+	if (auto* circ2 = dynamic_cast<sf::CircleShape*>(col2->GetShape())) {
 		if (auto r = DetectCirclePolygonIntersection(circ2, col1)) {
 			assignNodes(*r);
 			return r;
@@ -205,8 +193,9 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectIntersection(const sh
 	return std::nullopt;
 }
 
-std::optional<IntersectionDetails> PhysicsProcessor::DetectPolygonPolygonIntersection(const AbstractBody* body1,
-                                                                                      const AbstractBody* body2) {
+std::optional<IntersectionDetails>
+PhysicsProcessor::DetectPolygonPolygonIntersection(const PhysicsBodyBehaviour* body1,
+                                                   const PhysicsBodyBehaviour* body2) {
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
 
@@ -246,7 +235,7 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectPolygonPolygonInterse
 }
 
 std::optional<IntersectionDetails> PhysicsProcessor::DetectCirclePolygonIntersection(const sf::CircleShape* circle,
-                                                                                     const AbstractBody* body) {
+                                                                                     const PhysicsBodyBehaviour* body) {
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
 
@@ -483,21 +472,21 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 		return;
 	}
 
-	auto b1RigidBody = body1->RequireBehaviour<RigidBodyBehaviour>();
-	auto b2RigidBody = body2->RequireBehaviour<RigidBodyBehaviour>();
-	if (!b1RigidBody || !b2RigidBody) {
+	auto pb1 = body1->RequireBehaviour<PhysicsBodyBehaviour>();
+	auto pb2 = body2->RequireBehaviour<PhysicsBodyBehaviour>();
+	if (!pb1 || !pb2) {
 		assert(false);
 		return;
 	}
 
-	if (b1RigidBody->IsImmovable()) { // fixed body must be second
+	if (pb1->IsImmovable()) { // fixed body must be second
 		std::swap(body1, body2);
-		std::swap(b1RigidBody, b2RigidBody);
+		std::swap(pb1, pb2);
 	}
 
-	const auto m1 = b1RigidBody->_mass;
-	const auto m2 = b2RigidBody->_mass;
-	auto v1_to_v2 = b2RigidBody->_velocity - b1RigidBody->_velocity;
+	const auto m1 = pb1->_mass;
+	const auto m2 = pb2->_mass;
+	auto v1_to_v2 = pb2->_velocity - pb1->_velocity;
 	auto b1_tangent = collision.intersection.getDirVector();
 	auto b1_normal = Utils::Normalize(sf::Vector2f(-b1_tangent.y, b1_tangent.x));
 	if (Utils::Dot(body2->GetPosGlobal() - body1->GetPosGlobal(), b1_normal) < 0.f) {
@@ -509,7 +498,7 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 	auto getPenetrationDepth = [collisionPoint = collision.intersection.start](SceneNode* node,
 	                                                                           const sf::Vector2f& bodyNormal) {
 		float result = 0.f;
-		auto* body = node->FindShapeCollider();
+		auto* body = node->FindPhysicsBody();
 		if (!body) {
 			return 0.f;
 		}
@@ -523,7 +512,7 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 	float penetrationDepthSum =
 	    getPenetrationDepth(body1.get(), b1_normal) + getPenetrationDepth(body2.get(), -b1_normal);
 
-	if (b2RigidBody->IsImmovable()) {
+	if (pb2->IsImmovable()) {
 		auto b1_pos = body1->GetPosGlobal() - b1_normal * penetrationDepthSum;
 		body1->SetPosGlobal(b1_pos);
 	}
@@ -536,16 +525,16 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 
 	/* velocities handling */
 	if (bool areMovingTowards = Utils::Dot(b1_normal, v1_to_v2) < 0.f) {
-		const auto r = b1RigidBody->_restitution * b2RigidBody->_restitution;
+		const auto r = pb1->_restitution * pb2->_restitution;
 
-		auto norm_v1 = Utils::Project(b1RigidBody->_velocity, b1_normal);
-		auto norm_v2 = Utils::Project(b2RigidBody->_velocity, b1_normal);
+		auto norm_v1 = Utils::Project(pb1->_velocity, b1_normal);
+		auto norm_v2 = Utils::Project(pb2->_velocity, b1_normal);
 		auto norm_v_diff = norm_v1 - norm_v2;
 
 		float norm_dv1 = 0.f;
 		float norm_dv2 = 0.f;
 
-		if (b2RigidBody->IsImmovable()) {
+		if (pb2->IsImmovable()) {
 			norm_dv1 = -(1.f + r) * norm_v_diff;
 		}
 		else {
@@ -555,18 +544,18 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 
 		auto dv1 = b1_normal * norm_dv1;
 		auto dv2 = b1_normal * norm_dv2;
-		b1RigidBody->_velocity += dv1;
-		b2RigidBody->_velocity += dv2;
+		pb1->_velocity += dv1;
+		pb2->_velocity += dv2;
 
-		auto isNan = Utils::IsNan(b1RigidBody->_velocity) || Utils::IsNan(b2RigidBody->_velocity);
+		auto isNan = Utils::IsNan(pb1->_velocity) || Utils::IsNan(pb2->_velocity);
 		assert(!isNan);
 
 		if (Engine::MainContext::GetInstance().IsDebugDrawEnabled()) {
 			if (auto window = Engine::MainContext::GetInstance().GetMainWindow()) {
 				{
 					VectorArrow force1(body1->GetPosGlobal(), body1->GetPosGlobal() + dv1);
-					if (auto* collider = body1->FindShapeCollider()) {
-						if (auto* shape = collider->GetBaseShape()) {
+					if (auto* collider = body1->FindPhysicsBody()) {
+						if (auto* shape = collider->GetShape()) {
 							auto color = shape->getFillColor();
 							color.a = 255u;
 							force1.SetColor(color);
@@ -576,8 +565,8 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 				}
 				{
 					VectorArrow force2(body2->GetPosGlobal(), body2->GetPosGlobal() + dv2);
-					if (auto* collider = body2->FindShapeCollider()) {
-						if (auto* shape = collider->GetBaseShape()) {
+					if (auto* collider = body2->FindPhysicsBody()) {
+						if (auto* shape = collider->GetShape()) {
 							auto color = shape->getFillColor();
 							color.a = 255u;
 							force2.SetColor(color);

@@ -4,12 +4,8 @@
 #include "Engine/App/FunctionInputHandler.h"
 #include "Engine/App/MainContext.h"
 #include "Engine/App/Utils.h"
-#include "Engine/Behaviour/Physics/CollisionBehaviour.h"
 #include "Engine/Behaviour/Physics/IntersectionDetails.h"
-#include "Engine/Behaviour/Physics/OverlappingBehaviour.h"
-#include "Engine/Behaviour/Physics/PhysicsDebugBehaviour.h"
-#include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
-#include "Engine/Behaviour/Physics/ShapeColliderBehaviour.h"
+#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
@@ -77,7 +73,7 @@ void PongEnvironment::AddBall(Scene* scene) {
 	const sf::Vector2f vel = InitialBallVelocity();
 	const sf::Vector2f pos = InitialBallPosition();
 
-	auto ball = make_shared<PongBall>(CreateShapeBodyNode<sf::CircleShape>());
+	auto ball = make_shared<PongBall>(CreatePhysicsBodyNode<sf::CircleShape>());
 	ball->SetupBehaviours();
 	ball->SetMaxSpeed(400.f);
 	ball->SetSpeedDampingFactor(speedDampingFactor);
@@ -96,17 +92,13 @@ void PongEnvironment::AddBall(Scene* scene) {
 	shape->setOrigin(Utils::FindCenterOfMass(shape));
 	shape->setPosition(pos);
 
-	auto rigidBody = ball->GetNode()->RequireBehaviour<RigidBodyBehaviour>();
+	auto rigidBody = ball->GetNode()->RequireBehaviour<PhysicsBodyBehaviour>();
 	rigidBody->_mass = 3.14f * radius * radius;
 	rigidBody->_restitution = bodiesRestitution;
 	rigidBody->_velocity = vel;
-
-	{
-		auto ballCollision = ball->GetNode()->RequireBehaviour<CollisionBehaviour>();
-		ballCollision->_collisionGroups.set(0, true);
-		ballCollision->_collisionGroups.set(1, true);
-	}
-	ball->GetNode()->RequireBehaviour<OverlappingBehaviour>()->_overlappingGroups.set(0, true);
+	rigidBody->_collisionGroups.set(0, true);
+	rigidBody->_collisionGroups.set(1, true);
+	rigidBody->_overlappingGroups.set(0, true);
 	scene->AddChild(ball->GetNode());
 
 	sBall = ball;
@@ -114,14 +106,13 @@ void PongEnvironment::AddBall(Scene* scene) {
 
 shared_ptr<SceneNode> PongEnvironment::CreateDefaultPlatform(sf::Vector2f size, sf::Vector2f pos, float rotationDeg,
                                                              sf::Color color) const {
-	auto node = CreateShapeBodyNode<sf::ConvexShape>();
-
+	auto node = CreatePhysicsBodyNode<sf::ConvexShape>();
 	node->SetName("Platform");
 
 	constexpr int pointCount = 42;
 	constexpr float curvature = 0.9f;
 
-	auto shape = dynamic_cast<sf::ConvexShape*>(node->FindShapeCollider()->GetBaseShape());
+	auto shape = dynamic_cast<sf::ConvexShape*>(node->FindPhysicsBody()->GetShape());
 	shape->setPointCount(pointCount);
 	// half-ellipse shape
 	for (int i = 0; i < pointCount; ++i) {
@@ -135,9 +126,8 @@ shared_ptr<SceneNode> PongEnvironment::CreateDefaultPlatform(sf::Vector2f size, 
 	shape->setPosition(pos);
 	shape->setFillColor(color);
 
-	node->RequireBehaviour<CollisionBehaviour>()->_collisionGroups.set(1, true);
-
-	auto rigidBody = node->RequireBehaviour<RigidBodyBehaviour>();
+	auto rigidBody = node->RequireBehaviour<PhysicsBodyBehaviour>();
+	rigidBody->_collisionGroups.set(1, true);
 	rigidBody->SetImmovable();
 	rigidBody->_restitution = bodiesRestitution;
 
@@ -159,38 +149,40 @@ void PongEnvironment::AddWalls(Scene* scene) {
 	                                {o.x - wallOffset, o.y + sz.y / 2},
 	                                {o.x + sz.x + wallOffset, o.y + sz.y / 2}};
 	for (int i = 0; i < 4; ++i) {
-		auto wall = CreateShapeBodyNode<sf::RectangleShape>();
-		wall->SetName(wallNames[i]);
-		auto* rect = dynamic_cast<sf::RectangleShape*>(wall->FindShapeCollider()->GetBaseShape());
-		rect->setSize(wallSizes[i]);
-		rect->setOrigin(Utils::FindCenterOfMass(rect));
-		rect->setPosition(wallPositions[i]);
-		auto wrb = wall->RequireBehaviour<RigidBodyBehaviour>();
-		wrb->SetImmovable();
-		wrb->_restitution = bodiesRestitution;
+		auto wallNode = CreatePhysicsBodyNode<sf::RectangleShape>();
+		wallNode->SetName(wallNames[i]);
+
+		auto* rectShape = dynamic_cast<sf::RectangleShape*>(wallNode->FindPhysicsBody()->GetShape());
+		rectShape->setSize(wallSizes[i]);
+		rectShape->setOrigin(Utils::FindCenterOfMass(rectShape));
+		rectShape->setPosition(wallPositions[i]);
+
+		auto bodyBeh = wallNode->RequireBehaviour<PhysicsBodyBehaviour>();
+		bodyBeh->SetImmovable();
+		bodyBeh->_restitution = bodiesRestitution;
 		if (i < 2) {
-			rect->setFillColor(sf::Color(200, 200, 200, 50));
-			wall->RequireBehaviour<OverlappingBehaviour>()->_overlappingGroups.set(0, true);
+			rectShape->setFillColor(sf::Color(200, 200, 200, 50));
+			bodyBeh->_overlappingGroups.set(0, true);
 			if (i == 0) {
 				auto loseCallback = createDelegate<const IntersectionDetails&>([this](const IntersectionDetails&) {
 					OnLose();
 				});
-				static_cast<void>(wall->FindBehaviour<OverlappingBehaviour>()->_overlappingCallbacks.Connect(
+				static_cast<void>(wallNode->FindBehaviour<PhysicsBodyBehaviour>()->_overlappingCallbacks.Connect(
 				    std::move(loseCallback)));
 			}
 			else {
 				auto winCallback = createDelegate<const IntersectionDetails&>([this](const IntersectionDetails&) {
 					OnWin();
 				});
-				static_cast<void>(
-				    wall->FindBehaviour<OverlappingBehaviour>()->_overlappingCallbacks.Connect(std::move(winCallback)));
+				static_cast<void>(wallNode->FindBehaviour<PhysicsBodyBehaviour>()->_overlappingCallbacks.Connect(
+				    std::move(winCallback)));
 			}
 		}
 		else {
-			rect->setFillColor(sf::Color(200, 200, 200, 255));
-			wall->RequireBehaviour<CollisionBehaviour>()->_collisionGroups.set(0, true);
+			rectShape->setFillColor(sf::Color(200, 200, 200, 255));
+			bodyBeh->_collisionGroups.set(0, true);
 		}
-		scene->AddChild(std::move(wall));
+		scene->AddChild(std::move(wallNode));
 	}
 }
 
@@ -325,7 +317,7 @@ void PongEnvironment::ResetRound() {
 	}
 
 	sBall->GetNode()->SetPosGlobal(InitialBallPosition());
-	auto ballRb = sBall->GetNode()->RequireBehaviour<RigidBodyBehaviour>();
+	auto ballRb = sBall->GetNode()->RequireBehaviour<PhysicsBodyBehaviour>();
 	ballRb->_velocity = InitialBallVelocity();
 	ballRb->_angularSpeed = 0.f;
 

@@ -10,7 +10,7 @@ alwaysApply: false
 
 Editor property trees for classes inheriting `Engine::IPropertiesProvider` (e.g. via `EntityOnNode` → `Behaviour`, or `SceneNode` which also implements `IPropertiesProvider`) are generated into `src/Codegen/<HeaderStem>_gen.hpp`. The generator is **not** a full C++ parser; it supports a **small, documented subset** of header syntax.
 
-**Types in this repo that use codegen (non-exhaustive):** `SceneNode`, `FpsCounterBehaviour`, `RigidBodyBehaviour`, `ShapeColliderBehaviourBase`, `UserPullBehaviour`. Not every `Behaviour` subclass has reflectable scalars (e.g. `CollisionBehaviour` / `OverlappingBehaviour` use `std::bitset` and delegates; `PhysicsDebugBehaviour` / `ShapeVisualBehaviour` have no data; Pong-local anonymous behaviours stay without `META_CLASS`).
+**Types in this repo that use codegen (non-exhaustive):** `SceneNode`, `FpsCounterBehaviour`, `PhysicsBodyBehaviour`, `UserPullBehaviour`. Not every `Behaviour` subclass has reflectable scalars (e.g. signals / `std::bitset` groups without `@property`; `PhysicsDebugBehaviour` has no data; Pong-local anonymous behaviours stay without `META_CLASS`).
 
 Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONFIGURE_DEPENDS` on the source glob in `CMakeLists.txt` (same as other `src/**/*.cpp` files).
 

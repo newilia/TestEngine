@@ -2,8 +2,7 @@
 
 #include "Engine/App/Utils.h"
 #include "Engine/Behaviour/Behaviour.h"
-#include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
-#include "Engine/Behaviour/Physics/ShapeColliderBehaviourBase.h"
+#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
 
@@ -20,7 +19,7 @@ namespace {
 			if (!owner) {
 				return;
 			}
-			auto rigidBody = owner->GetNode()->RequireBehaviour<RigidBodyBehaviour>();
+			auto rigidBody = owner->GetNode()->RequireBehaviour<PhysicsBodyBehaviour>();
 			if (auto speedExcess = Utils::Length(rigidBody->_velocity) / owner->GetMaxSpeed(); speedExcess > 1.f) {
 				float dampingMultiplier = 1 - speedExcess * dt.asSeconds() * owner->GetSpeedDampingFactor();
 				rigidBody->_velocity *= dampingMultiplier;
@@ -56,9 +55,9 @@ void PongBall::SetupBehaviours() {
 }
 
 sf::CircleShape* PongBall::GetShape() const {
-	auto* c = _node->FindShapeCollider();
+	auto* c = _node->FindPhysicsBody();
 	if (!c) {
 		return nullptr;
 	}
-	return dynamic_cast<sf::CircleShape*>(c->GetBaseShape());
+	return dynamic_cast<sf::CircleShape*>(c->GetShape());
 }

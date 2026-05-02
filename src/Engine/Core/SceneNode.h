@@ -1,8 +1,6 @@
 #pragma once
 
 #include "Engine/Behaviour/Behaviour.h"
-#include "Engine/Behaviour/Physics/RigidBodyBehaviour.h"
-#include "Engine/Behaviour/Physics/ShapeColliderBehaviourBase.h"
 #include "Engine/Core/IPropertiesProvider.h"
 #include "Engine/Core/MetaClass.h"
 #include "Engine/Sorting/SortingStrategy.h"
@@ -23,6 +21,7 @@ using std::shared_ptr;
 using std::weak_ptr;
 
 class Transform;
+class PhysicsBodyBehaviour;
 
 class SceneNode : public enable_shared_from_this<SceneNode>,
                   public Updatable,
@@ -119,7 +118,7 @@ public:
 		return created;
 	}
 
-	ShapeColliderBehaviourBase* FindShapeCollider() const; // todo remove
+	PhysicsBodyBehaviour* FindPhysicsBody() const; // todo remove
 
 	shared_ptr<SceneNode> FindTopMostNodeAtPoint(const sf::Vector2f& worldPoint, bool tapResponsiveOnly = false);
 	void FindNodesAtPoint(const sf::Vector2f& worldPoint, std::vector<shared_ptr<SceneNode>>& result,
