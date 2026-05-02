@@ -53,7 +53,6 @@ namespace Engine {
 
 	void MainContext::SetSimPaused(bool paused) {
 		_isSimPaused = paused;
-		_tickClock.reset();
 	}
 
 	void MainContext::ToggleSimPaused() {
@@ -162,7 +161,6 @@ namespace Engine {
 		const float dtSec = _frameTime.asSeconds();
 		if (dtSec > 0.f) {
 			const float instantaneous = 1.f / dtSec;
-			AccumulateSmoothedRate(instantaneous, _fps, _haveFps);
 		}
 	}
 
@@ -205,7 +203,7 @@ namespace Engine {
 	}
 
 	float MainContext::GetCurrentFps() const {
-		return _haveFps ? _fps : 0.f;
+		return ImGui::GetIO().Framerate;
 	}
 
 	float MainContext::GetCurrentTickRate() const {

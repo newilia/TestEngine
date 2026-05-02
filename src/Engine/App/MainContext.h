@@ -100,12 +100,10 @@ namespace Engine {
 		bool _isImGuiInitialized = false;
 		float _fieldForceDebugArrowScale = 0.02f;
 		std::uint32_t _framerateLimit = 100;
-		bool _isFramerateLimitEnabled = true;
+		bool _isFramerateLimitEnabled = false;
 		bool _verticalSyncEnabled = false;
 		std::uint32_t _targetTickRateHz = 500;
-		float _fps = 0.f;
 		float _tickRate = 0.f;
-		bool _haveFps = false;
 		bool _haveTickRate = false;
 		std::weak_ptr<Scene> _hierarchySelectedForViewport;
 		sf::Vector2u _mainWindowPixelSizeForView{};
