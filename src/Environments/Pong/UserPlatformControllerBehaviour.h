@@ -19,6 +19,8 @@ public:
 	void OnUpdate(const sf::Time& dt) override;
 	void OnUserInput(const sf::Event& event) override;
 
+	void ResyncSpawnFromNode();
+
 	/* TODO incapsulation */
 	/// @property(minValue=0.f, maxValue=100000.f)
 	float _speedFactor = 50.f;

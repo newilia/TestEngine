@@ -24,6 +24,9 @@ public:
 	void SetAggressivenessParams(float aggression, sf::Time changePeriod);
 	void BeginObserve(const std::weak_ptr<SceneNode>& opponentPlatformNode, const std::weak_ptr<PongBall>& ball);
 
+	void ResyncSpawnFromNode();
+	void ClearPendingObservations();
+
 	/* TODO incapsulation */
 	/// @property(minValue=0.f, maxValue=100000.f, tooltip="Scales velocity toward target position.")
 	float _speedFactor = 50.f;
