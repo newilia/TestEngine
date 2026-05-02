@@ -34,7 +34,9 @@ public:
 			}
 		}
 
-		[[nodiscard]] explicit operator bool() const { return _signal != nullptr && _id != 0; }
+		[[nodiscard]] explicit operator bool() const {
+			return _signal != nullptr && _id != 0;
+		}
 
 		Connection(const Connection&) = delete;
 		Connection& operator=(const Connection&) = delete;
@@ -71,7 +73,9 @@ public:
 
 		explicit ScopedConnection(Connection&& c) : _conn(std::move(c)) {}
 
-		~ScopedConnection() { _conn.Disconnect(); }
+		~ScopedConnection() {
+			_conn.Disconnect();
+		}
 
 		ScopedConnection(const ScopedConnection&) = delete;
 		ScopedConnection& operator=(const ScopedConnection&) = delete;
@@ -143,18 +147,25 @@ public:
 		Emit(std::forward<UArgs>(args)...);
 	}
 
-	[[nodiscard]] std::size_t SubscriberCount() const { return _slots.size(); }
+	[[nodiscard]] std::size_t SubscriberCount() const {
+		return _slots.size();
+	}
 
 private:
 	void RemoveSlot(std::uint64_t id) {
-		const auto it = std::find_if(_slots.begin(), _slots.end(), [id](const Slot& s) { return s.id == id; });
+		const auto it = std::find_if(_slots.begin(), _slots.end(), [id](const Slot& s) {
+			return s.id == id;
+		});
 		if (it != _slots.end()) {
 			_slots.erase(it);
 		}
 	}
 
 	void RemoveExpiredSlots() {
-		_slots.erase(std::remove_if(_slots.begin(), _slots.end(), [](const Slot& s) { return s.delegate->expired(); }),
+		_slots.erase(std::remove_if(_slots.begin(), _slots.end(),
+		                            [](const Slot& s) {
+			                            return s.delegate->expired();
+		                            }),
 		             _slots.end());
 	}
 

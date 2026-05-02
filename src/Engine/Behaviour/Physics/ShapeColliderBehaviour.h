@@ -13,7 +13,9 @@ template <typename TShape>
 class ShapeColliderBehaviour final : public ShapeColliderBehaviourBase
 {
 public:
-	sf::Shape* GetBaseShape() const override { return const_cast<TShape*>(&_shape); }
+	sf::Shape* GetBaseShape() const override {
+		return const_cast<TShape*>(&_shape);
+	}
 
 private:
 	TShape _shape;

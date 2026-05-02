@@ -248,8 +248,9 @@ void SceneNode::AddChild(const std::shared_ptr<SceneNode>& child) {
 }
 
 void SceneNode::RemoveChild(SceneNode* child) {
-	auto it = std::ranges::find_if(_children.begin(), _children.end(),
-	                               [child](const auto& ptr) { return ptr.get() == child; });
+	auto it = std::ranges::find_if(_children.begin(), _children.end(), [child](const auto& ptr) {
+		return ptr.get() == child;
+	});
 	if (it != _children.end()) {
 		shared_ptr<SceneNode> node = *it;
 		if (node->IsInActiveScene()) {

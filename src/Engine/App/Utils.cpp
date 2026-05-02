@@ -132,8 +132,9 @@ namespace Utils {
 				return IsWorldPointInsideOfShape(worldPoint, shape);
 			}
 		}
-		return pointInsideConvexFan(worldPoint, body->GetPointCount(),
-		                            [&](std::size_t i) { return body->GetPointGlobal(i); });
+		return pointInsideConvexFan(worldPoint, body->GetPointCount(), [&](std::size_t i) {
+			return body->GetPointGlobal(i);
+		});
 	}
 
 	bool IsPointInsideOfTriangle(const sf::Vector2f& p, const sf::Vector2f& t1, const sf::Vector2f& t2,

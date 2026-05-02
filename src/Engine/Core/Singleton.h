@@ -16,7 +16,9 @@ public:
 		_instance = nullptr;
 	}
 
-	static bool IsAlive() { return _instance != nullptr; }
+	static bool IsAlive() {
+		return _instance != nullptr;
+	}
 
 protected:
 	Singleton() = default;

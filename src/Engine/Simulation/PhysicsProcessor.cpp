@@ -87,8 +87,9 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 		++bodyListIndex;
 	}
 
-	std::sort(sweepEntries.begin(), sweepEntries.end(),
-	          [](const BodySweepEntry& a, const BodySweepEntry& b) { return a.minX < b.minX; });
+	std::sort(sweepEntries.begin(), sweepEntries.end(), [](const BodySweepEntry& a, const BodySweepEntry& b) {
+		return a.minX < b.minX;
+	});
 
 	std::deque<size_t> active;
 	for (size_t i = 0; i < sweepEntries.size(); ++i) {
