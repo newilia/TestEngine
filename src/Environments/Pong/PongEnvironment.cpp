@@ -13,6 +13,7 @@
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
+#include "Engine/Sorting/SortingStrategy.h"
 #include "Engine/Visual/TextVisual.h"
 #include "PongBall.h"
 #include "PongPlayfield.h"
@@ -249,6 +250,9 @@ void PongEnvironment::AddScoreboard(Scene* scene) {
 	_aiScore = 0;
 
 	auto node = std::make_shared<SceneNode>();
+	auto sorting = std::make_shared<RelativeSortingStrategy>();
+	sorting->SetPriority(-1);
+	node->SetSortingStrategy(sorting);
 	node->SetName("Score");
 
 	_scoreText = std::make_shared<sf::Text>(*font, "0:0", static_cast<unsigned>(kPongScoreFontSize));
@@ -267,7 +271,8 @@ void PongEnvironment::UpdateScoreText() {
 	if (!_scoreText) {
 		return;
 	}
-	_scoreText->setString(fmt::format("{}:{}", _userScore, _aiScore));
+	auto text = fmt::format("{}:{}", _userScore, _aiScore);
+	_scoreText->setString(text);
 	auto lb = _scoreText->getLocalBounds();
 	_scoreText->setOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
 	_scoreText->setPosition(GetPongPlayfieldRect().getCenter());

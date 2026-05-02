@@ -1,11 +1,18 @@
 #pragma once
 
 #include "Engine/Core/EntityOnNode.h"
+#include "Engine/Core/MetaClass.h"
 
-class SortingStrategy : public EntityOnNode
+class RelativeSortingStrategy : public EntityOnNode
 {
-public:
-	~SortingStrategy() override = default;
+	META_CLASS()
 
-	virtual int GetSortLayer() const;
+public:
+	~RelativeSortingStrategy() override = default;
+	int GetPriority() const;
+	void SetPriority(int priority);
+
+private:
+	/// @property
+	int _priority = 0;
 };

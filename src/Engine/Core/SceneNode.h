@@ -56,11 +56,11 @@ public:
 	bool HasChild(const std::shared_ptr<SceneNode>& child);
 	std::vector<shared_ptr<SceneNode>> FindChildren(const std::string& id, bool recursively);
 	void SetVisual(shared_ptr<Visual>&& visual);
-	void SetSortingStrategy(const shared_ptr<SortingStrategy>& sorting);
+	void SetSortingStrategy(const shared_ptr<RelativeSortingStrategy>& sorting);
 
 	shared_ptr<Visual> GetVisual() const;
 	shared_ptr<Transform> GetTransform() const;
-	shared_ptr<SortingStrategy> GetSortingStrategy() const;
+	shared_ptr<RelativeSortingStrategy> GetSortingStrategy() const;
 	const std::vector<shared_ptr<Behaviour>>& GetBehaviours() const;
 
 	void AddBehaviour(shared_ptr<Behaviour> behaviour);
@@ -158,7 +158,7 @@ private:
 	std::vector<shared_ptr<SceneNode>> _children;
 	mutable shared_ptr<Transform> _transform;
 	shared_ptr<Visual> _visual;
-	shared_ptr<SortingStrategy> _sortingStrategy;
+	shared_ptr<RelativeSortingStrategy> _sortingStrategy;
 	std::vector<shared_ptr<Behaviour>> _behaviours;
 	bool _wasNodeLifecycleInited = false;
 };
