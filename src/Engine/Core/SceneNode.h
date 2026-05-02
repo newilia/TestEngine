@@ -23,13 +23,15 @@ using std::weak_ptr;
 class Transform;
 class PhysicsBodyBehaviour;
 
-class SceneNode : public enable_shared_from_this<SceneNode>,
-                  public Updatable,
-                  public sf::Drawable,
-                  public Engine::IPropertiesProvider
+class SceneNode final : public enable_shared_from_this<SceneNode>,
+                        public Updatable,
+                        public sf::Drawable,
+                        public Engine::IPropertiesProvider
 {
 	META_CLASS()
 public:
+	virtual ~SceneNode() = default; // TODO try Deinit()?
+
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 	void Update(const sf::Time& dt) override;
 
@@ -136,13 +138,13 @@ public:
 	void NotifyLifecycleInitRecursive();
 	void NotifyLifecycleDeinitRecursive();
 
-protected:
-	void SetParent(const shared_ptr<SceneNode>& parent);
-
 private:
+	void SetParent(const shared_ptr<SceneNode>& parent);
 	void DetachBehaviourForRemove(const shared_ptr<Behaviour>& b);
 	bool IsInActiveScene() const;
 	shared_ptr<SceneNode> GetSubtreeRoot() const;
+	// prevents UB if _behaviours is modified during iteration loop
+	void IterateBehavioursSafely(const std::function<void(shared_ptr<Behaviour>)>& func);
 
 private:
 	/// @property(name="Name")

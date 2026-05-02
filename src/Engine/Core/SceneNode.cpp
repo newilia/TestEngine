@@ -330,6 +330,12 @@ shared_ptr<SceneNode> SceneNode::GetSubtreeRoot() const {
 	return cur;
 }
 
+void SceneNode::IterateBehavioursSafely(const std::function<void(shared_ptr<Behaviour>)>& func) {
+	for (size_t i = 0; i < _behaviours.size(); ++i) {
+		func(_behaviours[i]);
+	}
+}
+
 bool SceneNode::IsInActiveScene() const {
 	auto active = Engine::MainContext::GetInstance().GetScene();
 	if (!active) {
@@ -344,12 +350,14 @@ void SceneNode::NotifyLifecycleInitRecursive() {
 		OnInit();
 		_wasNodeLifecycleInited = true;
 	}
-	for (auto& b : _behaviours) {
+
+	IterateBehavioursSafely([&](shared_ptr<Behaviour> b) {
 		if (!b->_wasInited) {
 			b->OnInit();
 			b->_wasInited = true;
 		}
-	}
+	});
+
 	for (auto& c : _children) {
 		c->NotifyLifecycleInitRecursive();
 	}
@@ -359,12 +367,14 @@ void SceneNode::NotifyLifecycleDeinitRecursive() {
 	for (auto& c : _children) {
 		c->NotifyLifecycleDeinitRecursive();
 	}
-	for (auto& b : _behaviours) {
+
+	IterateBehavioursSafely([&](shared_ptr<Behaviour> b) {
 		if (b->_wasInited) {
 			b->OnDeinit();
 			b->_wasInited = false;
 		}
-	}
+	});
+
 	if (_wasNodeLifecycleInited) {
 		OnDeinit();
 		_wasNodeLifecycleInited = false;
