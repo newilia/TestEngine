@@ -1,6 +1,6 @@
+#include "Engine/App/EventsDispatcher.h"
 #include "Engine/App/MainContext.h"
 #include "Engine/App/MainLoop.h"
-#include "Engine/App/UserInput.h"
 #include "Engine/Core/PeriodicTaskExecutor.h"
 #include "Engine/Editor/Editor.h"
 #include "Environments/EnvironmentBase.h"
@@ -78,12 +78,12 @@ namespace {
 		return AppEnvironmentKind::Test;
 	}
 
-	EnvironmentBase* CreateEnvironment(AppEnvironmentKind kind) {
+	std::shared_ptr<EnvironmentBase> CreateEnvironment(AppEnvironmentKind kind) {
 		switch (kind) {
 		case AppEnvironmentKind::Test:
-			return new TestEnvironment;
+			return std::make_shared<TestEnvironment>();
 		case AppEnvironmentKind::Pong: {
-			return new PongEnvironment;
+			return std::make_shared<PongEnvironment>();
 		}
 		}
 		return nullptr;
@@ -118,8 +118,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	mainLoop.Run();
 
 	Engine::MainContext::GetInstance().Shutdown();
-
-	delete env;
 
 	return EXIT_SUCCESS;
 }

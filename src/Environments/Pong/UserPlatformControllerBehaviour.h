@@ -17,7 +17,7 @@ public:
 	void OnInit() override;
 	void OnDeinit() override;
 	void OnUpdate(const sf::Time& dt) override;
-	void OnUserInput(const sf::Event& event) override;
+	void OnEventsDispatcher(const sf::Event& event) override;
 
 	void ResyncSpawnFromNode();
 

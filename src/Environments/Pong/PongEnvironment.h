@@ -1,4 +1,5 @@
 #pragma once
+#include "Engine/App/EventHandlerBase.h"
 #include "Engine/Core/Scene.h"
 #include "Environments/EnvironmentBase.h"
 
@@ -8,11 +9,12 @@ namespace sf {
 	class Text;
 }
 
-class PongEnvironment : public EnvironmentBase
+class PongEnvironment : public EnvironmentBase, public Engine::EventHandlerBase
 {
 public:
 	~PongEnvironment() override;
 	void Setup() override;
+	void OnEventsDispatcher(const sf::Event& event) override;
 
 private:
 	std::shared_ptr<Scene> BuildScene();
@@ -23,7 +25,6 @@ private:
 	void AddScoreboard(Scene* scene);
 	std::shared_ptr<SceneNode> CreateDefaultPlatform(sf::Vector2f size, sf::Vector2f pos, float rotationDeg,
 	                                                 sf::Color color) const;
-	void ConfigureGlobalInput();
 	void OnLose();
 	void OnWin();
 	void ResetRound();

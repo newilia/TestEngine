@@ -1,15 +1,16 @@
 #pragma once
-#include "Engine/App/FontManager.h"
-#include "Engine/App/UserInput.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/Singleton.h"
-#include "Engine/Simulation/PhysicsProcessor.h"
 
 #include <cstdint>
 #include <memory>
 #include <optional>
 
+class PhysicsProcessor;
+class FontManager;
+
 namespace Engine {
+	class EventsDispatcher;
 
 	class MainContext : public Singleton<MainContext>
 	{
@@ -23,7 +24,7 @@ namespace Engine {
 
 		shared_ptr<Scene> GetScene() const;
 		void SetScene(const shared_ptr<Scene>& scene);
-		shared_ptr<UserInput> GetUserInput() const;
+		shared_ptr<EventsDispatcher> GetEventsDispatcher() const;
 		shared_ptr<PhysicsProcessor> GetPhysicsProcessor() const;
 		shared_ptr<FontManager> GetFontManager() const;
 
@@ -87,7 +88,7 @@ namespace Engine {
 
 		shared_ptr<sf::RenderWindow> _mainWindow;
 		shared_ptr<Scene> _scene;
-		shared_ptr<UserInput> _userInput;
+		shared_ptr<EventsDispatcher> _eventsDispatcher;
 		shared_ptr<PhysicsProcessor> _physicsProcessor;
 		shared_ptr<FontManager> _fontManager;
 		sf::Clock _frameClock;

@@ -1,5 +1,6 @@
 #include "FpsCounterBehaviour.h"
 
+#include "Engine/App/FontManager.h"
 #include "Engine/App/MainContext.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Visual/TextVisual.h"
