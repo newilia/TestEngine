@@ -1,23 +1,25 @@
 #pragma once
-#include "Engine/Core/Delegates.h"
 
 #include <SFML/Window/Event.hpp>
 
-#include <functional>
-#include <set>
+#include <memory>
+#include <vector>
 
-class UserInput
-{
-public:
-	using EventHandler = std::function<void(const sf::Event&)>;
-	void HandleEvent(const sf::Event& event);
-	void AttachEventHandler(std::unique_ptr<IDelegate<sf::Event>>&& delegatePtr);
+namespace Engine {
+	class InputHandlerBase;
 
-private:
-	// void onMouseButtonPress(const sf::Event::MouseButtonEvent& event);
-	// void onMouseButtonRelease(const sf::Event::MouseButtonEvent& event);
-	// void onMouseMove(const sf::Event::MouseMoveEvent& event);
-	// void onKeyPress(const sf::Event::KeyEvent& key);
-	// void onKeyRelease(const sf::Event::KeyEvent& key);
-	std::set<std::unique_ptr<IDelegate<sf::Event>>> _eventHandlers;
-};
+	class UserInput
+	{
+		friend class InputHandlerBase;
+
+	public:
+		void HandleEvent(const sf::Event& event);
+
+	private:
+		void RegisterInputHandler(std::shared_ptr<Engine::InputHandlerBase> handler);
+		void UnregisterInputHandler(Engine::InputHandlerBase* handler);
+
+	private:
+		std::vector<std::shared_ptr<Engine::InputHandlerBase>> _handlers; // TODO fix memory leak, use weak_ptr
+	};
+} // namespace Engine

@@ -1,8 +1,8 @@
 #include "PongEnvironment.h"
 
 #include "AiPlatformController.h"
+#include "Engine/App/FunctionInputHandler.h"
 #include "Engine/App/MainContext.h"
-#include "Engine/App/UserInput.h"
 #include "Engine/App/Utils.h"
 #include "Engine/Behaviour/Physics/CollisionBehaviour.h"
 #include "Engine/Behaviour/Physics/IntersectionDetails.h"
@@ -19,6 +19,7 @@
 
 #include <utility>
 
+using std::dynamic_pointer_cast;
 using std::make_shared;
 using std::shared_ptr;
 using std::weak_ptr;
@@ -26,8 +27,8 @@ using std::weak_ptr;
 constexpr float bodiesRestitution = 1;
 constexpr float wallActualWidth = 200;
 constexpr float wallVisibleWidth = 10;
-static weak_ptr<PongPlatform> sUserPlatform;
-static weak_ptr<PongBall> sBall;
+static shared_ptr<PongPlatform> sUserPlatform;
+static shared_ptr<PongBall> sBall;
 
 namespace {
 	sf::Vector2f GetScreenSize() {
@@ -42,7 +43,6 @@ void PongEnvironment::Setup() {
 	engine.CreateMainWindow(videoMode, "Pong", sf::Style::None);
 	engine.GetMainWindow()->setMouseCursorVisible(false);
 	engine.GetPhysicsProcessor()->SetGravity({0, 1000});
-	engine.SetDebugDrawEnabled(false);
 	// engine.GetMainWindow()->setFramerateLimit(40.f);
 	engine.SetScene(BuildScene());
 	ConfigureGlobalInput();
@@ -180,12 +180,14 @@ void PongEnvironment::AddUserPlatform(Scene* scene) {
 	platform->Init();
 	scene->AddChild(platform->GetNode());
 
-	Engine::MainContext::GetInstance().GetUserInput()->AttachEventHandler(
-	    createDelegate<PongPlatform, sf::Event>(platform, [platform = std::weak_ptr(platform)](sf::Event event) {
-		    if (auto c = dynamic_pointer_cast<UserPlatformController>(platform.lock()->GetController())) {
-			    c->HandleEvent(event);
-		    }
-	    }));
+	std::make_shared<FunctionInputHandler>([weakPlatform = std::weak_ptr(platform)](sf::Event event) {
+		if (auto platform = weakPlatform.lock()) {
+			if (auto c = dynamic_pointer_cast<UserPlatformController>(platform->GetController())) {
+				c->HandleEvent(event);
+			}
+		}
+	})->Register();
+
 	sUserPlatform = platform;
 }
 
@@ -229,10 +231,8 @@ std::shared_ptr<Scene> PongEnvironment::BuildScene() {
 
 void PongEnvironment::ConfigureGlobalInput() {
 	auto mainContext = &Engine::MainContext::GetInstance();
-	auto userInput = mainContext->GetUserInput();
-	auto scene = mainContext->GetScene();
 
-	userInput->AttachEventHandler(createDelegate<sf::Event>([this, mainContext](sf::Event event) {
+	std::make_shared<FunctionInputHandler>([this, mainContext](const sf::Event& event) {
 		if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
 			if (key->code == sf::Keyboard::Key::R) {
 				mainContext->SetScene(BuildScene());
@@ -244,7 +244,7 @@ void PongEnvironment::ConfigureGlobalInput() {
 				std::exit(EXIT_SUCCESS);
 			}
 		}
-	}));
+	})->Register();
 }
 
 void PongEnvironment::OnLose() {
