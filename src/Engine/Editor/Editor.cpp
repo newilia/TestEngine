@@ -229,8 +229,10 @@ namespace Engine {
 
 	void Editor::OnMouseWheelScrolled(const sf::Event::MouseWheelScrolled& e) {
 		if (e.wheel == sf::Mouse::Wheel::Vertical) {
-			auto zoomFactor = 1 - e.delta * 0.05f;
-			MainContext::GetInstance().ZoomCamera(zoomFactor, e.position);
+			if (!ImGui::GetIO().WantCaptureMouse) {
+				auto zoomFactor = 1 - e.delta * 0.05f;
+				MainContext::GetInstance().ZoomCamera(zoomFactor, e.position);
+			}
 		}
 	}
 } // namespace Engine
