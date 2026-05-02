@@ -1,6 +1,6 @@
 #include "PongEnvironment.h"
 
-#include "AiPlatformController.h"
+#include "AiPlatformControllerBehaviour.h"
 #include "Engine/App/FunctionInputHandler.h"
 #include "Engine/App/MainContext.h"
 #include "Engine/App/Utils.h"
@@ -14,20 +14,17 @@
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "PongBall.h"
 #include "PongPlatform.h"
-#include "UserPlatformController.h"
-#include "fmt/format.h"
+#include "UserPlatformControllerBehaviour.h"
 
 #include <utility>
 
-using std::dynamic_pointer_cast;
 using std::make_shared;
 using std::shared_ptr;
-using std::weak_ptr;
 
 constexpr float bodiesRestitution = 1;
 constexpr float wallActualWidth = 200;
 constexpr float wallVisibleWidth = 10;
-static shared_ptr<PongPlatform> sUserPlatform;
+static shared_ptr<SceneNode> sUserPlatform;
 static shared_ptr<PongBall> sBall;
 
 namespace {
@@ -39,11 +36,9 @@ namespace {
 void PongEnvironment::Setup() {
 	auto& engine = Engine::MainContext::GetInstance();
 	auto videoMode = sf::VideoMode::getFullscreenModes()[0];
-	// sf::VideoMode videoMode(800, 600);
 	engine.CreateMainWindow(videoMode, "Pong", sf::Style::None);
 	engine.GetMainWindow()->setMouseCursorVisible(false);
 	engine.GetPhysicsProcessor()->SetGravity({0, 1000});
-	// engine.GetMainWindow()->setFramerateLimit(40.f);
 	engine.SetScene(BuildScene());
 	ConfigureGlobalInput();
 }
@@ -91,27 +86,35 @@ void PongEnvironment::AddBall(Scene* scene) {
 	sBall = ball;
 }
 
-shared_ptr<PongPlatform> PongEnvironment::CreateDefaultPlatform(sf::Vector2f size, sf::Vector2f pos, float rotationDeg,
-                                                                sf::Color color) const {
-	auto platform = make_shared<PongPlatform>(CreateShapeBodyNode<sf::ConvexShape>());
-	platform->RegisterTickBehaviour();
-	platform->GetNode()->RequireBehaviour<PhysicsDebugBehaviour>();
-	platform->SetName("Platform");
-	platform->SetShapeDimensions(size, 0.9f, rotationDeg);
-	// todo platform->setMoveArea(...);
-	if (auto* sh = platform->GetShape()) {
-		sh->setOrigin(Utils::FindCenterOfMass(sh));
-		sh->setPosition(pos);
-		sh->setFillColor(color);
+shared_ptr<SceneNode> PongEnvironment::CreateDefaultPlatform(sf::Vector2f size, sf::Vector2f pos, float rotationDeg,
+                                                             sf::Color color) const {
+	auto node = CreateShapeBodyNode<sf::ConvexShape>();
+
+	node->SetName("Platform");
+
+	constexpr int pointCount = 42;
+	constexpr float curvature = 0.9f;
+
+	auto shape = dynamic_cast<sf::ConvexShape*>(node->FindShapeCollider()->GetBaseShape());
+	shape->setPointCount(pointCount);
+	for (int i = 0; i < pointCount; ++i) {
+		float x = (static_cast<float>(i) / (pointCount - 1) - 0.5f) * 2.0f;
+		float y = sqrt(1 - x * x * curvature);
+		sf::Vector2f point(x * size.x * 0.5f, y * size.y);
+		shape->setPoint(i, point);
 	}
+	shape->setRotation(sf::degrees(rotationDeg));
+	shape->setOrigin(Utils::FindCenterOfMass(shape));
+	shape->setPosition(pos);
+	shape->setFillColor(color);
 
-	platform->GetNode()->RequireBehaviour<CollisionBehaviour>()->_collisionGroups.set(1, true);
+	node->RequireBehaviour<CollisionBehaviour>()->_collisionGroups.set(1, true);
 
-	auto rigidBody = platform->GetNode()->RequireBehaviour<RigidBodyBehaviour>();
+	auto rigidBody = node->RequireBehaviour<RigidBodyBehaviour>();
 	rigidBody->SetImmovable();
 	rigidBody->_restitution = bodiesRestitution;
 
-	return platform;
+	return node;
 }
 
 void PongEnvironment::AddWalls(Scene* scene) {
@@ -164,31 +167,22 @@ void PongEnvironment::AddUserPlatform(Scene* scene) {
 	const sf::Vector2f pos(screenSize.x * 0.5f, screenSize.y - wallVisibleWidth - 100);
 	const sf::Color color(220, 220, 20);
 
-	auto platform = CreateDefaultPlatform(size, pos, 180.f, color);
-	platform->SetName("User_platform");
+	auto platformNode = CreateDefaultPlatform(size, pos, 180.f, color);
+	platformNode->SetName("User_platform");
 
 	constexpr float verticalMoveFactor = 0.95f;
 	constexpr float velFactor = 50.f;
 	const sf::Vector2f maxSpeed = {15000.f, 1000.f};
 
-	auto controller = make_shared<UserPlatformController>(platform.get());
-	platform->SetController(controller);
-	controller->SetVerticalFreedomFactor(verticalMoveFactor);
-	controller->SetVelLimit(maxSpeed);
-	controller->SetVelocityFactor(velFactor);
+	auto userBehaviour = std::make_shared<UserPlatformControllerBehaviour>();
+	platformNode->AddBehaviour(userBehaviour);
+	userBehaviour->_verticalMoveFactor = verticalMoveFactor;
+	userBehaviour->_velLimit = maxSpeed;
+	userBehaviour->_speedFactor = velFactor;
 
-	platform->Init();
-	scene->AddChild(platform->GetNode());
+	scene->AddChild(platformNode);
 
-	std::make_shared<FunctionInputHandler>([weakPlatform = std::weak_ptr(platform)](sf::Event event) {
-		if (auto platform = weakPlatform.lock()) {
-			if (auto c = dynamic_pointer_cast<UserPlatformController>(platform->GetController())) {
-				c->HandleEvent(event);
-			}
-		}
-	})->Register();
-
-	sUserPlatform = platform;
+	sUserPlatform = platformNode;
 }
 
 void PongEnvironment::AddAiPlatform(Scene* scene) {
@@ -197,26 +191,22 @@ void PongEnvironment::AddAiPlatform(Scene* scene) {
 	const sf::Vector2f pos(screenSize.x * 0.5f, wallVisibleWidth + 100);
 	const sf::Color color(220, 220, 20);
 
-	auto platform = CreateDefaultPlatform(size, pos, 0.f, color);
-	;
-	platform->SetName("AI_platform");
+	auto platformNode = CreateDefaultPlatform(size, pos, 0.f, color);
+	platformNode->SetName("AI_platform");
 
-	auto controller = make_shared<AiPlatformController>(platform.get());
-	controller->BeginObserve(sUserPlatform, sBall);
-	platform->SetController(controller);
+	auto aiBehaviour = std::make_shared<AiPlatformControllerBehaviour>();
+	aiBehaviour->BeginObserve(sUserPlatform, sBall);
+	platformNode->AddBehaviour(aiBehaviour);
 
-	constexpr float verticalMoveFactor = 0.99f;
 	constexpr float velFactor = 50.f;
 	const sf::Vector2f maxSpeed = {3000.f, 1000.f};
 
-	controller->SetVerticalFreedomFactor(verticalMoveFactor);
-	controller->SetVelLimit(maxSpeed);
-	controller->SetVelocityFactor(velFactor);
-	controller->SetObservePeriod(sf::milliseconds(10));
-	controller->SetReactionDelay(sf::milliseconds(100));
+	aiBehaviour->_velLimit = maxSpeed;
+	aiBehaviour->_speedFactor = velFactor;
+	aiBehaviour->SetObservePeriod(sf::milliseconds(10));
+	aiBehaviour->SetReactionDelay(sf::milliseconds(100));
 
-	platform->Init();
-	scene->AddChild(platform->GetNode());
+	scene->AddChild(platformNode);
 }
 
 std::shared_ptr<Scene> PongEnvironment::BuildScene() {

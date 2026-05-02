@@ -89,8 +89,6 @@ namespace {
 
 } // namespace
 
-void SceneNode::Update(const sf::Time& /*dt*/) {}
-
 void SceneNode::OnInit() {}
 
 void SceneNode::OnDeinit() {}
@@ -194,17 +192,16 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	DrawHierarchySelectionHighlightIfSelected(*this, target, states);
 }
 
-void SceneNode::UpdateRec(const sf::Time& dt) {
+void SceneNode::Update(const sf::Time& dt) {
 	if (!_isEnabled || !_isVisible) {
 		return;
 	}
 
-	Update(dt);
 	for (auto& b : _behaviours) {
 		b->OnUpdate(dt);
 	}
 	for (auto& child : _children) {
-		child->UpdateRec(dt);
+		child->Update(dt);
 	}
 }
 
