@@ -1,54 +1,51 @@
-# C++ formatting for TestEngine (clang-format).
-# Naming (_ prefix on members, PascalCase methods) is enforced by .clang-tidy, not clang-format.
+# C++ formatting for TestEngine (clang-format)
 
-BasedOnStyle: LLVM
-Language: Cpp
+BasedOnStyle: LLVM														# Preset for unset keys (LLVM, Google, Chromium, Mozilla, WebKit, Microsoft, GNU, InheritParentConfig, InheritParentConfig=<path>).
+Language: Cpp															# Which language rules apply (None, C, Cpp, CSharp, Java, JavaScript, Json, ObjC, Proto, TableGen, TextProto, Verilog).
 
-# Indentation: tab characters for leading indent.
-UseTab: ForIndentation
-TabWidth: 4
-IndentWidth: 4
-ContinuationIndentWidth: 4
+UseTab: ForIndentation													# Where literal tabs appear (Never, ForIndentation, ForContinuationAndIndentation, AlignWithSpaces, Always).
+TabWidth: 4																# Display width of tab stops (unsigned).
+IndentWidth: 4															# Columns per indent level (unsigned).
+ContinuationIndentWidth: 4												# Extra indent for wrapped parameters / continued expressions (unsigned).
 
-ColumnLimit: 120
+ColumnLimit: 120														# Soft wrap column for code; comments follow ReflowComments (integer, 0 = no limit).
 
-# Match existing headers: opening brace on its own line after class/struct/enum,
-# attached brace for control statements and functions.
-# else / catch / do-while: keyword on a new line after the closing brace (Stroustrup/Whitesmiths-style tail).
-BreakBeforeBraces: Custom
+# Brace layout: Custom + BraceWrapping; else/catch/while-after-} on new lines (Stroustrup-style tail).
+BreakBeforeBraces: Custom												# Brace preset (Attach, Linux, Mozilla, Stroustrup, Allman, Whitesmiths, GNU, WebKit, Custom); Custom uses BraceWrapping below.
 BraceWrapping:
-  AfterCaseLabel: false
-  AfterClass: true
-  AfterControlStatement: Never
-  AfterEnum: true
-  AfterFunction: false
-  AfterNamespace: false
-  AfterStruct: true
-  AfterUnion: true
-  BeforeCatch: true
-  BeforeElse: true
-  BeforeLambdaBody: false
-  BeforeWhile: true
-  IndentBraces: false
-  SplitEmptyFunction: false
-  SplitEmptyRecord: false
-  SplitEmptyNamespace: false
+	AfterCaseLabel: false												# If true, break after `case`/`default:` before `{` (wrap case labels).
+	AfterClass: true													# If true, `{` for class on its own line.
+	AfterControlStatement: Never										# Brace after if/for/while/switch (Never, MultiLine, Always).
+	AfterEnum: true														# If true, `{` for enum on its own line.
+	AfterFunction: false												# If true, `{` for function on its own line.
+	AfterNamespace: false												# If true, `{` for namespace on its own line.
+	AfterStruct: true													# If true, `{` for struct on its own line.
+	AfterUnion: true													# If true, `{` for union on its own line.
+	BeforeCatch: true													# If true, newline before `catch` after closing `}`.
+	BeforeElse: true													# If true, newline before `else` after closing `}`.
+	BeforeLambdaBody: false												# If true, newline before lambda `{`.
+	BeforeWhile: true													# If true, newline before `while` of do-while after `}`.
+	IndentBraces: false													# If true, indent braces like Whitesmiths.
+	SplitEmptyFunction: false											# If false, allow `{}` on one line for empty function.
+	SplitEmptyRecord: false												# If false, allow `{}` on one line for empty class/struct.
+	SplitEmptyNamespace: false											# If false, allow `{}` on one line for empty namespace.
 
-AccessModifierOffset: -4
-IndentAccessModifiers: false
-EmptyLineBeforeAccessModifier: LogicalBlock
-SeparateDefinitionBlocks: Always
+AccessModifierOffset: -4												# Extra indent (<0 outdent) for `public:`/`private:` vs class body (integer).
+IndentAccessModifiers: false											# If true, indent access keywords one extra level (boolean).
+EmptyLineBeforeAccessModifier: LogicalBlock								# Blank line before access keyword (Never, Leave, LogicalBlock, Always).
+SeparateDefinitionBlocks: Always										# Empty lines between defs (Leave: keep as-is; Always: insert; Never: remove) (Leave, Always, Never).
 
-AlignAfterOpenBracket: Align
-AlignOperands: true
-AlignTrailingComments: true
+AlignAfterOpenBracket: true												# If true, align continued args after `(` / `<` / `[` (boolean; CF22+: legacy Align/DontAlign map to true/false).
+AlignOperands: Align													# Wrap alignment for binary/ternary (DontAlign, Align, AlignAfterOperator).
+AlignTrailingComments: true												# Align `//` on consecutive lines (boolean or nested Kind: Leave, Always, Never).
+ReflowComments: false													# Comment reflow (Never, IndentOnly, Always; legacy false/true).
 
-PointerAlignment: Left
-ReferenceAlignment: Pointer
+PointerAlignment: Left													# Placement of `*` (Left, Right, Middle).
+ReferenceAlignment: Pointer												# `&` layout (Pointer, Left, Right, Middle).
 
-SortIncludes: true
-IncludeBlocks: Regroup
-IncludeCategories:
+SortIncludes: true														# Sort #includes (boolean or nested Enabled/IgnoreCase/IgnoreExtension; legacy true/false).
+IncludeBlocks: Regroup													# Merge/split include blocks (Preserve, Merge, Regroup).
+IncludeCategories:														# Regex -> Priority buckets; order: quoted local, SFML, other system .h/.hpp, remaining <...>.
   - Regex: '^".*"$'
     Priority: 1
   - Regex: '^<SFML/'
@@ -58,31 +55,31 @@ IncludeCategories:
   - Regex: '^<'
     Priority: 4
 
-AllowShortBlocksOnASingleLine: Empty
-AllowShortFunctionsOnASingleLine: Inline
-AllowShortIfStatementsOnASingleLine: Never
-AllowShortLambdasOnASingleLine: Inline
-AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Empty									# One-line `{}` blocks (Never, Empty, Always).
+AllowShortFunctionsOnASingleLine: None									# One-line bodies (None, InlineOnly, Empty, Inline, All, or nested Empty/Inline/Other).
+AllowShortIfStatementsOnASingleLine: Never								# One-line if (Never, WithoutElse, OnlyFirstIf, AllIfsAndElse).
+AllowShortLambdasOnASingleLine: None									# One-line lambdas (None, Empty, Inline, All).
+AllowShortLoopsOnASingleLine: false										# If true, allow `while (x) y;` on one line (boolean).
 
-AlwaysBreakTemplateDeclarations: Yes
-BreakConstructorInitializers: BeforeColon
-BreakInheritanceList: BeforeColon
-ConstructorInitializerIndentWidth: 4
-PackConstructorInitializers: BinPack
+AlwaysBreakTemplateDeclarations: Yes									# Deprecated alias of BreakTemplateDeclarations (Leave, No, MultiLine, Yes).
+BreakConstructorInitializers: BeforeColon								# Ctor init list breaks (BeforeColon, BeforeComma, AfterColon, AfterComma).
+BreakInheritanceList: BeforeColon										# Base-specifier list breaks (BeforeColon, BeforeComma, AfterColon, AfterComma).
+ConstructorInitializerIndentWidth: 4									# Indent wrapped ctor-initializer lines (unsigned).
+PackConstructorInitializers: BinPack									# Ctor init packing (Never, BinPack, CurrentLine, NextLine, NextLineOnly).
 
-Cpp11BracedListStyle: true
-SpaceBeforeCpp11BracedList: false
-SpacesInAngles: false
-SpacesInParentheses: false
-SpacesInSquareBrackets: false
+Cpp11BracedListStyle: true												# Braced-list layout (Block, FunctionCall, AlignFirstComment; legacy bool).
+SpaceBeforeCpp11BracedList: false										# Space before `{` in `T{...}` (boolean).
+SpacesInAngles: false													# Spaces inside `< >` (Never, Always, Leave; legacy bool).
+SpacesInParentheses: false												# Spaces inside `()` (boolean; see SpacesInParens* in newer CF).
+SpacesInSquareBrackets: false											# Spaces inside `[]` (boolean).
 
-BinPackArguments: true
-BinPackParameters: true
+BinPackArguments: true													# Pack call arguments (boolean; see PackArguments / BinPackLongBracedList).
+BinPackParameters: true													# Parameter packing (BinPack, OnePerLine, AlwaysOnePerLine; legacy bool).
 
-FixNamespaceComments: true
-KeepEmptyLinesAtTheStartOfBlocks: false
-MaxEmptyLinesToKeep: 1
+FixNamespaceComments: true												# Add/fix `// namespace name` closers (boolean).
+KeepEmptyLinesAtTheStartOfBlocks: false									# If true, keep a blank line right after `{`; false removes it (boolean).
+MaxEmptyLinesToKeep: 1													# Cap consecutive blank lines (unsigned).
 
-InsertBraces: false
-InsertNewlineAtEOF: true
-NamespaceIndentation: All
+InsertBraces: false														# Auto-insert `{}` around single-statement control bodies (boolean).
+InsertNewlineAtEOF: true												# Force newline at end of file (boolean).
+NamespaceIndentation: All												# Indent inside namespaces (None, Inner, All).
