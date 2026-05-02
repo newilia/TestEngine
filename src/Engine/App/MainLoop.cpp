@@ -140,7 +140,7 @@ namespace Engine {
 		}
 		auto simulatedDt = engine.GetSimTickDt();
 		if (auto scene = engine.GetScene()) {
-			scene->UpdateRec(simulatedDt);
+			scene->Update(simulatedDt);
 		}
 		engine.GetPhysicsProcessor()->Update(simulatedDt);
 	}

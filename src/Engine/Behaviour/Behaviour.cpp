@@ -1,5 +1,6 @@
 #include "Engine/Behaviour/Behaviour.h"
 
+// todo move all to header
 void Behaviour::OnAttached() {}
 
 void Behaviour::OnInit() {}
