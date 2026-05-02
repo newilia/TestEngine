@@ -77,11 +77,11 @@ namespace {
 		                 [](const shared_ptr<SceneNode>& a, const shared_ptr<SceneNode>& b) {
 			                 int la = 0;
 			                 int lb = 0;
-			                 if (auto sa = a->FindEntity<SortingStrategy>()) {
-				                 la = sa->GetSortLayer();
+			                 if (auto sa = a->FindEntity<RelativeSortingStrategy>()) {
+				                 la = sa->GetPriority();
 			                 }
-			                 if (auto sb = b->FindEntity<SortingStrategy>()) {
-				                 lb = sb->GetSortLayer();
+			                 if (auto sb = b->FindEntity<RelativeSortingStrategy>()) {
+				                 lb = sb->GetPriority();
 			                 }
 			                 return la < lb;
 		                 });
@@ -122,7 +122,7 @@ shared_ptr<Transform> SceneNode::GetTransform() const {
 	return _transform;
 }
 
-shared_ptr<SortingStrategy> SceneNode::GetSortingStrategy() const {
+shared_ptr<RelativeSortingStrategy> SceneNode::GetSortingStrategy() const {
 	return _sortingStrategy;
 }
 
@@ -230,7 +230,7 @@ void SceneNode::SetVisual(shared_ptr<Visual>&& visual) {
 	}
 }
 
-void SceneNode::SetSortingStrategy(const shared_ptr<SortingStrategy>& sorting) {
+void SceneNode::SetSortingStrategy(const shared_ptr<RelativeSortingStrategy>& sorting) {
 	_sortingStrategy = sorting;
 	if (_sortingStrategy) {
 		_sortingStrategy->AttachTo(shared_from_this());

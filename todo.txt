@@ -43,3 +43,6 @@ RequireBehaviour c аргументами
 	#include "Engine/Behaviour/Physics/IntersectionDetails.h"
 	#include "Engine/Behaviour/Physics/CollisionBehaviour.h"
 	#include "Engine/Behaviour/Physics/ShapeColliderBehaviourBase.h"
+	
+локальные и глобальные трансформы
+

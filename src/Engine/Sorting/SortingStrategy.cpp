@@ -1,5 +1,11 @@
 #include "Engine/Sorting/SortingStrategy.h"
 
-int SortingStrategy::GetSortLayer() const {
-	return 0;
+#include "SortingStrategy.generated.hpp"
+
+int RelativeSortingStrategy::GetPriority() const {
+	return _priority;
+}
+
+void RelativeSortingStrategy::SetPriority(int priority) {
+	_priority = priority;
 }
