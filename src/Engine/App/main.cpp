@@ -23,7 +23,7 @@ namespace {
 		Pong
 	};
 
-	[[nodiscard]] bool EqualsIgnoreCaseAscii(std::string_view a, std::string_view b) {
+	bool EqualsIgnoreCaseAscii(std::string_view a, std::string_view b) {
 		if (a.size() != b.size()) {
 			return false;
 		}
@@ -110,7 +110,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	Engine::MainContext::GetInstance().Init();
 
 	Engine::MainLoop mainLoop;
-	mainLoop.Update();
+	mainLoop.Run();
 
 	Engine::MainContext::GetInstance().Shutdown();
 

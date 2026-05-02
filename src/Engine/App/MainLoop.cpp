@@ -14,110 +14,135 @@
 
 namespace Engine {
 
-	void MainLoop::Update() {
-		MainContext& engine = Engine::MainContext::GetInstance();
-		auto dt = _clock.restart();
+	void MainLoop::Run() {
+		PeriodicTaskExecutor tickExecutor(
+		    []() {
+			    return sf::seconds(1.f / MainContext::GetInstance().GetTargetTickRate());
+		    },
+		    [this](const sf::Time& dt) {
+			    UpdateTick();
+		    });
 
-		const auto targetTickPeriod = [&engine]() {
-			auto period = sf::seconds(1.f / engine.GetTargetTickRate());
-			return period;
-		};
-		PeriodicTaskExecutor tickExecutor(targetTickPeriod, [this](const sf::Time& dt) { UpdateTick(); });
-
-		const auto targetFramePeriod = [&engine]() {
-			if (!engine.IsFramerateLimitEnabled()) {
-				return sf::Time::Zero;
-			}
-			auto period = sf::seconds(1.f / engine.GetFramerateLimit());
-			return period;
-		};
-		PeriodicTaskExecutor presentExecutor(targetFramePeriod, [this](const sf::Time& dt) { PresentFrame(); });
+		PeriodicTaskExecutor presentExecutor(
+		    []() {
+			    MainContext& engine = Engine::MainContext::GetInstance();
+			    if (!engine.IsFramerateLimitEnabled()) {
+				    return sf::Time::Zero;
+			    }
+			    return sf::seconds(1.f / engine.GetFramerateLimit());
+		    },
+		    [this](const sf::Time& dt) {
+			    PresentFrame();
+		    });
 
 		sf::Clock mainLoopClock;
+		MainContext& engine = Engine::MainContext::GetInstance();
+		{
+			while (true) {
+				const auto& window = engine.GetMainWindow();
+				if (!window) {
+					exit(EXIT_FAILURE);
+				}
+				if (!window->isOpen()) {
+					break;
+				}
 
-		while (true) {
-			auto window = engine.GetMainWindow();
-			if (!window) {
-				exit(EXIT_FAILURE);
-			}
-			if (!window->isOpen()) {
-				break;
-			}
+				if (!PollAndDispatchEvents()) {
+					break;
+				}
 
-			if (!PollAndDispatchEvents()) {
-				break;
+				auto dt = mainLoopClock.restart();
+				tickExecutor.Update(dt);
+				presentExecutor.Update(dt);
 			}
-
-			auto dt = mainLoopClock.restart();
-			tickExecutor.Update(dt);
-			presentExecutor.Update(dt);
 		}
 	}
 
 	bool MainLoop::PollAndDispatchEvents() {
 		auto& engine = Engine::MainContext::GetInstance();
-		auto window = engine.GetMainWindow();
+		const auto& window = engine.GetMainWindow();
 		if (!window) {
 			return false;
 		}
 
 		bool isImGuiInitialized = engine.IsImGuiInitialized();
 
-		while (auto ev = window->pollEvent()) {
-			if (isImGuiInitialized) {
-				ImGui::SFML::ProcessEvent(*window, *ev);
+		while (const auto& ev = window->pollEvent()) {
+			if (!ev) {
+				break;
 			}
-			sf::Event event = *ev;
-			if (event.is<sf::Event::Closed>()) {
-				window->close();
+			if (!DispatchEvent(*ev)) {
 				return false;
-			}
-			if (const auto* resized = event.getIf<sf::Event::Resized>()) {
-				engine.OnMainWindowResized(resized->size);
-			}
-			Editor::GetInstance().OnEvent(event);
-			const bool forwardToGame = !isImGuiInitialized || ShouldForwardEventToGame(event);
-			bool consumed = false;
-			if (forwardToGame) {
-				consumed = Editor::GetInstance().GetEditorToolManager().ProcessEvent(event);
-			}
-			if (forwardToGame && !consumed) {
-				engine.GetUserInput()->HandleEvent(event);
 			}
 		}
 		return window->isOpen();
 	}
 
-	bool MainLoop::ShouldForwardEventToGame(const sf::Event& event) {
+	bool MainLoop::IsImGuiWantCaptureInput(const sf::Event& event) {
+		if (!Engine::MainContext::GetInstance().IsImGuiInitialized()) {
+			return false;
+		}
+
 		const ImGuiIO& io = ImGui::GetIO();
 		if (event.is<sf::Event::MouseButtonPressed>() || event.is<sf::Event::MouseButtonReleased>() ||
-		    event.is<sf::Event::MouseMoved>() || event.is<sf::Event::MouseMovedRaw>() ||
-		    event.is<sf::Event::MouseWheelScrolled>() || event.is<sf::Event::TouchBegan>() ||
+		    event.is<sf::Event::MouseMoved>() || event.is<sf::Event::MouseWheelScrolled>() ||
+		    event.is<sf::Event::MouseMovedRaw>() || event.is<sf::Event::TouchBegan>() ||
 		    event.is<sf::Event::TouchMoved>() || event.is<sf::Event::TouchEnded>()) {
-			return !io.WantCaptureMouse;
+			return io.WantCaptureMouse;
 		}
 		if (event.is<sf::Event::KeyPressed>() || event.is<sf::Event::KeyReleased>()) {
-			return !io.WantCaptureKeyboard;
+			return io.WantCaptureKeyboard;
 		}
 		if (event.is<sf::Event::TextEntered>()) {
-			return !io.WantTextInput;
+			return io.WantTextInput;
 		}
 		return true;
 	}
 
-	bool MainLoop::UpdateTick() {
+	bool MainLoop::DispatchEvent(const sf::Event& event) {
 		auto& engine = Engine::MainContext::GetInstance();
-		if (engine.IsSimPaused()) {
+		bool isImGuiInitialized = engine.IsImGuiInitialized();
+		const auto& window = engine.GetMainWindow();
+
+		if (event.is<sf::Event::Closed>()) {
+			window->close();
 			return false;
 		}
-		engine.OnStartUpdateTick();
-		auto simulatedDt = engine.GetSimTickDt();
 
+		if (isImGuiInitialized) {
+			ImGui::SFML::ProcessEvent(*window, event);
+		}
+
+		if (const auto* resized = event.getIf<sf::Event::Resized>()) {
+			engine.OnMainWindowResized(resized->size);
+		}
+
+		auto& editor = Editor::GetInstance();
+		editor.OnEvent(event);
+
+		if (IsImGuiWantCaptureInput(event)) {
+			return true;
+		}
+
+		bool consumed = editor.GetEditorToolManager().ProcessEvent(event);
+		if (!consumed) {
+			engine.GetUserInput()->HandleEvent(event);
+		}
+		return true;
+	}
+
+	void MainLoop::UpdateTick() {
+		auto& engine = Engine::MainContext::GetInstance();
+		engine.OnStartUpdateTick();
+
+		if (engine.IsSimPaused()) {
+			return;
+		}
+		auto simulatedDt = engine.GetSimTickDt();
 		if (auto scene = engine.GetScene()) {
 			scene->UpdateRec(simulatedDt);
 		}
 		engine.GetPhysicsProcessor()->Update(simulatedDt);
-		return true;
 	}
 
 	bool MainLoop::PresentFrame() {
