@@ -60,11 +60,14 @@ if(MSVC)
 	target_compile_options(TestEngine PRIVATE /FS)
 	# Debug: /Z7 embeds symbols in .obj and avoids C1041 (parallel cl.exe vs one vc*.pdb) when /FS alone is not enough.
 	target_compile_options(TestEngine PRIVATE $<$<CONFIG:Debug>:/Z7>)
+	# RelWithDebInfo: richer PDB (/Zo) so more locals survive under /O2; runtime cost negligible.
+	target_compile_options(TestEngine PRIVATE $<$<CONFIG:RelWithDebInfo>:/Zo>)
 	# Do not run C++ Core Check inside vendored fmt headers (we do not patch third-party/fmt).
 	target_compile_options(
 		TestEngine
 		PRIVATE
-			"/external:I${CMAKE_SOURCE_DIR}/third-party/fmt/include"
+			"/external:I"
+			"${CMAKE_SOURCE_DIR}/third-party/fmt/include"
 			/analyze:external-
 	)
 endif()
@@ -75,6 +78,13 @@ target_include_directories(
 		${CMAKE_CURRENT_SOURCE_DIR}/src
 		${CMAKE_CURRENT_SOURCE_DIR}/src/Codegen
 )
+
+set(TE_GLOBALS_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/src/TestEngineGlobals.h")
+if(MSVC)
+	target_compile_options(TestEngine PRIVATE "/FI\"${TE_GLOBALS_HEADER}\"")
+else()
+	target_compile_options(TestEngine PRIVATE "-include" "${TE_GLOBALS_HEADER}")
+endif()
 
 # fmt submodule: third-party/fmt
 add_subdirectory(third-party/fmt EXCLUDE_FROM_ALL)
