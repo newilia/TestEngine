@@ -4,13 +4,17 @@
 #include "UserPlatformControllerBehaviour.generated.hpp"
 
 void UserPlatformControllerBehaviour::OnInit() {
+	ResyncSpawnFromNode();
+	InputHandlerBehaviourBase::OnInit();
+}
+
+void UserPlatformControllerBehaviour::ResyncSpawnFromNode() {
 	if (auto p = GetNode()) {
 		_targetPos = _defaultPos = p->GetPosGlobal();
 		ClampPongPlatformDesiredCenter(_targetPos, true, p);
 		ClampPongPlatformDesiredCenter(_defaultPos, true, p);
 		p->SetPosGlobal(_defaultPos);
 	}
-	InputHandlerBehaviourBase::OnInit();
 }
 
 void UserPlatformControllerBehaviour::OnDeinit() {

@@ -10,11 +10,28 @@
 
 void AiPlatformControllerBehaviour::OnInit() {
 	Behaviour::OnInit();
+	ResyncSpawnFromNode();
+}
+
+void AiPlatformControllerBehaviour::ResyncSpawnFromNode() {
 	if (auto p = GetNode()) {
 		_targetPos = _defaultPos = p->GetPosGlobal();
 		ClampPongPlatformDesiredCenter(_targetPos, false, p);
 		ClampPongPlatformDesiredCenter(_defaultPos, false, p);
 		p->SetPosGlobal(_defaultPos);
+	}
+}
+
+void AiPlatformControllerBehaviour::ClearPendingObservations() {
+	while (!_externalStateTimers.empty()) {
+		_externalStateTimers.pop();
+	}
+	_observeTimer.restart();
+	if (auto ball = _ball.lock()) {
+		if (auto* sh = ball->GetShape()) {
+			_curExState.ballPos = sh->getPosition();
+			_prevExState = _curExState;
+		}
 	}
 }
 
