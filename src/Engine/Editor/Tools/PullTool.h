@@ -21,13 +21,21 @@ public:
 
 	void SetArrowVisual(std::shared_ptr<VectorArrowVisual> arrow);
 
-	void SetPullForceScale(float v) { _pullForceScale = v; }
+	void SetPullForceScale(float v) {
+		_pullForceScale = v;
+	}
 
-	float GetPullForceScale() const { return _pullForceScale; }
+	float GetPullForceScale() const {
+		return _pullForceScale;
+	}
 
-	bool IsDebugArrowEnabled() const { return _debugArrowEnabled; }
+	bool IsDebugArrowEnabled() const {
+		return _debugArrowEnabled;
+	}
 
-	void SetDebugArrowEnabled(bool v) { _debugArrowEnabled = v; }
+	void SetDebugArrowEnabled(bool v) {
+		_debugArrowEnabled = v;
+	}
 
 private:
 	std::shared_ptr<SceneNode> OnTap(const sf::Vector2f& screenPixelPos);

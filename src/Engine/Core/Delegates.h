@@ -12,14 +12,18 @@ public:
 
 	virtual void operator()(TArgs... args) = 0;
 
-	virtual bool expired() { return false; }
+	virtual bool expired() {
+		return false;
+	}
 };
 
 template <class TOwner, class... TArgs>
 class IWeakDelegate : public IDelegate<TArgs...>
 {
 public:
-	bool expired() override { return _owner.expired(); }
+	bool expired() override {
+		return _owner.expired();
+	}
 
 protected:
 	std::weak_ptr<TOwner> _owner;
@@ -29,9 +33,13 @@ template <class... TArgs>
 class FunctionDelegate : public IDelegate<TArgs...>
 {
 public:
-	FunctionDelegate(std::function<void(TArgs...)> func) { _function = std::move(func); }
+	FunctionDelegate(std::function<void(TArgs...)> func) {
+		_function = std::move(func);
+	}
 
-	void operator()(TArgs... args) override { _function(args...); }
+	void operator()(TArgs... args) override {
+		_function(args...);
+	}
 
 private:
 	std::function<void(TArgs...)> _function;

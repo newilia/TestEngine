@@ -19,8 +19,7 @@ public:
 
 	/// Net field acceleration at the receiving behaviour's world position, due to all **other** registered sources.
 	/// Does not include self; respects each source's `_isEnabled` and `EvaluateAcceleration` caches purge expired.
-	[[nodiscard]] sf::Vector2f
-	EvaluateAcceleration(const shared_ptr<AttractiveBehaviour>& receiver) const;
+	[[nodiscard]] sf::Vector2f EvaluateAcceleration(const shared_ptr<AttractiveBehaviour>& receiver) const;
 
 	[[nodiscard]] float GetGlobalStrengthScale() const;
 	void SetGlobalStrengthScale(float v);

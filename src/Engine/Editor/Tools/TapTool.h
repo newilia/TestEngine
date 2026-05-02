@@ -5,5 +5,7 @@
 class TapTool final : public IEditorTool
 {
 public:
-	[[nodiscard]] bool processEvent(const sf::Event& /*event*/) override { return false; }
+	[[nodiscard]] bool processEvent(const sf::Event& /*event*/) override {
+		return false;
+	}
 };

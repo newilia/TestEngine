@@ -21,7 +21,9 @@ void AttractionField::Register(const shared_ptr<AttractiveBehaviour>& s) {
 }
 
 void AttractionField::Unregister(const shared_ptr<AttractiveBehaviour>& s) {
-	_sources.remove_if([&s](const std::weak_ptr<AttractiveBehaviour>& w) { return w.lock() == s; });
+	_sources.remove_if([&s](const std::weak_ptr<AttractiveBehaviour>& w) {
+		return w.lock() == s;
+	});
 }
 
 static float EffectiveSourceMass(const RigidBodyBehaviour& rb) {
@@ -33,7 +35,9 @@ static float EffectiveSourceMass(const RigidBodyBehaviour& rb) {
 
 [[nodiscard]] sf::Vector2f
 AttractionField::EvaluateAcceleration(const shared_ptr<AttractiveBehaviour>& receiver) const {
-	_sources.remove_if([](const std::weak_ptr<AttractiveBehaviour>& w) { return w.expired(); });
+	_sources.remove_if([](const std::weak_ptr<AttractiveBehaviour>& w) {
+		return w.expired();
+	});
 
 	if (!receiver) {
 		return {};
