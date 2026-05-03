@@ -65,7 +65,7 @@ public:
 		std::uint64_t _id{};
 	};
 
-	/// Unsubscribes in the destructor (move-only).
+	/// Disconnects in the destructor (move-only).
 	class ScopedConnection
 	{
 	public:
