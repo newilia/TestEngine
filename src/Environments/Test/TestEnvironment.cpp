@@ -17,23 +17,19 @@ using std::make_shared;
 using std::shared_ptr;
 
 void TestEnvironment::Setup() {
-	auto& engine = Engine::MainContext::GetInstance();
-	const auto mainWindow = engine.CreateMainWindow(sf::VideoMode({1920, 1080}), "Test scene");
+	auto& mainContext = Engine::MainContext::GetInstance();
+	const auto mainWindow = mainContext.CreateMainWindow(sf::VideoMode({1920, 1080}), "Test scene");
 	if (!mainWindow) {
 		std::exit(EXIT_FAILURE);
 	}
 	Utils::MaximizeWindow(*mainWindow);
-	engine.GetPhysicsProcessor()->SetGravity({0, 1000});
-	engine.SetScene(BuildScene());
+	mainContext.GetPhysicsProcessor()->SetGravity({0, 1000});
+	mainContext.SetScene(BuildScene());
 
-	EventHandlerBase::SubscribeForInputEvents();
+	EventHandlerBase::SubscribeForEvents();
 }
 
 void TestEnvironment::OnEvent(const sf::Event& event) {
-	if (event.is<sf::Event::Closed>()) {
-		std::exit(EXIT_SUCCESS);
-	}
-
 	auto mainContext = &Engine::MainContext::GetInstance();
 	auto* window = mainContext->GetMainWindow();
 	if (!window) {

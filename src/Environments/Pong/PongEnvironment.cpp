@@ -56,12 +56,12 @@ constexpr int kPongScoreFontSize = 140;
 PongEnvironment::~PongEnvironment() = default;
 
 void PongEnvironment::Setup() {
-	auto& engine = Engine::MainContext::GetInstance();
+	auto& mainContext = Engine::MainContext::GetInstance();
 	auto videoMode = sf::VideoMode::getFullscreenModes()[0];
-	engine.CreateMainWindow(videoMode, "Pong", sf::Style::None);
-	engine.GetMainWindow()->setMouseCursorVisible(false);
-	engine.GetPhysicsProcessor()->SetGravity({0, 1000});
-	engine.SetScene(BuildScene());
+	mainContext.CreateMainWindow(videoMode, "Pong", sf::Style::None);
+	mainContext.GetMainWindow()->setMouseCursorVisible(false);
+	mainContext.GetPhysicsProcessor()->SetGravity({0, 1000});
+	mainContext.SetScene(BuildScene());
 }
 
 void PongEnvironment::OnEvent(const sf::Event& event) {

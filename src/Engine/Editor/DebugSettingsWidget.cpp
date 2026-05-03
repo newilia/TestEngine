@@ -11,53 +11,53 @@
 
 namespace Engine {
 	void DebugSettingsWidget::Draw() const {
-		auto& engine = Engine::MainContext::GetInstance();
+		auto& mainContext = Engine::MainContext::GetInstance();
 
 		ImGui::SeparatorText("Simulation");
-		bool simEnabled = !engine.IsSimPaused();
+		bool simEnabled = !mainContext.IsSimPaused();
 		if (ImGui::Checkbox("Simulation enabled", &simEnabled)) {
-			engine.SetSimPaused(!simEnabled);
+			mainContext.SetSimPaused(!simEnabled);
 		}
-		float speedMul = engine.GetSimSpeedMultiplier();
+		float speedMul = mainContext.GetSimSpeedMultiplier();
 		if (ImGui::SliderFloat("dt multiplier", &speedMul, 0.05f, 8.f, "%.3f")) {
-			engine.SetSimSpeedMultiplier(std::max(1e-4f, speedMul));
+			mainContext.SetSimSpeedMultiplier(std::max(1e-4f, speedMul));
 		}
 
 		ImGui::SeparatorText("Timing");
-		bool vsync = engine.IsVerticalSyncEnabled();
+		bool vsync = mainContext.IsVerticalSyncEnabled();
 		if (ImGui::Checkbox("VSync", &vsync)) {
-			engine.SetVerticalSyncEnabled(vsync);
+			mainContext.SetVerticalSyncEnabled(vsync);
 		}
 		ImGui::SameLine();
 		ImGui::TextDisabled("(sync to display; pair with Max FPS 0)");
 
-		bool isFpsLimitEnabled = engine.IsFramerateLimitEnabled();
+		bool isFpsLimitEnabled = mainContext.IsFramerateLimitEnabled();
 		if (ImGui::Checkbox("FPS limit enabled", &isFpsLimitEnabled)) {
-			engine.SetFramerateLimitEnabled(isFpsLimitEnabled);
+			mainContext.SetFramerateLimitEnabled(isFpsLimitEnabled);
 		}
 
-		int fpsLimit = static_cast<int>(engine.GetFramerateLimit());
+		int fpsLimit = static_cast<int>(mainContext.GetFramerateLimit());
 		if (ImGui::SliderInt("FPS limit", &fpsLimit, 30, 200)) {
-			engine.SetFramerateLimit(static_cast<std::uint32_t>(fpsLimit));
+			mainContext.SetFramerateLimit(static_cast<std::uint32_t>(fpsLimit));
 		}
 		ImGui::SameLine();
 		ImGui::TextDisabled("(0 = off; meaningful when VSync is off)");
 
-		int tickHz = static_cast<int>(engine.GetTargetTickRate());
+		int tickHz = static_cast<int>(mainContext.GetTargetTickRate());
 		if (ImGui::SliderInt("Logic tick rate (Hz)", &tickHz, 30, 500)) {
 			tickHz = std::max(0, tickHz);
-			engine.SetTargetTickRate(static_cast<std::uint32_t>(tickHz));
+			mainContext.SetTargetTickRate(static_cast<std::uint32_t>(tickHz));
 		}
 		ImGui::SameLine();
 		ImGui::TextDisabled("(0 = unlimited: one variable step per frame)");
 
-		ImGui::Text("Frame dt: %.3f s (%.1f fps)", static_cast<double>(engine.GetFrameDt().asSeconds()),
-		            engine.GetCurrentFps());
+		ImGui::Text("Frame dt: %.3f s (%.1f fps)", static_cast<double>(mainContext.GetFrameDt().asSeconds()),
+		            mainContext.GetCurrentFps());
 
-		ImGui::Text("Tick dt:  %.3f s (%.1f fps)", static_cast<double>(engine.GetSimTickDt().asSeconds()),
-		            engine.GetCurrentTickRate());
+		ImGui::Text("Tick dt:  %.3f s (%.1f fps)", static_cast<double>(mainContext.GetSimTickDt().asSeconds()),
+		            mainContext.GetCurrentTickRate());
 
-		if (const auto ph = engine.GetPhysicsProcessor()) {
+		if (const auto ph = mainContext.GetPhysicsProcessor()) {
 			ImGui::SeparatorText("Physics");
 			bool gravOn = ph->IsGravityEnabled();
 			if (ImGui::Checkbox("World gravity", &gravOn)) {
@@ -72,16 +72,16 @@ namespace Engine {
 		}
 
 		ImGui::SeparatorText("Debug & field");
-		bool debugDraw = engine.IsDebugDrawEnabled();
+		bool debugDraw = mainContext.IsDebugDrawEnabled();
 		if (ImGui::Checkbox("Debug draw (velocities, labels, ...)", &debugDraw)) {
-			engine.SetDebugDrawEnabled(debugDraw);
+			mainContext.SetDebugDrawEnabled(debugDraw);
 		}
-		float forceArrowScale = engine.GetFieldForceDebugArrowScale();
+		float forceArrowScale = mainContext.GetFieldForceDebugArrowScale();
 		if (ImGui::SliderFloat("Field force arrow scale", &forceArrowScale, 1e-5f, 20.f, "%.5f",
 		                       ImGuiSliderFlags_Logarithmic)) {
-			engine.SetFieldForceDebugArrowScale(forceArrowScale);
+			mainContext.SetFieldForceDebugArrowScale(forceArrowScale);
 		}
-		if (const auto ph = engine.GetPhysicsProcessor()) {
+		if (const auto ph = mainContext.GetPhysicsProcessor()) {
 			if (auto field = ph->GetAttractionField()) {
 				float strength = field->GetGlobalStrengthScale();
 				if (ImGui::DragFloat("Attraction field strength", &strength, 2.f, -10000.f, 10000, "%.2f")) {
