@@ -32,6 +32,9 @@ namespace Utils {
 	bool IsPointInsideOfTriangle(const sf::Vector2f& p, const sf::Vector2f& t1, const sf::Vector2f& t2,
 	                             const sf::Vector2f& t3);
 
+	/// AABB in world space after mapping `localRect` by `m` (four corners).
+	sf::FloatRect AxisAlignedBoundsAfterTransform(const sf::Transform& m, const sf::FloatRect& localRect);
+
 	/// Веерная триангуляция от первой вершины; Не для круга — см. `IsWorldPointInsideOfShape`.
 	bool IsWorldPointInsideOfShapeByFan(const sf::Vector2f& worldPoint, const sf::Shape* shape);
 	bool IsWorldPointInsideOfShapeByFan(const sf::Vector2f& worldPoint, const sf::Shape* shape,

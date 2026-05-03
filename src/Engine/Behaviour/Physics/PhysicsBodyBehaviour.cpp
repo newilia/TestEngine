@@ -2,6 +2,7 @@
 
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Core/Utils.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "Engine/Visual/ShapeVisualBase.h"
 #include "PhysicsBodyBehaviour.generated.hpp"
@@ -59,7 +60,14 @@ const sf::Shape* PhysicsBodyBehaviour::GetShape() const {
 }
 
 sf::FloatRect PhysicsBodyBehaviour::GetBbox() const {
-	return GetShape()->getGlobalBounds();
+	const sf::Shape* s = GetShape();
+	auto n = GetNode();
+	if (!s || !n) {
+		return {};
+	}
+	sf::Transform full = n->GetWorldTransform();
+	full *= s->getTransform();
+	return Utils::AxisAlignedBoundsAfterTransform(full, s->getLocalBounds());
 }
 
 size_t PhysicsBodyBehaviour::GetPointCount() const {
@@ -68,15 +76,13 @@ size_t PhysicsBodyBehaviour::GetPointCount() const {
 
 sf::Vector2f PhysicsBodyBehaviour::GetPointGlobal(std::size_t index) const {
 	const auto* s = GetShape();
-	return s->getTransform().transformPoint(s->getPoint(index));
-}
-
-sf::Vector2f PhysicsBodyBehaviour::GetPosGlobal() const {
-	return GetShape()->getPosition();
-}
-
-void PhysicsBodyBehaviour::SetPosGlobal(sf::Vector2f pos) {
-	GetShape()->setPosition(pos);
+	auto n = GetNode();
+	if (!s || !n) {
+		return {};
+	}
+	sf::Transform full = n->GetWorldTransform();
+	full *= s->getTransform();
+	return full.transformPoint(s->getPoint(index));
 }
 
 void PhysicsBodyBehaviour::SetImmovable() {

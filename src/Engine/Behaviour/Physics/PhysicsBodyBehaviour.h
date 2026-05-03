@@ -36,8 +36,6 @@ public:
 	sf::FloatRect GetBbox() const;
 	size_t GetPointCount() const;
 	sf::Vector2f GetPointGlobal(std::size_t index) const;
-	sf::Vector2f GetPosGlobal() const;
-	void SetPosGlobal(sf::Vector2f pos);
 	void SetImmovable();
 	bool IsImmovable() const;
 	float GetMass() const;

@@ -111,7 +111,7 @@ void PongEnvironment::AddBall(Scene* scene) {
 	shape->setOutlineColor(outlineColor);
 	shape->setOutlineThickness(1);
 	shape->setOrigin(Utils::FindCenterOfMass(shape));
-	shape->setPosition(pos);
+	ballNode->SetPosGlobal(pos);
 
 	auto rigidBody = ball->GetNode()->RequireBehaviour<PhysicsBodyBehaviour>();
 	rigidBody->SetMass(3.14f * radius * radius);
@@ -146,7 +146,7 @@ shared_ptr<SceneNode> PongEnvironment::CreateDefaultPlatform(sf::Vector2f size, 
 	}
 	shape->setRotation(sf::degrees(rotationDeg));
 	shape->setOrigin(Utils::FindCenterOfMass(shape));
-	shape->setPosition(pos);
+	node->SetPosGlobal(pos);
 	shape->setFillColor(color);
 
 	auto physicsBody = node->RequireBehaviour<PhysicsBodyBehaviour>();
@@ -180,7 +180,7 @@ void PongEnvironment::AddWalls(Scene* scene) {
 		auto rectShape = rectVisual->GetShape();
 		rectShape->setSize(wallSizes[i]);
 		rectShape->setOrigin(Utils::FindCenterOfMass(rectShape));
-		rectShape->setPosition(wallPositions[i]);
+		wallNode->SetPosGlobal(wallPositions[i]);
 
 		auto bodyBeh = wallNode->RequireBehaviour<PhysicsBodyBehaviour>();
 		bodyBeh->SetImmovable();
@@ -278,21 +278,22 @@ void PongEnvironment::AddScoreboard(Scene* scene) {
 	const sf::Vector2f center = GetPongPlayfieldRect().getCenter();
 	auto lb = _scoreText->getLocalBounds();
 	_scoreText->setOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
-	_scoreText->setPosition(center);
 
 	node->SetVisual(std::make_shared<TextVisual>(_scoreText));
+	node->SetPosGlobal(center);
+	_scoreboardNode = node;
 	scene->AddChild(std::move(node));
 }
 
 void PongEnvironment::UpdateScoreText() {
-	if (!_scoreText) {
+	if (!_scoreText || !_scoreboardNode) {
 		return;
 	}
 	auto text = fmt::format("{}:{}", _userScore, _aiScore);
 	_scoreText->setString(text);
 	auto lb = _scoreText->getLocalBounds();
 	_scoreText->setOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
-	_scoreText->setPosition(GetPongPlayfieldRect().getCenter());
+	_scoreboardNode->SetPosGlobal(GetPongPlayfieldRect().getCenter());
 }
 
 std::shared_ptr<Scene> PongEnvironment::BuildScene() {

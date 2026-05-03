@@ -5,6 +5,7 @@
 #endif
 
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
+#include "Engine/Core/SceneNode.h"
 #include "Engine/Visual/ShapeVisualBase.h"
 #include "Engine/Visual/SpriteVisual.h"
 #include "Engine/Visual/TextVisual.h"
@@ -161,6 +162,22 @@ namespace Utils {
 		return result;
 	}
 
+	sf::FloatRect AxisAlignedBoundsAfterTransform(const sf::Transform& m, const sf::FloatRect& localRect) {
+		const float l = localRect.position.x;
+		const float t = localRect.position.y;
+		const float r = l + localRect.size.x;
+		const float b = t + localRect.size.y;
+		const sf::Vector2f p0 = m.transformPoint({l, t});
+		const sf::Vector2f p1 = m.transformPoint({r, t});
+		const sf::Vector2f p2 = m.transformPoint({l, b});
+		const sf::Vector2f p3 = m.transformPoint({r, b});
+		const float minX = std::min(std::min(p0.x, p1.x), std::min(p2.x, p3.x));
+		const float maxX = std::max(std::max(p0.x, p1.x), std::max(p2.x, p3.x));
+		const float minY = std::min(std::min(p0.y, p1.y), std::min(p2.y, p3.y));
+		const float maxY = std::max(std::max(p0.y, p1.y), std::max(p2.y, p3.y));
+		return {{minX, minY}, {maxX - minX, maxY - minY}};
+	}
+
 	bool IsWorldPointInsideOfShapeByFan(const sf::Vector2f& worldPoint, const sf::Shape* shape,
 	                                    const sf::Transform& nodeWorld) {
 		if (!shape) {
@@ -240,7 +257,9 @@ namespace Utils {
 			return false;
 		}
 		if (const sf::Shape* shape = body->GetShape()) {
-			return IsWorldPointInsideOfShape(worldPoint, shape);
+			if (auto n = Verify(body->GetNode())) {
+				return IsWorldPointInsideOfShape(worldPoint, shape, n->GetWorldTransform());
+			}
 		}
 		return pointInsideConvexFan(worldPoint, body->GetPointCount(), [&](std::size_t i) {
 			return body->GetPointGlobal(i);

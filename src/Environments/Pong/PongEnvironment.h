@@ -9,6 +9,8 @@ namespace sf {
 	class Text;
 }
 
+class SceneNode;
+
 class PongEnvironment : public EnvironmentBase, public Engine::EventHandlerBase
 {
 public:
@@ -31,6 +33,7 @@ private:
 	void UpdateScoreText();
 
 	std::shared_ptr<sf::Text> _scoreText;
+	std::shared_ptr<SceneNode> _scoreboardNode;
 	int _userScore = 0;
 	int _aiScore = 0;
 };

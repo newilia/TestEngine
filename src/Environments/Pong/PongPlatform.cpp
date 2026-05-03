@@ -56,8 +56,7 @@ void ApplyPongPlatformVelocityTowardsTarget(const std::shared_ptr<SceneNode>& pl
 	if (!collider) {
 		return;
 	}
-	auto shape = collider->GetShape();
-	auto vel = (targetPos - shape->getPosition()) * speedFactor;
+	auto vel = (targetPos - platformNode->GetPosGlobal()) * speedFactor;
 	vel.x = std::clamp(vel.x, -velLimit.x, velLimit.x);
 	vel.y = std::clamp(vel.y, -velLimit.y, velLimit.y);
 	platformNode->RequireBehaviour<PhysicsBodyBehaviour>()->SetVelocity(vel);
@@ -72,13 +71,13 @@ void ClampPongPlatformDesiredCenter(sf::Vector2f& center, bool isBottomPlayer,
 	if (!collider) {
 		return;
 	}
-	const sf::Vector2f shapePos = collider->GetPosGlobal();
 	const sf::FloatRect bb = collider->GetBbox();
 	const sf::FloatRect field = GetPongPlayfieldRect();
 	const float screenH = GetPongWindowSize().y;
 
 	float minX, maxX, minY, maxY;
-	ComputePlatformCenterBounds(shapePos, bb, isBottomPlayer, field, screenH, minX, maxX, minY, maxY);
+	ComputePlatformCenterBounds(platformNode->GetPosGlobal(), bb, isBottomPlayer, field, screenH, minX, maxX, minY,
+	                            maxY);
 
 	center.x = std::clamp(center.x, minX, maxX);
 	center.y = std::clamp(center.y, minY, maxY);
@@ -92,7 +91,7 @@ void ClampPongPlatformToPlayfield(const std::shared_ptr<SceneNode>& platformNode
 	if (!collider) {
 		return;
 	}
-	sf::Vector2f pos = collider->GetPosGlobal();
+	sf::Vector2f pos = platformNode->GetPosGlobal();
 	ClampPongPlatformDesiredCenter(pos, isBottomPlayer, platformNode);
 	platformNode->SetPosGlobal(pos);
 }

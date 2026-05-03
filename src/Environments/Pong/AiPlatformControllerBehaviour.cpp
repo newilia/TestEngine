@@ -29,8 +29,8 @@ void AiPlatformControllerBehaviour::ClearPendingObservations() {
 	}
 	_observeTimer.restart();
 	if (auto ball = _ball.lock()) {
-		if (auto* sh = ball->GetShape()) {
-			_curExState.ballPos = sh->getPosition();
+		if (auto ballNode = ball->GetNode()) {
+			_curExState.ballPos = ballNode->GetPosGlobal();
 			_prevExState = _curExState;
 		}
 	}
@@ -57,8 +57,10 @@ void AiPlatformControllerBehaviour::BeginObserve(const std::weak_ptr<SceneNode>&
 
 void AiPlatformControllerBehaviour::ObserveState() {
 	if (auto ball = _ball.lock()) {
-		ExternalState state = {.ballPos = ball->GetShape()->getPosition()};
-		_externalStateTimers.push({sf::Clock(), state});
+		if (auto ballNode = ball->GetNode()) {
+			ExternalState state = {.ballPos = ballNode->GetPosGlobal()};
+			_externalStateTimers.push({sf::Clock(), state});
+		}
 	}
 }
 
@@ -75,25 +77,20 @@ void AiPlatformControllerBehaviour::MovePlatformTowardsBall() {
 	if (!selfCollider) {
 		return;
 	}
-	sf::Shape* selfShape = selfCollider->GetShape();
+	const sf::Vector2f selfPos = node->GetPosGlobal();
 	float distanceToBall = 0.f;
 	if (auto ball = _ball.lock()) {
 		if (auto* ballShape = ball->GetShape()) {
 			const sf::FloatRect selfBbox = selfCollider->GetBbox();
-			distanceToBall =
-			    std::abs(_curExState.ballPos.y - selfShape->getPosition().y) - ballShape->getRadius() - selfBbox.size.y;
+			distanceToBall = std::abs(_curExState.ballPos.y - selfPos.y) - ballShape->getRadius() - selfBbox.size.y;
 		}
 	}
 
 	float steadyRatio = 0.f;
 	if (auto opponentPlatform = _opponentPlatform.lock()) {
-		if (auto* oppCollider = opponentPlatform->FindPhysicsBody()) {
-			if (sf::Shape* oppShape = oppCollider->GetShape()) {
-				const float distanceBetweenPlatforms = std::abs(selfShape->getPosition().y - oppShape->getPosition().y);
-				if (distanceBetweenPlatforms > 0.f) {
-					steadyRatio = 0.2f * std::clamp(distanceToBall / distanceBetweenPlatforms, 0.f, 1.f);
-				}
-			}
+		const float distanceBetweenPlatforms = std::abs(selfPos.y - opponentPlatform->GetPosGlobal().y);
+		if (distanceBetweenPlatforms > 0.f) {
+			steadyRatio = 0.2f * std::clamp(distanceToBall / distanceBetweenPlatforms, 0.f, 1.f);
 		}
 	}
 

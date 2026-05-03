@@ -16,6 +16,16 @@
 #include <optional>
 #include <vector>
 
+namespace {
+
+	sf::Vector2f WorldCircleCenter(const SceneNode& node, const sf::CircleShape& c) {
+		sf::Transform full = node.GetWorldTransform();
+		full *= c.getTransform();
+		return full.transformPoint(c.getGeometricCenter());
+	}
+
+} // namespace
+
 void PhysicsProcessor::Update(const sf::Time& dt) {
 	Utils::RemoveExpiredPointers(_bodies);
 	// motion step
@@ -167,20 +177,20 @@ PhysicsProcessor::DetectIntersection(const shared_ptr<SceneNode>& n1, const shar
 
 	if (auto* circ1 = dynamic_cast<sf::CircleShape*>(col1->GetShape())) {
 		if (auto* circ2 = dynamic_cast<sf::CircleShape*>(col2->GetShape())) {
-			if (auto r = DetectCircleCircleIntersection(circ1, circ2)) {
+			if (auto r = DetectCircleCircleIntersection(*n1, circ1, *n2, circ2)) {
 				assignNodes(*r);
 				return r;
 			}
 			return std::nullopt;
 		}
-		if (auto r = DetectCirclePolygonIntersection(circ1, col2)) {
+		if (auto r = DetectCirclePolygonIntersection(*n1, circ1, col2)) {
 			assignNodes(*r);
 			return r;
 		}
 		return std::nullopt;
 	}
 	if (auto* circ2 = dynamic_cast<sf::CircleShape*>(col2->GetShape())) {
-		if (auto r = DetectCirclePolygonIntersection(circ2, col1)) {
+		if (auto r = DetectCirclePolygonIntersection(*n2, circ2, col1)) {
 			assignNodes(*r);
 			return r;
 		}
@@ -234,7 +244,8 @@ PhysicsProcessor::DetectPolygonPolygonIntersection(const PhysicsBodyBehaviour* b
 	return result;
 }
 
-std::optional<IntersectionDetails> PhysicsProcessor::DetectCirclePolygonIntersection(const sf::CircleShape* circle,
+std::optional<IntersectionDetails> PhysicsProcessor::DetectCirclePolygonIntersection(const SceneNode& circleNode,
+                                                                                     const sf::CircleShape* circle,
                                                                                      const PhysicsBodyBehaviour* body) {
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
@@ -242,10 +253,12 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectCirclePolygonIntersec
 	const auto pointsCount = body->GetPointCount();
 	IntersectionDetails result;
 
+	const sf::Vector2f circleCenterWorld = WorldCircleCenter(circleNode, *circle);
+
 	for (size_t i = 0; i < pointsCount; ++i) {
 		const Segment edge = {body->GetPointGlobal(i), body->GetPointGlobal((i + 1) % pointsCount)};
 
-		if (auto i_point = FindSegmentCircleIntersectionPoint(edge, circle->getPosition(), circle->getRadius())) {
+		if (auto i_point = FindSegmentCircleIntersectionPoint(edge, circleCenterWorld, circle->getRadius())) {
 			edges_i_p.emplace_back(i_point->p1);
 			if (i_point->p2) {
 				edges_i_p.emplace_back(*i_point->p2);
@@ -269,13 +282,15 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectCirclePolygonIntersec
 	return result;
 }
 
-std::optional<IntersectionDetails> PhysicsProcessor::DetectCircleCircleIntersection(const sf::CircleShape* circle1,
+std::optional<IntersectionDetails> PhysicsProcessor::DetectCircleCircleIntersection(const SceneNode& node1,
+                                                                                    const sf::CircleShape* circle1,
+                                                                                    const SceneNode& node2,
                                                                                     const sf::CircleShape* circle2) {
 	using namespace Utils;
 	auto r1 = circle1->getRadius();
 	auto r2 = circle2->getRadius();
-	auto pos1 = circle1->getPosition();
-	auto pos2 = circle2->getPosition() - circle1->getPosition();
+	auto pos1 = WorldCircleCenter(node1, *circle1);
+	auto pos2 = WorldCircleCenter(node2, *circle2) - pos1;
 	float a = -2 * pos2.x;
 	float b = -2 * pos2.y;
 	float c = Sq(pos2.x) + Sq(pos2.y) + Sq(r1) - Sq(r2);
