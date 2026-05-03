@@ -10,7 +10,7 @@ alwaysApply: false
 
 Editor property trees for classes inheriting `Engine::IPropertiesProvider` (e.g. via `EntityOnNode` → `Behaviour`, or `SceneNode` which also implements `IPropertiesProvider`) are generated into `src/Codegen/<HeaderStem>_gen.hpp`. The generator is **not** a full C++ parser; it supports a **small, documented subset** of header syntax.
 
-**Types in this repo that use codegen (non-exhaustive):** `SceneNode`, `FpsCounterBehaviour`, `PhysicsBodyBehaviour`, `UserPullBehaviour`. Not every `Behaviour` subclass has reflectable scalars (e.g. signals / `std::bitset` groups without `@property`; `PhysicsDebugBehaviour` has no data; Pong-local anonymous behaviours stay without `META_CLASS`).
+**Types in this repo that use codegen (non-exhaustive):** `SceneNode`, `FpsCounterBehaviour`, `PhysicsBodyBehaviour`, `UserPullBehaviour`. Not every `Behaviour` subclass has reflectable scalars (e.g. signals without `@property`; `PhysicsDebugBehaviour` has no data; Pong-local anonymous behaviours stay without `META_CLASS`).
 
 Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONFIGURE_DEPENDS` on the source glob in `CMakeLists.txt` (same as other `src/**/*.cpp` files).
 
@@ -56,6 +56,13 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 
 `float`, `double`, `bool`, `int`, `std::int32_t`, `std::int64_t`, `std::string`, `sf::Vector2f`, `sf::Vector3f`, `sf::Color`. Other types → codegen error until mapped in `tools/property_codegen.py`.
 
+## `std::bitset<N>` (fixed bit masks)
+
+- Declare **`std::bitset</*size expression*/> memberName;`** on one line after `/// @property` (optional `= …` / braced init before `;` is allowed), or use a **`using Alias = std::bitset<...>;`** in the **same class** and then **`Alias memberName;`**. The header must **`#include <bitset>`** where the type appears.
+- Inspector: a **fixed-length sequence** of **bool** checkboxes (indices `0 .. N-1`); list length cannot change (unlike `std::vector`). Uses `test` / `set` / `reset` on the member.
+- **`@property` meta:** `readonly`, `tooltip`, and numeric hints on the sequence behave like other properties (per-element bool editors do not use `minValue` / `maxValue`).
+- **Not supported in v1:** `@getter` / `@setter` for `std::bitset`.
+
 ## `std::vector<T>` (sequences)
 
 - Declare **`std::vector<ElementType> memberName;`** on one line after `/// @property`, where **`ElementType`** is any **Supported field types (v1)** scalar (same list as plain fields).
@@ -80,7 +87,7 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 ## Extending reflection
 
 1. Prefer extending **meta keys** → `Engine::PropertyMeta` / existing `PropertyBuilder::add*` in the generator.
-2. New C++ types: add to `KNOWN_TYPES`, `FIELD_RE`, `VECTOR_FIELD_RE`, `GETTER_METHOD_RE`, `GETTER_VECTOR_*_RE`, `SETTER_METHOD_RE`, `SETTER_VECTOR_METHOD_RE`, scalar emit in `generate_file_content`, and `emit_std_vector_property` for vectors.
+2. New C++ types: add to `KNOWN_TYPES`, `FIELD_RE`, `VECTOR_FIELD_RE`, `BITSET_FIELD_RE` / alias tracking / `GETTER_METHOD_RE`, `GETTER_VECTOR_*_RE`, `SETTER_METHOD_RE`, `SETTER_VECTOR_METHOD_RE`, scalar emit in `generate_file_content`, `emit_std_vector_property` for vectors, and `emit_bitset_property` for `std::bitset`.
 3. If headers outgrow the scanner, plan a **Clang-based** extraction step; keep `_gen.hpp` output format stable.
 
 ## CMake

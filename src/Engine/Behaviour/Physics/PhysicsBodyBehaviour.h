@@ -62,7 +62,7 @@ public:
 	Signal<const IntersectionDetails&>& GetOverlappingCallbacks();
 
 private:
-	/// @property(tooltip="Infinity = immovable; use SetImmovable() in code, or set mass in inspector.")
+	/// @property
 	float _mass = 1.f;
 	/// @property
 	sf::Vector2f _velocity{};
@@ -76,9 +76,10 @@ private:
 	float _friction = 0.5f;
 	/// @property(minValue=-1.f, maxValue=1.f, tooltip="Scales world gravity on this body. 0 = none; -1 = opposite.")
 	float _gravityScale = 1.f;
-
-	std::bitset<CollisionGroupsCount> _collisionGroups;
-	std::bitset<CollisionGroupsCount> _overlappingGroups;
+	/// @property
+	CollisionGroups _collisionGroups;
+	/// @property(readonly=true)
+	CollisionGroups _overlappingGroups;
 
 	Signal<const IntersectionDetails&> _collisionCallbacks;
 	Signal<const IntersectionDetails&> _overlappingCallbacks;
