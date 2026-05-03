@@ -24,17 +24,8 @@ namespace {
 	constexpr float kSelectionOutlinePadPx = 3.f;
 	constexpr float kSelectionOutlineThickness = 2.f;
 	const sf::Color kSelectionOutlineColor(120u, 190u, 255u, 220u);
+	const sf::Color kSelectionChildOutlineColor(255u, 200u, 120u, 210u);
 	constexpr float kSelectionFallbackHalfSize = 6.f;
-
-	void DrawAabbOutline(sf::RenderTarget& target, sf::RenderStates states, const sf::FloatRect& bounds) {
-		sf::RectangleShape frame;
-		frame.setPosition({bounds.position.x - kSelectionOutlinePadPx, bounds.position.y - kSelectionOutlinePadPx});
-		frame.setSize({bounds.size.x + 2.f * kSelectionOutlinePadPx, bounds.size.y + 2.f * kSelectionOutlinePadPx});
-		frame.setFillColor(sf::Color::Transparent);
-		frame.setOutlineColor(kSelectionOutlineColor);
-		frame.setOutlineThickness(kSelectionOutlineThickness);
-		target.draw(frame, states);
-	}
 
 	std::optional<sf::FloatRect> TryGetHierarchySelectionBounds(const SceneNode& node) {
 		const sf::Transform nodeWorld = node.GetWorldTransform();
@@ -62,31 +53,6 @@ namespace {
 		return std::nullopt;
 	}
 
-	void DrawHierarchySelectionHighlightIfSelected(const SceneNode& node, sf::RenderTarget& target,
-	                                               sf::RenderStates states) {
-		const auto selected = Engine::MainContext::GetInstance().GetHierarchySelectedForViewport();
-		if (!selected || selected.get() != &node) {
-			return;
-		}
-		sf::RenderStates worldOnly = states;
-		worldOnly.transform = sf::Transform{};
-		if (const std::optional<sf::FloatRect> bb = TryGetHierarchySelectionBounds(node)) {
-			const sf::FloatRect& b = *bb;
-			if (b.size.x > 0.f && b.size.y > 0.f) {
-				DrawAabbOutline(target, worldOnly, b);
-				return;
-			}
-		}
-		const sf::Vector2f pos = node.GetPosGlobal();
-		sf::CircleShape marker(kSelectionFallbackHalfSize);
-		marker.setOrigin({kSelectionFallbackHalfSize, kSelectionFallbackHalfSize});
-		marker.setPosition(pos);
-		marker.setFillColor(sf::Color::Transparent);
-		marker.setOutlineColor(kSelectionOutlineColor);
-		marker.setOutlineThickness(kSelectionOutlineThickness);
-		target.draw(marker, worldOnly);
-	}
-
 	void SortChildrenByDrawOrder(std::vector<shared_ptr<SceneNode>>& nodes) {
 		std::stable_sort(nodes.begin(), nodes.end(),
 		                 [](const shared_ptr<SceneNode>& a, const shared_ptr<SceneNode>& b) {
@@ -100,6 +66,61 @@ namespace {
 			                 }
 			                 return la < lb;
 		                 });
+	}
+
+	void DrawAabbOutline(sf::RenderTarget& target, sf::RenderStates states, const sf::FloatRect& bounds,
+	                     const sf::Color& outlineColor) {
+		sf::RectangleShape frame;
+		frame.setPosition({bounds.position.x - kSelectionOutlinePadPx, bounds.position.y - kSelectionOutlinePadPx});
+		frame.setSize({bounds.size.x + 2.f * kSelectionOutlinePadPx, bounds.size.y + 2.f * kSelectionOutlinePadPx});
+		frame.setFillColor(sf::Color::Transparent);
+		frame.setOutlineColor(outlineColor);
+		frame.setOutlineThickness(kSelectionOutlineThickness);
+		target.draw(frame, states);
+	}
+
+	void DrawNodeHierarchySelectionBounds(const SceneNode& node, sf::RenderTarget& target, sf::RenderStates worldOnly,
+	                                      const sf::Color& outlineColor) {
+		if (const std::optional<sf::FloatRect> bb = TryGetHierarchySelectionBounds(node)) {
+			const sf::FloatRect& b = *bb;
+			if (b.size.x > 0.f && b.size.y > 0.f) {
+				DrawAabbOutline(target, worldOnly, b, outlineColor);
+				return;
+			}
+		}
+		const sf::Vector2f pos = node.GetPosGlobal();
+		sf::CircleShape marker(kSelectionFallbackHalfSize);
+		marker.setOrigin({kSelectionFallbackHalfSize, kSelectionFallbackHalfSize});
+		marker.setPosition(pos);
+		marker.setFillColor(sf::Color::Transparent);
+		marker.setOutlineColor(outlineColor);
+		marker.setOutlineThickness(kSelectionOutlineThickness);
+		target.draw(marker, worldOnly);
+	}
+
+	void DrawDescendantHierarchySelectionOutlines(const SceneNode& parent, sf::RenderTarget& target,
+	                                              sf::RenderStates worldOnly) {
+		std::vector<shared_ptr<SceneNode>> sorted = parent.GetChildren();
+		SortChildrenByDrawOrder(sorted);
+		for (const auto& child : sorted) {
+			if (!child || !child->IsEnabled() || !child->IsVisible()) {
+				continue;
+			}
+			DrawNodeHierarchySelectionBounds(*child, target, worldOnly, kSelectionChildOutlineColor);
+			DrawDescendantHierarchySelectionOutlines(*child, target, worldOnly);
+		}
+	}
+
+	void DrawHierarchySelectionHighlightIfSelected(const SceneNode& node, sf::RenderTarget& target,
+	                                               sf::RenderStates states) {
+		const auto selected = Engine::MainContext::GetInstance().GetHierarchySelectedForViewport();
+		if (!selected || selected.get() != &node) {
+			return;
+		}
+		sf::RenderStates worldOnly = states;
+		worldOnly.transform = sf::Transform{};
+		DrawDescendantHierarchySelectionOutlines(node, target, worldOnly);
+		DrawNodeHierarchySelectionBounds(node, target, worldOnly, kSelectionOutlineColor);
 	}
 
 } // namespace
