@@ -21,7 +21,7 @@ public:
 private:
 	std::shared_ptr<Scene> BuildScene();
 	void AddWalls(Scene* scene);
-	void AddBall(Scene* scene);
+	void AddBall(Scene* scene, float radius);
 	void AddUserPlatform(Scene* scene);
 	void AddAiPlatform(Scene* scene);
 	void AddScoreboard(Scene* scene);

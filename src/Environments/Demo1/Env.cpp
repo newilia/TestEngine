@@ -85,9 +85,11 @@ namespace Demo1 {
 		const float fieldW = 500;
 		const float fieldH = 900;
 		const float platformWidth = 100;
-		const float platformThickness = 50;
+		const float platformThickness = 20;
 		const float wallsThickness = 50;
-		auto pongRoot = CreatePongGameNode(fieldW, fieldH, platformWidth, platformThickness, wallsThickness);
+		const float ballRadius = 20;
+		auto pongRoot =
+		    CreatePongGameNode(fieldW, fieldH, platformWidth, platformThickness, wallsThickness, ballRadius);
 		scene->AddChild(std::move(pongRoot));
 
 		auto ticTacToe = CreateTicTacToeGameNode();
