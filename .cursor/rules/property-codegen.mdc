@@ -43,7 +43,7 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 
 - Use **`/// @setter(name="same_as_getter", ...)`** (or `label="..."`) on its **own** doc line; the next non-empty code line must be **`void MethodName(ValueType param)`** with **one** parameter whose type matches the getter’s value type (same rules as field types: optional `const`, optional `&` on the parameter type is allowed by the scanner). For a vector-backed getter, use **`void MethodName(const std::vector<ElementType>& p)`** or **`void MethodName(std::vector<ElementType> p)`** (parameter name arbitrary).
 - **Pairing:** the string keys **`name`** and **`label`** are checked in that order; the first non-empty string on the getter must equal the first non-empty string on the setter so they refer to the same property (e.g. both `name="size"`).
-- **`@setter` must include `name="..."` or `label="..."`** so the generator can pair it. Unpaired `@setter` tags are an error.
+- **Implicit pairing:** if both getter and setter omit `name` / `label`, a **`GetXxx` / `SetXxx`** pair is matched by the same **`Xxx`** suffix (e.g. `GetPoints` / `SetPoints`). Comparison is **case-insensitive** for that key. If the setter cannot be inferred this way, use **`name="..."` / `label="..."`** on the setter (or getter).
 - **Alternative:** on `/// @getter` you can still use **`setter=MethodName`** instead of a separate `@setter` tag (do not use both for the same pair).
 
 ### Read-only vs writable

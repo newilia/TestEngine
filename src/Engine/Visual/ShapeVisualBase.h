@@ -18,16 +18,16 @@ public:
 	const sf::Shape* GetBaseShape() const;
 
 public:
-	/// @getter(name="FillColor")
+	/// @getter
 	sf::Color GetFillColor();
-	/// @setter(name="FillColor")
+	/// @setter
 	void SetFillColor(const sf::Color& color);
-	/// @getter(name="OutlineColor")
+	/// @getter
 	sf::Color GetOutlineColor();
-	/// @setter(name="OutlineColor")
+	/// @setter
 	void SetOutlineColor(const sf::Color& color);
-	/// @getter(name="OutlineThickness")
+	/// @getter
 	float GetOutlineThickness();
-	/// @setter(name="OutlineThickness")
+	/// @setter
 	void SetOutlineThickness(float thickness);
 };

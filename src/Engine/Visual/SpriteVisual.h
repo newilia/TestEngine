@@ -21,9 +21,9 @@ public:
 	bool HitTest(const sf::Vector2f& worldPoint) const override;
 	const sf::Sprite* GetSprite() const;
 	void SetTexture(const sf::Texture& texture);
-	/// @getter(name="Size")
+	/// @getter
 	sf::Vector2f GetSize() const;
-	/// @setter(name="Size")
+	/// @setter
 	void SetSize(const sf::Vector2f& size);
 
 private:

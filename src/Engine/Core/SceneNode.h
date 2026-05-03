@@ -151,9 +151,9 @@ private:
 private:
 	/// @property
 	std::string _name;
-	/// @property(name="Enabled", setter=SetEnabled)
+	/// @property(setter=SetEnabled)
 	bool _isEnabled = true;
-	/// @property(name="Visible", setter=SetVisible)
+	/// @property(setter=SetVisible)
 	bool _isVisible = true;
 
 private:

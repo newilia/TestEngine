@@ -17,9 +17,9 @@ public:
 	sf::Shape* GetBaseShape() override;
 
 	sf::ConvexShape* GetShape();
-	/// @getter(name="Points")
+	/// @getter
 	std::vector<sf::Vector2f> GetPoints() const;
-	/// @setter(name="Points")
+	/// @setter
 	void SetPoints(const std::vector<sf::Vector2f>& points);
 
 private:
