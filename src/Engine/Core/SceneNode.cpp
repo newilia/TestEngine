@@ -5,6 +5,7 @@
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/Transform.h"
 #include "Engine/Core/Utils.h"
+#include "Engine/Editor/EditorVisualTheme.h"
 #include "Engine/Visual/ShapeVisualBase.h"
 #include "Engine/Visual/SpriteVisual.h"
 #include "Engine/Visual/TextVisual.h"
@@ -21,11 +22,11 @@
 
 namespace {
 
-	constexpr float kSelectionOutlinePadPx = 3.f;
-	constexpr float kSelectionOutlineThickness = 2.f;
-	const sf::Color kSelectionOutlineColor(120u, 190u, 255u, 220u);
-	const sf::Color kSelectionChildOutlineColor(255u, 200u, 120u, 210u);
-	constexpr float kSelectionFallbackHalfSize = 6.f;
+	using Engine::EditorVisualTheme::kHierarchySelectionChildOutlineColor;
+	using Engine::EditorVisualTheme::kHierarchySelectionFallbackHalfSize;
+	using Engine::EditorVisualTheme::kHierarchySelectionOutlineColor;
+	using Engine::EditorVisualTheme::kHierarchySelectionOutlinePadPx;
+	using Engine::EditorVisualTheme::kHierarchySelectionOutlineThickness;
 
 	std::optional<sf::FloatRect> TryGetHierarchySelectionBounds(const SceneNode& node) {
 		const sf::Transform nodeWorld = node.GetWorldTransform();
@@ -71,11 +72,13 @@ namespace {
 	void DrawAabbOutline(sf::RenderTarget& target, sf::RenderStates states, const sf::FloatRect& bounds,
 	                     const sf::Color& outlineColor) {
 		sf::RectangleShape frame;
-		frame.setPosition({bounds.position.x - kSelectionOutlinePadPx, bounds.position.y - kSelectionOutlinePadPx});
-		frame.setSize({bounds.size.x + 2.f * kSelectionOutlinePadPx, bounds.size.y + 2.f * kSelectionOutlinePadPx});
+		frame.setPosition(
+		    {bounds.position.x - kHierarchySelectionOutlinePadPx, bounds.position.y - kHierarchySelectionOutlinePadPx});
+		frame.setSize({bounds.size.x + 2.f * kHierarchySelectionOutlinePadPx,
+		               bounds.size.y + 2.f * kHierarchySelectionOutlinePadPx});
 		frame.setFillColor(sf::Color::Transparent);
 		frame.setOutlineColor(outlineColor);
-		frame.setOutlineThickness(kSelectionOutlineThickness);
+		frame.setOutlineThickness(kHierarchySelectionOutlineThickness);
 		target.draw(frame, states);
 	}
 
@@ -89,12 +92,12 @@ namespace {
 			}
 		}
 		const sf::Vector2f pos = node.GetPosGlobal();
-		sf::CircleShape marker(kSelectionFallbackHalfSize);
-		marker.setOrigin({kSelectionFallbackHalfSize, kSelectionFallbackHalfSize});
+		sf::CircleShape marker(kHierarchySelectionFallbackHalfSize);
+		marker.setOrigin({kHierarchySelectionFallbackHalfSize, kHierarchySelectionFallbackHalfSize});
 		marker.setPosition(pos);
 		marker.setFillColor(sf::Color::Transparent);
 		marker.setOutlineColor(outlineColor);
-		marker.setOutlineThickness(kSelectionOutlineThickness);
+		marker.setOutlineThickness(kHierarchySelectionOutlineThickness);
 		target.draw(marker, worldOnly);
 	}
 
@@ -106,7 +109,7 @@ namespace {
 			if (!child || !child->IsEnabled() || !child->IsVisible()) {
 				continue;
 			}
-			DrawNodeHierarchySelectionBounds(*child, target, worldOnly, kSelectionChildOutlineColor);
+			DrawNodeHierarchySelectionBounds(*child, target, worldOnly, kHierarchySelectionChildOutlineColor);
 			DrawDescendantHierarchySelectionOutlines(*child, target, worldOnly);
 		}
 	}
@@ -120,7 +123,7 @@ namespace {
 		sf::RenderStates worldOnly = states;
 		worldOnly.transform = sf::Transform{};
 		DrawDescendantHierarchySelectionOutlines(node, target, worldOnly);
-		DrawNodeHierarchySelectionBounds(node, target, worldOnly, kSelectionOutlineColor);
+		DrawNodeHierarchySelectionBounds(node, target, worldOnly, kHierarchySelectionOutlineColor);
 	}
 
 } // namespace

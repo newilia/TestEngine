@@ -42,7 +42,21 @@ namespace Engine {
 		}
 	} // namespace
 
-	void PropertyTreeDrawer::Draw(const PropertyTree& tree) const {
+	void PropertyTreeDrawer::Draw(const PropertyTree& tree, PropertyTreeDrawOptions options) const {
+		if (options.unwrapSingleRootObject && tree.roots.size() == 1) {
+			const PropertyNode& root = tree.roots.front();
+			if (root.kind == PropertyKind::Object) {
+				if (root.children.empty()) {
+					drawNode(root);
+				}
+				else {
+					for (const PropertyNode& child : root.children) {
+						drawNode(child);
+					}
+				}
+				return;
+			}
+		}
 		for (const auto& root : tree.roots) {
 			drawNode(root);
 		}
