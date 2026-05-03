@@ -1,5 +1,6 @@
 #include "TextVisual.h"
 
+#include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Utils.h"
 
 #include <SFML/Graphics/Text.hpp>
@@ -17,5 +18,7 @@ void TextVisual::Draw(sf::RenderTarget& target, sf::RenderStates states) const {
 }
 
 bool TextVisual::HitTest(const sf::Vector2f& worldPoint) const {
-	return Utils::IsWorldPointInsideOfVisual(worldPoint, this);
+	auto node = GetNode();
+	const sf::Transform nw = node ? node->GetWorldTransform() : sf::Transform{};
+	return Utils::IsWorldPointInsideOfVisual(worldPoint, this, nw);
 }

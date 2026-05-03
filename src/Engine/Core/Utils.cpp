@@ -43,8 +43,11 @@ namespace {
 		return it->second;
 	}
 
-	bool IsWorldPointInsideSpriteConsideringAlpha(const sf::Vector2f& worldPoint, const sf::Sprite& sprite) {
-		const sf::Vector2f local = sprite.getInverseTransform().transformPoint(worldPoint);
+	bool IsWorldPointInsideSpriteConsideringAlpha(const sf::Vector2f& worldPoint, const sf::Sprite& sprite,
+	                                              const sf::Transform& nodeWorld) {
+		sf::Transform full = nodeWorld;
+		full *= sprite.getTransform();
+		const sf::Vector2f local = full.getInverse().transformPoint(worldPoint);
 		const sf::FloatRect bounds = sprite.getLocalBounds();
 		if (!bounds.contains(local)) {
 			return false;
@@ -158,56 +161,78 @@ namespace Utils {
 		return result;
 	}
 
-	bool IsWorldPointInsideOfShapeByFan(const sf::Vector2f& worldPoint, const sf::Shape* shape) {
+	bool IsWorldPointInsideOfShapeByFan(const sf::Vector2f& worldPoint, const sf::Shape* shape,
+	                                    const sf::Transform& nodeWorld) {
 		if (!shape) {
 			return false;
 		}
+		sf::Transform combined = nodeWorld;
+		combined *= shape->getTransform();
 		return pointInsideConvexFan(worldPoint, shape->getPointCount(), [&](std::size_t i) {
-			return shape->getTransform().transformPoint(shape->getPoint(i));
+			return combined.transformPoint(shape->getPoint(i));
 		});
 	}
 
-	bool IsWorldPointInsideOfShape(const sf::Vector2f& worldPoint, const sf::Shape* shape) {
+	bool IsWorldPointInsideOfShapeByFan(const sf::Vector2f& worldPoint, const sf::Shape* shape) {
+		return IsWorldPointInsideOfShapeByFan(worldPoint, shape, sf::Transform{});
+	}
+
+	bool IsWorldPointInsideOfShape(const sf::Vector2f& worldPoint, const sf::Shape* shape,
+	                               const sf::Transform& nodeWorld) {
 		if (!shape) {
 			return false;
 		}
 		if (const auto* circle = dynamic_cast<const sf::CircleShape*>(shape)) {
-			const auto& tf = circle->getTransform();
+			sf::Transform combined = nodeWorld;
+			combined *= circle->getTransform();
 			const sf::Vector2f localCenter = circle->getGeometricCenter();
-			const sf::Vector2f center = tf.transformPoint(localCenter);
+			const sf::Vector2f center = combined.transformPoint(localCenter);
 			const float radius =
-			    Length(tf.transformPoint(localCenter + sf::Vector2f{circle->getRadius(), 0.f}) - center);
+			    Length(combined.transformPoint(localCenter + sf::Vector2f{circle->getRadius(), 0.f}) - center);
 			return Sq(worldPoint.x - center.x) + Sq(worldPoint.y - center.y) <= Sq(radius);
 		}
 		if (const auto* rect = dynamic_cast<const sf::RectangleShape*>(shape)) {
-			const sf::Vector2f local = rect->getInverseTransform().transformPoint(worldPoint);
+			sf::Transform combined = nodeWorld;
+			combined *= rect->getTransform();
+			const sf::Vector2f local = combined.getInverse().transformPoint(worldPoint);
 			const sf::FloatRect localBounds({0.f, 0.f}, rect->getSize());
 			return localBounds.contains(local);
 		}
-		return IsWorldPointInsideOfShapeByFan(worldPoint, shape);
+		return IsWorldPointInsideOfShapeByFan(worldPoint, shape, nodeWorld);
 	}
 
-	bool IsWorldPointInsideOfVisual(const sf::Vector2f& worldPoint, const Visual* visual) {
+	bool IsWorldPointInsideOfShape(const sf::Vector2f& worldPoint, const sf::Shape* shape) {
+		return IsWorldPointInsideOfShape(worldPoint, shape, sf::Transform{});
+	}
+
+	bool IsWorldPointInsideOfVisual(const sf::Vector2f& worldPoint, const Visual* visual,
+	                                const sf::Transform& nodeWorld) {
 		if (!visual) {
 			return false;
 		}
 		if (const auto* shapeVisual = dynamic_cast<const ShapeVisualBase*>(visual)) {
-			return IsWorldPointInsideOfShape(worldPoint, shapeVisual->GetBaseShape());
+			return IsWorldPointInsideOfShape(worldPoint, shapeVisual->GetBaseShape(), nodeWorld);
 		}
 		if (const auto* fps = dynamic_cast<const TextVisual*>(visual)) {
 			if (const sf::Text* text = fps->GetText()) {
-				return text->getGlobalBounds().contains(worldPoint);
+				sf::Transform full = nodeWorld;
+				full *= text->getTransform();
+				const sf::Vector2f local = full.getInverse().transformPoint(worldPoint);
+				return text->getLocalBounds().contains(local);
 			}
 			return false;
 		}
 		if (const auto* spriteVis = dynamic_cast<const SpriteVisual*>(visual)) {
 			if (const sf::Sprite* sprite = spriteVis->GetSprite()) {
-				// return sprite->getGlobalBounds().contains(worldPoint);
-				return IsWorldPointInsideSpriteConsideringAlpha(worldPoint, *sprite); // must be expensive
+				return IsWorldPointInsideSpriteConsideringAlpha(worldPoint, *sprite, nodeWorld);
 			}
 			return false;
 		}
 		return false;
+	}
+
+	bool IsWorldPointInsideOfVisual(const sf::Vector2f& worldPoint, const Visual* visual) {
+		return IsWorldPointInsideOfVisual(worldPoint, visual, sf::Transform{});
 	}
 
 	bool IsWorldPointInsideOfBody(const sf::Vector2f& worldPoint, const PhysicsBodyBehaviour* body) {

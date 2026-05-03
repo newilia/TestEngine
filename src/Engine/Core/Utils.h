@@ -34,8 +34,14 @@ namespace Utils {
 
 	/// Веерная триангуляция от первой вершины; Не для круга — см. `IsWorldPointInsideOfShape`.
 	bool IsWorldPointInsideOfShapeByFan(const sf::Vector2f& worldPoint, const sf::Shape* shape);
+	bool IsWorldPointInsideOfShapeByFan(const sf::Vector2f& worldPoint, const sf::Shape* shape,
+	                                    const sf::Transform& nodeWorld);
 	bool IsWorldPointInsideOfShape(const sf::Vector2f& worldPoint, const sf::Shape* shape);
+	bool IsWorldPointInsideOfShape(const sf::Vector2f& worldPoint, const sf::Shape* shape,
+	                               const sf::Transform& nodeWorld);
 	bool IsWorldPointInsideOfVisual(const sf::Vector2f& worldPoint, const Visual* visual);
+	bool IsWorldPointInsideOfVisual(const sf::Vector2f& worldPoint, const Visual* visual,
+	                                const sf::Transform& nodeWorld);
 	bool IsWorldPointInsideOfBody(const sf::Vector2f& worldPoint, const PhysicsBodyBehaviour* body);
 
 	bool IsNan(const sf::Vector2f& v);

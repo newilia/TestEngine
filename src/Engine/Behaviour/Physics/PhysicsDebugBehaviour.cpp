@@ -34,10 +34,12 @@ void PhysicsDebugBehaviour::DebugDraw(sf::RenderTarget& target, sf::RenderStates
 	auto pos = node->GetPosGlobal();
 	text.setPosition(pos);
 	text.setString(fmt::format("{}\n{:.1f}, {:.1f}", node->GetName(), pos.x, pos.y));
-	target.draw(text, states);
+	sf::RenderStates dbg = states;
+	dbg.transform = sf::Transform{};
+	target.draw(text, dbg);
 
 	VectorArrow velArrow(node->GetPosGlobal(), node->GetPosGlobal() + rigidBody->GetVelocity());
-	target.draw(velArrow, states);
+	target.draw(velArrow, dbg);
 
 	if (auto fieldSrc = node->FindBehaviour<AttractiveBehaviour>()) {
 		if (fieldSrc->IsEnabled() && !rigidBody->IsImmovable() && std::isfinite(rigidBody->GetMass()) &&
@@ -54,7 +56,7 @@ void PhysicsDebugBehaviour::DebugDraw(sf::RenderTarget& target, sf::RenderStates
 				if (visualLen2 > 1e-10f) {
 					const sf::Vector2f tip = pos + sf::Vector2f{vx, vy};
 					VectorArrow forceArrow(pos, tip, sf::Color(255, 80, 220));
-					target.draw(forceArrow, states);
+					target.draw(forceArrow, dbg);
 				}
 			}
 		}

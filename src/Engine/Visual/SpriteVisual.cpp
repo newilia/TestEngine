@@ -1,5 +1,6 @@
 #include "Engine/Visual/SpriteVisual.h"
 
+#include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Utils.h"
 #include "SpriteVisual.generated.hpp"
 
@@ -18,7 +19,9 @@ void SpriteVisual::Draw(sf::RenderTarget& target, sf::RenderStates states) const
 }
 
 bool SpriteVisual::HitTest(const sf::Vector2f& worldPoint) const {
-	return Utils::IsWorldPointInsideOfVisual(worldPoint, this);
+	auto node = GetNode();
+	const sf::Transform nw = node ? node->GetWorldTransform() : sf::Transform{};
+	return Utils::IsWorldPointInsideOfVisual(worldPoint, this, nw);
 }
 
 void SpriteVisual::SetTexture(const sf::Texture& texture) {

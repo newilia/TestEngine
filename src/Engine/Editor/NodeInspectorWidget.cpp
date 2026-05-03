@@ -38,7 +38,7 @@ namespace Engine {
 		}
 		DrawIPropertiesProviderBlock("SceneNode", dynamic_cast<IPropertiesProvider*>(node.get()), _propertyDrawer);
 
-		DrawIPropertiesProviderBlock("Transform", node->GetTransform().get(), _propertyDrawer);
+		DrawIPropertiesProviderBlock("Transform", node->GetLocalTransform().get(), _propertyDrawer);
 
 		if (const auto visual = node->GetVisual()) {
 			DrawIPropertiesProviderBlock("Visual", dynamic_cast<IPropertiesProvider*>(visual.get()), _propertyDrawer);

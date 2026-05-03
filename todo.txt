@@ -18,6 +18,10 @@ PhysicsProcessor::Update(const sf::Time& dt) удаление протухших
 
 пересмотреть неймспейсы Editor, Engine, Common (common.h), Utils
 
+перетаскивание нод в иерархии
+
+del, ctrl c, ctrl x, ctrl v в иерархии
+
 множественное выделение нод:
 	ctrl, shift в иерархии
 	ctrl во viewport

@@ -60,7 +60,7 @@ public:
 	void SetSortingStrategy(const shared_ptr<RelativeSortingStrategy>& sorting);
 
 	shared_ptr<Visual> GetVisual() const;
-	shared_ptr<Transform> GetTransform() const;
+	shared_ptr<Transform> GetLocalTransform() const;
 	shared_ptr<RelativeSortingStrategy> GetSortingStrategy() const;
 	const std::vector<shared_ptr<Behaviour>>& GetBehaviours() const;
 
@@ -81,7 +81,7 @@ public:
 
 	template <typename T>
 	shared_ptr<T> FindEntity() const {
-		if (auto t = std::dynamic_pointer_cast<T>(GetTransform())) {
+		if (auto t = std::dynamic_pointer_cast<T>(GetLocalTransform())) {
 			return t;
 		}
 		if (auto v = std::dynamic_pointer_cast<T>(_visual)) {
@@ -126,6 +126,8 @@ public:
 	void FindNodesAtPoint(const sf::Vector2f& worldPoint, std::vector<shared_ptr<SceneNode>>& result,
 	                      bool tapResponsiveOnly = false);
 	bool DispatchTapAt(const sf::Vector2f& worldPoint);
+	sf::Transform GetWorldTransform() const;
+	void MarkWorldTransformSubtreeDirty() const;
 	sf::Vector2f GetPosGlobal() const;
 	void SetPosGlobal(sf::Vector2f pos);
 
@@ -157,7 +159,9 @@ private:
 private:
 	weak_ptr<SceneNode> _parent;
 	std::vector<shared_ptr<SceneNode>> _children;
-	mutable shared_ptr<Transform> _transform;
+	mutable shared_ptr<Transform> _localTransform;
+	mutable bool _worldTransformDirty = true;
+	mutable sf::Transform _cachedWorldTransform{};
 	shared_ptr<Visual> _visual;
 	shared_ptr<RelativeSortingStrategy> _sortingStrategy;
 	std::vector<shared_ptr<Behaviour>> _behaviours;

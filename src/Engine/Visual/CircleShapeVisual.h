@@ -9,7 +9,6 @@ class CircleShapeVisual : public ShapeVisualBase
 public:
 	CircleShapeVisual();
 	sf::Shape* GetBaseShape() override;
-	bool HitTest(const sf::Vector2f& worldPoint) const override;
 
 	sf::CircleShape* GetShape();
 
