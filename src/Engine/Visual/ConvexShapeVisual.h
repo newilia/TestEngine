@@ -10,6 +10,7 @@
 class ConvexShapeVisual : public ShapeVisualBase
 {
 	META_CLASS()
+	META_PROPERTY_BASE(ShapeVisualBase)
 
 public:
 	ConvexShapeVisual();

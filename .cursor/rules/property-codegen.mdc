@@ -1,5 +1,5 @@
 ---
-description: Property reflection codegen (META_CLASS, @property, @getter, @setter, Python generator)
+description: Property reflection codegen (META_CLASS, META_PROPERTY_BASE, @property, @getter, @setter, Python generator)
 globs: src/**/*.h, tools/property_codegen.py, CMakeLists.txt, src/Codegen/**/*
 alwaysApply: false
 ---
@@ -17,9 +17,10 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 ## Author workflow
 
 1. In the class header: `#include "Engine/Core/MetaClass.h"`, then put `META_CLASS()` inside the class (typically before `public:`).
-2. Above each reflected **data member** use `/// @property` or `/// @property(key=value, ...)`. For method-backed properties use `/// @getter` on the getter line and optionally `/// @setter` on the setter line (see below).
-3. In **one** corresponding `.cpp`: `#include "<HeaderStem>.generated.hpp"` after the class header so out-of-line `BuildPropertyTree` sees the full class type.
-4. Build `TestEngine`; CMake target **`Codegen`** runs first. Include generated headers as `#include "Foo_gen.hpp"` (`src/Codegen` is on the include path).
+2. If a **derived** class should show the inspector tree of an **immediate base** that also uses codegen, add **`META_PROPERTY_BASE(ImmediateBase)`** on its own line in the same class (usually right after `META_CLASS()`). The generator emits `ImmediateBase::BuildPropertyTree(b);` before this class’s properties. Omit on root reflecting types (e.g. `ShapeVisualBase` has no `META_PROPERTY_BASE`). The name may be `Qualified::Base` if needed.
+3. Above each reflected **data member** use `/// @property` or `/// @property(key=value, ...)`. For method-backed properties use `/// @getter` on the getter line and optionally `/// @setter` on the setter line (see below).
+4. In **one** corresponding `.cpp`: `#include "<HeaderStem>.generated.hpp"` after the class header so out-of-line `BuildPropertyTree` sees the full class type.
+5. Build `TestEngine`; CMake target **`Codegen`** runs first. Include generated headers as `#include "Foo_gen.hpp"` (`src/Codegen` is on the include path).
 
 ## `@property` argument syntax
 
@@ -85,8 +86,9 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 ## Limitations (maintainability)
 
 - One-line `/// @property` / `/// @getter` / `/// @setter` tags only. After each tag, the next non-empty code line must be the matching declaration ending in `;` (field, getter, or `void` setter with one parameter).
+- At most one `META_PROPERTY_BASE(...)` per class; it must appear in the same class as `META_CLASS()` (scanner error if `META_PROPERTY_BASE` is used without `META_CLASS`).
 - Templates, tricky macros, multi-line declarations, and **nested** `std::vector`s are **not** supported in v1.
-- `#define META_CLASS()` in `MetaClass.h` is ignored by the scanner (not treated as usage).
+- `#define META_CLASS()` / `#define META_PROPERTY_BASE(...)` in `MetaClass.h` are ignored by the scanner (not treated as usage).
 
 ## Cache and force rebuild
 
