@@ -3,9 +3,11 @@
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/TextureManager.h"
+#include "Engine/Core/Transform.h"
 #include "Engine/Core/Utils.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "Engine/Visual/SpriteVisual.h"
+#include "PongGame.h"
 #include "TicTacToeGame.h"
 
 #include <cstdlib>
@@ -21,7 +23,7 @@ namespace Demo1 {
 		Utils::MaximizeWindow(*mainWindow);
 		mainContext.GetPhysicsProcessor()->SetGravity({0, 1000});
 		mainContext.SetScene(BuildScene());
-		mainContext.SetVerticalSyncEnabled(true);
+		mainContext.SetVerticalSyncEnabled(false);
 		EventHandlerBase::SubscribeForEvents();
 	}
 
@@ -79,8 +81,17 @@ namespace Demo1 {
 	shared_ptr<Scene> Env::BuildScene() {
 		auto scene = make_shared<Scene>();
 		scene->AddChild(CreateBackgroundNode());
+
+		const float fieldW = 500;
+		const float fieldH = 900;
+		const float platformWidth = 100;
+		const float platformThickness = 50;
+		const float wallsThickness = 50;
+		auto pongRoot = CreatePongGameNode(fieldW, fieldH, platformWidth, platformThickness, wallsThickness);
+		scene->AddChild(std::move(pongRoot));
+
 		auto ticTacToe = CreateTicTacToeGameNode();
-		ticTacToe->SetPosGlobal({160.f, 160.f});
+		ticTacToe->SetPosGlobal({80.f, 120.f});
 		scene->AddChild(std::move(ticTacToe));
 		return scene;
 	}

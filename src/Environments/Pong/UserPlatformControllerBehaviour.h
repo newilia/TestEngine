@@ -5,9 +5,13 @@
 
 #include <SFML/System/Vector2.hpp>
 
+#include <memory>
+
 namespace sf {
 	class Event;
 }
+
+class SceneNode;
 
 /// Player paddle: mouse-driven target + velocity toward target.
 class UserPlatformControllerBehaviour : public InputHandlerBehaviourBase
@@ -20,6 +24,7 @@ public:
 	void OnEvent(const sf::Event& event) override;
 
 	void ResyncSpawnFromNode();
+	void SetMovementBounds(std::weak_ptr<SceneNode> movementRegionRect);
 
 	/* TODO incapsulation */
 	/// @property(minValue=0.f, maxValue=100000.f)
@@ -30,4 +35,5 @@ public:
 private:
 	sf::Vector2f _defaultPos{};
 	sf::Vector2f _targetPos{};
+	std::weak_ptr<SceneNode> _movementBounds;
 };
