@@ -306,6 +306,66 @@ namespace Engine {
 			}
 			break;
 		}
+		case PropertyKind::Vec2i: {
+			if (const auto* a = std::get_if<PropAccessVec2i>(&n.access)) {
+				drawLabelLeft(n);
+				sf::Vector2i v = a->get();
+				int arr[2] = {v.x, v.y};
+				if (readOnly) {
+					ImGui::Text("(%d, %d)", arr[0], arr[1]);
+				}
+				else {
+					const float speed = n.meta.dragSpeed.value_or(1.f);
+					if (ImGui::DragInt2("##v", arr, speed)) {
+						int x = arr[0];
+						int y = arr[1];
+						if (n.meta.numericMin) {
+							const int mn = static_cast<int>(*n.meta.numericMin);
+							x = std::max(x, mn);
+							y = std::max(y, mn);
+						}
+						if (n.meta.numericMax) {
+							const int mx = static_cast<int>(*n.meta.numericMax);
+							x = std::min(x, mx);
+							y = std::min(y, mx);
+						}
+						a->set(sf::Vector2i{x, y});
+					}
+				}
+				itemTooltipAfter(n.meta);
+			}
+			break;
+		}
+		case PropertyKind::Vec2u: {
+			if (const auto* a = std::get_if<PropAccessVec2u>(&n.access)) {
+				drawLabelLeft(n);
+				sf::Vector2u v = a->get();
+				std::uint32_t arr[2] = {static_cast<std::uint32_t>(v.x), static_cast<std::uint32_t>(v.y)};
+				if (readOnly) {
+					ImGui::Text("(%u, %u)", static_cast<unsigned>(arr[0]), static_cast<unsigned>(arr[1]));
+				}
+				else {
+					const float speed = n.meta.dragSpeed.value_or(1.f);
+					const void* pMin = nullptr;
+					const void* pMax = nullptr;
+					std::uint32_t vmin = 0;
+					std::uint32_t vmax = 0;
+					if (n.meta.numericMin) {
+						vmin = static_cast<std::uint32_t>(*n.meta.numericMin);
+						pMin = &vmin;
+					}
+					if (n.meta.numericMax) {
+						vmax = static_cast<std::uint32_t>(*n.meta.numericMax);
+						pMax = &vmax;
+					}
+					if (ImGui::DragScalarN("##v", ImGuiDataType_U32, arr, 2, speed, pMin, pMax, "%u", 0)) {
+						a->set(sf::Vector2u{static_cast<unsigned int>(arr[0]), static_cast<unsigned int>(arr[1])});
+					}
+				}
+				itemTooltipAfter(n.meta);
+			}
+			break;
+		}
 		case PropertyKind::Vec3f: {
 			if (const auto* a = std::get_if<PropAccessVec3f>(&n.access)) {
 				drawLabelLeft(n);

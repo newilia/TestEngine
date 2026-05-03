@@ -12,6 +12,8 @@ namespace Engine {
 		String,
 		Enum,
 		Vec2f,
+		Vec2i,
+		Vec2u,
 		Vec3f,
 		Color,
 		/// Group / struct: only `children` are shown.

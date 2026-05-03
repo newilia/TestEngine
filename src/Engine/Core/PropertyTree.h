@@ -48,6 +48,12 @@ namespace Engine {
 		void addVec2f(std::string id, const std::string& label, std::function<sf::Vector2f()> get,
 		              std::function<void(sf::Vector2f)> set, PropertyMeta meta = {});
 
+		void addVec2i(std::string id, const std::string& label, std::function<sf::Vector2i()> get,
+		              std::function<void(sf::Vector2i)> set, PropertyMeta meta = {});
+
+		void addVec2u(std::string id, const std::string& label, std::function<sf::Vector2u()> get,
+		              std::function<void(sf::Vector2u)> set, PropertyMeta meta = {});
+
 		void addVec3f(std::string id, const std::string& label, std::function<sf::Vector3f()> get,
 		              std::function<void(sf::Vector3f)> set, PropertyMeta meta = {});
 

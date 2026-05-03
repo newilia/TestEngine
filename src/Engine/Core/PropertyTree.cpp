@@ -106,6 +106,18 @@ namespace Engine {
 		(void)appendChild(makeLeaf(std::move(id), label, PropertyKind::Vec2f, std::move(meta), std::move(acc)));
 	}
 
+	void PropertyBuilder::addVec2i(std::string id, const std::string& label, std::function<sf::Vector2i()> get,
+	                               std::function<void(sf::Vector2i)> set, PropertyMeta meta) {
+		PropAccessVec2i acc{std::move(get), std::move(set)};
+		(void)appendChild(makeLeaf(std::move(id), label, PropertyKind::Vec2i, std::move(meta), std::move(acc)));
+	}
+
+	void PropertyBuilder::addVec2u(std::string id, const std::string& label, std::function<sf::Vector2u()> get,
+	                               std::function<void(sf::Vector2u)> set, PropertyMeta meta) {
+		PropAccessVec2u acc{std::move(get), std::move(set)};
+		(void)appendChild(makeLeaf(std::move(id), label, PropertyKind::Vec2u, std::move(meta), std::move(acc)));
+	}
+
 	void PropertyBuilder::addVec3f(std::string id, const std::string& label, std::function<sf::Vector3f()> get,
 	                               std::function<void(sf::Vector3f)> set, PropertyMeta meta) {
 		PropAccessVec3f acc{std::move(get), std::move(set)};
