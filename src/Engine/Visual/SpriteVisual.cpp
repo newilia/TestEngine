@@ -4,7 +4,7 @@
 
 #include <SFML/Graphics/Sprite.hpp>
 
-SpriteVisual::SpriteVisual(std::shared_ptr<sf::Sprite> sprite) : _sprite(std::move(sprite)) {}
+SpriteVisual::SpriteVisual() {}
 
 const sf::Sprite* SpriteVisual::GetSprite() const {
 	return _sprite.get();
@@ -18,4 +18,8 @@ void SpriteVisual::Draw(sf::RenderTarget& target, sf::RenderStates states) const
 
 bool SpriteVisual::HitTest(const sf::Vector2f& worldPoint) const {
 	return Utils::IsWorldPointInsideOfVisual(worldPoint, this);
+}
+
+void SpriteVisual::SetTexture(const sf::Texture& texture) {
+	_sprite = std::make_shared<sf::Sprite>(texture);
 }

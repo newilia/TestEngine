@@ -49,3 +49,5 @@ RequireBehaviour c аргументами
 	std::bitset<CollisionGroupsCount> _overlappingGroups;
 	Signal<const IntersectionDetails&> _collisionCallbacks;
 	Signal<const IntersectionDetails&> _overlappingCallbacks;
+
+добавить LOG_DEBUG(), LOG_INFO() и т.д. и панельку с логом
