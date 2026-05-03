@@ -15,7 +15,9 @@
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics/Text.hpp>
 
+#include <algorithm>
 #include <cmath>
+#include <unordered_map>
 
 namespace {
 	template <typename GetVertex>
@@ -30,6 +32,83 @@ namespace {
 			}
 		}
 		return false;
+	}
+
+	const sf::Image& TexturePixelsForHitTest(const sf::Texture& texture) {
+		static std::unordered_map<const sf::Texture*, sf::Image> cache;
+		const auto [it, inserted] = cache.try_emplace(&texture);
+		if (inserted) {
+			it->second = texture.copyToImage();
+		}
+		return it->second;
+	}
+
+	bool IsWorldPointInsideSpriteConsideringAlpha(const sf::Vector2f& worldPoint, const sf::Sprite& sprite) {
+		const sf::Vector2f local = sprite.getInverseTransform().transformPoint(worldPoint);
+		const sf::FloatRect bounds = sprite.getLocalBounds();
+		if (!bounds.contains(local)) {
+			return false;
+		}
+
+		const sf::IntRect tr = sprite.getTextureRect();
+		if (tr.size.x <= 0 || tr.size.y <= 0) {
+			return false;
+		}
+
+		const float minX = std::min(bounds.position.x, bounds.position.x + bounds.size.x);
+		const float minY = std::min(bounds.position.y, bounds.position.y + bounds.size.y);
+		const float spanX = std::abs(bounds.size.x);
+		const float spanY = std::abs(bounds.size.y);
+		if (spanX <= std::numeric_limits<float>::epsilon() || spanY <= std::numeric_limits<float>::epsilon()) {
+			return false;
+		}
+
+		const float nx = (local.x - minX) / spanX;
+		const float ny = (local.y - minY) / spanY;
+
+		int ox = static_cast<int>(nx * static_cast<float>(tr.size.x));
+		int oy = static_cast<int>(ny * static_cast<float>(tr.size.y));
+		if (ox >= tr.size.x) {
+			ox = tr.size.x - 1;
+		}
+		if (oy >= tr.size.y) {
+			oy = tr.size.y - 1;
+		}
+		if (ox < 0) {
+			ox = 0;
+		}
+		if (oy < 0) {
+			oy = 0;
+		}
+
+		const sf::Texture& tex = sprite.getTexture();
+		const sf::Vector2u texSize = tex.getSize();
+		if (texSize.x == 0 || texSize.y == 0) {
+			return false;
+		}
+
+		const int px = tr.position.x + ox;
+		const int py = tr.position.y + oy;
+		if (px < 0 || py < 0 || px >= static_cast<int>(texSize.x) || py >= static_cast<int>(texSize.y)) {
+			return false;
+		}
+
+		const sf::Image& image = TexturePixelsForHitTest(tex);
+		const sf::Vector2u imageSize = image.getSize();
+		if (imageSize.x == 0 || imageSize.y == 0) {
+			return false;
+		}
+
+		const unsigned pux = static_cast<unsigned>(px);
+		const unsigned puy = static_cast<unsigned>(py);
+		if (pux >= imageSize.x || puy >= imageSize.y) {
+			return false;
+		}
+
+		const sf::Color texel = image.getPixel({pux, puy});
+		const sf::Color tint = sprite.getColor();
+		const int combinedAlpha = static_cast<int>(texel.a) * static_cast<int>(tint.a) / 255;
+		return combinedAlpha > 0;
 	}
 } // namespace
 
@@ -123,7 +202,8 @@ namespace Utils {
 		}
 		if (const auto* spriteVis = dynamic_cast<const SpriteVisual*>(visual)) {
 			if (const sf::Sprite* sprite = spriteVis->GetSprite()) {
-				return sprite->getGlobalBounds().contains(worldPoint);
+				// return sprite->getGlobalBounds().contains(worldPoint);
+				return IsWorldPointInsideSpriteConsideringAlpha(worldPoint, *sprite); // must be expensive
 			}
 			return false;
 		}

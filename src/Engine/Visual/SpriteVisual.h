@@ -11,10 +11,12 @@ namespace sf {
 class SpriteVisual : public Visual
 {
 public:
-	explicit SpriteVisual(std::shared_ptr<sf::Sprite> sprite);
+	SpriteVisual();
 
 	void Draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 	bool HitTest(const sf::Vector2f& worldPoint) const override;
+	void SetTexture(const sf::Texture& texture);
+	void SetSize(const sf::Vector2f& size);
 	const sf::Sprite* GetSprite() const;
 
 private:
