@@ -1,5 +1,6 @@
 #include "Engine/Editor/Tools/PolygonTool.h"
 
+#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Utils.h"
@@ -31,7 +32,7 @@ namespace {
 PolygonTool::PolygonTool(SelectTool::SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
 
 void PolygonTool::beginStroke(const sf::Vector2f& world, const sf::Vector2i& pixel) {
-	_drawing = true;
+	_isDrawing = true;
 	_worldSamples.clear();
 	_worldSamples.push_back(world);
 	_lastSamplePixel = pixel;
@@ -92,6 +93,10 @@ void PolygonTool::finalizeStroke() {
 	node->SetVisual(std::move(visual));
 	parent->AddChild(node);
 	node->SetPosGlobal(centerWorld);
+	if (_isAttachPhysicsBody) {
+		auto body = node->RequireBehaviour<PhysicsBodyBehaviour>();
+	}
+	/* TODO remove when behaviours init after node attach is fixed */
 	{
 		auto active = Engine::MainContext::GetInstance().GetScene();
 		shared_ptr<SceneNode> root = parent;
@@ -102,14 +107,13 @@ void PolygonTool::finalizeStroke() {
 			node->NotifyLifecycleInitRecursive();
 		}
 	}
-	_onSelect(node);
 }
 
 void PolygonTool::endStroke() {
-	if (!_drawing) {
+	if (!_isDrawing) {
 		return;
 	}
-	_drawing = false;
+	_isDrawing = false;
 	finalizeStroke();
 	_worldSamples.clear();
 	_lastSamplePixel.reset();
@@ -129,7 +133,7 @@ bool PolygonTool::processEvent(const sf::Event& event) {
 		}
 	}
 
-	if (_drawing) {
+	if (_isDrawing) {
 		if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
 			_cursorWorld = ToWorldPixel(moved->position);
 			tryAppendSample(moved->position, _cursorWorld);
@@ -160,7 +164,7 @@ bool PolygonTool::processEvent(const sf::Event& event) {
 }
 
 void PolygonTool::drawOverlay(sf::RenderWindow& window) {
-	if (!_drawing || _worldSamples.empty()) {
+	if (!_isDrawing || _worldSamples.empty()) {
 		return;
 	}
 
@@ -179,4 +183,9 @@ void PolygonTool::drawOverlay(sf::RenderWindow& window) {
 
 	ImGui::GetForegroundDrawList()->AddPolyline(pts.data(), static_cast<int>(pts.size()), IM_COL32(255, 255, 255, 255),
 	                                            ImDrawFlags_None, kOverlayLineThickness);
+}
+
+void PolygonTool::drawToolParametersUi() {
+	ImGui::TextUnformatted("Draw a convex shape");
+	ImGui::Checkbox("Attach physical body behaviour", &_isAttachPhysicsBody);
 }

@@ -15,6 +15,7 @@ public:
 	explicit SelectTool(SelectCallback onSelect);
 
 	[[nodiscard]] bool processEvent(const sf::Event& event) override;
+	void drawToolParametersUi() override;
 
 private:
 	SelectCallback _onSelect;

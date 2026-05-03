@@ -16,7 +16,8 @@ public:
 	explicit MoveTool(SelectTool::SelectCallback onSelect);
 
 	bool processEvent(const sf::Event& event) override;
-	virtual void onPresent(const sf::Time& dt);
+	void onPresent(const sf::Time& dt) override;
+	void drawToolParametersUi() override;
 
 private:
 	SelectTool::SelectCallback _onSelect;

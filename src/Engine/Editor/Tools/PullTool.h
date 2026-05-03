@@ -19,6 +19,7 @@ public:
 	bool processEvent(const sf::Event& event) override;
 	void onPresent(const sf::Time& dt) override;
 	void drawOverlay(sf::RenderWindow& window) override;
+	void drawToolParametersUi() override;
 
 	void SetPullForceScale(float v);
 	float GetPullForceScale() const;

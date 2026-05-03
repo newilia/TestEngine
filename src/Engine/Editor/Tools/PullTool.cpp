@@ -10,6 +10,8 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Mouse.hpp>
 
+#include <imgui.h>
+
 #include <algorithm>
 #include <cmath>
 
@@ -170,4 +172,19 @@ void PullTool::drawOverlay(sf::RenderWindow& window) {
 		return;
 	}
 	_arrow.draw(window, sf::RenderStates::Default);
+}
+
+void PullTool::drawToolParametersUi() {
+	float scale = GetPullForceScale();
+	if (ImGui::SliderFloat("Pull force scale", &scale, 0.01f, 100.f, "%.3f")) {
+		SetPullForceScale(scale);
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Multiplier for pull force (Force mode); base strength is 100000.");
+	}
+
+	bool dbg = IsDebugArrowEnabled();
+	if (ImGui::Checkbox("Debug draw arrow", &dbg)) {
+		SetDebugArrowEnabled(dbg);
+	}
 }

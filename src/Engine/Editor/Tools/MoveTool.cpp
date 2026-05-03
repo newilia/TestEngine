@@ -8,6 +8,8 @@
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/Mouse.hpp>
 
+#include <imgui.h>
+
 namespace {
 
 	void ZeroMotion(PhysicsBodyBehaviour* rb) {
@@ -108,4 +110,8 @@ void MoveTool::onPresent(const sf::Time& dt) {
 			ZeroMotion(rb.get());
 		}
 	}
+}
+
+void MoveTool::drawToolParametersUi() {
+	ImGui::TextUnformatted("Drag physical bodies with LMB; velocity is cleared while moving.");
 }
