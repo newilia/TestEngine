@@ -75,6 +75,7 @@ namespace Demo1 {
 		auto sorting = make_shared<RelativeSortingStrategy>();
 		sorting->SetPriority(-10);
 		node->SetSortingStrategy(std::move(sorting));
+		node->GetLocalTransform()->SetScale({2.f, 2.f});
 		return node;
 	}
 

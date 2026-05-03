@@ -8,38 +8,37 @@
 #include <SFML/System/Angle.hpp>
 #include <SFML/System/Vector2.hpp>
 
-/// Per-node spatial transform; held by `SceneNode` as local TRS relative to the parent.
-/// Mutations use `setLocal*` only so hierarchy caches stay consistent (no public `sf::Transformable`).
+/// Wrapper for sf::Transformable. Held by `SceneNode` as local TRS relative to the parent.
+/// Mutations use setters only so hierarchy caches stay consistent (no public `sf::Transformable`).
 class Transform final : public EntityOnNode
 {
 	META_CLASS()
-	META_PROPERTY_BASE(EntityOnNode)
 
 public:
-	sf::Transform getTransform() const;
+	sf::Transform GetTransform() const;
 
 	/// @getter
-	sf::Vector2f getLocalPosition() const;
+	sf::Vector2f GetPosition() const;
 	/// @setter
-	void setLocalPosition(sf::Vector2f v);
+	void SetPosition(sf::Vector2f v);
 
 	/// @getter
-	sf::Vector2f getLocalScale() const;
+	sf::Vector2f GetScale() const;
 	/// @setter(dragSpeed=0.01f)
-	void setLocalScale(sf::Vector2f v);
+	void SetScale(sf::Vector2f v);
 
 	/// @getter
-	sf::Angle getLocalRotation() const;
+	sf::Angle GetRotation() const;
 	/// @setter
-	void setLocalRotation(sf::Angle angle);
+	void SetRotation(sf::Angle angle);
 
 	/// @getter
-	sf::Vector2f getLocalOrigin() const;
+	sf::Vector2f GetOrigin() const;
 	/// @setter
-	void setLocalOrigin(sf::Vector2f v);
+	void SetOrigin(sf::Vector2f v);
 
 private:
-	void notifyTransformChanged();
+	void NotifyTransformChanged();
 
 private:
 	sf::Transformable _transformable;
