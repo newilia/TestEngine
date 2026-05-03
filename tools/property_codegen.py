@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 4
+CACHE_VERSION = 6
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
@@ -29,10 +29,10 @@ CLASS_HEAD_RE = re.compile(
 NS_HEAD_RE = re.compile(r"^\s*namespace\s+([A-Za-z_]\w*)\s*(?:\{)?\s*$")
 FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*"
-    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color|sf::Angle)\s+"
+    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector2i|sf::Vector2u|sf::Vector3f|sf::Color|sf::Angle)\s+"
     r"(\w+)\s*.*;\s*$"
 )
-_VEC_ELT = r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color)"
+_VEC_ELT = r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector2i|sf::Vector2u|sf::Vector3f|sf::Color)"
 VECTOR_FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*std::vector<\s*"
     + _VEC_ELT
@@ -65,7 +65,7 @@ BITSET_TYPEDEF_FIELD_RE = re.compile(
 GETTER_METHOD_RE = re.compile(
     r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?"
     r"(?:const\s+)?"
-    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color|sf::Angle)"
+    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector2i|sf::Vector2u|sf::Vector3f|sf::Color|sf::Angle)"
     r"(?:\s*&)?\s+"
     r"(\w+)\s*\([^)]*\)\s*"
     r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
@@ -90,7 +90,7 @@ GETTER_VECTOR_CONSTREF2_RE = re.compile(
 SETTER_METHOD_RE = re.compile(
     r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?void\s+"
     r"(\w+)\s*\(\s*(?:const\s+)?"
-    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color|sf::Angle)"
+    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector2i|sf::Vector2u|sf::Vector3f|sf::Color|sf::Angle)"
     r"(?:\s*&)?\s*\w*\s*\)\s*"
     r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
 )
@@ -109,6 +109,8 @@ KNOWN_TYPES = frozenset(
         "std::int64_t",
         "std::string",
         "sf::Vector2f",
+        "sf::Vector2i",
+        "sf::Vector2u",
         "sf::Vector3f",
         "sf::Color",
         "sf::Angle",
@@ -252,6 +254,9 @@ def merge_getter_setter_decls(
                     g.col,
                 )
             setter_method = s.method
+            for k, v in s.attrs.items():
+                if k not in merged:
+                    merged[k] = v
 
         if setter_method:
             merged["setter"] = setter_method
@@ -1070,6 +1075,8 @@ def _default_cpp_value(t: str) -> str:
         "std::int64_t": "static_cast<std::int64_t>(0)",
         "std::string": "std::string{}",
         "sf::Vector2f": "sf::Vector2f{}",
+        "sf::Vector2i": "sf::Vector2i{}",
+        "sf::Vector2u": "sf::Vector2u{}",
         "sf::Vector3f": "sf::Vector3f{}",
         "sf::Color": "sf::Color{}",
     }[t]
@@ -1105,6 +1112,10 @@ def _emit_scalar_leaf(
         out.append(f'\t\tb.addString("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
     elif t == "sf::Vector2f":
         out.append(f'\t\tb.addVec2f("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+    elif t == "sf::Vector2i":
+        out.append(f'\t\tb.addVec2i("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+    elif t == "sf::Vector2u":
+        out.append(f'\t\tb.addVec2u("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
     elif t == "sf::Vector3f":
         out.append(f'\t\tb.addVec3f("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
     elif t == "sf::Color":
@@ -1131,6 +1142,8 @@ def _map_key_set(mem: str, idx: str, kt: str, readonly: bool) -> str:
             "std::int64_t": f"[this, {idx}](std::int64_t) {{}}",
             "std::string": f"[this, {idx}](std::string) {{}}",
             "sf::Vector2f": f"[this, {idx}](sf::Vector2f) {{}}",
+            "sf::Vector2i": f"[this, {idx}](sf::Vector2i) {{}}",
+            "sf::Vector2u": f"[this, {idx}](sf::Vector2u) {{}}",
             "sf::Vector3f": f"[this, {idx}](sf::Vector3f) {{}}",
             "sf::Color": f"[this, {idx}](sf::Color) {{}}",
         }
@@ -1142,7 +1155,7 @@ def _map_key_set(mem: str, idx: str, kt: str, readonly: bool) -> str:
         ins = f"{mem}.insert_or_assign(static_cast<int>(newKey), std::move(_mapped))"
     elif kt == "std::string":
         ins = f"{mem}.insert_or_assign(std::move(newKey), std::move(_mapped))"
-    elif kt in ("sf::Vector2f", "sf::Vector3f", "sf::Color"):
+    elif kt in ("sf::Vector2f", "sf::Vector2i", "sf::Vector2u", "sf::Vector3f", "sf::Color"):
         ins = f"{mem}.insert_or_assign(std::move(newKey), std::move(_mapped))"
     else:
         ins = f"{mem}.insert_or_assign(newKey, std::move(_mapped))"
@@ -1167,6 +1180,8 @@ def _map_val_set(mem: str, idx: str, vt: str, readonly: bool) -> str:
             "std::int64_t": f"[this, {idx}](std::int64_t) {{}}",
             "std::string": f"[this, {idx}](std::string) {{}}",
             "sf::Vector2f": f"[this, {idx}](sf::Vector2f) {{}}",
+            "sf::Vector2i": f"[this, {idx}](sf::Vector2i) {{}}",
+            "sf::Vector2u": f"[this, {idx}](sf::Vector2u) {{}}",
             "sf::Vector3f": f"[this, {idx}](sf::Vector3f) {{}}",
             "sf::Color": f"[this, {idx}](sf::Color) {{}}",
         }
@@ -1176,7 +1191,7 @@ def _map_val_set(mem: str, idx: str, vt: str, readonly: bool) -> str:
         return f"[this, {idx}](std::int32_t newVal) {{ {adv}_it->second = static_cast<int>(newVal); }}"
     if vt == "std::string":
         return f"[this, {idx}](std::string newVal) {{ {adv}_it->second = std::move(newVal); }}"
-    if vt in ("sf::Vector2f", "sf::Vector3f", "sf::Color"):
+    if vt in ("sf::Vector2f", "sf::Vector2i", "sf::Vector2u", "sf::Vector3f", "sf::Color"):
         return f"[this, {idx}]({vt} newVal) {{ {adv}_it->second = std::move(newVal); }}"
     return f"[this, {idx}]({vt} newVal) {{ {adv}_it->second = newVal; }}"
 
@@ -1184,7 +1199,7 @@ def _map_val_set(mem: str, idx: str, vt: str, readonly: bool) -> str:
 def _cpp_map_emplace(mem: str, kt: str, key_var: str, dv: str) -> str:
     if kt == "std::string":
         return f"{mem}.emplace(std::move({key_var}), {dv})"
-    if kt in ("sf::Vector2f", "sf::Vector3f", "sf::Color"):
+    if kt in ("sf::Vector2f", "sf::Vector2i", "sf::Vector2u", "sf::Vector3f", "sf::Color"):
         return f"{mem}.emplace(std::move({key_var}), {dv})"
     return f"{mem}.emplace({key_var}, {dv})"
 
@@ -1192,7 +1207,7 @@ def _cpp_map_emplace(mem: str, kt: str, key_var: str, dv: str) -> str:
 def _cpp_set_insert(mem: str, et: str, val_var: str) -> str:
     if et == "std::string":
         return f"{mem}.insert(std::move({val_var}))"
-    if et in ("sf::Vector2f", "sf::Vector3f", "sf::Color"):
+    if et in ("sf::Vector2f", "sf::Vector2i", "sf::Vector2u", "sf::Vector3f", "sf::Color"):
         return f"{mem}.insert(std::move({val_var}))"
     return f"{mem}.insert({val_var})"
 
@@ -1267,6 +1282,32 @@ def _map_add_pair_body(mem: str, kt: str, vt: str, path: Path, line: int, col: i
             f"{tab}\tbool _placed = false;\n"
             f"{tab}\tfor (int _ox = 0; _ox < 100000 && !_placed; ++_ox) {{\n"
             f"{tab}\t\tsf::Vector2f _nk{{static_cast<float>(_ox), 0.f}};\n"
+            f"{tab}\t\tif ({mem}.find(_nk) == {mem}.end()) {{\n"
+            f"{tab}\t\t\t{_cpp_map_emplace(mem, kt, '_nk', dv)};\n"
+            f"{tab}\t\t\t_placed = true;\n"
+            f"{tab}\t\t}}\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
+    if kt == "sf::Vector2i":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tbool _placed = false;\n"
+            f"{tab}\tfor (int _ox = 0; _ox < 100000 && !_placed; ++_ox) {{\n"
+            f"{tab}\t\tsf::Vector2i _nk{{_ox, 0}};\n"
+            f"{tab}\t\tif ({mem}.find(_nk) == {mem}.end()) {{\n"
+            f"{tab}\t\t\t{_cpp_map_emplace(mem, kt, '_nk', dv)};\n"
+            f"{tab}\t\t\t_placed = true;\n"
+            f"{tab}\t\t}}\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
+    if kt == "sf::Vector2u":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tbool _placed = false;\n"
+            f"{tab}\tfor (int _ox = 0; _ox < 100000 && !_placed; ++_ox) {{\n"
+            f"{tab}\t\tsf::Vector2u _nk{{static_cast<unsigned int>(_ox), 0u}};\n"
             f"{tab}\t\tif ({mem}.find(_nk) == {mem}.end()) {{\n"
             f"{tab}\t\t\t{_cpp_map_emplace(mem, kt, '_nk', dv)};\n"
             f"{tab}\t\t\t_placed = true;\n"
@@ -1376,6 +1417,32 @@ def _set_add_pair_body(mem: str, et: str, path: Path, line: int, col: int) -> st
             f"{tab}\tbool _placed = false;\n"
             f"{tab}\tfor (int _ox = 0; _ox < 100000 && !_placed; ++_ox) {{\n"
             f"{tab}\t\tsf::Vector2f _nv{{static_cast<float>(_ox), 0.f}};\n"
+            f"{tab}\t\tif ({mem}.find(_nv) == {mem}.end()) {{\n"
+            f"{tab}\t\t\t{_cpp_set_insert(mem, et, '_nv')};\n"
+            f"{tab}\t\t\t_placed = true;\n"
+            f"{tab}\t\t}}\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
+    if et == "sf::Vector2i":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tbool _placed = false;\n"
+            f"{tab}\tfor (int _ox = 0; _ox < 100000 && !_placed; ++_ox) {{\n"
+            f"{tab}\t\tsf::Vector2i _nv{{_ox, 0}};\n"
+            f"{tab}\t\tif ({mem}.find(_nv) == {mem}.end()) {{\n"
+            f"{tab}\t\t\t{_cpp_set_insert(mem, et, '_nv')};\n"
+            f"{tab}\t\t\t_placed = true;\n"
+            f"{tab}\t\t}}\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
+    if et == "sf::Vector2u":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tbool _placed = false;\n"
+            f"{tab}\tfor (int _ox = 0; _ox < 100000 && !_placed; ++_ox) {{\n"
+            f"{tab}\t\tsf::Vector2u _nv{{static_cast<unsigned int>(_ox), 0u}};\n"
             f"{tab}\t\tif ({mem}.find(_nv) == {mem}.end()) {{\n"
             f"{tab}\t\t\t{_cpp_set_insert(mem, et, '_nv')};\n"
             f"{tab}\t\t\t_placed = true;\n"
@@ -1509,7 +1576,7 @@ def emit_assoc_set_property(
             s = f"[this, {idx}](std::int32_t v) {{ {adv}{mem}.insert(static_cast<int>(v)); }}"
         elif et == "std::string":
             s = f"[this, {idx}](std::string v) {{ {adv}{mem}.insert(std::move(v)); }}"
-        elif et in ("sf::Vector2f", "sf::Vector3f", "sf::Color"):
+        elif et in ("sf::Vector2f", "sf::Vector2i", "sf::Vector2u", "sf::Vector3f", "sf::Color"):
             s = f"[this, {idx}]({et} v) {{ {adv}{mem}.insert(std::move(v)); }}"
         else:
             s = f"[this, {idx}]({et} v) {{ {adv}{mem}.insert(v); }}"
@@ -1601,6 +1668,8 @@ def emit_std_vector_property(
             "std::int64_t": f"[this, {idx}](std::int64_t) {{}}",
             "std::string": f"[this, {idx}](std::string) {{}}",
             "sf::Vector2f": f"[this, {idx}](sf::Vector2f) {{}}",
+            "sf::Vector2i": f"[this, {idx}](sf::Vector2i) {{}}",
+            "sf::Vector2u": f"[this, {idx}](sf::Vector2u) {{}}",
             "sf::Vector3f": f"[this, {idx}](sf::Vector3f) {{}}",
             "sf::Color": f"[this, {idx}](sf::Color) {{}}",
         }
@@ -1619,6 +1688,10 @@ def emit_std_vector_property(
             add_inner(f'b.addString("v", "", {g}, {sl}, {meta_arg});')
         elif t == "sf::Vector2f":
             add_inner(f'b.addVec2f("v", "", {g}, {sl}, {meta_arg});')
+        elif t == "sf::Vector2i":
+            add_inner(f'b.addVec2i("v", "", {g}, {sl}, {meta_arg});')
+        elif t == "sf::Vector2u":
+            add_inner(f'b.addVec2u("v", "", {g}, {sl}, {meta_arg});')
         elif t == "sf::Vector3f":
             add_inner(f'b.addVec3f("v", "", {g}, {sl}, {meta_arg});')
         elif t == "sf::Color":
@@ -1635,6 +1708,8 @@ def emit_std_vector_property(
             "std::int64_t": f"[this, {idx}](std::int64_t v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
             "std::string": f"[this, {idx}](std::string v) {{ auto _pv = {vec_access}; _pv[{idx}] = std::move(v); this->{setter_name}(std::move(_pv)); }}",
             "sf::Vector2f": f"[this, {idx}](sf::Vector2f v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
+            "sf::Vector2i": f"[this, {idx}](sf::Vector2i v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
+            "sf::Vector2u": f"[this, {idx}](sf::Vector2u v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
             "sf::Vector3f": f"[this, {idx}](sf::Vector3f v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
             "sf::Color": f"[this, {idx}](sf::Color c) {{ auto _pv = {vec_access}; _pv[{idx}] = c; this->{setter_name}(std::move(_pv)); }}",
         }
@@ -1653,6 +1728,10 @@ def emit_std_vector_property(
             add_inner(f'b.addString("v", "", {g}, {wl}, {meta_arg});')
         elif t == "sf::Vector2f":
             add_inner(f'b.addVec2f("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "sf::Vector2i":
+            add_inner(f'b.addVec2i("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "sf::Vector2u":
+            add_inner(f'b.addVec2u("v", "", {g}, {wl}, {meta_arg});')
         elif t == "sf::Vector3f":
             add_inner(f'b.addVec3f("v", "", {g}, {wl}, {meta_arg});')
         elif t == "sf::Color":
@@ -1669,6 +1748,8 @@ def emit_std_vector_property(
             "std::int64_t": f"[this, {idx}](std::int64_t v) {{ {acc} = v; }}",
             "std::string": f"[this, {idx}](std::string v) {{ {acc} = std::move(v); }}",
             "sf::Vector2f": f"[this, {idx}](sf::Vector2f v) {{ {acc} = v; }}",
+            "sf::Vector2i": f"[this, {idx}](sf::Vector2i v) {{ {acc} = v; }}",
+            "sf::Vector2u": f"[this, {idx}](sf::Vector2u v) {{ {acc} = v; }}",
             "sf::Vector3f": f"[this, {idx}](sf::Vector3f v) {{ {acc} = v; }}",
             "sf::Color": f"[this, {idx}](sf::Color c) {{ {acc} = c; }}",
         }
@@ -1687,6 +1768,10 @@ def emit_std_vector_property(
             add_inner(f'b.addString("v", "", {g}, {wl}, {meta_arg});')
         elif t == "sf::Vector2f":
             add_inner(f'b.addVec2f("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "sf::Vector2i":
+            add_inner(f'b.addVec2i("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "sf::Vector2u":
+            add_inner(f'b.addVec2u("v", "", {g}, {wl}, {meta_arg});')
         elif t == "sf::Vector3f":
             add_inner(f'b.addVec3f("v", "", {g}, {wl}, {meta_arg});')
         elif t == "sf::Color":
@@ -1841,6 +1926,8 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                 "std::int64_t": "[this](std::int64_t) {}",
                 "std::string": "[this](std::string) {}",
                 "sf::Vector2f": "[this](sf::Vector2f) {}",
+                "sf::Vector2i": "[this](sf::Vector2i) {}",
+                "sf::Vector2u": "[this](sf::Vector2u) {}",
                 "sf::Vector3f": "[this](sf::Vector3f) {}",
                 "sf::Color": "[this](sf::Color) {}",
                 "sf::Angle": "[this](float) {}",
@@ -1854,6 +1941,8 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                 "std::int64_t": f"[this](std::int64_t v) {{ {p.member} = v; }}",
                 "std::string": f"[this](std::string v) {{ {p.member} = std::move(v); }}",
                 "sf::Vector2f": f"[this](sf::Vector2f v) {{ {p.member} = v; }}",
+                "sf::Vector2i": f"[this](sf::Vector2i v) {{ {p.member} = v; }}",
+                "sf::Vector2u": f"[this](sf::Vector2u v) {{ {p.member} = v; }}",
                 "sf::Vector3f": f"[this](sf::Vector3f v) {{ {p.member} = v; }}",
                 "sf::Color": f"[this](sf::Color c) {{ {p.member} = c; }}",
                 "sf::Angle": f"[this](float v) {{ {p.member} = sf::degrees(v); }}",
@@ -1870,6 +1959,8 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                     "std::int64_t": f"[this](std::int64_t v) {{ this->{sn}(v); }}",
                     "std::string": f"[this](std::string v) {{ this->{sn}(std::move(v)); }}",
                     "sf::Vector2f": f"[this](sf::Vector2f v) {{ this->{sn}(v); }}",
+                    "sf::Vector2i": f"[this](sf::Vector2i v) {{ this->{sn}(v); }}",
+                    "sf::Vector2u": f"[this](sf::Vector2u v) {{ this->{sn}(v); }}",
                     "sf::Vector3f": f"[this](sf::Vector3f v) {{ this->{sn}(v); }}",
                     "sf::Color": f"[this](sf::Color c) {{ this->{sn}(c); }}",
                     "sf::Angle": f"[this](float v) {{ this->{sn}(sf::degrees(v)); }}",
@@ -1901,6 +1992,10 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                 out.append(f'\tb.addString("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
             elif p.cpp_type == "sf::Vector2f":
                 out.append(f'\tb.addVec2f("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
+            elif p.cpp_type == "sf::Vector2i":
+                out.append(f'\tb.addVec2i("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
+            elif p.cpp_type == "sf::Vector2u":
+                out.append(f'\tb.addVec2u("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
             elif p.cpp_type == "sf::Vector3f":
                 out.append(f'\tb.addVec3f("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
             elif p.cpp_type == "sf::Color":

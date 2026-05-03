@@ -67,6 +67,18 @@ namespace Engine {
 		std::function<void(sf::Vector2f)> set;
 	};
 
+	struct PropAccessVec2i
+	{
+		std::function<sf::Vector2i()> get;
+		std::function<void(sf::Vector2i)> set;
+	};
+
+	struct PropAccessVec2u
+	{
+		std::function<sf::Vector2u()> get;
+		std::function<void(sf::Vector2u)> set;
+	};
+
 	struct PropAccessVec3f
 	{
 		std::function<sf::Vector3f()> get;
@@ -95,8 +107,8 @@ namespace Engine {
 
 	using PropertyAccess =
 	    std::variant<PropAccessNone, PropAccessBool, PropAccessInt32, PropAccessInt64, PropAccessFloat,
-	                 PropAccessDouble, PropAccessString, PropAccessEnum, PropAccessVec2f, PropAccessVec3f,
-	                 PropAccessColor, PropAccessSequence, PropAccessAssociative>;
+	                 PropAccessDouble, PropAccessString, PropAccessEnum, PropAccessVec2f, PropAccessVec2i,
+	                 PropAccessVec2u, PropAccessVec3f, PropAccessColor, PropAccessSequence, PropAccessAssociative>;
 
 	struct PropertyNode
 	{

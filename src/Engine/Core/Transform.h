@@ -25,7 +25,7 @@ public:
 
 	/// @getter
 	sf::Vector2f getLocalScale() const;
-	/// @setter
+	/// @setter(dragSpeed=0.01f)
 	void setLocalScale(sf::Vector2f v);
 
 	/// @getter
@@ -41,5 +41,6 @@ public:
 private:
 	void notifyTransformChanged();
 
+private:
 	sf::Transformable _transformable;
 };
