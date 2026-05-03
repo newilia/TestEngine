@@ -8,7 +8,7 @@ namespace Engine {
 	void EventsDispatcher::DispatchEvent(const sf::Event& event) {
 		for (auto it = _handlers.begin(); it != _handlers.end();) {
 			if (auto handler = it->lock()) {
-				handler->OnEventsDispatcher(event);
+				handler->OnEvent(event);
 				++it;
 			}
 			else {

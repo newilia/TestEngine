@@ -11,8 +11,7 @@ namespace Engine {
 	{
 	public:
 		virtual ~EventHandlerBase() = default;
-
-		virtual void OnEventsDispatcher(const sf::Event& event) = 0;
+		virtual void OnEvent(const sf::Event& event) = 0;
 
 		void SubscribeForInputEvents();
 		void UnsubscribeFromInputEvent();

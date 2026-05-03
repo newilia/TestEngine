@@ -29,7 +29,7 @@ void TestEnvironment::Setup() {
 	EventHandlerBase::SubscribeForInputEvents();
 }
 
-void TestEnvironment::OnEventsDispatcher(const sf::Event& event) {
+void TestEnvironment::OnEvent(const sf::Event& event) {
 	if (event.is<sf::Event::Closed>()) {
 		std::exit(EXIT_SUCCESS);
 	}

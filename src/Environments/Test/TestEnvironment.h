@@ -10,7 +10,7 @@ class TestEnvironment : public EnvironmentBase, public Engine::EventHandlerBase
 public:
 	~TestEnvironment() override = default;
 	void Setup() override;
-	void OnEventsDispatcher(const sf::Event& event) override;
+	void OnEvent(const sf::Event& event) override;
 
 private:
 	std::shared_ptr<Scene> BuildScene();

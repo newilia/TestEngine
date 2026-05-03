@@ -64,7 +64,7 @@ void PongEnvironment::Setup() {
 	engine.SetScene(BuildScene());
 }
 
-void PongEnvironment::OnEventsDispatcher(const sf::Event& event) {
+void PongEnvironment::OnEvent(const sf::Event& event) {
 	if (auto e = event.getIf<sf::Event::KeyPressed>()) {
 		auto& mainContext = Engine::MainContext::GetInstance();
 		if (e->code == sf::Keyboard::Key::R) {

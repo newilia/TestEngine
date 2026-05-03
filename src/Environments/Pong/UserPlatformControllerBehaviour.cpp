@@ -31,7 +31,7 @@ void UserPlatformControllerBehaviour::OnUpdate(const sf::Time& /*dt*/) {
 	ApplyPongPlatformVelocityTowardsTarget(p, _targetPos, _speedFactor, _velLimit);
 }
 
-void UserPlatformControllerBehaviour::OnEventsDispatcher(const sf::Event& event) {
+void UserPlatformControllerBehaviour::OnEvent(const sf::Event& event) {
 	if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
 		auto p = GetNode();
 		if (!p) {
