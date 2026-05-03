@@ -28,7 +28,7 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 		auto pos = body->GetPosGlobal();
 
 		if (_isGravityEnabled && !rigidBody->IsImmovable()) {
-			rigidBody->_velocity += _gravity * dt.asSeconds();
+			rigidBody->_velocity += _gravity * rigidBody->_gravityScale * dt.asSeconds();
 		}
 
 		pos += rigidBody->_velocity * dt.asSeconds();
