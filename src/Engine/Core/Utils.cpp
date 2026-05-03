@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <cmath>
 #include <unordered_map>
+#include <vector>
 
 namespace {
 	template <typename GetVertex>
@@ -373,6 +374,50 @@ namespace Utils {
 
 	sf::Vector2f MapWindowPixelToWorld(const sf::RenderWindow& window, const sf::Vector2f& pixel) {
 		return MapWindowPixelToWorld(window, sf::Vector2i(pixel));
+	}
+
+	sf::Vector2i MapWorldToWindowPixel(const sf::RenderWindow& window, const sf::Vector2f& world) {
+		return window.mapCoordsToPixel(world);
+	}
+
+	namespace {
+		float CrossOAB(const sf::Vector2f& O, const sf::Vector2f& A, const sf::Vector2f& B) {
+			return (A.x - O.x) * (B.y - O.y) - (A.y - O.y) * (B.x - O.x);
+		}
+	} // namespace
+
+	std::vector<sf::Vector2f> ConvexHull2D(std::vector<sf::Vector2f> points) {
+		if (points.size() <= 1) {
+			return points;
+		}
+		std::sort(points.begin(), points.end(), [](const sf::Vector2f& a, const sf::Vector2f& b) {
+			return a.x < b.x || (a.x == b.x && a.y < b.y);
+		});
+		std::vector<sf::Vector2f> lower;
+		lower.reserve(points.size());
+		for (const auto& p : points) {
+			while (lower.size() >= 2 && CrossOAB(lower[lower.size() - 2], lower[lower.size() - 1], p) <= 0.f) {
+				lower.pop_back();
+			}
+			lower.push_back(p);
+		}
+		std::vector<sf::Vector2f> upper;
+		upper.reserve(points.size());
+		for (int i = static_cast<int>(points.size()) - 1; i >= 0; --i) {
+			const auto& p = points[static_cast<std::size_t>(i)];
+			while (upper.size() >= 2 && CrossOAB(upper[upper.size() - 2], upper[upper.size() - 1], p) <= 0.f) {
+				upper.pop_back();
+			}
+			upper.push_back(p);
+		}
+		if (!lower.empty()) {
+			lower.pop_back();
+		}
+		if (!upper.empty()) {
+			upper.pop_back();
+		}
+		lower.insert(lower.end(), upper.begin(), upper.end());
+		return lower;
 	}
 
 } // namespace Utils

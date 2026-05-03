@@ -8,6 +8,7 @@ class PhysicsBodyBehaviour;
 #include <optional>
 #include <ranges>
 #include <string>
+#include <vector>
 
 class Visual;
 
@@ -71,5 +72,9 @@ namespace Utils {
 
 	sf::Vector2f MapWindowPixelToWorld(const sf::RenderWindow& window, const sf::Vector2i& pixel);
 	sf::Vector2f MapWindowPixelToWorld(const sf::RenderWindow& window, const sf::Vector2f& pixel);
+	sf::Vector2i MapWorldToWindowPixel(const sf::RenderWindow& window, const sf::Vector2f& world);
+
+	/// Counter-clockwise convex hull; collinear boundary points may be omitted. Size may be 0..n.
+	std::vector<sf::Vector2f> ConvexHull2D(std::vector<sf::Vector2f> points);
 
 } // namespace Utils

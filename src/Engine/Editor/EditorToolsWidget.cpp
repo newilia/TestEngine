@@ -11,7 +11,7 @@ namespace Engine {
 		ImGui::TextUnformatted("Tools");
 		ImGui::Separator();
 
-		const char* names[] = {"Tap", "Select", "Pull", "Move"};
+		const char* names[] = {"Tap", "Select", "Pull", "Move", "Polygon"};
 		int active = tools.GetActiveToolIndex();
 		for (int i = 0; i < EditorToolManager::kToolCount; ++i) {
 			const std::string label = EditorToolManager::FormatToolPaletteLabel(i, names[i]);
@@ -52,7 +52,10 @@ namespace Engine {
 			ImGui::TextUnformatted("Click a body or tap target to select it in the hierarchy.");
 			break;
 		case 3:
-			ImGui::TextUnformatted("Drag bodies with LMB; velocity is cleared while moving.");
+			ImGui::TextUnformatted("Drag physical bodies with LMB; velocity is cleared while moving.");
+			break;
+		case 4:
+			ImGui::TextUnformatted("Draw a convex shape");
 			break;
 		default:
 			break;

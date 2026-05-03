@@ -3,9 +3,12 @@
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Editor/Editor.h"
 #include "Engine/Editor/Tools/MoveTool.h"
+#include "Engine/Editor/Tools/PolygonTool.h"
 #include "Engine/Editor/Tools/PullTool.h"
 #include "Engine/Editor/Tools/SelectTool.h"
 #include "Engine/Editor/Tools/TapTool.h"
+
+#include <SFML/Graphics/RenderWindow.hpp>
 
 #include <fmt/format.h>
 
@@ -76,6 +79,7 @@ EditorToolManager::EditorToolManager() {
 	_tools[1] = std::move(select);
 	_tools[2] = std::move(pull);
 	_tools[3] = std::make_unique<MoveTool>(setHierarchySelection);
+	_tools[4] = std::make_unique<PolygonTool>(setHierarchySelection);
 }
 
 void EditorToolManager::SetActiveToolIndex(int index) {
@@ -94,6 +98,13 @@ void EditorToolManager::OnPresent(const sf::Time& dt) {
 		return;
 	}
 	_tools[_activeToolIndex]->onPresent(dt);
+}
+
+void EditorToolManager::DrawOverlay(sf::RenderWindow& window) {
+	if (_activeToolIndex < 0 || _activeToolIndex >= kToolCount || !_tools[_activeToolIndex]) {
+		return;
+	}
+	_tools[_activeToolIndex]->drawOverlay(window);
 }
 
 void EditorToolManager::BindPullArrow(std::shared_ptr<VectorArrowVisual> arrow) {
