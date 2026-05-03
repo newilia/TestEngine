@@ -2,8 +2,16 @@
 
 #include "Engine/Core/Utils.h"
 
-RectangleShapeVisual::RectangleShapeVisual(sf::RectangleShape* rect) : ShapeVisualBase(rect), _rect(rect) {}
+RectangleShapeVisual::RectangleShapeVisual() {}
+
+sf::Shape* RectangleShapeVisual::GetBaseShape() {
+	return &_rect;
+}
 
 bool RectangleShapeVisual::HitTest(const sf::Vector2f& worldPoint) const {
-	return _rect && Utils::IsWorldPointInsideOfShape(worldPoint, _rect);
+	return Utils::IsWorldPointInsideOfShape(worldPoint, &_rect);
+}
+
+sf::RectangleShape* RectangleShapeVisual::GetShape() {
+	return &_rect;
 }

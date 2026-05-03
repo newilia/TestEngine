@@ -7,9 +7,12 @@
 class RectangleShapeVisual : public ShapeVisualBase
 {
 public:
-	explicit RectangleShapeVisual(sf::RectangleShape* rect);
+	RectangleShapeVisual();
+	sf::Shape* GetBaseShape() override;
 	bool HitTest(const sf::Vector2f& worldPoint) const override;
 
+	sf::RectangleShape* GetShape();
+
 private:
-	sf::RectangleShape* _rect = nullptr;
+	sf::RectangleShape _rect;
 };

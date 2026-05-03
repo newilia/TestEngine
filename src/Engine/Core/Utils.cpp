@@ -192,7 +192,7 @@ namespace Utils {
 			return false;
 		}
 		if (const auto* shapeVisual = dynamic_cast<const ShapeVisualBase*>(visual)) {
-			return IsWorldPointInsideOfShape(worldPoint, shapeVisual->GetShape());
+			return IsWorldPointInsideOfShape(worldPoint, shapeVisual->GetBaseShape());
 		}
 		if (const auto* fps = dynamic_cast<const TextVisual*>(visual)) {
 			if (const sf::Text* text = fps->GetText()) {

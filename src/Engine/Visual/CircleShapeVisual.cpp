@@ -2,8 +2,16 @@
 
 #include "Engine/Core/Utils.h"
 
-CircleShapeVisual::CircleShapeVisual(sf::CircleShape* circle) : ShapeVisualBase(circle), _circle(circle) {}
+CircleShapeVisual::CircleShapeVisual() {}
+
+sf::Shape* CircleShapeVisual::GetBaseShape() {
+	return &_circle;
+}
+
+sf::CircleShape* CircleShapeVisual::GetShape() {
+	return &_circle;
+}
 
 bool CircleShapeVisual::HitTest(const sf::Vector2f& worldPoint) const {
-	return _circle && Utils::IsWorldPointInsideOfShape(worldPoint, _circle);
+	return Utils::IsWorldPointInsideOfShape(worldPoint, &_circle);
 }

@@ -8,6 +8,8 @@
 #include "Engine/Editor/Editor.h"
 #include "Engine/Editor/Tools/PullTool.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
+#include "Engine/Visual/CircleShapeVisual.h"
+#include "Engine/Visual/RectangleShapeVisual.h"
 #include "fmt/format.h"
 
 #include <memory>
@@ -100,7 +102,8 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	                                {viewSize.x + wallOffset, viewSize.y / 2}};
 
 	for (int i = 0; i < 4; ++i) {
-		auto node = CreatePhysicsBodyNode<sf::RectangleShape>();
+		auto node = make_shared<SceneNode>();
+		node->SetVisual(std::make_shared<RectangleShapeVisual>());
 		node->RequireBehaviour<PhysicsBodyBehaviour>()->GetCollisionGroups().set(0, true);
 
 		node->SetName(wallNames[i]);
@@ -128,7 +131,8 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	/* circles */
 	constexpr int circlesCount = 200;
 	for (int i = 0; i < circlesCount; ++i) {
-		auto node = CreatePhysicsBodyNode<sf::CircleShape>();
+		auto node = make_shared<SceneNode>();
+		node->SetVisual(std::make_shared<CircleShapeVisual>());
 		node->SetName(fmt::format("circle_{}", i));
 		node->RequireBehaviour<PhysicsBodyBehaviour>()->GetCollisionGroups().set(0, true);
 
