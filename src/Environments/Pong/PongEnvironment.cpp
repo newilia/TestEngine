@@ -107,12 +107,12 @@ void PongEnvironment::AddBall(Scene* scene) {
 	shape->setPosition(pos);
 
 	auto rigidBody = ball->GetNode()->RequireBehaviour<PhysicsBodyBehaviour>();
-	rigidBody->_mass = 3.14f * radius * radius;
-	rigidBody->_restitution = bodiesRestitution;
-	rigidBody->_velocity = vel;
-	rigidBody->_collisionGroups.set(0, true);
-	rigidBody->_collisionGroups.set(1, true);
-	rigidBody->_overlappingGroups.set(0, true);
+	rigidBody->SetMass(3.14f * radius * radius);
+	rigidBody->SetRestitution(bodiesRestitution);
+	rigidBody->SetVelocity(vel);
+	rigidBody->GetCollisionGroups().set(0, true);
+	rigidBody->GetCollisionGroups().set(1, true);
+	rigidBody->GetOverlappingGroups().set(0, true);
 	scene->AddChild(ball->GetNode());
 
 	sBall = ball;
@@ -141,9 +141,9 @@ shared_ptr<SceneNode> PongEnvironment::CreateDefaultPlatform(sf::Vector2f size, 
 	shape->setFillColor(color);
 
 	auto rigidBody = node->RequireBehaviour<PhysicsBodyBehaviour>();
-	rigidBody->_collisionGroups.set(1, true);
+	rigidBody->GetCollisionGroups().set(1, true);
 	rigidBody->SetImmovable();
-	rigidBody->_restitution = bodiesRestitution;
+	rigidBody->SetRestitution(bodiesRestitution);
 
 	return node;
 }
@@ -173,28 +173,28 @@ void PongEnvironment::AddWalls(Scene* scene) {
 
 		auto bodyBeh = wallNode->RequireBehaviour<PhysicsBodyBehaviour>();
 		bodyBeh->SetImmovable();
-		bodyBeh->_restitution = bodiesRestitution;
+		bodyBeh->SetRestitution(bodiesRestitution);
 
 		if (i < 2) {
 			rectShape->setFillColor(sf::Color(200, 200, 200, 50));
-			bodyBeh->_overlappingGroups.set(0, true);
+			bodyBeh->GetOverlappingGroups().set(0, true);
 
 			if (i == 0) {
 				[[maybe_unused]] auto connection =
-				    bodyBeh->_overlappingCallbacks.Connect([this](const IntersectionDetails&) {
+				    bodyBeh->GetOverlappingCallbacks().Connect([this](const IntersectionDetails&) {
 					    OnLose();
 				    });
 			}
 			else {
 				[[maybe_unused]] auto connection =
-				    bodyBeh->_overlappingCallbacks.Connect([this](const IntersectionDetails&) {
+				    bodyBeh->GetOverlappingCallbacks().Connect([this](const IntersectionDetails&) {
 					    OnWin();
 				    });
 			}
 		}
 		else {
 			rectShape->setFillColor(sf::Color(200, 200, 200, 255));
-			bodyBeh->_collisionGroups.set(0, true);
+			bodyBeh->GetCollisionGroups().set(0, true);
 		}
 		scene->AddChild(std::move(wallNode));
 	}
@@ -314,8 +314,8 @@ void PongEnvironment::ResetRound() {
 
 	sBall->GetNode()->SetPosGlobal(InitialBallPosition());
 	auto ballRb = sBall->GetNode()->RequireBehaviour<PhysicsBodyBehaviour>();
-	ballRb->_velocity = InitialBallVelocity();
-	ballRb->_angularSpeed = 0.f;
+	ballRb->SetVelocity(InitialBallVelocity());
+	ballRb->SetAngularSpeed(0.f);
 
 	sUserPlatform->SetPosGlobal(InitialUserPlatformPosition());
 	if (auto u = sUserPlatform->FindBehaviour<UserPlatformControllerBehaviour>()) {

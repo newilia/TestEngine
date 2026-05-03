@@ -60,7 +60,7 @@ void ApplyPongPlatformVelocityTowardsTarget(const std::shared_ptr<SceneNode>& pl
 	auto vel = (targetPos - shape->getPosition()) * speedFactor;
 	vel.x = std::clamp(vel.x, -velLimit.x, velLimit.x);
 	vel.y = std::clamp(vel.y, -velLimit.y, velLimit.y);
-	platformNode->RequireBehaviour<PhysicsBodyBehaviour>()->_velocity = vel;
+	platformNode->RequireBehaviour<PhysicsBodyBehaviour>()->SetVelocity(vel);
 }
 
 void ClampPongPlatformDesiredCenter(sf::Vector2f& center, bool isBottomPlayer,

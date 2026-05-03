@@ -101,7 +101,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 
 	for (int i = 0; i < 4; ++i) {
 		auto node = CreatePhysicsBodyNode<sf::RectangleShape>();
-		node->RequireBehaviour<PhysicsBodyBehaviour>()->_collisionGroups.set(0, true);
+		node->RequireBehaviour<PhysicsBodyBehaviour>()->GetCollisionGroups().set(0, true);
 
 		node->SetName(wallNames[i]);
 
@@ -115,8 +115,8 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 
 		auto rb = node->RequireBehaviour<PhysicsBodyBehaviour>();
 		rb->SetImmovable();
-		rb->_restitution = commonRestitution;
-		rb->_friction = commonFriction;
+		rb->SetRestitution(commonRestitution);
+		rb->SetFriction(commonFriction);
 
 		auto fieldBeh = std::make_shared<AttractiveBehaviour>();
 		fieldBeh->SetAttraction(10000 * (isAttractive ? -1 : 1));
@@ -130,7 +130,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	for (int i = 0; i < circlesCount; ++i) {
 		auto node = CreatePhysicsBodyNode<sf::CircleShape>();
 		node->SetName(fmt::format("circle_{}", i));
-		node->RequireBehaviour<PhysicsBodyBehaviour>()->_collisionGroups.set(0, true);
+		node->RequireBehaviour<PhysicsBodyBehaviour>()->GetCollisionGroups().set(0, true);
 
 		bool isAttractive = true;
 
@@ -160,9 +160,9 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		circle->setPosition(sf::Vector2f{x, y});
 
 		auto rb = node->RequireBehaviour<PhysicsBodyBehaviour>();
-		rb->_mass = 3.14f * radius * radius;
-		rb->_restitution = commonRestitution;
-		rb->_friction = commonFriction;
+		rb->SetMass(3.14f * radius * radius);
+		rb->SetRestitution(commonRestitution);
+		rb->SetFriction(commonFriction);
 
 		auto fieldBeh = std::make_shared<AttractiveBehaviour>();
 		fieldBeh->SetAttraction(commonAttraction * (isAttractive ? -1 : 1));

@@ -36,17 +36,17 @@ void PhysicsDebugBehaviour::DebugDraw(sf::RenderTarget& target, sf::RenderStates
 	text.setString(fmt::format("{}\n{:.1f}, {:.1f}", node->GetName(), pos.x, pos.y));
 	target.draw(text, states);
 
-	VectorArrow velArrow(node->GetPosGlobal(), node->GetPosGlobal() + rigidBody->_velocity);
+	VectorArrow velArrow(node->GetPosGlobal(), node->GetPosGlobal() + rigidBody->GetVelocity());
 	target.draw(velArrow, states);
 
 	if (auto fieldSrc = node->FindBehaviour<AttractiveBehaviour>()) {
-		if (fieldSrc->IsEnabled() && !rigidBody->IsImmovable() && std::isfinite(rigidBody->_mass) &&
-		    rigidBody->_mass > 0.f) {
+		if (fieldSrc->IsEnabled() && !rigidBody->IsImmovable() && std::isfinite(rigidBody->GetMass()) &&
+		    rigidBody->GetMass() > 0.f) {
 			auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor();
 			auto field = ph ? ph->GetAttractionField() : nullptr;
 			if (field) {
 				const sf::Vector2f a = field->EvaluateAcceleration(fieldSrc);
-				const sf::Vector2f force = a * rigidBody->_mass;
+				const sf::Vector2f force = a * rigidBody->GetMass();
 				const float s = Engine::MainContext::GetInstance().GetFieldForceDebugArrowScale();
 				const float vx = force.x * s;
 				const float vy = force.y * s;

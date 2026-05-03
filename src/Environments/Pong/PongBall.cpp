@@ -20,9 +20,9 @@ namespace {
 				return;
 			}
 			auto rigidBody = owner->GetNode()->RequireBehaviour<PhysicsBodyBehaviour>();
-			if (auto speedExcess = Utils::Length(rigidBody->_velocity) / owner->GetMaxSpeed(); speedExcess > 1.f) {
+			if (auto speedExcess = Utils::Length(rigidBody->GetVelocity()) / owner->GetMaxSpeed(); speedExcess > 1.f) {
 				float dampingMultiplier = 1 - speedExcess * dt.asSeconds() * owner->GetSpeedDampingFactor();
-				rigidBody->_velocity *= dampingMultiplier;
+				rigidBody->ScaleVelocity(dampingMultiplier);
 			}
 		}
 	};

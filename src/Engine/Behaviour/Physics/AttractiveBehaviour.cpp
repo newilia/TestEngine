@@ -39,7 +39,7 @@ void AttractiveBehaviour::OnUpdate(const sf::Time& dt) {
 		return;
 	}
 	const auto rb = _rigidBody.lock();
-	if (!rb || rb->IsImmovable() || !std::isfinite(rb->_mass) || rb->_mass <= 0.f) {
+	if (!rb || rb->IsImmovable() || !std::isfinite(rb->GetMass()) || rb->GetMass() <= 0.f) {
 		return;
 	}
 	if (const auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
@@ -47,7 +47,7 @@ void AttractiveBehaviour::OnUpdate(const sf::Time& dt) {
 			sf::Vector2f a = field->EvaluateAcceleration(shared_from_this());
 			const float sec = dt.asSeconds();
 			if (sec > 0.f) {
-				rb->_velocity += a * sec;
+				rb->AddVelocity(a * sec);
 			}
 		}
 	}
