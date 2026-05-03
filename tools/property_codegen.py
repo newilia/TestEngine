@@ -29,6 +29,11 @@ FIELD_RE = re.compile(
     r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color)\s+"
     r"(\w+)\s*.*;\s*$"
 )
+VECTOR_FIELD_RE = re.compile(
+    r"^\s*(?:inline\s+|static\s+|mutable\s+)*std::vector<\s*"
+    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color)"
+    r"\s*>\s+(\w+)\s*;\s*$"
+)
 # One-line non-static method declaration; parameter lists must not contain ')' inside nested parens (v1).
 # Return type: known scalar/vector name, optionally "const" before and/or "&" after (e.g. const sf::Vector2f&).
 GETTER_METHOD_RE = re.compile(
@@ -39,12 +44,34 @@ GETTER_METHOD_RE = re.compile(
     r"(\w+)\s*\([^)]*\)\s*"
     r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
 )
+_VEC_ELT = r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color)"
+# std::vector<Elt> Method(...) const; or const std::vector<Elt>& Method(...) const;
+GETTER_VECTOR_VAL_RE = re.compile(
+    r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?"
+    r"std::vector<\s*" + _VEC_ELT + r"\s*>\s+"
+    r"(\w+)\s*\([^)]*\)\s*(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
+)
+GETTER_VECTOR_CREF_RE = re.compile(
+    r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?"
+    r"const\s+std::vector<\s*" + _VEC_ELT + r"\s*>\s*&\s*"
+    r"(\w+)\s*\([^)]*\)\s*(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
+)
+GETTER_VECTOR_CONSTREF2_RE = re.compile(
+    r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?"
+    r"std::vector<\s*" + _VEC_ELT + r"\s*>\s*const\s*&\s*"
+    r"(\w+)\s*\([^)]*\)\s*(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
+)
 # void Method(Type param); — one parameter, known value type (v1).
 SETTER_METHOD_RE = re.compile(
     r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?void\s+"
     r"(\w+)\s*\(\s*(?:const\s+)?"
     r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color)"
     r"(?:\s*&)?\s*\w*\s*\)\s*"
+    r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
+)
+SETTER_VECTOR_METHOD_RE = re.compile(
+    r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?void\s+"
+    r"(\w+)\s*\(\s*(?:const\s+)?std::vector<\s*" + _VEC_ELT + r"\s*>\s*(?:const\s*)?(?:&)?\s*\w+\s*\)\s*"
     r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
 )
 KNOWN_TYPES = frozenset(
@@ -71,6 +98,7 @@ class PropSpec:
     col: int
     attrs: dict[str, Any] = field(default_factory=dict)
     is_getter: bool = False
+    is_vector: bool = False
 
 
 PendingKind = Literal["property", "getter", "setter"]
@@ -83,6 +111,7 @@ class GetterDecl:
     line: int
     col: int
     attrs: dict[str, Any]
+    is_vector: bool = False
 
 
 @dataclass
@@ -92,6 +121,7 @@ class SetterDecl:
     line: int
     col: int
     attrs: dict[str, Any]
+    is_vector: bool = False
 
 
 def pair_tag_key(attrs: dict[str, Any]) -> str | None:
@@ -150,7 +180,7 @@ def merge_getter_setter_decls(
                 )
         elif gkey is not None and gkey in by_key:
             s = by_key.pop(gkey)
-            if s.cpp_type != g.cpp_type:
+            if s.cpp_type != g.cpp_type or s.is_vector != g.is_vector:
                 raise ParseError(
                     f'@getter / @setter pair "{gkey}": type mismatch ({g.cpp_type} vs {s.cpp_type})',
                     path,
@@ -172,6 +202,7 @@ def merge_getter_setter_decls(
                 col=g.col,
                 attrs=merged,
                 is_getter=True,
+                is_vector=g.is_vector,
             )
         )
 
@@ -443,25 +474,41 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                 )
             attrs = parse_attr_dict(pargs, path, pline, pcol)
             if kind == "property":
-                m_field = FIELD_RE.match(line)
-                if not m_field:
-                    raise ParseError(
-                        f"expected field with supported type after @property (tag at line {pline})",
-                        path,
-                        line_no,
-                        1,
+                m_vec = VECTOR_FIELD_RE.match(line)
+                if m_vec:
+                    cpp_type, member = m_vec.group(1), m_vec.group(2)
+                    inner.setdefault("props", []).append(
+                        PropSpec(
+                            cpp_type=cpp_type,
+                            member=member,
+                            line=pline,
+                            col=pcol,
+                            attrs=attrs,
+                            is_getter=False,
+                            is_vector=True,
+                        )
                     )
-                cpp_type, member = m_field.group(1), m_field.group(2)
-                inner.setdefault("props", []).append(
-                    PropSpec(
-                        cpp_type=cpp_type,
-                        member=member,
-                        line=pline,
-                        col=pcol,
-                        attrs=attrs,
-                        is_getter=False,
+                else:
+                    m_field = FIELD_RE.match(line)
+                    if not m_field:
+                        raise ParseError(
+                            f"expected field with supported type after @property (tag at line {pline})",
+                            path,
+                            line_no,
+                            1,
+                        )
+                    cpp_type, member = m_field.group(1), m_field.group(2)
+                    inner.setdefault("props", []).append(
+                        PropSpec(
+                            cpp_type=cpp_type,
+                            member=member,
+                            line=pline,
+                            col=pcol,
+                            attrs=attrs,
+                            is_getter=False,
+                            is_vector=False,
+                        )
                     )
-                )
             elif kind == "getter":
                 if re.search(r"\bstatic\b", line):
                     raise ParseError(
@@ -471,23 +518,39 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                         1,
                     )
                 m_getter = GETTER_METHOD_RE.match(line)
-                if not m_getter:
+                if m_getter:
+                    cpp_type, method = m_getter.group(1), m_getter.group(2)
+                    inner.setdefault("getter_decls", []).append(
+                        GetterDecl(
+                            cpp_type=cpp_type,
+                            method=method,
+                            line=pline,
+                            col=pcol,
+                            attrs=attrs,
+                            is_vector=False,
+                        )
+                    )
+                elif (m_vec := GETTER_VECTOR_VAL_RE.match(line)) or (
+                    m_vec := GETTER_VECTOR_CREF_RE.match(line)
+                ) or (m_vec := GETTER_VECTOR_CONSTREF2_RE.match(line)):
+                    cpp_type, method = m_vec.group(1), m_vec.group(2)
+                    inner.setdefault("getter_decls", []).append(
+                        GetterDecl(
+                            cpp_type=cpp_type,
+                            method=method,
+                            line=pline,
+                            col=pcol,
+                            attrs=attrs,
+                            is_vector=True,
+                        )
+                    )
+                else:
                     raise ParseError(
                         f"expected instance method with supported return type after @getter (tag at line {pline})",
                         path,
                         line_no,
                         1,
                     )
-                cpp_type, method = m_getter.group(1), m_getter.group(2)
-                inner.setdefault("getter_decls", []).append(
-                    GetterDecl(
-                        cpp_type=cpp_type,
-                        method=method,
-                        line=pline,
-                        col=pcol,
-                        attrs=attrs,
-                    )
-                )
             else:
                 if re.search(r"\bstatic\b", line):
                     raise ParseError(
@@ -496,24 +559,39 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                         line_no,
                         1,
                     )
-                m_setter = SETTER_METHOD_RE.match(line)
-                if not m_setter:
-                    raise ParseError(
-                        f"expected void Method(value_type) after @setter (tag at line {pline})",
-                        path,
-                        line_no,
-                        1,
+                m_setter_vec = SETTER_VECTOR_METHOD_RE.match(line)
+                if m_setter_vec:
+                    smethod, stype = m_setter_vec.group(1), m_setter_vec.group(2)
+                    inner.setdefault("setter_decls", []).append(
+                        SetterDecl(
+                            cpp_type=stype,
+                            method=smethod,
+                            line=pline,
+                            col=pcol,
+                            attrs=attrs,
+                            is_vector=True,
+                        )
                     )
-                smethod, stype = m_setter.group(1), m_setter.group(2)
-                inner.setdefault("setter_decls", []).append(
-                    SetterDecl(
-                        cpp_type=stype,
-                        method=smethod,
-                        line=pline,
-                        col=pcol,
-                        attrs=attrs,
+                else:
+                    m_setter = SETTER_METHOD_RE.match(line)
+                    if not m_setter:
+                        raise ParseError(
+                            f"expected void Method(value_type) after @setter (tag at line {pline})",
+                            path,
+                            line_no,
+                            1,
+                        )
+                    smethod, stype = m_setter.group(1), m_setter.group(2)
+                    inner.setdefault("setter_decls", []).append(
+                        SetterDecl(
+                            cpp_type=stype,
+                            method=smethod,
+                            line=pline,
+                            col=pcol,
+                            attrs=attrs,
+                            is_vector=False,
+                        )
                     )
-                )
             pending = None
             continue
 
@@ -704,8 +782,195 @@ def format_meta_inline(p: PropSpec) -> str:
         v = a[key]
         if isinstance(v, (int, float)):
             parts.append(f"_m.{mk} = static_cast<double>({float(v)});")
+    if p.is_vector:
+        for key, mk in (("minCount", "minElementCount"), ("maxCount", "maxElementCount")):
+            if key not in a:
+                continue
+            v = a[key]
+            if isinstance(v, (int, float)):
+                parts.append(f"_m.{mk} = static_cast<std::size_t>({int(v)});")
     inner = " ".join(parts)
     return f"[&]() -> Engine::PropertyMeta {{ {inner} return _m; }}()"
+
+
+def emit_std_vector_property(
+    out: list[str],
+    p: PropSpec,
+    path: Path,
+    meta_arg: str,
+    readonly: bool,
+) -> None:
+    setter_raw = p.attrs.get("setter")
+    setter_name = setter_raw.strip() if isinstance(setter_raw, str) else ""
+
+    if p.is_getter and not readonly and not setter_name:
+        raise ParseError(
+            "writable @getter returning std::vector requires a paired @setter (or setter= on @getter)",
+            path,
+            p.line,
+            p.col,
+        )
+
+    fid = member_to_field_id(p.member)
+    label_esc = cpp_escape_string(default_label(p.member, p.attrs))
+    idx = f"_pv_{fid}_i"
+
+    if p.is_getter:
+        vec_access = f"this->{p.member}()"
+    else:
+        mem = p.member
+        vec_access = mem
+
+    size_body = f"{vec_access}.size()"
+
+    if readonly:
+        seq = (
+            "Engine::PropAccessSequence{\n"
+            f"\t\t[this]() {{ return {size_body}; }},\n"
+            "\t\t{}\n"
+            "\t}"
+        )
+    elif p.is_getter:
+        seq = (
+            "Engine::PropAccessSequence{\n"
+            f"\t\t[this]() {{ return {size_body}; }},\n"
+            f"\t\t[this](std::size_t _n) {{\n"
+            f"\t\t\tauto _pv = {vec_access};\n"
+            f"\t\t\t_pv.resize(_n);\n"
+            f"\t\t\tthis->{setter_name}(std::move(_pv));\n"
+            "\t\t}\n"
+            "\t}"
+        )
+    else:
+        seq = (
+            "Engine::PropAccessSequence{\n"
+            f"\t\t[this]() {{ return {size_body}; }},\n"
+            f"\t\t[this](std::size_t _n) {{ {mem}.resize(_n); }}\n"
+            "\t}"
+        )
+    out.append(f'\tb.beginSequence("{fid}", "{label_esc}", {seq}, {meta_arg});')
+    out.append(f"\tfor (std::size_t {idx} = 0; {idx} < {size_body}; ++{idx}) {{")
+    out.append(
+        f'\t\tb.pushObject(std::to_string({idx}), "[" + std::to_string({idx}) + "]", Engine::PropertyMeta{{}});'
+    )
+
+    if p.is_getter:
+        acc = f"{vec_access}[{idx}]"
+    else:
+        acc = f"{mem}[{idx}]"
+
+    g = f"[this, {idx}] {{ return {acc}; }}"
+
+    def add_inner(call: str) -> None:
+        out.append(f"\t\t{call}")
+
+    t = p.cpp_type
+    if readonly:
+        ro = {
+            "float": f"[this, {idx}](float) {{}}",
+            "double": f"[this, {idx}](double) {{}}",
+            "bool": f"[this, {idx}](bool) {{}}",
+            "int": f"[this, {idx}](std::int32_t) {{}}",
+            "std::int32_t": f"[this, {idx}](std::int32_t) {{}}",
+            "std::int64_t": f"[this, {idx}](std::int64_t) {{}}",
+            "std::string": f"[this, {idx}](std::string) {{}}",
+            "sf::Vector2f": f"[this, {idx}](sf::Vector2f) {{}}",
+            "sf::Vector3f": f"[this, {idx}](sf::Vector3f) {{}}",
+            "sf::Color": f"[this, {idx}](sf::Color) {{}}",
+        }
+        sl = ro[t]
+        if t == "float":
+            add_inner(f'b.addFloat("v", "", {g}, {sl}, {meta_arg});')
+        elif t == "double":
+            add_inner(f'b.addDouble("v", "", {g}, {sl}, {meta_arg});')
+        elif t == "bool":
+            add_inner(f'b.addBool("v", "", {g}, {sl}, {meta_arg});')
+        elif t in ("int", "std::int32_t"):
+            add_inner(f'b.addInt32("v", "", {g}, {sl}, {meta_arg});')
+        elif t == "std::int64_t":
+            add_inner(f'b.addInt64("v", "", {g}, {sl}, {meta_arg});')
+        elif t == "std::string":
+            add_inner(f'b.addString("v", "", {g}, {sl}, {meta_arg});')
+        elif t == "sf::Vector2f":
+            add_inner(f'b.addVec2f("v", "", {g}, {sl}, {meta_arg});')
+        elif t == "sf::Vector3f":
+            add_inner(f'b.addVec3f("v", "", {g}, {sl}, {meta_arg});')
+        elif t == "sf::Color":
+            add_inner(f'b.addColor("v", "", {g}, {sl}, {meta_arg});')
+        else:
+            raise ParseError(f"unsupported vector element type `{t}`", path, p.line, p.col)
+    elif p.is_getter:
+        wl_vec = {
+            "float": f"[this, {idx}](float v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
+            "double": f"[this, {idx}](double v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
+            "bool": f"[this, {idx}](bool v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
+            "int": f"[this, {idx}](std::int32_t v) {{ auto _pv = {vec_access}; _pv[{idx}] = static_cast<int>(v); this->{setter_name}(std::move(_pv)); }}",
+            "std::int32_t": f"[this, {idx}](std::int32_t v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
+            "std::int64_t": f"[this, {idx}](std::int64_t v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
+            "std::string": f"[this, {idx}](std::string v) {{ auto _pv = {vec_access}; _pv[{idx}] = std::move(v); this->{setter_name}(std::move(_pv)); }}",
+            "sf::Vector2f": f"[this, {idx}](sf::Vector2f v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
+            "sf::Vector3f": f"[this, {idx}](sf::Vector3f v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
+            "sf::Color": f"[this, {idx}](sf::Color c) {{ auto _pv = {vec_access}; _pv[{idx}] = c; this->{setter_name}(std::move(_pv)); }}",
+        }
+        wl = wl_vec[t]
+        if t == "float":
+            add_inner(f'b.addFloat("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "double":
+            add_inner(f'b.addDouble("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "bool":
+            add_inner(f'b.addBool("v", "", {g}, {wl}, {meta_arg});')
+        elif t in ("int", "std::int32_t"):
+            add_inner(f'b.addInt32("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "std::int64_t":
+            add_inner(f'b.addInt64("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "std::string":
+            add_inner(f'b.addString("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "sf::Vector2f":
+            add_inner(f'b.addVec2f("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "sf::Vector3f":
+            add_inner(f'b.addVec3f("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "sf::Color":
+            add_inner(f'b.addColor("v", "", {g}, {wl}, {meta_arg});')
+        else:
+            raise ParseError(f"unsupported vector element type `{t}`", path, p.line, p.col)
+    else:
+        rw = {
+            "float": f"[this, {idx}](float v) {{ {acc} = v; }}",
+            "double": f"[this, {idx}](double v) {{ {acc} = v; }}",
+            "bool": f"[this, {idx}](bool v) {{ {acc} = v; }}",
+            "int": f"[this, {idx}](std::int32_t v) {{ {acc} = static_cast<int>(v); }}",
+            "std::int32_t": f"[this, {idx}](std::int32_t v) {{ {acc} = v; }}",
+            "std::int64_t": f"[this, {idx}](std::int64_t v) {{ {acc} = v; }}",
+            "std::string": f"[this, {idx}](std::string v) {{ {acc} = std::move(v); }}",
+            "sf::Vector2f": f"[this, {idx}](sf::Vector2f v) {{ {acc} = v; }}",
+            "sf::Vector3f": f"[this, {idx}](sf::Vector3f v) {{ {acc} = v; }}",
+            "sf::Color": f"[this, {idx}](sf::Color c) {{ {acc} = c; }}",
+        }
+        wl = rw[t]
+        if t == "float":
+            add_inner(f'b.addFloat("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "double":
+            add_inner(f'b.addDouble("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "bool":
+            add_inner(f'b.addBool("v", "", {g}, {wl}, {meta_arg});')
+        elif t in ("int", "std::int32_t"):
+            add_inner(f'b.addInt32("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "std::int64_t":
+            add_inner(f'b.addInt64("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "std::string":
+            add_inner(f'b.addString("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "sf::Vector2f":
+            add_inner(f'b.addVec2f("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "sf::Vector3f":
+            add_inner(f'b.addVec3f("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "sf::Color":
+            add_inner(f'b.addColor("v", "", {g}, {wl}, {meta_arg});')
+        else:
+            raise ParseError(f"unsupported vector element type `{t}`", path, p.line, p.col)
+
+    out.append("\t\tb.pop();")
+    out.append("\t}")
+    out.append("\tb.endSequence();")
 
 
 def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
@@ -726,6 +991,8 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
         out.append("")
     out.append("#include <cstdint>")
     out.append("#include <string>")
+    if any(p.is_vector for c in classes for p in c.props):
+        out.append("#include <cstddef>")
     out.append("")
 
     for c in classes:
@@ -741,6 +1008,24 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
             setter_name = a.get("setter")
             has_setter_method = isinstance(setter_name, str) and bool(setter_name)
             readonly = (a.get("readonly") is True) or (p.is_getter and not has_setter_method)
+
+            if p.is_vector:
+                has_meta = readonly or any(
+                    k in a
+                    for k in (
+                        "tooltip",
+                        "minValue",
+                        "maxValue",
+                        "step",
+                        "dragSpeed",
+                        "minCount",
+                        "maxCount",
+                    )
+                )
+                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
+                emit_std_vector_property(out, p, path, meta_arg, readonly)
+                continue
+
             has_meta = readonly or any(
                 k in a for k in ("tooltip", "minValue", "maxValue", "step", "dragSpeed")
             )

@@ -70,17 +70,27 @@ namespace Engine {
 		case PropertyKind::Sequence: {
 			const auto* seq = std::get_if<PropAccessSequence>(&n.access);
 			if (ImGui::TreeNodeEx("##seq", ImGuiTreeNodeFlags_DefaultOpen, "%s", n.label.c_str())) {
-				if (seq && seq->getSize && seq->resize && !readOnly) {
-					int sz = static_cast<int>(seq->getSize());
-					const int before = sz;
-					ImGui::SetNextItemWidth(120.f);
-					const int dragMin = n.meta.minElementCount ? static_cast<int>(*n.meta.minElementCount) : 0;
-					const int dragMax = n.meta.maxElementCount ? static_cast<int>(*n.meta.maxElementCount)
-					                                           : std::numeric_limits<int>::max();
-					ImGui::DragInt("Count", &sz, 1.f, dragMin, dragMax);
-					sz = clampIntMeta(sz, n.meta);
-					if (sz != before) {
-						seq->resize(static_cast<std::size_t>(sz));
+				if (seq && seq->getSize) {
+					const int sz = static_cast<int>(seq->getSize());
+					ImGui::AlignTextToFramePadding();
+					ImGui::Text("Size = %d", sz);
+					if (seq->resize && !readOnly) {
+						ImGui::SameLine();
+						ImGui::PushID("szctl");
+						if (ImGui::SmallButton("-")) {
+							const int next = clampIntMeta(sz - 1, n.meta);
+							if (next != sz) {
+								seq->resize(static_cast<std::size_t>(next));
+							}
+						}
+						ImGui::SameLine();
+						if (ImGui::SmallButton("+")) {
+							const int next = clampIntMeta(sz + 1, n.meta);
+							if (next != sz) {
+								seq->resize(static_cast<std::size_t>(next));
+							}
+						}
+						ImGui::PopID();
 					}
 					itemTooltipAfter(n.meta);
 				}
