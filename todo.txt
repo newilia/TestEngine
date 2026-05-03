@@ -49,3 +49,5 @@ del, ctrl c, ctrl x, ctrl v в иерархии
 более медленный drag float для scale
 
 убрать SetPosGlobal
+
+кривая работа столкновений тел, если их глобальный трансформ не равен identity
