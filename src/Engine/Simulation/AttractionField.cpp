@@ -33,8 +33,7 @@ static float EffectiveSourceMass(const PhysicsBodyBehaviour& rb) {
 	return rb.GetMass();
 }
 
-[[nodiscard]] sf::Vector2f
-AttractionField::EvaluateAcceleration(const shared_ptr<AttractiveBehaviour>& receiver) const {
+sf::Vector2f AttractionField::EvaluateAcceleration(const shared_ptr<AttractiveBehaviour>& receiver) const {
 	_sources.remove_if([](const std::weak_ptr<AttractiveBehaviour>& w) {
 		return w.expired();
 	});
@@ -56,6 +55,14 @@ AttractionField::EvaluateAcceleration(const shared_ptr<AttractiveBehaviour>& rec
 		}
 		const auto otherNode = other->GetNode();
 		if (!otherNode) {
+			continue;
+		}
+		const auto recvRb = recvNode->FindBehaviour<PhysicsBodyBehaviour>();
+		const auto otherRb = otherNode->FindBehaviour<PhysicsBodyBehaviour>();
+		if (!recvRb || !otherRb) {
+			continue;
+		}
+		if (!(recvRb->GetInteractionGroups() & otherRb->GetInteractionGroups()).any()) {
 			continue;
 		}
 		sf::Vector2f d = otherNode->GetPosGlobal() - posI; // from receiver toward source

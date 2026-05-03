@@ -66,9 +66,9 @@ namespace Demo1 {
 				wallNode->GetLocalTransform()->SetPosition(wallCentersLocal[i]);
 
 				auto bodyBeh = wallNode->RequireBehaviour<PhysicsBodyBehaviour>();
-				bodyBeh->SetImmovable();
+				bodyBeh->SetImmovable(true);
 				bodyBeh->SetRestitution(wallRestitution);
-				bodyBeh->GetCollisionGroups().set(kAquariumPhysicsGroup, true);
+				bodyBeh->GetInteractionGroups().set(kAquariumPhysicsGroup, true);
 			}
 		}
 
@@ -141,7 +141,7 @@ namespace Demo1 {
 				rb->SetRestitution(ballRestitution);
 				rb->SetFriction(kBallFriction);
 				rb->SetVelocity({velXY(gen), velXY(gen)});
-				rb->GetCollisionGroups().set(kAquariumPhysicsGroup, true);
+				rb->GetInteractionGroups().set(kAquariumPhysicsGroup, true);
 
 				root->AddChild(ballNode);
 				ballNode->GetLocalTransform()->SetPosition(pos);

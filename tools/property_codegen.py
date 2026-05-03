@@ -2034,7 +2034,7 @@ def run_label_inference_self_tests() -> int:
         (("_thisIsAProperty", False, {}), "This is a property"),
         (("_angularSpeed", False, {}), "Angular speed"),
         (("_gravityScale", False, {}), "Gravity scale"),
-        (("_collisionGroups", False, {}), "Collision groups"),
+        (("_interactionGroups", False, {}), "Interaction groups"),
         (("_mass", False, {}), "Mass"),
         (("GetSomeProp", True, {}), "Some prop"),
         (("GetPointCount", True, {}), "Point count"),

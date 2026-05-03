@@ -22,8 +22,8 @@ class PhysicsBodyBehaviour : public Behaviour
 {
 	META_CLASS()
 public:
-	static constexpr int CollisionGroupsCount = 8;
-	using CollisionGroups = std::bitset<PhysicsBodyBehaviour::CollisionGroupsCount>;
+	static constexpr int kGroupsCount = 8;
+	using GroupSet = std::bitset<PhysicsBodyBehaviour::kGroupsCount>;
 
 	PhysicsBodyBehaviour();
 	~PhysicsBodyBehaviour() override;
@@ -33,40 +33,53 @@ public:
 
 	sf::Shape* GetShape();
 	const sf::Shape* GetShape() const;
+
 	sf::FloatRect GetBbox() const;
+
 	size_t GetPointCount() const;
-	sf::Vector2f GetPointGlobal(std::size_t index) const;
-	void SetImmovable();
+	sf::Vector2f GetPointWorldPos(std::size_t pointIndex) const;
+
 	bool IsImmovable() const;
+	void SetImmovable(bool isImmovable);
+
 	float GetMass() const;
 	void SetMass(float m);
+
 	sf::Vector2f GetVelocity() const;
 	void SetVelocity(sf::Vector2f v);
 	void AddVelocity(sf::Vector2f delta);
 	void ScaleVelocity(float factor);
+
 	float GetAngle() const;
 	void SetAngle(float a);
+
 	float GetAngularSpeed() const;
 	void SetAngularSpeed(float w);
+
 	float GetRestitution() const;
 	void SetRestitution(float r);
+
 	float GetFriction() const;
 	void SetFriction(float f);
+
 	float GetGravityScale() const;
 	void SetGravityScale(float s);
-	CollisionGroups& GetCollisionGroups();
-	const CollisionGroups& GetCollisionGroups() const;
-	CollisionGroups& GetOverlappingGroups();
-	const CollisionGroups& GetOverlappingGroups() const;
-	Signal<const IntersectionDetails&>& GetCollisionCallbacks();
-	Signal<const IntersectionDetails&>& GetOverlappingCallbacks();
+
+	GroupSet& GetInteractionGroups();
+	const GroupSet& GetInteractionGroups() const;
+
+	GroupSet& GetOverlappingGroups();
+	const GroupSet& GetOverlappingGroups() const;
+
+	Signal<const IntersectionDetails&>& GetOnCollideSignal();
+	Signal<const IntersectionDetails&>& GetOnOverlapSignal();
 
 private:
 	/// @property
 	float _mass = 1.f;
 	/// @property
 	sf::Vector2f _velocity{};
-	/// @property(name="Angle (rad)")
+	/// @property(tooltip="Radians")
 	float _angle = 0.f;
 	/// @property
 	float _angularSpeed = 0.f;
@@ -76,10 +89,10 @@ private:
 	float _friction = 0.5f;
 	/// @property(minValue=-1.f, maxValue=1.f, dragSpeed=0.05f, tooltip="Scales world gravity on this body")
 	float _gravityScale = 1.f;
-	/// @property
-	CollisionGroups _collisionGroups;
-	/// @property(readonly=true)
-	CollisionGroups _overlappingGroups;
+	/// @property(tooltip="Groups with common groups will interact in a physical way (collisions, forces, etc.)")
+	GroupSet _interactionGroups;
+	/// @property(tooltip="Groups with common groups will trigger overlap events, but won't interact in a physical way")
+	GroupSet _overlappingGroups;
 
 	Signal<const IntersectionDetails&> _collisionCallbacks;
 	Signal<const IntersectionDetails&> _overlappingCallbacks;

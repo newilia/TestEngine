@@ -107,7 +107,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	for (int i = 0; i < 4; ++i) {
 		auto node = make_shared<SceneNode>();
 		node->SetVisual(std::make_shared<RectangleShapeVisual>());
-		node->RequireBehaviour<PhysicsBodyBehaviour>()->GetCollisionGroups().set(0, true);
+		node->RequireBehaviour<PhysicsBodyBehaviour>()->GetInteractionGroups().set(0, true);
 
 		node->SetName(wallNames[i]);
 
@@ -120,7 +120,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		rect->setOutlineThickness(1.f);
 
 		auto rb = node->RequireBehaviour<PhysicsBodyBehaviour>();
-		rb->SetImmovable();
+		rb->SetImmovable(true);
 		rb->SetRestitution(commonRestitution);
 		rb->SetFriction(commonFriction);
 
@@ -137,7 +137,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		auto node = make_shared<SceneNode>();
 		node->SetVisual(std::make_shared<CircleShapeVisual>());
 		node->SetName(fmt::format("circle_{}", i));
-		node->RequireBehaviour<PhysicsBodyBehaviour>()->GetCollisionGroups().set(0, true);
+		node->RequireBehaviour<PhysicsBodyBehaviour>()->GetInteractionGroups().set(0, true);
 
 		bool isAttractive = true;
 
