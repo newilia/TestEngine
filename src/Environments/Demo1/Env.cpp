@@ -6,6 +6,7 @@
 #include "Engine/Core/Utils.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "Engine/Visual/SpriteVisual.h"
+#include "TicTacToeGame.h"
 
 #include <cstdlib>
 #include <memory>
@@ -20,12 +21,37 @@ namespace Demo1 {
 		Utils::MaximizeWindow(*mainWindow);
 		mainContext.GetPhysicsProcessor()->SetGravity({0, 1000});
 		mainContext.SetScene(BuildScene());
+		mainContext.SetVerticalSyncEnabled(true);
 		EventHandlerBase::SubscribeForEvents();
 	}
 
 	void Env::OnEvent(const sf::Event& event) {
+		auto& mainContext = Engine::MainContext::GetInstance();
+		auto* window = mainContext.GetMainWindow();
+		if (!window) {
+			return;
+		}
+
+		if (const auto* touch = event.getIf<sf::Event::TouchBegan>()) {
+			const sf::Vector2f worldPos = Utils::MapWindowPixelToWorld(*window, touch->position);
+			if (auto scene = mainContext.GetScene()) {
+				scene->DispatchTapAt(worldPos);
+			}
+			return;
+		}
+
+		if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
+			if (pressed->button != sf::Mouse::Button::Left) {
+				return;
+			}
+			const sf::Vector2f worldPos = Utils::MapWindowPixelToWorld(*window, pressed->position);
+			if (auto scene = mainContext.GetScene()) {
+				scene->DispatchTapAt(worldPos);
+			}
+			return;
+		}
+
 		if (auto e = event.getIf<sf::Event::KeyPressed>()) {
-			auto& mainContext = Engine::MainContext::GetInstance();
 			if (e->code == sf::Keyboard::Key::R) {
 				mainContext.SetScene(BuildScene());
 			}
@@ -53,6 +79,9 @@ namespace Demo1 {
 	shared_ptr<Scene> Env::BuildScene() {
 		auto scene = make_shared<Scene>();
 		scene->AddChild(CreateBackgroundNode());
+		auto ticTacToe = CreateTicTacToeGameNode();
+		ticTacToe->SetPosGlobal({160.f, 160.f});
+		scene->AddChild(std::move(ticTacToe));
 		return scene;
 	}
 
