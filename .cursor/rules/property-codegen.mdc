@@ -28,6 +28,7 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 - Strings in double quotes. Booleans `true` / `false`. Numbers may use a trailing `f`.
 - Parser errors include `file:line:col:` messages; fix the tag or the following field line.
 - The key `name` (and `label`) sets the **inspector display string** only. The **property id** in the tree is still derived from the C++ field or method name (e.g. `GetPropValue` → `get_prop_value`).
+- If neither `name` nor `label` is set to a **non-empty** string, the display label is **inferred**: from the **field** name (`_thisIsAProperty` → `This is a property`; snake segments → sentence case, e.g. `_angular_speed` → `Angular speed`), or from a **`Get…` / `Set…` method** for `@getter` / `@setter` pairs (`GetSomeProp` → `Some prop` after stripping the `Get`/`Set` prefix and splitting PascalCase). Use `name="..."` when you need exact wording.
 
 ## `@getter` / `@setter` (method-backed get/set)
 
@@ -94,6 +95,7 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 
 - Cache: `src/Codegen/.codegen_cache.json` (ignored with `src/Codegen/`). Skips unchanged headers by mtime/size.
 - **`Codegen_Force`** CMake target (or `python tools/property_codegen.py --root . --force`) clears incremental assumptions and regenerates everything.
+- **`python tools/property_codegen.py --test-labels`** runs built-in checks for inferred display labels (no header scan).
 - Default CLI output is a **short summary**; use **`--verbose`** to print every scanned header (useful when debugging the scanner).
 
 ## Extending reflection
