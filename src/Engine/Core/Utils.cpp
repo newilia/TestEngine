@@ -6,6 +6,7 @@
 
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Visual/ShapeVisualBase.h"
+#include "Engine/Visual/SpriteVisual.h"
 #include "Engine/Visual/TextVisual.h"
 #include "SFML/Graphics.hpp"
 #include "fmt/format.h"
@@ -117,6 +118,12 @@ namespace Utils {
 		if (const auto* fps = dynamic_cast<const TextVisual*>(visual)) {
 			if (const sf::Text* text = fps->GetText()) {
 				return text->getGlobalBounds().contains(worldPoint);
+			}
+			return false;
+		}
+		if (const auto* spriteVis = dynamic_cast<const SpriteVisual*>(visual)) {
+			if (const sf::Sprite* sprite = spriteVis->GetSprite()) {
+				return sprite->getGlobalBounds().contains(worldPoint);
 			}
 			return false;
 		}

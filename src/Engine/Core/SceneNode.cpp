@@ -5,6 +5,7 @@
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/Transform.h"
 #include "Engine/Visual/ShapeVisualBase.h"
+#include "Engine/Visual/SpriteVisual.h"
 #include "Engine/Visual/TextVisual.h"
 #include "SceneNode.generated.hpp"
 
@@ -42,6 +43,11 @@ namespace {
 		if (auto tv = std::dynamic_pointer_cast<TextVisual>(node.GetVisual())) {
 			if (const sf::Text* text = tv->GetText()) {
 				return text->getGlobalBounds();
+			}
+		}
+		if (auto spv = std::dynamic_pointer_cast<SpriteVisual>(node.GetVisual())) {
+			if (const sf::Sprite* sprite = spv->GetSprite()) {
+				return sprite->getGlobalBounds();
 			}
 		}
 		if (auto* c = node.FindPhysicsBody()) {
