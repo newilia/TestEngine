@@ -12,10 +12,8 @@ public:
 	~Visual() override = default;
 
 	virtual void Draw(sf::RenderTarget& target, sf::RenderStates states) const = 0;
-	/// `worldPoint` — в координатах сцены (`Utils::IsWorldPointInsideOf*`).
 	virtual bool HitTest(const sf::Vector2f& worldPoint) const = 0;
-
-	virtual void OnTap(const sf::Vector2f& worldPoint);
+	virtual void OnTap(const sf::Vector2f& worldPoint); // TODO Remove, I guess this is not a Visual's responsibility
 
 	void SetTapHandlingEnabled(bool enabled);
 	bool IsTapHandlingEnabled() const;
