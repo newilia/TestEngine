@@ -216,12 +216,11 @@ void SceneNode::SetPosGlobal(sf::Vector2f pos) {
 	}
 	if (auto parent = GetParent()) {
 		const sf::Vector2f local = parent->GetWorldTransform().getInverse().transformPoint(pos);
-		GetLocalTransform()->setPosition(local);
+		GetLocalTransform()->setLocalPosition(local);
 	}
 	else {
-		GetLocalTransform()->setPosition(pos);
+		GetLocalTransform()->setLocalPosition(pos);
 	}
-	MarkWorldTransformSubtreeDirty();
 }
 
 void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
