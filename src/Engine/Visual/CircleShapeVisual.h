@@ -7,9 +7,12 @@
 class CircleShapeVisual : public ShapeVisualBase
 {
 public:
-	explicit CircleShapeVisual(sf::CircleShape* circle);
+	CircleShapeVisual();
+	sf::Shape* GetBaseShape() override;
 	bool HitTest(const sf::Vector2f& worldPoint) const override;
 
+	sf::CircleShape* GetShape();
+
 private:
-	sf::CircleShape* _circle = nullptr;
+	sf::CircleShape _circle;
 };

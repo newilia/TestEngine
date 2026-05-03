@@ -36,7 +36,7 @@ namespace {
 
 	std::optional<sf::FloatRect> TryGetHierarchySelectionBounds(const SceneNode& node) {
 		if (auto sv = std::dynamic_pointer_cast<ShapeVisualBase>(node.GetVisual())) {
-			if (sf::Shape* shape = sv->GetShape()) {
+			if (sf::Shape* shape = sv->GetBaseShape()) {
 				return shape->getGlobalBounds();
 			}
 		}
@@ -49,9 +49,6 @@ namespace {
 			if (const sf::Sprite* sprite = spv->GetSprite()) {
 				return sprite->getGlobalBounds();
 			}
-		}
-		if (auto* c = node.FindPhysicsBody()) {
-			return c->GetBbox();
 		}
 		return std::nullopt;
 	}

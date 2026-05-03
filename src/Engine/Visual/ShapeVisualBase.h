@@ -4,16 +4,11 @@
 
 #include <SFML/Graphics/Shape.hpp>
 
-/// Общая отрисовка `sf::Shape*`; проверка попадания — в наследниках.
 class ShapeVisualBase : public Visual
 {
 public:
-	explicit ShapeVisualBase(sf::Shape* shape);
-
+	ShapeVisualBase();
 	void Draw(sf::RenderTarget& target, sf::RenderStates states) const override;
-
-	sf::Shape* GetShape() const;
-
-private:
-	sf::Shape* _shape = nullptr;
+	virtual sf::Shape* GetBaseShape() = 0;
+	const sf::Shape* GetBaseShape() const;
 };

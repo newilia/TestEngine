@@ -25,9 +25,6 @@ public:
 	static constexpr int CollisionGroupsCount = 8;
 
 	PhysicsBodyBehaviour();
-	explicit PhysicsBodyBehaviour(sf::CircleShape shape, bool attachVisualFromShape = true);
-	explicit PhysicsBodyBehaviour(sf::RectangleShape shape, bool attachVisualFromShape = true);
-	explicit PhysicsBodyBehaviour(sf::ConvexShape shape, bool attachVisualFromShape = true);
 	~PhysicsBodyBehaviour() override;
 
 	void OnInit() override;
@@ -157,12 +154,4 @@ private:
 
 	/// @property(readonly=true, tooltip="Set when body is registered with the physics handler.")
 	bool _registered = false;
-
-	bool _attachVisualFromShape = false;
-	bool _ownsShapeVisual = false;
-
-	std::variant<sf::CircleShape, sf::RectangleShape, sf::ConvexShape> _shape;
 };
-
-template <typename TShape>
-std::shared_ptr<SceneNode> CreatePhysicsBodyNode(bool attachVisualFromShape = true);

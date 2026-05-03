@@ -2,14 +2,14 @@
 
 #include <SFML/Graphics/RenderTarget.hpp>
 
-ShapeVisualBase::ShapeVisualBase(sf::Shape* shape) : _shape(shape) {}
+ShapeVisualBase::ShapeVisualBase() {}
 
-sf::Shape* ShapeVisualBase::GetShape() const {
-	return _shape;
+const sf::Shape* ShapeVisualBase::GetBaseShape() const {
+	return const_cast<ShapeVisualBase*>(this)->GetBaseShape();
 }
 
 void ShapeVisualBase::Draw(sf::RenderTarget& target, sf::RenderStates states) const {
-	if (GetShape()) {
-		target.draw(*GetShape(), states);
+	if (auto shape = GetBaseShape()) {
+		target.draw(*shape, states);
 	}
 }

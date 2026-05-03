@@ -10,6 +10,9 @@
 #include "Engine/Core/Utils.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "Engine/Sorting/SortingStrategy.h"
+#include "Engine/Visual/CircleShapeVisual.h"
+#include "Engine/Visual/ConvexShapeVisual.h"
+#include "Engine/Visual/RectangleShapeVisual.h"
 #include "Engine/Visual/TextVisual.h"
 #include "PongBall.h"
 #include "PongPlayfield.h"
@@ -62,6 +65,7 @@ void PongEnvironment::Setup() {
 	mainContext.GetMainWindow()->setMouseCursorVisible(false);
 	mainContext.GetPhysicsProcessor()->SetGravity({0, 1000});
 	mainContext.SetScene(BuildScene());
+	SubscribeForEvents();
 }
 
 void PongEnvironment::OnEvent(const sf::Event& event) {
@@ -87,11 +91,14 @@ void PongEnvironment::AddBall(Scene* scene) {
 	const sf::Vector2f vel = InitialBallVelocity();
 	const sf::Vector2f pos = InitialBallPosition();
 
-	auto ball = make_shared<PongBall>(CreatePhysicsBodyNode<sf::CircleShape>());
+	auto ballNode = make_shared<SceneNode>();
+	auto circleVisual = std::make_shared<CircleShapeVisual>();
+	ballNode->SetVisual(circleVisual);
+	auto ball = make_shared<PongBall>(ballNode);
 	ball->SetupBehaviours();
 	ball->SetMaxSpeed(400.f);
 	ball->SetSpeedDampingFactor(speedDampingFactor);
-	auto shape = ball->GetShape();
+	auto shape = circleVisual->GetShape();
 	ball->GetNode()->SetName("Ball");
 
 	shape->setRadius(radius);
@@ -120,13 +127,15 @@ void PongEnvironment::AddBall(Scene* scene) {
 
 shared_ptr<SceneNode> PongEnvironment::CreateDefaultPlatform(sf::Vector2f size, sf::Vector2f pos, float rotationDeg,
                                                              sf::Color color) const {
-	auto node = CreatePhysicsBodyNode<sf::ConvexShape>();
+	auto node = make_shared<SceneNode>();
 	node->SetName("Platform");
+	auto convexShape = std::make_shared<ConvexShapeVisual>();
+	node->SetVisual(convexShape);
 
 	constexpr int pointCount = 42;
 	constexpr float curvature = 0.9f;
 
-	auto shape = dynamic_cast<sf::ConvexShape*>(node->FindPhysicsBody()->GetShape());
+	auto shape = convexShape->GetShape();
 	shape->setPointCount(pointCount);
 	// half-ellipse shape
 	for (int i = 0; i < pointCount; ++i) {
@@ -140,10 +149,10 @@ shared_ptr<SceneNode> PongEnvironment::CreateDefaultPlatform(sf::Vector2f size, 
 	shape->setPosition(pos);
 	shape->setFillColor(color);
 
-	auto rigidBody = node->RequireBehaviour<PhysicsBodyBehaviour>();
-	rigidBody->GetCollisionGroups().set(1, true);
-	rigidBody->SetImmovable();
-	rigidBody->SetRestitution(bodiesRestitution);
+	auto physicsBody = node->RequireBehaviour<PhysicsBodyBehaviour>();
+	physicsBody->GetCollisionGroups().set(1, true);
+	physicsBody->SetImmovable();
+	physicsBody->SetRestitution(bodiesRestitution);
 
 	return node;
 }
@@ -163,10 +172,12 @@ void PongEnvironment::AddWalls(Scene* scene) {
 	                                {o.x - wallOffset, o.y + sz.y / 2},
 	                                {o.x + sz.x + wallOffset, o.y + sz.y / 2}};
 	for (int i = 0; i < 4; ++i) {
-		auto wallNode = CreatePhysicsBodyNode<sf::RectangleShape>();
+		auto wallNode = make_shared<SceneNode>();
 		wallNode->SetName(wallNames[i]);
+		auto rectVisual = std::make_shared<RectangleShapeVisual>();
+		wallNode->SetVisual(rectVisual);
 
-		auto* rectShape = dynamic_cast<sf::RectangleShape*>(wallNode->FindPhysicsBody()->GetShape());
+		auto rectShape = rectVisual->GetShape();
 		rectShape->setSize(wallSizes[i]);
 		rectShape->setOrigin(Utils::FindCenterOfMass(rectShape));
 		rectShape->setPosition(wallPositions[i]);
