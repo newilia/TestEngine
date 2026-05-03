@@ -23,6 +23,7 @@ class PhysicsBodyBehaviour : public Behaviour
 	META_CLASS()
 public:
 	static constexpr int CollisionGroupsCount = 8;
+	using CollisionGroups = std::bitset<PhysicsBodyBehaviour::CollisionGroupsCount>;
 
 	PhysicsBodyBehaviour();
 	~PhysicsBodyBehaviour() override;
@@ -32,103 +33,35 @@ public:
 
 	sf::Shape* GetShape();
 	const sf::Shape* GetShape() const;
-
 	sf::FloatRect GetBbox() const;
 	size_t GetPointCount() const;
 	sf::Vector2f GetPointGlobal(std::size_t index) const;
 	sf::Vector2f GetPosGlobal() const;
 	void SetPosGlobal(sf::Vector2f pos);
-
 	void SetImmovable();
 	bool IsImmovable() const;
-
-	float GetMass() const {
-		return _mass;
-	}
-
-	void SetMass(float m) {
-		_mass = m;
-	}
-
-	sf::Vector2f GetVelocity() const {
-		return _velocity;
-	}
-
-	void SetVelocity(sf::Vector2f v) {
-		_velocity = v;
-	}
-
-	void AddVelocity(sf::Vector2f delta) {
-		_velocity += delta;
-	}
-
-	void ScaleVelocity(float factor) {
-		_velocity *= factor;
-	}
-
-	float GetAngle() const {
-		return _angle;
-	}
-
-	void SetAngle(float a) {
-		_angle = a;
-	}
-
-	float GetAngularSpeed() const {
-		return _angularSpeed;
-	}
-
-	void SetAngularSpeed(float w) {
-		_angularSpeed = w;
-	}
-
-	float GetRestitution() const {
-		return _restitution;
-	}
-
-	void SetRestitution(float r) {
-		_restitution = r;
-	}
-
-	float GetFriction() const {
-		return _friction;
-	}
-
-	void SetFriction(float f) {
-		_friction = f;
-	}
-
-	float GetGravityScale() const {
-		return _gravityScale;
-	}
-
-	void SetGravityScale(float s) {
-		_gravityScale = s;
-	}
-
-	std::bitset<CollisionGroupsCount>& GetCollisionGroups() {
-		return _collisionGroups;
-	}
-
-	const std::bitset<CollisionGroupsCount>& GetCollisionGroups() const {
-		return _collisionGroups;
-	}
-
-	std::bitset<CollisionGroupsCount>& GetOverlappingGroups() {
-		return _overlappingGroups;
-	}
-
-	const std::bitset<CollisionGroupsCount>& GetOverlappingGroups() const {
-		return _overlappingGroups;
-	}
-
-	Signal<const IntersectionDetails&>& GetCollisionCallbacks() {
-		return _collisionCallbacks;
-	}
-
-	Signal<const IntersectionDetails&>& GetOverlappingCallbacks() {
-		return _overlappingCallbacks;
-	}
+	float GetMass() const;
+	void SetMass(float m);
+	sf::Vector2f GetVelocity() const;
+	void SetVelocity(sf::Vector2f v);
+	void AddVelocity(sf::Vector2f delta);
+	void ScaleVelocity(float factor);
+	float GetAngle() const;
+	void SetAngle(float a);
+	float GetAngularSpeed() const;
+	void SetAngularSpeed(float w);
+	float GetRestitution() const;
+	void SetRestitution(float r);
+	float GetFriction() const;
+	void SetFriction(float f);
+	float GetGravityScale() const;
+	void SetGravityScale(float s);
+	CollisionGroups& GetCollisionGroups();
+	const CollisionGroups& GetCollisionGroups() const;
+	CollisionGroups& GetOverlappingGroups();
+	const CollisionGroups& GetOverlappingGroups() const;
+	Signal<const IntersectionDetails&>& GetCollisionCallbacks();
+	Signal<const IntersectionDetails&>& GetOverlappingCallbacks();
 
 private:
 	/// @property(tooltip="Infinity = immovable; use SetImmovable() in code, or set mass in inspector.")
@@ -151,7 +84,4 @@ private:
 
 	Signal<const IntersectionDetails&> _collisionCallbacks;
 	Signal<const IntersectionDetails&> _overlappingCallbacks;
-
-	/// @property(readonly=true, tooltip="Set when body is registered with the physics handler.")
-	bool _registered = false;
 };

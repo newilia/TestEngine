@@ -57,6 +57,9 @@ void TestEnvironment::OnEvent(const sf::Event& event) {
 	}
 
 	if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
+		if (key->code == sf::Keyboard::Key::Escape) {
+			std::exit(EXIT_SUCCESS);
+		}
 		if (key->code == sf::Keyboard::Key::Equal) {
 			mainContext->SetSimSpeedMultiplier(mainContext->GetSimSpeedMultiplier() * 2);
 		}
