@@ -228,10 +228,15 @@ namespace Engine {
 		return _hierarchySelectedForViewport.lock();
 	}
 
-	void MainContext::MoveCamera(const sf::Vector2i& delta) {
+	void MainContext::MoveCamera(const sf::Vector2i& screenDelta) {
 		if (auto window = GetMainWindow()) {
 			auto view = window->getView();
-			view.move(static_cast<sf::Vector2f>(delta));
+			const sf::Vector2f w0 = window->mapPixelToCoords({0, 0}, view);
+			const sf::Vector2f perPxX = window->mapPixelToCoords({1, 0}, view) - w0;
+			const sf::Vector2f perPxY = window->mapPixelToCoords({0, 1}, view) - w0;
+			const sf::Vector2f worldDelta =
+			    perPxX * static_cast<float>(screenDelta.x) + perPxY * static_cast<float>(screenDelta.y);
+			view.move(worldDelta);
 			window->setView(view);
 		}
 	}
