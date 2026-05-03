@@ -1,5 +1,6 @@
 #include "PongGame.h"
 
+#include "Engine/Behaviour/ButtonBehaviour.h"
 #include "Engine/Behaviour/Physics/IntersectionDetails.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/FontManager.h"
@@ -33,6 +34,7 @@ namespace Demo1 {
 
 		constexpr float bodiesRestitution = 1;
 		constexpr int kPongScoreFontSize = 140;
+		constexpr int kTapPromptFontSize = 56;
 
 		shared_ptr<SceneNode> sUserPlatform;
 		shared_ptr<SceneNode> sAiPlatform;
@@ -42,6 +44,21 @@ namespace Demo1 {
 		int aiScore = 0;
 		shared_ptr<sf::Text> scoreText;
 		shared_ptr<SceneNode> scoreboardNode;
+
+		bool sAwaitingFirstTap = false;
+		std::weak_ptr<SceneNode> sPongGameRoot;
+		float sBallRadius = 0.f;
+
+		void OnScoreboardTap(const sf::Event&);
+
+		void ConfigureNewPongSession(float ballRadius) {
+			sAwaitingFirstTap = true;
+			sBallRadius = ballRadius;
+		}
+
+		void RegisterPongGameRoot(const shared_ptr<SceneNode>& root) {
+			sPongGameRoot = root;
+		}
 
 		float FieldHalfHeight() {
 			return GetPongPlayfieldRect().size.y * 0.5f;
@@ -53,6 +70,10 @@ namespace Demo1 {
 
 		sf::Vector2f InitialBallVelocity() {
 			return {0, 500};
+		}
+
+		sf::Vector2f FirstServeBallVelocity() {
+			return {0.f, -500.f};
 		}
 
 		sf::Vector2f InitialUserPlatformPositionLocal() {
@@ -178,11 +199,11 @@ namespace Demo1 {
 			return m;
 		}
 
-		void AddBall(SceneNode* root, float radius) {
+		void AddBall(SceneNode* root, float radius, const sf::Vector2f& initialVelocity) {
 			constexpr float pointsCountConstant = 3.f;
 			constexpr float speedDampingFactor = 0.1f;
 			const sf::Color color(40, 170, 255, 200);
-			const sf::Vector2f vel = InitialBallVelocity();
+			const sf::Vector2f vel = initialVelocity;
 
 			auto ballNode = make_shared<SceneNode>();
 			auto circleVisual = std::make_shared<CircleShapeVisual>();
@@ -216,6 +237,8 @@ namespace Demo1 {
 
 			root->AddChild(ball->GetNode());
 			ballNode->GetLocalTransform()->SetPosition(InitialBallPositionLocal());
+
+			ballNode->NotifyLifecycleInitRecursive();
 
 			sBall = ball;
 		}
@@ -334,7 +357,7 @@ namespace Demo1 {
 			node->SetSortingStrategy(sorting);
 			node->SetName("Score");
 
-			scoreText = std::make_shared<sf::Text>(*font, "0:0", static_cast<unsigned>(kPongScoreFontSize));
+			scoreText = std::make_shared<sf::Text>(*font, "Tap to play", static_cast<unsigned>(kTapPromptFontSize));
 			scoreText->setFillColor(sf::Color(255, 255, 255, static_cast<std::uint8_t>(0.3f * 255.f)));
 
 			auto lb = scoreText->getLocalBounds();
@@ -342,8 +365,30 @@ namespace Demo1 {
 
 			node->SetVisual(std::make_shared<TextVisual>(scoreText));
 			scoreboardNode = node;
+
+			auto button = std::make_shared<ButtonBehaviour>();
+			node->AddBehaviour(button);
+			[[maybe_unused]] auto tapConn = button->SubscribeOnTap(OnScoreboardTap);
+
 			root->AddChild(std::move(node));
 			scoreboardNode->GetLocalTransform()->SetPosition({0.f, 0.f});
+		}
+
+		void OnScoreboardTap(const sf::Event&) {
+			if (!sAwaitingFirstTap) {
+				return;
+			}
+			auto root = sPongGameRoot.lock();
+			if (!root || !scoreText) {
+				return;
+			}
+			sAwaitingFirstTap = false;
+			AddBall(root.get(), sBallRadius, FirstServeBallVelocity());
+			if (auto ai = sAiPlatform->FindBehaviour<AiPlatformControllerBehaviour>()) {
+				ai->BeginObserve(sUserPlatform, sBall);
+			}
+			scoreText->setCharacterSize(static_cast<unsigned>(kPongScoreFontSize));
+			UpdateScoreText();
 		}
 
 	} // namespace
@@ -354,6 +399,7 @@ namespace Demo1 {
 		    wallThickness <= 0.f) {
 			return nullptr;
 		}
+		ConfigureNewPongSession(ballRadius);
 		auto* window = Engine::MainContext::GetInstance().GetMainWindow();
 		if (!window) {
 			return nullptr;
@@ -366,11 +412,11 @@ namespace Demo1 {
 		auto root = make_shared<SceneNode>();
 		root->SetName("Pong");
 		root->SetPosGlobal(GetPongPlayfieldRect().getCenter());
+		RegisterPongGameRoot(root);
 
 		const sf::Vector2f platformSize{platformWidth, platformHeight};
 
 		AddWalls(root.get(), wallThickness);
-		AddBall(root.get(), ballRadius);
 		const MovementBoundNodes movementBounds = CreateMovementBoundRects(root.get());
 		AddUserPlatform(root.get(), platformSize);
 		AddAiPlatform(root.get(), platformSize);

@@ -83,7 +83,11 @@ namespace Demo1 {
 
 	shared_ptr<Scene> Env::BuildScene() {
 		auto scene = make_shared<Scene>();
-		scene->AddChild(CreateBackgroundNode());
+		{
+			auto background = CreateBackgroundNode();
+			background->SetName("Background");
+			scene->AddChild(background);
+		}
 
 		{
 			const float fieldW = 500;
