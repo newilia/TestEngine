@@ -10,6 +10,8 @@
 #include <memory>
 #include <queue>
 
+class SceneNode;
+
 /// AI paddle: observes ball with delay and moves toward predicted position.
 class AiPlatformControllerBehaviour : public Behaviour
 {
@@ -26,6 +28,7 @@ public:
 
 	void ResyncSpawnFromNode();
 	void ClearPendingObservations();
+	void SetMovementBounds(std::weak_ptr<SceneNode> movementRegionRect);
 
 	/* TODO incapsulation */
 	/// @property(minValue=0.f, maxValue=100000.f, tooltip="Scales velocity toward target position.")
@@ -63,6 +66,7 @@ private:
 
 	std::weak_ptr<SceneNode> _opponentPlatform;
 	std::weak_ptr<PongBall> _ball;
+	std::weak_ptr<SceneNode> _movementBounds;
 	sf::Clock _observeTimer;
 	std::queue<ExternalStateTimer> _externalStateTimers;
 	ExternalState _curExState{};

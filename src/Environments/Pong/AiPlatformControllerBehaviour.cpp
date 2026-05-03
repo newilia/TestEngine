@@ -2,12 +2,17 @@
 
 #include "AiPlatformControllerBehaviour.generated.hpp"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
+#include "Engine/Core/SceneNode.h"
 #include "PongPlatform.h"
 
 #include <SFML/System/Time.hpp>
 
 #include <algorithm>
 #include <cstdlib>
+
+void AiPlatformControllerBehaviour::SetMovementBounds(std::weak_ptr<SceneNode> movementRegionRect) {
+	_movementBounds = std::move(movementRegionRect);
+}
 
 void AiPlatformControllerBehaviour::OnInit() {
 	Behaviour::OnInit();
@@ -17,8 +22,8 @@ void AiPlatformControllerBehaviour::OnInit() {
 void AiPlatformControllerBehaviour::ResyncSpawnFromNode() {
 	if (auto p = GetNode()) {
 		_targetPos = _defaultPos = p->GetPosGlobal();
-		ClampPongPlatformDesiredCenter(_targetPos, false, p);
-		ClampPongPlatformDesiredCenter(_defaultPos, false, p);
+		ClampPongPlatformDesiredCenter(_targetPos, false, p, _movementBounds);
+		ClampPongPlatformDesiredCenter(_defaultPos, false, p, _movementBounds);
 		p->SetPosGlobal(_defaultPos);
 	}
 }
@@ -103,7 +108,7 @@ void AiPlatformControllerBehaviour::OnUpdate(const sf::Time& /*dt*/) {
 		return;
 	}
 
-	ClampPongPlatformToPlayfield(node, false);
+	ClampPongPlatformToPlayfield(node, false, _movementBounds);
 
 	if (_observeTimer.getElapsedTime().asSeconds() > _observePeriodSeconds) {
 		_observeTimer.restart();
@@ -128,7 +133,7 @@ void AiPlatformControllerBehaviour::OnUpdate(const sf::Time& /*dt*/) {
 		}
 	}
 
-	ClampPongPlatformDesiredCenter(_targetPos, false, node);
+	ClampPongPlatformDesiredCenter(_targetPos, false, node, _movementBounds);
 
 	ApplyPongPlatformVelocityTowardsTarget(node, _targetPos, _speedFactor, _velLimit);
 }

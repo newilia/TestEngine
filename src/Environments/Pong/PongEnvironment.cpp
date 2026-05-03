@@ -297,6 +297,7 @@ void PongEnvironment::UpdateScoreText() {
 }
 
 std::shared_ptr<Scene> PongEnvironment::BuildScene() {
+	ClearPongPlayfieldRectOverride();
 	auto scene = make_shared<Scene>();
 
 	AddWalls(scene.get());
