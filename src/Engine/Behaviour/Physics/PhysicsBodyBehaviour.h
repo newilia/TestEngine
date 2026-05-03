@@ -71,8 +71,8 @@ public:
 	GroupSet& GetOverlappingGroups();
 	const GroupSet& GetOverlappingGroups() const;
 
-	Signal<const IntersectionDetails&>& GetOnCollideSignal();
-	Signal<const IntersectionDetails&>& GetOnOverlapSignal();
+	Signal<const IntersectionDetails&>& GetOnCollideSignal() const;
+	Signal<const IntersectionDetails&>& GetOnOverlapSignal() const;
 
 private:
 	/// @property
@@ -90,10 +90,10 @@ private:
 	/// @property(minValue=-1.f, maxValue=1.f, dragSpeed=0.05f, tooltip="Scales world gravity on this body")
 	float _gravityScale = 1.f;
 	/// @property(tooltip="Groups with common groups will interact in a physical way (collisions, forces, etc.)")
-	GroupSet _interactionGroups;
-	/// @property(tooltip="Groups with common groups will trigger overlap events, but won't interact in a physical way")
+	GroupSet _interactionGroups = {{true}};
+	/// @property(tooltip="Groups with common groups will trigger overlap signal, but won't interact in a physical way")
 	GroupSet _overlappingGroups;
 
-	Signal<const IntersectionDetails&> _collisionCallbacks;
-	Signal<const IntersectionDetails&> _overlappingCallbacks;
+	mutable Signal<const IntersectionDetails&> _onCollideSignal;
+	mutable Signal<const IntersectionDetails&> _onOverlapSignal;
 };

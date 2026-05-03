@@ -178,10 +178,10 @@ const PhysicsBodyBehaviour::GroupSet& PhysicsBodyBehaviour::GetOverlappingGroups
 	return _overlappingGroups;
 }
 
-Signal<const IntersectionDetails&>& PhysicsBodyBehaviour::GetOnCollideSignal() {
-	return _collisionCallbacks;
+Signal<const IntersectionDetails&>& PhysicsBodyBehaviour::GetOnCollideSignal() const {
+	return _onCollideSignal;
 }
 
-Signal<const IntersectionDetails&>& PhysicsBodyBehaviour::GetOnOverlapSignal() {
-	return _overlappingCallbacks;
+Signal<const IntersectionDetails&>& PhysicsBodyBehaviour::GetOnOverlapSignal() const {
+	return _onOverlapSignal;
 }
