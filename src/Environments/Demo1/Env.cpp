@@ -9,6 +9,7 @@
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "Engine/Visual/SpriteVisual.h"
 #include "PongGame.h"
+#include "SolarSystemGame.h"
 #include "TicTacToeGame.h"
 
 #include <cstdlib>
@@ -124,6 +125,12 @@ namespace Demo1 {
 			                                     ColorVar, BallCount, BallRestitution, WallRestitution);
 			ballpit->GetLocalTransform()->SetPosition({2100, 700});
 			scene->AddChild(std::move(ballpit));
+		}
+
+		{
+			auto solar = CreateSolarSystemGameNode();
+			solar->GetLocalTransform()->SetPosition({2700, 5000});
+			scene->AddChild(std::move(solar));
 		}
 		return scene;
 	}
