@@ -2,10 +2,10 @@
 
 void InputHandlerBehaviourBase::OnInit() {
 	Behaviour::OnInit();
-	SubscribeForInputEvents();
+	SubscribeForEvents();
 }
 
 void InputHandlerBehaviourBase::OnDeinit() {
-	UnsubscribeFromInputEvent();
+	UnsubscribeFromEvents();
 	Behaviour::OnDeinit();
 }

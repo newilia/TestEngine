@@ -70,8 +70,12 @@ namespace Engine {
 		bool isImGuiInitialized = mainContext.IsImGuiInitialized();
 
 		while (const auto& ev = window->pollEvent()) {
-			if (!ev) {
+			if (!Verify(ev)) {
 				break;
+			}
+			if (ev->is<sf::Event::Closed>()) {
+				window->close();
+				return false;
 			}
 			if (!DispatchEvent(*ev)) {
 				return false;
@@ -105,11 +109,6 @@ namespace Engine {
 		auto& mainContext = Engine::MainContext::GetInstance();
 		bool isImGuiInitialized = mainContext.IsImGuiInitialized();
 		const auto& window = mainContext.GetMainWindow();
-
-		if (event.is<sf::Event::Closed>()) {
-			window->close();
-			return false;
-		}
 
 		if (isImGuiInitialized) {
 			ImGui::SFML::ProcessEvent(*window, event);

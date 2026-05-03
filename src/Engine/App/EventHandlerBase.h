@@ -13,8 +13,8 @@ namespace Engine {
 		virtual ~EventHandlerBase() = default;
 		virtual void OnEvent(const sf::Event& event) = 0;
 
-		void SubscribeForInputEvents();
-		void UnsubscribeFromInputEvent();
+		void SubscribeForEvents();
+		void UnsubscribeFromEvents();
 
 	private:
 		bool _registered = false;

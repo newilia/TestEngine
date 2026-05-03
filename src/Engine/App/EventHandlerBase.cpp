@@ -4,15 +4,15 @@
 #include "MainContext.h"
 
 namespace Engine {
-	void EventHandlerBase::SubscribeForInputEvents() {
+	void EventHandlerBase::SubscribeForEvents() {
 		if (_registered) {
-			UnsubscribeFromInputEvent();
+			UnsubscribeFromEvents();
 		}
 		Engine::MainContext::GetInstance().GetEventsDispatcher()->RegisterInputHandler(shared_from_this());
 		_registered = true;
 	}
 
-	void EventHandlerBase::UnsubscribeFromInputEvent() {
+	void EventHandlerBase::UnsubscribeFromEvents() {
 		if (!_registered) {
 			return;
 		}

@@ -3,6 +3,7 @@
 #include "Engine/App/MainLoop.h"
 #include "Engine/Core/PeriodicTaskExecutor.h"
 #include "Engine/Editor/Editor.h"
+#include "Environments/Demo1/Env.h"
 #include "Environments/EnvironmentBase.h"
 #include "Environments/Pong/PongEnvironment.h"
 #include "Environments/Test/TestEnvironment.h"
@@ -21,7 +22,8 @@ namespace {
 	enum class AppEnvironmentKind
 	{
 		Test,
-		Pong
+		Pong,
+		Demo1
 	};
 
 	bool EqualsIgnoreCaseAscii(std::string_view a, std::string_view b) {
@@ -48,6 +50,9 @@ namespace {
 				if (EqualsIgnoreCaseAscii(value, "test")) {
 					return AppEnvironmentKind::Test;
 				}
+				if (EqualsIgnoreCaseAscii(value, "demo1")) {
+					return AppEnvironmentKind::Demo1;
+				}
 			}
 		}
 		return AppEnvironmentKind::Test;
@@ -73,6 +78,9 @@ namespace {
 			if (EqualsIgnoreCaseAscii(value, "test")) {
 				return AppEnvironmentKind::Test;
 			}
+			if (EqualsIgnoreCaseAscii(value, "demo1")) {
+				return AppEnvironmentKind::Demo1;
+			}
 			pos = valEnd;
 		}
 		return AppEnvironmentKind::Test;
@@ -85,6 +93,8 @@ namespace {
 		case AppEnvironmentKind::Pong: {
 			return std::make_shared<PongEnvironment>();
 		}
+		case AppEnvironmentKind::Demo1:
+			return std::make_shared<Demo1::Env>();
 		}
 		return nullptr;
 	}
