@@ -1,8 +1,8 @@
 #include "ButtonBehaviour.h"
 
-#include "Engine/App/MainContext.h"
-#include "Engine/App/Utils.h"
+#include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Core/Utils.h"
 #include "Engine/Visual/Visual.h"
 
 #include <SFML/Window/Mouse.hpp>

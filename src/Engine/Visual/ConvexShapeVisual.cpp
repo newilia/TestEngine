@@ -1,6 +1,6 @@
 #include "Engine/Visual/ConvexShapeVisual.h"
 
-#include "Engine/App/Utils.h"
+#include "Engine/Core/Utils.h"
 
 ConvexShapeVisual::ConvexShapeVisual(sf::ConvexShape* convex) : ShapeVisualBase(convex), _convex(convex) {}
 

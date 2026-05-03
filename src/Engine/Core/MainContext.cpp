@@ -1,7 +1,7 @@
 #include "MainContext.h"
 
-#include "Engine/App/EventsDispatcher.h"
-#include "Engine/App/FontManager.h"
+#include "Engine/Core/EventsDispatcher.h"
+#include "Engine/Core/FontManager.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 
 #include <imgui-SFML.h>

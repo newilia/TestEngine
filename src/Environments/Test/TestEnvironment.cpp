@@ -1,10 +1,10 @@
 #include "TestEnvironment.h"
 
-#include "Engine/App/MainContext.h"
-#include "Engine/App/Utils.h"
 #include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
+#include "Engine/Core/MainContext.h"
 #include "Engine/Core/Scene.h"
+#include "Engine/Core/Utils.h"
 #include "Engine/Editor/Editor.h"
 #include "Engine/Editor/Tools/PullTool.h"
 #include "Engine/Simulation/PhysicsProcessor.h"

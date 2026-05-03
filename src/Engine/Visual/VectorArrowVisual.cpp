@@ -1,6 +1,6 @@
 #include "Engine/Visual/VectorArrowVisual.h"
 
-#include "Engine/App/Utils.h"
+#include "Engine/Core/Utils.h"
 
 #include <SFML/Graphics/RenderTarget.hpp>
 

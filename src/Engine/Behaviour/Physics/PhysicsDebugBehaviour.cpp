@@ -1,9 +1,9 @@
 #include "PhysicsDebugBehaviour.h"
 
-#include "Engine/App/FontManager.h"
-#include "Engine/App/MainContext.h"
 #include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
+#include "Engine/Core/FontManager.h"
+#include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "Engine/Visual/VectorArrowVisual.h"

@@ -1,9 +1,9 @@
 #include "AttractiveBehaviour.h"
 
 #include "AttractiveBehaviour.generated.hpp"
-#include "Engine/App/MainContext.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Behaviour/Physics/PhysicsDebugBehaviour.h"
+#include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Simulation/AttractionField.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
