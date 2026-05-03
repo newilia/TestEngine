@@ -5,5 +5,5 @@
 class SceneNode;
 
 namespace Demo1 {
-	[[nodiscard]] std::shared_ptr<SceneNode> CreateTicTacToeGameNode();
+	std::shared_ptr<SceneNode> CreateTicTacToeGameNode();
 } // namespace Demo1

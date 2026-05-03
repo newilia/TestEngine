@@ -19,10 +19,6 @@ namespace {
 
 PullTool::PullTool(SelectTool::SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
 
-void PullTool::SetArrowVisual(std::shared_ptr<VectorArrowVisual> arrow) {
-	_arrowVisual = std::move(arrow);
-}
-
 void PullTool::SetPullForceScale(float v) {
 	_pullForceScale = v;
 }
@@ -60,12 +56,14 @@ std::shared_ptr<SceneNode> PullTool::OnTap(const sf::Vector2f& screenPixelPos) {
 		if (!body) {
 			continue;
 		}
-		auto* collider = body->FindPhysicsBody();
-		if (!collider || !Utils::IsWorldPointInsideOfBody(worldMousePos, collider)) {
+		auto rigidBody = body->FindBehaviour<PhysicsBodyBehaviour>();
+		if (!rigidBody) {
 			continue;
 		}
-		auto rigidBody = body->FindBehaviour<PhysicsBodyBehaviour>();
-		if (!rigidBody || rigidBody->IsImmovable()) {
+		if (!Utils::IsWorldPointInsideOfBody(worldMousePos, rigidBody.get())) {
+			continue;
+		}
+		if (rigidBody->IsImmovable()) {
 			continue;
 		}
 		_pullingBody = body;
@@ -144,23 +142,13 @@ bool PullTool::processEvent(const sf::Event& event) {
 }
 
 void PullTool::onPresent(const sf::Time& dt) {
-	auto arrow = _arrowVisual.lock();
-	if (!arrow) {
-		return;
-	}
-	if (!_debugArrowEnabled) {
-		arrow->SetVisible(false);
-		return;
-	}
 	auto body = _pullingBody.lock();
 	if (!body) {
-		arrow->SetVisible(false);
 		return;
 	}
-	arrow->SetColor(sf::Color::Green);
-	arrow->SetStartPos(body->GetPosGlobal());
-	arrow->SetEndPos(_destination);
-	arrow->SetVisible(true);
+	_arrow.SetColor(sf::Color::Green);
+	_arrow.SetStartPos(body->GetPosGlobal());
+	_arrow.SetEndPos(_destination);
 
 	if (auto rigidBody = body->FindBehaviour<PhysicsBodyBehaviour>()) {
 		auto pullVector = _destination - body->GetPosGlobal();
@@ -174,15 +162,12 @@ void PullTool::onPresent(const sf::Time& dt) {
 	}
 }
 
-PullVisualSetup CreatePullVisualOverlay() { // TODO render separate from scene
-	auto root = std::make_shared<SceneNode>();
-	root->SetName("body_pull");
-
-	auto arrowNode = std::make_shared<SceneNode>();
-	arrowNode->SetName("body_pull_arrow");
-	auto arrowVis = std::make_shared<VectorArrowVisual>();
-	arrowNode->SetVisual(arrowVis);
-	root->AddChild(std::move(arrowNode));
-
-	return PullVisualSetup{std::move(root), std::move(arrowVis)};
+void PullTool::drawOverlay(sf::RenderWindow& window) {
+	if (!_debugArrowEnabled) {
+		return;
+	}
+	if (_pullingBody.expired()) {
+		return;
+	}
+	_arrow.draw(window, sf::RenderStates::Default);
 }

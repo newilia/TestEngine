@@ -190,7 +190,7 @@ PhysicsBodyBehaviour* SceneNode::FindPhysicsBody() const {
 	return nullptr;
 }
 
-sf::Transform SceneNode::GetWorldTransform() const {
+const sf::Transform& SceneNode::GetWorldTransform() const {
 	if (!_worldTransformDirty) {
 		return _cachedWorldTransform;
 	}

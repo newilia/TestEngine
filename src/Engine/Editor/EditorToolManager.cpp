@@ -106,9 +106,3 @@ void EditorToolManager::DrawOverlay(sf::RenderWindow& window) {
 	}
 	_tools[_activeToolIndex]->drawOverlay(window);
 }
-
-void EditorToolManager::BindPullArrow(std::shared_ptr<VectorArrowVisual> arrow) {
-	if (_pullTool) {
-		_pullTool->SetArrowVisual(std::move(arrow));
-	}
-}

@@ -126,7 +126,7 @@ public:
 	void FindNodesAtPoint(const sf::Vector2f& worldPoint, std::vector<shared_ptr<SceneNode>>& result,
 	                      bool tapResponsiveOnly = false);
 	bool DispatchTapAt(const sf::Vector2f& worldPoint);
-	sf::Transform GetWorldTransform() const;
+	const sf::Transform& GetWorldTransform() const;
 	void MarkWorldTransformSubtreeDirty() const;
 	sf::Vector2f GetPosGlobal() const;
 	void SetPosGlobal(sf::Vector2f pos);

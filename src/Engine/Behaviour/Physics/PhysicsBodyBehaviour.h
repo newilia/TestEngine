@@ -62,6 +62,7 @@ public:
 	Signal<const IntersectionDetails&>& GetOverlappingCallbacks();
 
 private:
+	// TODO minValue maxValue
 	/// @property
 	float _mass = 1.f;
 	/// @property

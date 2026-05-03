@@ -34,7 +34,6 @@ public:
 	bool ProcessEvent(const sf::Event& event);
 	void OnPresent(const sf::Time& dt);
 	void DrawOverlay(sf::RenderWindow& window);
-	void BindPullArrow(std::shared_ptr<VectorArrowVisual> arrow);
 
 	PullTool* GetPullTool();
 
