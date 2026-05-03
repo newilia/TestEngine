@@ -4,6 +4,7 @@
 #include "Engine/Behaviour/Physics/PhysicsDebugBehaviour.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/Transform.h"
+#include "Engine/Core/Utils.h"
 #include "Engine/Visual/ShapeVisualBase.h"
 #include "Engine/Visual/SpriteVisual.h"
 #include "Engine/Visual/TextVisual.h"
@@ -25,22 +26,6 @@ namespace {
 	const sf::Color kSelectionOutlineColor(120u, 190u, 255u, 220u);
 	constexpr float kSelectionFallbackHalfSize = 6.f;
 
-	sf::FloatRect AxisAlignedBoundsAfterTransform(const sf::Transform& m, const sf::FloatRect& localRect) {
-		const float l = localRect.position.x;
-		const float t = localRect.position.y;
-		const float r = l + localRect.size.x;
-		const float b = t + localRect.size.y;
-		const sf::Vector2f p0 = m.transformPoint({l, t});
-		const sf::Vector2f p1 = m.transformPoint({r, t});
-		const sf::Vector2f p2 = m.transformPoint({l, b});
-		const sf::Vector2f p3 = m.transformPoint({r, b});
-		const float minX = std::min(std::min(p0.x, p1.x), std::min(p2.x, p3.x));
-		const float maxX = std::max(std::max(p0.x, p1.x), std::max(p2.x, p3.x));
-		const float minY = std::min(std::min(p0.y, p1.y), std::min(p2.y, p3.y));
-		const float maxY = std::max(std::max(p0.y, p1.y), std::max(p2.y, p3.y));
-		return {{minX, minY}, {maxX - minX, maxY - minY}};
-	}
-
 	void DrawAabbOutline(sf::RenderTarget& target, sf::RenderStates states, const sf::FloatRect& bounds) {
 		sf::RectangleShape frame;
 		frame.setPosition({bounds.position.x - kSelectionOutlinePadPx, bounds.position.y - kSelectionOutlinePadPx});
@@ -57,21 +42,21 @@ namespace {
 			if (const sf::Shape* shape = sv->GetBaseShape()) {
 				sf::Transform full = nodeWorld;
 				full *= shape->getTransform();
-				return AxisAlignedBoundsAfterTransform(full, shape->getLocalBounds());
+				return Utils::AxisAlignedBoundsAfterTransform(full, shape->getLocalBounds());
 			}
 		}
 		if (auto tv = std::dynamic_pointer_cast<TextVisual>(node.GetVisual())) {
 			if (const sf::Text* text = tv->GetText()) {
 				sf::Transform full = nodeWorld;
 				full *= text->getTransform();
-				return AxisAlignedBoundsAfterTransform(full, text->getLocalBounds());
+				return Utils::AxisAlignedBoundsAfterTransform(full, text->getLocalBounds());
 			}
 		}
 		if (auto spv = std::dynamic_pointer_cast<SpriteVisual>(node.GetVisual())) {
 			if (const sf::Sprite* sprite = spv->GetSprite()) {
 				sf::Transform full = nodeWorld;
 				full *= sprite->getTransform();
-				return AxisAlignedBoundsAfterTransform(full, sprite->getLocalBounds());
+				return Utils::AxisAlignedBoundsAfterTransform(full, sprite->getLocalBounds());
 			}
 		}
 		return std::nullopt;
@@ -203,17 +188,10 @@ void SceneNode::MarkWorldTransformSubtreeDirty() const {
 }
 
 sf::Vector2f SceneNode::GetPosGlobal() const {
-	if (auto* c = FindPhysicsBody()) {
-		return c->GetPosGlobal();
-	}
 	return GetWorldTransform().transformPoint(sf::Vector2f{});
 }
 
 void SceneNode::SetPosGlobal(sf::Vector2f pos) {
-	if (auto* c = FindPhysicsBody()) {
-		c->SetPosGlobal(pos);
-		return;
-	}
 	if (auto parent = GetParent()) {
 		const sf::Vector2f local = parent->GetWorldTransform().getInverse().transformPoint(pos);
 		GetLocalTransform()->setLocalPosition(local);

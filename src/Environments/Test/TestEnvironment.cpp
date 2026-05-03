@@ -114,7 +114,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		auto* rect = dynamic_cast<sf::RectangleShape*>(node->FindPhysicsBody()->GetShape());
 		rect->setSize(wallSizes[i]);
 		rect->setOrigin(Utils::FindCenterOfMass(rect));
-		rect->setPosition(wallPositions[i]);
+		node->SetPosGlobal(wallPositions[i]);
 		rect->setFillColor(sf::Color(30, 255, 30, 50));
 		rect->setOutlineColor(sf::Color(30, 255, 30, 120));
 		rect->setOutlineThickness(1.f);
@@ -164,7 +164,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		auto maxY = static_cast<int>(viewSize.y - wallVisibleWidth - radius);
 		auto x = static_cast<float>(minX + rand() % (maxX - minX));
 		auto y = static_cast<float>(minY + rand() % (maxY - minY));
-		circle->setPosition(sf::Vector2f{x, y});
+		node->SetPosGlobal(sf::Vector2f{x, y});
 
 		auto rb = node->RequireBehaviour<PhysicsBodyBehaviour>();
 		rb->SetMass(3.14f * radius * radius);
