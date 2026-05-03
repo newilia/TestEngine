@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Scan src/**/*.h for META_CLASS() and /// @property tags; emit src/Codegen/<Stem>.generated.hpp.
+Scan src/**/*.h for META_CLASS(), /// @property, /// @getter, and /// @setter tags; emit src/Codegen/<Stem>.generated.hpp.
 """
 
 from __future__ import annotations
@@ -11,12 +11,14 @@ import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
 CACHE_VERSION = 1
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
+GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
+SETTER_TAG_RE = re.compile(r"^\s*///\s*@setter\s*(?:\((.*)\))?\s*$")
 META_CLASS_RE = re.compile(r"\bMETA_CLASS\s*\(\s*\)")
 CLASS_HEAD_RE = re.compile(
     r"^\s*(?:template\s*<[^>{};]*>\s*)?(?:class|struct)\s+([A-Za-z_]\w*)\b"
@@ -26,6 +28,24 @@ FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*"
     r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color)\s+"
     r"(\w+)\s*.*;\s*$"
+)
+# One-line non-static method declaration; parameter lists must not contain ')' inside nested parens (v1).
+# Return type: known scalar/vector name, optionally "const" before and/or "&" after (e.g. const sf::Vector2f&).
+GETTER_METHOD_RE = re.compile(
+    r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?"
+    r"(?:const\s+)?"
+    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color)"
+    r"(?:\s*&)?\s+"
+    r"(\w+)\s*\([^)]*\)\s*"
+    r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
+)
+# void Method(Type param); — one parameter, known value type (v1).
+SETTER_METHOD_RE = re.compile(
+    r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?void\s+"
+    r"(\w+)\s*\(\s*(?:const\s+)?"
+    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color)"
+    r"(?:\s*&)?\s*\w*\s*\)\s*"
+    r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
 )
 KNOWN_TYPES = frozenset(
     {
@@ -50,6 +70,117 @@ class PropSpec:
     line: int
     col: int
     attrs: dict[str, Any] = field(default_factory=dict)
+    is_getter: bool = False
+
+
+PendingKind = Literal["property", "getter", "setter"]
+
+
+@dataclass
+class GetterDecl:
+    cpp_type: str
+    method: str
+    line: int
+    col: int
+    attrs: dict[str, Any]
+
+
+@dataclass
+class SetterDecl:
+    cpp_type: str
+    method: str
+    line: int
+    col: int
+    attrs: dict[str, Any]
+
+
+def pair_tag_key(attrs: dict[str, Any]) -> str | None:
+    for k in ("name", "label"):
+        v = attrs.get(k)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    return None
+
+
+def merge_getter_setter_decls(
+    path: Path,
+    getters: list[GetterDecl],
+    setters: list[SetterDecl],
+) -> list[PropSpec]:
+    if not getters and not setters:
+        return []
+
+    by_key: dict[str, SetterDecl] = {}
+    for s in setters:
+        key = pair_tag_key(s.attrs)
+        if key is None:
+            raise ParseError(
+                '@setter requires name="..." or label="..." to pair with @getter',
+                path,
+                s.line,
+                s.col,
+            )
+        if key in by_key:
+            raise ParseError(f'duplicate @setter for name="{key}"', path, s.line, s.col)
+        by_key[key] = s
+
+    seen_gkeys: set[str] = set()
+    out: list[PropSpec] = []
+
+    for g in getters:
+        gkey = pair_tag_key(g.attrs)
+        if gkey is not None:
+            if gkey in seen_gkeys:
+                raise ParseError(f'duplicate @getter for name="{gkey}"', path, g.line, g.col)
+            seen_gkeys.add(gkey)
+
+        merged = dict(g.attrs)
+        inline = g.attrs.get("setter")
+        inline_ok = isinstance(inline, str) and bool(inline.strip())
+
+        setter_method: str | None = None
+        if inline_ok:
+            setter_method = inline.strip()
+            if gkey is not None and gkey in by_key:
+                raise ParseError(
+                    f'@getter uses both setter= and @setter with name="{gkey}"; use only one',
+                    path,
+                    g.line,
+                    g.col,
+                )
+        elif gkey is not None and gkey in by_key:
+            s = by_key.pop(gkey)
+            if s.cpp_type != g.cpp_type:
+                raise ParseError(
+                    f'@getter / @setter pair "{gkey}": type mismatch ({g.cpp_type} vs {s.cpp_type})',
+                    path,
+                    g.line,
+                    g.col,
+                )
+            setter_method = s.method
+
+        if setter_method:
+            merged["setter"] = setter_method
+        else:
+            merged.pop("setter", None)
+
+        out.append(
+            PropSpec(
+                cpp_type=g.cpp_type,
+                member=g.method,
+                line=g.line,
+                col=g.col,
+                attrs=merged,
+                is_getter=True,
+            )
+        )
+
+    if by_key:
+        s = next(iter(by_key.values()))
+        k = pair_tag_key(s.attrs) or "?"
+        raise ParseError(f'@setter name="{k}" has no matching @getter', path, s.line, s.col)
+
+    return out
 
 
 @dataclass
@@ -272,16 +403,21 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
     pending_class: str | None = None
     pending_ns: str | None = None
     finished: list[ClassSpec] = []
-    pending_prop: tuple[int, int, str] | None = None
+    pending: tuple[PendingKind, int, int, str] | None = None
 
     def close_class_block(b: dict[str, Any]) -> None:
         if not b.get("meta"):
             return
+        props: list[PropSpec] = list(b.get("props", []))
+        gdecls: list[GetterDecl] = list(b.get("getter_decls", []))
+        sdecls: list[SetterDecl] = list(b.get("setter_decls", []))
+        if gdecls or sdecls:
+            props.extend(merge_getter_setter_decls(path, gdecls, sdecls))
         finished.append(
             ClassSpec(
                 namespaces=tuple(b["namespaces"]),
                 class_name=b["name"],
-                props=list(b.get("props", [])),
+                props=props,
             )
         )
 
@@ -290,46 +426,146 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
         line = strip_line_comment_keep_doc(raw_line)
         stripped = line.strip()
 
-        if pending_prop is not None:
-            pline, pcol, pargs = pending_prop
+        if pending is not None:
+            kind, pline, pcol, pargs = pending
             if not stripped or stripped.startswith("///"):
                 continue
             if re.match(r"^\s*(public|private|protected)\s*:\s*$", line):
                 continue
-            m_field = FIELD_RE.match(line)
-            if not m_field:
-                raise ParseError(
-                    f"expected field with supported type after @property (tag at line {pline})",
-                    path,
-                    line_no,
-                    1,
-                )
-            cpp_type, member = m_field.group(1), m_field.group(2)
             inner = find_innermost_class(block_stack)
             if inner is None or not inner.get("meta"):
-                raise ParseError("@property must appear inside a class marked with META_CLASS()", path, pline, pcol)
+                tag = {"property": "@property", "getter": "@getter", "setter": "@setter"}[kind]
+                raise ParseError(
+                    f"{tag} must appear inside a class marked with META_CLASS()",
+                    path,
+                    pline,
+                    pcol,
+                )
             attrs = parse_attr_dict(pargs, path, pline, pcol)
-            inner.setdefault("props", []).append(
-                PropSpec(cpp_type=cpp_type, member=member, line=pline, col=pcol, attrs=attrs)
-            )
-            pending_prop = None
+            if kind == "property":
+                m_field = FIELD_RE.match(line)
+                if not m_field:
+                    raise ParseError(
+                        f"expected field with supported type after @property (tag at line {pline})",
+                        path,
+                        line_no,
+                        1,
+                    )
+                cpp_type, member = m_field.group(1), m_field.group(2)
+                inner.setdefault("props", []).append(
+                    PropSpec(
+                        cpp_type=cpp_type,
+                        member=member,
+                        line=pline,
+                        col=pcol,
+                        attrs=attrs,
+                        is_getter=False,
+                    )
+                )
+            elif kind == "getter":
+                if re.search(r"\bstatic\b", line):
+                    raise ParseError(
+                        f"@getter does not support static methods (tag at line {pline})",
+                        path,
+                        line_no,
+                        1,
+                    )
+                m_getter = GETTER_METHOD_RE.match(line)
+                if not m_getter:
+                    raise ParseError(
+                        f"expected instance method with supported return type after @getter (tag at line {pline})",
+                        path,
+                        line_no,
+                        1,
+                    )
+                cpp_type, method = m_getter.group(1), m_getter.group(2)
+                inner.setdefault("getter_decls", []).append(
+                    GetterDecl(
+                        cpp_type=cpp_type,
+                        method=method,
+                        line=pline,
+                        col=pcol,
+                        attrs=attrs,
+                    )
+                )
+            else:
+                if re.search(r"\bstatic\b", line):
+                    raise ParseError(
+                        f"@setter does not support static methods (tag at line {pline})",
+                        path,
+                        line_no,
+                        1,
+                    )
+                m_setter = SETTER_METHOD_RE.match(line)
+                if not m_setter:
+                    raise ParseError(
+                        f"expected void Method(value_type) after @setter (tag at line {pline})",
+                        path,
+                        line_no,
+                        1,
+                    )
+                smethod, stype = m_setter.group(1), m_setter.group(2)
+                inner.setdefault("setter_decls", []).append(
+                    SetterDecl(
+                        cpp_type=stype,
+                        method=smethod,
+                        line=pline,
+                        col=pcol,
+                        attrs=attrs,
+                    )
+                )
+            pending = None
             continue
 
-        if PROPERTY_TAG_RE.match(raw_line):
-            if pending_prop is not None:
-                pl, pc, _ = pending_prop
+        m_prop = PROPERTY_TAG_RE.match(raw_line)
+        if m_prop:
+            if pending is not None:
                 raise ParseError(
-                    "unfinished @property (another @property started before the field line)",
+                    "unfinished @property, @getter, or @setter (a new tag started before the declaration line)",
                     path,
                     line_no,
                     1,
                 )
-            args = PROPERTY_TAG_RE.match(raw_line).group(1) or ""
+            args = m_prop.group(1) or ""
             try:
                 col = raw_line.index("@property") + 1
             except ValueError:
                 col = 1
-            pending_prop = (line_no, col, args)
+            pending = ("property", line_no, col, args)
+            continue
+
+        m_getter_tag = GETTER_TAG_RE.match(raw_line)
+        if m_getter_tag:
+            if pending is not None:
+                raise ParseError(
+                    "unfinished @property, @getter, or @setter (a new tag started before the declaration line)",
+                    path,
+                    line_no,
+                    1,
+                )
+            args = m_getter_tag.group(1) or ""
+            try:
+                col = raw_line.index("@getter") + 1
+            except ValueError:
+                col = 1
+            pending = ("getter", line_no, col, args)
+            continue
+
+        m_setter_tag = SETTER_TAG_RE.match(raw_line)
+        if m_setter_tag:
+            if pending is not None:
+                raise ParseError(
+                    "unfinished @property, @getter, or @setter (a new tag started before the declaration line)",
+                    path,
+                    line_no,
+                    1,
+                )
+            args = m_setter_tag.group(1) or ""
+            try:
+                col = raw_line.index("@setter") + 1
+            except ValueError:
+                col = 1
+            pending = ("setter", line_no, col, args)
             continue
 
         if META_CLASS_RE.search(line) and not re.search(r"^\s*#\s*define\s+META_CLASS\b", line):
@@ -428,9 +664,10 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                 continue
             j += 1
 
-    if pending_prop:
-        pline, pcol, _ = pending_prop
-        raise ParseError("unfinished @property (no field declaration before EOF)", path, pline, pcol)
+    if pending:
+        kind, pline, pcol, _ = pending
+        tag = {"property": "@property", "getter": "@getter", "setter": "@setter"}[kind]
+        raise ParseError(f"unfinished {tag} (no declaration line before EOF)", path, pline, pcol)
 
     for spec in finished:
         log.append(f"  class {spec.qualified()} : {len(spec.props)} properties")
@@ -449,8 +686,10 @@ def default_label(member: str, attrs: dict[str, Any]) -> str:
 
 def format_meta_inline(p: PropSpec) -> str:
     a = p.attrs
+    has_setter = isinstance(a.get("setter"), str) and bool(a.get("setter"))
+    ro = (a.get("readonly") is True) or (p.is_getter and not has_setter)
     parts: list[str] = ["Engine::PropertyMeta _m;"]
-    if a.get("readonly") is True:
+    if ro:
         parts.append("_m.readOnly = true;")
     if isinstance(a.get("tooltip"), str):
         parts.append(f'_m.tooltip = "{cpp_escape_string(a["tooltip"])}";')
@@ -499,12 +738,17 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
             if p.cpp_type not in KNOWN_TYPES:
                 raise ParseError(f"unsupported type `{p.cpp_type}`", path, p.line, p.col)
             a = p.attrs
-            has_meta = a.get("readonly") is True or any(
+            setter_name = a.get("setter")
+            has_setter_method = isinstance(setter_name, str) and bool(setter_name)
+            readonly = (a.get("readonly") is True) or (p.is_getter and not has_setter_method)
+            has_meta = readonly or any(
                 k in a for k in ("tooltip", "minValue", "maxValue", "step", "dragSpeed")
             )
             meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
-            get_lambda = "[this] { return " + p.member + "; }"
-            readonly = a.get("readonly") is True
+            if p.is_getter:
+                get_lambda = f"[this]() {{ return this->{p.member}(); }}"
+            else:
+                get_lambda = "[this] { return " + p.member + "; }"
             setters_ro = {
                 "float": "[this](float) {}",
                 "double": "[this](double) {}",
@@ -530,10 +774,26 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                 "sf::Color": f"[this](sf::Color c) {{ {p.member} = c; }}",
             }
             setter_method = a.get("setter")
-            if (
+            if p.is_getter and has_setter_method:
+                sn = setter_name if isinstance(setter_name, str) else ""
+                getter_gs = {
+                    "float": f"[this](float v) {{ this->{sn}(v); }}",
+                    "double": f"[this](double v) {{ this->{sn}(v); }}",
+                    "bool": f"[this](bool v) {{ this->{sn}(v); }}",
+                    "int": f"[this](std::int32_t v) {{ this->{sn}(static_cast<int>(v)); }}",
+                    "std::int32_t": f"[this](std::int32_t v) {{ this->{sn}(v); }}",
+                    "std::int64_t": f"[this](std::int64_t v) {{ this->{sn}(v); }}",
+                    "std::string": f"[this](std::string v) {{ this->{sn}(std::move(v)); }}",
+                    "sf::Vector2f": f"[this](sf::Vector2f v) {{ this->{sn}(v); }}",
+                    "sf::Vector3f": f"[this](sf::Vector3f v) {{ this->{sn}(v); }}",
+                    "sf::Color": f"[this](sf::Color c) {{ this->{sn}(c); }}",
+                }
+                set_lambda = getter_gs[p.cpp_type]
+            elif (
                 isinstance(setter_method, str)
                 and setter_method
                 and not readonly
+                and not p.is_getter
                 and p.cpp_type == "bool"
             ):
                 set_lambda = f"[this](bool v) {{ this->{setter_method}(v); }}"
