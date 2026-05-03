@@ -34,6 +34,16 @@ VECTOR_FIELD_RE = re.compile(
     r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color)"
     r"\s*>\s+(\w+)\s*;\s*$"
 )
+BITSET_FIELD_RE = re.compile(
+    r"^\s*(?:inline\s+|static\s+|mutable\s+)*std::bitset\s*<\s*[^>]+\s*>\s+(\w+)\s*(?:\{[^}]*\}|=\s*[^;]+)?\s*;\s*$"
+)
+# `using MyBits = std::bitset<...>;` inside the same class — fields may use `MyBits name;`
+USING_BITSET_ALIAS_RE = re.compile(
+    r"^\s*using\s+(\w+)\s*=\s*std::bitset\s*<\s*[^>]+\s*>\s*;\s*$"
+)
+BITSET_TYPEDEF_FIELD_RE = re.compile(
+    r"^\s*(?:inline\s+|static\s+|mutable\s+)*(\w+)\s+(\w+)\s*(?:\{[^}]*\}|=\s*[^;]+)?\s*;\s*$"
+)
 # One-line non-static method declaration; parameter lists must not contain ')' inside nested parens (v1).
 # Return type: known scalar/vector name, optionally "const" before and/or "&" after (e.g. const sf::Vector2f&).
 GETTER_METHOD_RE = re.compile(
@@ -99,6 +109,7 @@ class PropSpec:
     attrs: dict[str, Any] = field(default_factory=dict)
     is_getter: bool = False
     is_vector: bool = False
+    is_bitset: bool = False
 
 
 PendingKind = Literal["property", "getter", "setter"]
@@ -203,6 +214,7 @@ def merge_getter_setter_decls(
                 attrs=merged,
                 is_getter=True,
                 is_vector=g.is_vector,
+                is_bitset=False,
             )
         )
 
@@ -486,6 +498,28 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                             attrs=attrs,
                             is_getter=False,
                             is_vector=True,
+                            is_bitset=False,
+                        )
+                    )
+                elif (m_bs := BITSET_FIELD_RE.match(line)) or (
+                    (m_td := BITSET_TYPEDEF_FIELD_RE.match(line))
+                    and m_td.group(1) in (inner.get("bitset_aliases") or set())
+                ):
+                    member = (
+                        m_bs.group(1)
+                        if m_bs
+                        else m_td.group(2)  # type: ignore[union-attr]
+                    )
+                    inner.setdefault("props", []).append(
+                        PropSpec(
+                            cpp_type="std::bitset",
+                            member=member,
+                            line=pline,
+                            col=pcol,
+                            attrs=attrs,
+                            is_getter=False,
+                            is_vector=False,
+                            is_bitset=True,
                         )
                     )
                 else:
@@ -507,6 +541,7 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                             attrs=attrs,
                             is_getter=False,
                             is_vector=False,
+                            is_bitset=False,
                         )
                     )
             elif kind == "getter":
@@ -594,6 +629,12 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                     )
             pending = None
             continue
+
+        m_using_bitset_alias = USING_BITSET_ALIAS_RE.match(line)
+        if m_using_bitset_alias:
+            inner_alias = find_innermost_class(block_stack)
+            if inner_alias is not None:
+                inner_alias.setdefault("bitset_aliases", set()).add(m_using_bitset_alias.group(1))
 
         m_prop = PROPERTY_TAG_RE.match(raw_line)
         if m_prop:
@@ -791,6 +832,44 @@ def format_meta_inline(p: PropSpec) -> str:
                 parts.append(f"_m.{mk} = static_cast<std::size_t>({int(v)});")
     inner = " ".join(parts)
     return f"[&]() -> Engine::PropertyMeta {{ {inner} return _m; }}()"
+
+
+def emit_bitset_property(
+    out: list[str],
+    p: PropSpec,
+    meta_arg: str,
+    readonly: bool,
+) -> None:
+    fid = member_to_field_id(p.member)
+    label_esc = cpp_escape_string(default_label(p.member, p.attrs))
+    idx = f"_pv_{fid}_i"
+    mem = p.member
+    size_body = f"{mem}.size()"
+
+    seq = (
+        "Engine::PropAccessSequence{\n"
+        f"\t\t[this]() {{ return {size_body}; }},\n"
+        "\t\t{}\n"
+        "\t}"
+    )
+    out.append(f'\tb.beginSequence("{fid}", "{label_esc}", {seq}, {meta_arg});')
+    out.append(f"\tfor (std::size_t {idx} = 0; {idx} < {size_body}; ++{idx}) {{")
+    out.append(
+        f'\t\tb.pushObject(std::to_string({idx}), "[" + std::to_string({idx}) + "]", Engine::PropertyMeta{{}});'
+    )
+
+    get_bit = f"{mem}.test({idx})"
+    g = f"[this, {idx}]() {{ return {get_bit}; }}"
+    if readonly:
+        sl = f"[this, {idx}](bool) {{}}"
+        out.append(f'\t\tb.addBool("v", "", {g}, {sl}, {meta_arg});')
+    else:
+        wl = f"[this, {idx}](bool v) {{ if (v) {mem}.set({idx}); else {mem}.reset({idx}); }}"
+        out.append(f'\t\tb.addBool("v", "", {g}, {wl}, {meta_arg});')
+
+    out.append("\t\tb.pop();")
+    out.append("\t}")
+    out.append("\tb.endSequence();")
 
 
 def emit_std_vector_property(
@@ -993,6 +1072,8 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
     out.append("#include <string>")
     if any(p.is_vector for c in classes for p in c.props):
         out.append("#include <cstddef>")
+    if any(p.is_bitset for c in classes for p in c.props):
+        out.append("#include <bitset>")
     out.append("")
 
     for c in classes:
@@ -1002,12 +1083,28 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
         out.append(f"void {q}::BuildPropertyTree(Engine::PropertyBuilder& b) {{")
         out.append(f'\tb.pushObject("{root_id}", "{root_label}");')
         for p in c.props:
-            if p.cpp_type not in KNOWN_TYPES:
-                raise ParseError(f"unsupported type `{p.cpp_type}`", path, p.line, p.col)
             a = p.attrs
             setter_name = a.get("setter")
             has_setter_method = isinstance(setter_name, str) and bool(setter_name)
             readonly = (a.get("readonly") is True) or (p.is_getter and not has_setter_method)
+
+            if p.is_bitset:
+                if p.is_getter:
+                    raise ParseError(
+                        "std::bitset properties must be data members (not @getter) in codegen v1",
+                        path,
+                        p.line,
+                        p.col,
+                    )
+                has_meta = readonly or any(
+                    k in a for k in ("tooltip", "minValue", "maxValue", "step", "dragSpeed")
+                )
+                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
+                emit_bitset_property(out, p, meta_arg, readonly)
+                continue
+
+            if p.cpp_type not in KNOWN_TYPES:
+                raise ParseError(f"unsupported type `{p.cpp_type}`", path, p.line, p.col)
 
             if p.is_vector:
                 has_meta = readonly or any(
