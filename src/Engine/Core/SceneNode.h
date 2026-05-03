@@ -149,7 +149,7 @@ private:
 	void IterateBehavioursSafely(const std::function<void(shared_ptr<Behaviour>)>& func);
 
 private:
-	/// @property(name="Name")
+	/// @property
 	std::string _name;
 	/// @property(name="Enabled", setter=SetEnabled)
 	bool _isEnabled = true;

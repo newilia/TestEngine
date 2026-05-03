@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 1
+CACHE_VERSION = 2
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
@@ -274,6 +274,55 @@ def pascal_to_snake(name: str) -> str:
 
 def member_to_field_id(member: str) -> str:
     return pascal_to_snake(member.lstrip("_"))
+
+
+def _explicit_display_name(attrs: dict[str, Any]) -> str | None:
+    for k in ("name", "label"):
+        v = attrs.get(k)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    return None
+
+
+def _split_identifier_words(raw: str) -> list[str]:
+    s = raw.lstrip("_").strip()
+    if not s:
+        return []
+    if "_" in s:
+        return [p.lower() for p in s.split("_") if p]
+    s1 = re.sub(r"(.)([A-Z][a-z]+)", r"\1 \2", s)
+    s2 = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", s1)
+    return [p.lower() for p in s2.split() if p]
+
+
+def _strip_accessor_prefix(identifier: str, *, is_getter: bool) -> str:
+    n = identifier.lstrip("_")
+    if is_getter and len(n) > 3 and n.startswith("Get") and n[3].isupper():
+        return n[3:]
+    if (not is_getter) and len(n) > 3 and n.startswith("Set") and n[3].isupper():
+        return n[3:]
+    return n
+
+
+def _words_to_sentence_label(words: list[str]) -> str:
+    if not words:
+        return ""
+    first, *rest = words
+    head = (first[:1].upper() + first[1:].lower()) if first else ""
+    tail = [w.lower() for w in rest]
+    return " ".join([head, *tail]) if tail else head
+
+
+def inferred_display_label(member: str, attrs: dict[str, Any], *, is_getter: bool) -> str:
+    explicit = _explicit_display_name(attrs)
+    if explicit is not None:
+        return explicit
+    core = _strip_accessor_prefix(member, is_getter=is_getter)
+    words = _split_identifier_words(core)
+    if not words:
+        fid = member_to_field_id(member)
+        return fid.replace("_", " ").title()
+    return _words_to_sentence_label(words)
 
 
 def cpp_escape_string(s: str) -> str:
@@ -907,13 +956,8 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
     return finished, log
 
 
-def default_label(member: str, attrs: dict[str, Any]) -> str:
-    if "name" in attrs and isinstance(attrs["name"], str):
-        return attrs["name"]
-    if "label" in attrs and isinstance(attrs["label"], str):
-        return attrs["label"]
-    fid = member_to_field_id(member)
-    return fid.replace("_", " ").title()
+def default_label(p: PropSpec) -> str:
+    return inferred_display_label(p.member, p.attrs, is_getter=p.is_getter)
 
 
 def format_meta_inline(p: PropSpec) -> str:
@@ -954,7 +998,7 @@ def emit_bitset_property(
     readonly: bool,
 ) -> None:
     fid = member_to_field_id(p.member)
-    label_esc = cpp_escape_string(default_label(p.member, p.attrs))
+    label_esc = cpp_escape_string(default_label(p))
     idx = f"_pv_{fid}_i"
     mem = p.member
     size_body = f"{mem}.size()"
@@ -1354,7 +1398,7 @@ def emit_assoc_map_property(
     kt = p.cpp_type
     mem = p.member
     fid = member_to_field_id(p.member)
-    label_esc = cpp_escape_string(default_label(p.member, p.attrs))
+    label_esc = cpp_escape_string(default_label(p))
     idx = f"_pv_{fid}_i"
     leaf_meta = "Engine::PropertyMeta{}"
 
@@ -1396,7 +1440,7 @@ def emit_assoc_set_property(
     et = p.cpp_type
     mem = p.member
     fid = member_to_field_id(p.member)
-    label_esc = cpp_escape_string(default_label(p.member, p.attrs))
+    label_esc = cpp_escape_string(default_label(p))
     idx = f"_pv_{fid}_i"
     leaf_meta = "Engine::PropertyMeta{}"
 
@@ -1463,7 +1507,7 @@ def emit_std_vector_property(
         )
 
     fid = member_to_field_id(p.member)
-    label_esc = cpp_escape_string(default_label(p.member, p.attrs))
+    label_esc = cpp_escape_string(default_label(p))
     idx = f"_pv_{fid}_i"
 
     if p.is_getter:
@@ -1800,7 +1844,7 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
             else:
                 set_lambda = setters_ro[p.cpp_type] if readonly else setters_rw[p.cpp_type]
             fid = member_to_field_id(p.member)
-            label_esc = cpp_escape_string(default_label(p.member, a))
+            label_esc = cpp_escape_string(default_label(p))
             if p.cpp_type == "float":
                 out.append(f'\tb.addFloat("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
             elif p.cpp_type == "double":
@@ -1848,12 +1892,46 @@ def file_signature(p: Path) -> dict[str, Any]:
     return {"mtime_ns": st.st_mtime_ns, "size": st.st_size}
 
 
+def run_label_inference_self_tests() -> int:
+    cases: list[tuple[tuple[str, bool, dict[str, Any]], str]] = [
+        (("_thisIsAProperty", False, {}), "This is a property"),
+        (("_angularSpeed", False, {}), "Angular speed"),
+        (("_gravityScale", False, {}), "Gravity scale"),
+        (("_collisionGroups", False, {}), "Collision groups"),
+        (("_mass", False, {}), "Mass"),
+        (("GetSomeProp", True, {}), "Some prop"),
+        (("GetPointCount", True, {}), "Point count"),
+        (("GetMass", True, {}), "Mass"),
+        (("GetHTTPPort", True, {}), "Http port"),
+        (("_angle", False, {"name": "Angle (rad)"}), "Angle (rad)"),
+        (("GetPoints", True, {"name": "Points"}), "Points"),
+    ]
+    for (member, is_getter, attrs), want in cases:
+        got = inferred_display_label(member, attrs, is_getter=is_getter)
+        if got != want:
+            print(
+                f"[codegen] label test FAIL member={member!r} is_getter={is_getter} attrs={attrs!r}: "
+                f"got {got!r} expected {want!r}",
+                file=sys.stderr,
+            )
+            return 1
+    print("[codegen] label inference self-tests OK")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Property tree codegen for TestEngine.")
     ap.add_argument("--root", type=Path, default=Path.cwd(), help="Repository root (default: cwd)")
     ap.add_argument("--force", action="store_true", help="Ignore cache and regenerate all headers")
     ap.add_argument("--verbose", action="store_true", help="Log every scanned header (default: summary only)")
+    ap.add_argument(
+        "--test-labels",
+        action="store_true",
+        help="Run display-label heuristics self-tests and exit (no scan)",
+    )
     args = ap.parse_args()
+    if args.test_labels:
+        return run_label_inference_self_tests()
     root: Path = args.root.resolve()
     src = root / "src"
     codegen_dir = src / "Codegen"
