@@ -28,8 +28,8 @@ public:
 	explicit PhysicsBodyBehaviour(sf::CircleShape shape, bool attachVisualFromShape = true);
 	explicit PhysicsBodyBehaviour(sf::RectangleShape shape, bool attachVisualFromShape = true);
 	explicit PhysicsBodyBehaviour(sf::ConvexShape shape, bool attachVisualFromShape = true);
-
 	~PhysicsBodyBehaviour() override;
+
 	void OnInit() override;
 	void OnDeinit() override;
 
@@ -45,6 +45,95 @@ public:
 	void SetImmovable();
 	bool IsImmovable() const;
 
+	float GetMass() const {
+		return _mass;
+	}
+
+	void SetMass(float m) {
+		_mass = m;
+	}
+
+	sf::Vector2f GetVelocity() const {
+		return _velocity;
+	}
+
+	void SetVelocity(sf::Vector2f v) {
+		_velocity = v;
+	}
+
+	void AddVelocity(sf::Vector2f delta) {
+		_velocity += delta;
+	}
+
+	void ScaleVelocity(float factor) {
+		_velocity *= factor;
+	}
+
+	float GetAngle() const {
+		return _angle;
+	}
+
+	void SetAngle(float a) {
+		_angle = a;
+	}
+
+	float GetAngularSpeed() const {
+		return _angularSpeed;
+	}
+
+	void SetAngularSpeed(float w) {
+		_angularSpeed = w;
+	}
+
+	float GetRestitution() const {
+		return _restitution;
+	}
+
+	void SetRestitution(float r) {
+		_restitution = r;
+	}
+
+	float GetFriction() const {
+		return _friction;
+	}
+
+	void SetFriction(float f) {
+		_friction = f;
+	}
+
+	float GetGravityScale() const {
+		return _gravityScale;
+	}
+
+	void SetGravityScale(float s) {
+		_gravityScale = s;
+	}
+
+	std::bitset<CollisionGroupsCount>& GetCollisionGroups() {
+		return _collisionGroups;
+	}
+
+	const std::bitset<CollisionGroupsCount>& GetCollisionGroups() const {
+		return _collisionGroups;
+	}
+
+	std::bitset<CollisionGroupsCount>& GetOverlappingGroups() {
+		return _overlappingGroups;
+	}
+
+	const std::bitset<CollisionGroupsCount>& GetOverlappingGroups() const {
+		return _overlappingGroups;
+	}
+
+	Signal<const IntersectionDetails&>& GetCollisionCallbacks() {
+		return _collisionCallbacks;
+	}
+
+	Signal<const IntersectionDetails&>& GetOverlappingCallbacks() {
+		return _overlappingCallbacks;
+	}
+
+private:
 	/// @property(tooltip="Infinity = immovable; use SetImmovable() in code, or set mass in inspector.")
 	float _mass = 1.f;
 	/// @property
@@ -66,7 +155,6 @@ public:
 	Signal<const IntersectionDetails&> _collisionCallbacks;
 	Signal<const IntersectionDetails&> _overlappingCallbacks;
 
-private:
 	/// @property(readonly=true, tooltip="Set when body is registered with the physics handler.")
 	bool _registered = false;
 

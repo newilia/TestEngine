@@ -28,10 +28,10 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 		auto pos = body->GetPosGlobal();
 
 		if (_isGravityEnabled && !rigidBody->IsImmovable()) {
-			rigidBody->_velocity += _gravity * rigidBody->_gravityScale * dt.asSeconds();
+			rigidBody->AddVelocity(_gravity * rigidBody->GetGravityScale() * dt.asSeconds());
 		}
 
-		pos += rigidBody->_velocity * dt.asSeconds();
+		pos += rigidBody->GetVelocity() * dt.asSeconds();
 		body->SetPosGlobal(pos);
 	}
 
@@ -57,8 +57,8 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 	auto pairNeedsNarrowPhase = [](const SceneNode& n1, const SceneNode& n2) {
 		auto pb1 = n1.FindBehaviour<PhysicsBodyBehaviour>();
 		auto pb2 = n2.FindBehaviour<PhysicsBodyBehaviour>();
-		const bool collisionPair = pb1 && pb2 && (pb1->_collisionGroups & pb2->_collisionGroups).any();
-		const bool overlapPair = pb1 && pb2 && (pb1->_overlappingGroups & pb2->_overlappingGroups).any();
+		const bool collisionPair = pb1 && pb2 && (pb1->GetCollisionGroups() & pb2->GetCollisionGroups()).any();
+		const bool overlapPair = pb1 && pb2 && (pb1->GetOverlappingGroups() & pb2->GetOverlappingGroups()).any();
 		return collisionPair || overlapPair;
 	};
 
@@ -107,17 +107,17 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 			if (auto intersection = DetectIntersection(nFirst, nSecond, cFirst, cSecond, true)) {
 				auto b1Pb = nFirst->FindBehaviour<PhysicsBodyBehaviour>();
 				auto b2Pb = nSecond->FindBehaviour<PhysicsBodyBehaviour>();
-				if (b1Pb && b2Pb && (b1Pb->_collisionGroups & b2Pb->_collisionGroups).any()) {
+				if (b1Pb && b2Pb && (b1Pb->GetCollisionGroups() & b2Pb->GetCollisionGroups()).any()) {
 					if (!b1Pb->IsImmovable() || !b2Pb->IsImmovable()) {
 						ResolveCollision(*intersection);
-						b1Pb->_collisionCallbacks.Emit(*intersection);
-						b2Pb->_collisionCallbacks.Emit(*intersection);
+						b1Pb->GetCollisionCallbacks().Emit(*intersection);
+						b2Pb->GetCollisionCallbacks().Emit(*intersection);
 					}
 				}
 
-				if (b1Pb && b2Pb && (b1Pb->_overlappingGroups & b2Pb->_overlappingGroups).any()) {
-					b1Pb->_overlappingCallbacks.Emit(*intersection);
-					b2Pb->_overlappingCallbacks.Emit(*intersection);
+				if (b1Pb && b2Pb && (b1Pb->GetOverlappingGroups() & b2Pb->GetOverlappingGroups()).any()) {
+					b1Pb->GetOverlappingCallbacks().Emit(*intersection);
+					b2Pb->GetOverlappingCallbacks().Emit(*intersection);
 				}
 			}
 		}
@@ -484,9 +484,9 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 		std::swap(pb1, pb2);
 	}
 
-	const auto m1 = pb1->_mass;
-	const auto m2 = pb2->_mass;
-	auto v1_to_v2 = pb2->_velocity - pb1->_velocity;
+	const auto m1 = pb1->GetMass();
+	const auto m2 = pb2->GetMass();
+	auto v1_to_v2 = pb2->GetVelocity() - pb1->GetVelocity();
 	auto b1_tangent = collision.intersection.getDirVector();
 	auto b1_normal = Utils::Normalize(sf::Vector2f(-b1_tangent.y, b1_tangent.x));
 	if (Utils::Dot(body2->GetPosGlobal() - body1->GetPosGlobal(), b1_normal) < 0.f) {
@@ -525,10 +525,10 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 
 	/* velocities handling */
 	if (bool areMovingTowards = Utils::Dot(b1_normal, v1_to_v2) < 0.f) {
-		const auto r = pb1->_restitution * pb2->_restitution;
+		const auto r = pb1->GetRestitution() * pb2->GetRestitution();
 
-		auto norm_v1 = Utils::Project(pb1->_velocity, b1_normal);
-		auto norm_v2 = Utils::Project(pb2->_velocity, b1_normal);
+		auto norm_v1 = Utils::Project(pb1->GetVelocity(), b1_normal);
+		auto norm_v2 = Utils::Project(pb2->GetVelocity(), b1_normal);
 		auto norm_v_diff = norm_v1 - norm_v2;
 
 		float norm_dv1 = 0.f;
@@ -544,10 +544,10 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 
 		auto dv1 = b1_normal * norm_dv1;
 		auto dv2 = b1_normal * norm_dv2;
-		pb1->_velocity += dv1;
-		pb2->_velocity += dv2;
+		pb1->AddVelocity(dv1);
+		pb2->AddVelocity(dv2);
 
-		auto isNan = Utils::IsNan(pb1->_velocity) || Utils::IsNan(pb2->_velocity);
+		auto isNan = Utils::IsNan(pb1->GetVelocity()) || Utils::IsNan(pb2->GetVelocity());
 		assert(!isNan);
 
 		if (Engine::MainContext::GetInstance().IsDebugDrawEnabled()) {

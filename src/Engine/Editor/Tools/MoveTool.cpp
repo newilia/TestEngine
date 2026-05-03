@@ -14,8 +14,8 @@ namespace {
 		if (!rb) {
 			return;
 		}
-		rb->_velocity = {};
-		rb->_angularSpeed = 0.f;
+		rb->SetVelocity({});
+		rb->SetAngularSpeed(0.f);
 	}
 
 } // namespace

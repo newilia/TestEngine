@@ -170,7 +170,7 @@ void PullTool::onPresent(const sf::Time& dt) {
 		}
 
 		auto force = pullVector * kBasePullStrength * _pullForceScale;
-		rigidBody->_velocity += force * dt.asSeconds() / rigidBody->_mass;
+		rigidBody->AddVelocity(force * dt.asSeconds() / rigidBody->GetMass());
 	}
 }
 
