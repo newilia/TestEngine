@@ -72,10 +72,20 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 - **Method-backed sequences:** pair `/// @getter` returning `std::vector<Elt>` (or `const std::vector<Elt>&` / `std::vector<Elt> const&`) with `/// @setter` taking the same `std::vector<Elt>` (by ref or value). Writable UI calls the getter, edits a copy, then calls the setter (including per-index edits and list length).
 - **Not supported:** `std::vector` of custom structs, nested vectors, or `@getter` returning types other than the supported scalars / `std::vector` of those scalars.
 
+## `std::map` / `std::unordered_map` / `std::set` / `std::unordered_set`
+
+- **`std::map<Key, Value>`** or **`std::unordered_map<Key, Value>`** on one line after `/// @property` (optional `= …` / `{…}` before `;`). **`Key`** and **`Value`** must each be a **Supported field types (v1)** scalar (same list as `std::vector` elements). Include **`<map>`** / **`<unordered_map>`** in the header as appropriate.
+- **`std::set<Element>`** or **`std::unordered_set<Element>`** — same scalar list for **`Element`**; include **`<set>`** / **`<unordered_set>`** in the header.
+- Generated UI: `PropertyBuilder::beginAssociative` / `endAssociative` with **`PropAccessAssociative`** (`Add entry` / per-row `Remove`), matching **`PropertyKind::Associative`** in `PropertyTreeDrawer`.
+  - **Map:** one child object per entry with **Key** and **Value** scalar editors. **Add entry** picks a **new key** that is not already in the map (e.g. next free integer, `__new_<n>` strings, stepped floats, grid for `sf::Vector*`, …) then **emplace**s the default value. **Key edits** in a row still use `erase` + `insert_or_assign` so duplicate keys merge sensibly.
+  - **Set:** one scalar editor per entry. **Add entry** picks a **value** not already in the set (same strategies as map keys where applicable), then **insert**s. Editing a row still erase+inserts the new value.
+- **`@property` meta:** `readonly=true` disables add/remove and makes scalar rows read-only.
+- **Not supported in v1:** `@getter` / `@setter` for associative containers; keys/values outside the supported scalar list; templates with nested commas in the map/set template arguments.
+
 ## Limitations (maintainability)
 
 - One-line `/// @property` / `/// @getter` / `/// @setter` tags only. After each tag, the next non-empty code line must be the matching declaration ending in `;` (field, getter, or `void` setter with one parameter).
-- Templates, tricky macros, multi-line declarations, **`beginAssociative` codegen**, and **nested** `std::vector`s are **not** supported in v1.
+- Templates, tricky macros, multi-line declarations, and **nested** `std::vector`s are **not** supported in v1.
 - `#define META_CLASS()` in `MetaClass.h` is ignored by the scanner (not treated as usage).
 
 ## Cache and force rebuild
@@ -87,7 +97,7 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 ## Extending reflection
 
 1. Prefer extending **meta keys** → `Engine::PropertyMeta` / existing `PropertyBuilder::add*` in the generator.
-2. New C++ types: add to `KNOWN_TYPES`, `FIELD_RE`, `VECTOR_FIELD_RE`, `BITSET_FIELD_RE` / alias tracking / `GETTER_METHOD_RE`, `GETTER_VECTOR_*_RE`, `SETTER_METHOD_RE`, `SETTER_VECTOR_METHOD_RE`, scalar emit in `generate_file_content`, `emit_std_vector_property` for vectors, and `emit_bitset_property` for `std::bitset`.
+2. New C++ types: add to `KNOWN_TYPES`, `FIELD_RE`, `VECTOR_FIELD_RE`, `MAP_FIELD_RE`, `SET_FIELD_RE`, `BITSET_FIELD_RE` / alias tracking / `GETTER_METHOD_RE`, `GETTER_VECTOR_*_RE`, `SETTER_METHOD_RE`, `SETTER_VECTOR_METHOD_RE`, scalar emit in `generate_file_content`, `emit_std_vector_property`, `emit_assoc_map_property` / `emit_assoc_set_property`, and `emit_bitset_property` where applicable.
 3. If headers outgrow the scanner, plan a **Clang-based** extraction step; keep `_gen.hpp` output format stable.
 
 ## CMake
