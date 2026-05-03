@@ -9,7 +9,6 @@ class RectangleShapeVisual : public ShapeVisualBase
 public:
 	RectangleShapeVisual();
 	sf::Shape* GetBaseShape() override;
-	bool HitTest(const sf::Vector2f& worldPoint) const override;
 
 	sf::RectangleShape* GetShape();
 

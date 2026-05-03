@@ -1,16 +1,11 @@
 #include "Engine/Visual/ConvexShapeVisual.h"
 
 #include "ConvexShapeVisual.generated.hpp"
-#include "Engine/Core/Utils.h"
 
 ConvexShapeVisual::ConvexShapeVisual() {}
 
 sf::Shape* ConvexShapeVisual::GetBaseShape() {
 	return &_convex;
-}
-
-bool ConvexShapeVisual::HitTest(const sf::Vector2f& worldPoint) const {
-	return Utils::IsWorldPointInsideOfShape(worldPoint, &_convex);
 }
 
 sf::ConvexShape* ConvexShapeVisual::GetShape() {

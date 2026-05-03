@@ -14,7 +14,6 @@ class ConvexShapeVisual : public ShapeVisualBase
 public:
 	ConvexShapeVisual();
 	sf::Shape* GetBaseShape() override;
-	bool HitTest(const sf::Vector2f& worldPoint) const override;
 
 	sf::ConvexShape* GetShape();
 	/// @getter(name="Points")

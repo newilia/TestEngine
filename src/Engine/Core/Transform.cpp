@@ -19,6 +19,9 @@ void Transform::BuildPropertyTree(Engine::PropertyBuilder& b) {
 	    },
 	    [this](sf::Vector2f v) {
 		    setPosition(v);
+		    if (auto n = GetNode()) {
+			    n->MarkWorldTransformSubtreeDirty();
+		    }
 	    },
 	    {});
 	b.addVec2f(
@@ -37,6 +40,9 @@ void Transform::BuildPropertyTree(Engine::PropertyBuilder& b) {
 	    },
 	    [this](sf::Vector2f v) {
 		    setScale(v);
+		    if (auto n = GetNode()) {
+			    n->MarkWorldTransformSubtreeDirty();
+		    }
 	    },
 	    {});
 	b.addDouble(
@@ -46,6 +52,9 @@ void Transform::BuildPropertyTree(Engine::PropertyBuilder& b) {
 	    },
 	    [this](double deg) {
 		    setRotation(sf::degrees(static_cast<float>(deg)));
+		    if (auto n = GetNode()) {
+			    n->MarkWorldTransformSubtreeDirty();
+		    }
 	    },
 	    {});
 

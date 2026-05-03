@@ -16,6 +16,7 @@
 #include <cassert>
 #include <memory>
 #include <optional>
+#include <vector>
 
 namespace {
 
@@ -23,6 +24,22 @@ namespace {
 	constexpr float kSelectionOutlineThickness = 2.f;
 	const sf::Color kSelectionOutlineColor(120u, 190u, 255u, 220u);
 	constexpr float kSelectionFallbackHalfSize = 6.f;
+
+	sf::FloatRect AxisAlignedBoundsAfterTransform(const sf::Transform& m, const sf::FloatRect& localRect) {
+		const float l = localRect.position.x;
+		const float t = localRect.position.y;
+		const float r = l + localRect.size.x;
+		const float b = t + localRect.size.y;
+		const sf::Vector2f p0 = m.transformPoint({l, t});
+		const sf::Vector2f p1 = m.transformPoint({r, t});
+		const sf::Vector2f p2 = m.transformPoint({l, b});
+		const sf::Vector2f p3 = m.transformPoint({r, b});
+		const float minX = std::min(std::min(p0.x, p1.x), std::min(p2.x, p3.x));
+		const float maxX = std::max(std::max(p0.x, p1.x), std::max(p2.x, p3.x));
+		const float minY = std::min(std::min(p0.y, p1.y), std::min(p2.y, p3.y));
+		const float maxY = std::max(std::max(p0.y, p1.y), std::max(p2.y, p3.y));
+		return {{minX, minY}, {maxX - minX, maxY - minY}};
+	}
 
 	void DrawAabbOutline(sf::RenderTarget& target, sf::RenderStates states, const sf::FloatRect& bounds) {
 		sf::RectangleShape frame;
@@ -35,19 +52,26 @@ namespace {
 	}
 
 	std::optional<sf::FloatRect> TryGetHierarchySelectionBounds(const SceneNode& node) {
+		const sf::Transform nodeWorld = node.GetWorldTransform();
 		if (auto sv = std::dynamic_pointer_cast<ShapeVisualBase>(node.GetVisual())) {
-			if (sf::Shape* shape = sv->GetBaseShape()) {
-				return shape->getGlobalBounds();
+			if (const sf::Shape* shape = sv->GetBaseShape()) {
+				sf::Transform full = nodeWorld;
+				full *= shape->getTransform();
+				return AxisAlignedBoundsAfterTransform(full, shape->getLocalBounds());
 			}
 		}
 		if (auto tv = std::dynamic_pointer_cast<TextVisual>(node.GetVisual())) {
 			if (const sf::Text* text = tv->GetText()) {
-				return text->getGlobalBounds();
+				sf::Transform full = nodeWorld;
+				full *= text->getTransform();
+				return AxisAlignedBoundsAfterTransform(full, text->getLocalBounds());
 			}
 		}
 		if (auto spv = std::dynamic_pointer_cast<SpriteVisual>(node.GetVisual())) {
 			if (const sf::Sprite* sprite = spv->GetSprite()) {
-				return sprite->getGlobalBounds();
+				sf::Transform full = nodeWorld;
+				full *= sprite->getTransform();
+				return AxisAlignedBoundsAfterTransform(full, sprite->getLocalBounds());
 			}
 		}
 		return std::nullopt;
@@ -59,10 +83,12 @@ namespace {
 		if (!selected || selected.get() != &node) {
 			return;
 		}
+		sf::RenderStates worldOnly = states;
+		worldOnly.transform = sf::Transform{};
 		if (const std::optional<sf::FloatRect> bb = TryGetHierarchySelectionBounds(node)) {
 			const sf::FloatRect& b = *bb;
 			if (b.size.x > 0.f && b.size.y > 0.f) {
-				DrawAabbOutline(target, states, b);
+				DrawAabbOutline(target, worldOnly, b);
 				return;
 			}
 		}
@@ -73,7 +99,7 @@ namespace {
 		marker.setFillColor(sf::Color::Transparent);
 		marker.setOutlineColor(kSelectionOutlineColor);
 		marker.setOutlineThickness(kSelectionOutlineThickness);
-		target.draw(marker, states);
+		target.draw(marker, worldOnly);
 	}
 
 	void SortChildrenByDrawOrder(std::vector<shared_ptr<SceneNode>>& nodes) {
@@ -117,13 +143,13 @@ shared_ptr<Visual> SceneNode::GetVisual() const {
 	return _visual;
 }
 
-shared_ptr<Transform> SceneNode::GetTransform() const {
-	if (!_transform) {
+shared_ptr<Transform> SceneNode::GetLocalTransform() const {
+	if (!_localTransform) {
 		auto self = std::static_pointer_cast<SceneNode>(const_cast<SceneNode*>(this)->shared_from_this());
-		_transform = std::make_shared<Transform>();
-		_transform->AttachTo(self);
+		_localTransform = std::make_shared<Transform>();
+		_localTransform->AttachTo(self);
 	}
-	return _transform;
+	return _localTransform;
 }
 
 shared_ptr<RelativeSortingStrategy> SceneNode::GetSortingStrategy() const {
@@ -155,20 +181,47 @@ PhysicsBodyBehaviour* SceneNode::FindPhysicsBody() const {
 	return nullptr;
 }
 
+sf::Transform SceneNode::GetWorldTransform() const {
+	if (!_worldTransformDirty) {
+		return _cachedWorldTransform;
+	}
+	if (auto parent = GetParent()) {
+		_cachedWorldTransform = parent->GetWorldTransform() * GetLocalTransform()->getTransform();
+	}
+	else {
+		_cachedWorldTransform = GetLocalTransform()->getTransform();
+	}
+	_worldTransformDirty = false;
+	return _cachedWorldTransform;
+}
+
+void SceneNode::MarkWorldTransformSubtreeDirty() const {
+	_worldTransformDirty = true;
+	for (const auto& child : _children) {
+		child->MarkWorldTransformSubtreeDirty();
+	}
+}
+
 sf::Vector2f SceneNode::GetPosGlobal() const {
 	if (auto* c = FindPhysicsBody()) {
 		return c->GetPosGlobal();
 	}
-	return GetTransform()->getPosition();
+	return GetWorldTransform().transformPoint(sf::Vector2f{});
 }
 
 void SceneNode::SetPosGlobal(sf::Vector2f pos) {
 	if (auto* c = FindPhysicsBody()) {
 		c->SetPosGlobal(pos);
+		return;
+	}
+	if (auto parent = GetParent()) {
+		const sf::Vector2f local = parent->GetWorldTransform().getInverse().transformPoint(pos);
+		GetLocalTransform()->setPosition(local);
 	}
 	else {
-		GetTransform()->setPosition(pos);
+		GetLocalTransform()->setPosition(pos);
 	}
+	MarkWorldTransformSubtreeDirty();
 }
 
 void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
@@ -176,24 +229,27 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 		return;
 	}
 
+	sf::RenderStates nodeStates = states;
+	nodeStates.transform *= GetLocalTransform()->getTransform();
+
 	if (_visual) {
-		_visual->Draw(target, states);
+		_visual->Draw(target, nodeStates);
 	}
 
 	std::vector<shared_ptr<SceneNode>> sorted = _children;
 	SortChildrenByDrawOrder(sorted);
 
 	for (auto& child : sorted) {
-		child->draw(target, states);
+		child->draw(target, nodeStates);
 	}
 
 	if (Engine::MainContext::GetInstance().IsDebugDrawEnabled()) {
 		if (auto debugBehaviour = FindBehaviour<PhysicsDebugBehaviour>()) { // todo fix (некрасиво)
-			debugBehaviour->DebugDraw(target, states);
+			debugBehaviour->DebugDraw(target, nodeStates);
 		}
 	}
 
-	DrawHierarchySelectionHighlightIfSelected(*this, target, states);
+	DrawHierarchySelectionHighlightIfSelected(*this, target, nodeStates);
 }
 
 void SceneNode::Update(const sf::Time& dt) {
@@ -246,6 +302,7 @@ void SceneNode::AddChild(const std::shared_ptr<SceneNode>& child) {
 
 	_children.push_back(child);
 	child->SetParent(shared_from_this());
+	child->MarkWorldTransformSubtreeDirty();
 }
 
 void SceneNode::RemoveChild(SceneNode* child) {
@@ -258,6 +315,7 @@ void SceneNode::RemoveChild(SceneNode* child) {
 			node->NotifyLifecycleDeinitRecursive();
 		}
 		node->SetParent(nullptr);
+		node->MarkWorldTransformSubtreeDirty();
 		_children.erase(it);
 	}
 }
