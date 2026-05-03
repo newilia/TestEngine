@@ -18,8 +18,8 @@ public:
 
 	bool processEvent(const sf::Event& event) override;
 	void onPresent(const sf::Time& dt) override;
+	void drawOverlay(sf::RenderWindow& window) override;
 
-	void SetArrowVisual(std::shared_ptr<VectorArrowVisual> arrow);
 	void SetPullForceScale(float v);
 	float GetPullForceScale() const;
 	bool IsDebugArrowEnabled() const;
@@ -34,16 +34,7 @@ private:
 	float _pullForceScale = 1.f;
 	sf::Vector2f _destination;
 	bool _debugArrowEnabled = true;
-	std::weak_ptr<VectorArrowVisual> _arrowVisual;
+	VectorArrow _arrow;
 	std::weak_ptr<SceneNode> _pullingBody;
 	bool _isDragging = false;
 };
-
-struct PullVisualSetup
-{
-	std::shared_ptr<SceneNode> root;
-	std::shared_ptr<VectorArrowVisual> arrowVisual;
-};
-
-/// Root `body_pull` + child arrow visual (no behaviour — pull lives in `PullTool`).
-PullVisualSetup CreatePullVisualOverlay();

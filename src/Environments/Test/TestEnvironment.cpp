@@ -177,8 +177,5 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 
 		scene->AddChild(std::move(node));
 	}
-	auto pull = CreatePullVisualOverlay();
-	scene->AddChild(std::move(pull.root));
-	Engine::Editor::GetInstance().GetEditorToolManager().BindPullArrow(std::move(pull.arrowVisual));
 	return scene;
 }

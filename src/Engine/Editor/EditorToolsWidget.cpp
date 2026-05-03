@@ -7,16 +7,16 @@
 
 namespace Engine {
 
-	void EditorToolsWidget::Draw(EditorToolManager& tools) {
+	void EditorToolsWidget::Draw(EditorToolManager& toolManager) {
 		ImGui::TextUnformatted("Tools");
 		ImGui::Separator();
 
 		const char* names[] = {"Tap", "Select", "Pull", "Move", "Polygon"};
-		int active = tools.GetActiveToolIndex();
+		int active = toolManager.GetActiveToolIndex();
 		for (int i = 0; i < EditorToolManager::kToolCount; ++i) {
 			const std::string label = EditorToolManager::FormatToolPaletteLabel(i, names[i]);
 			if (ImGui::RadioButton(label.c_str(), active == i)) {
-				tools.SetActiveToolIndex(i);
+				toolManager.SetActiveToolIndex(i);
 				active = i;
 			}
 		}
@@ -28,7 +28,7 @@ namespace Engine {
 		switch (active) {
 		case 2: {
 			/* TODO move tool inpector to the tool itself */
-			auto* pull = tools.GetPullTool();
+			auto* pull = toolManager.GetPullTool();
 			if (pull) {
 				float scale = pull->GetPullForceScale();
 				if (ImGui::SliderFloat("Pull force scale", &scale, 0.01f, 100.f, "%.3f")) {

@@ -1,5 +1,6 @@
 #include "Env.h"
 
+#include "BallpitGame.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/TextureManager.h"
@@ -22,6 +23,7 @@ namespace Demo1 {
 		}
 		Utils::MaximizeWindow(*mainWindow);
 		mainContext.GetPhysicsProcessor()->SetGravity({0, 1000});
+		mainContext.GetPhysicsProcessor()->SetGravityEnabled(true);
 		mainContext.SetScene(BuildScene());
 		mainContext.SetVerticalSyncEnabled(false);
 		EventHandlerBase::SubscribeForEvents();
@@ -83,19 +85,42 @@ namespace Demo1 {
 		auto scene = make_shared<Scene>();
 		scene->AddChild(CreateBackgroundNode());
 
-		const float fieldW = 500;
-		const float fieldH = 900;
-		const float platformWidth = 100;
-		const float platformThickness = 20;
-		const float wallsThickness = 50;
-		const float ballRadius = 20;
-		auto pongRoot =
-		    CreatePongGameNode(fieldW, fieldH, platformWidth, platformThickness, wallsThickness, ballRadius);
-		scene->AddChild(std::move(pongRoot));
+		{
+			const float fieldW = 500;
+			const float fieldH = 900;
+			const float platformWidth = 100;
+			const float platformThickness = 20;
+			const float wallsThickness = 50;
+			const float ballRadius = 20;
+			auto pongRoot =
+			    CreatePongGameNode(fieldW, fieldH, platformWidth, platformThickness, wallsThickness, ballRadius);
+			pongRoot->GetLocalTransform()->SetPosition({800, 2000});
+			scene->AddChild(std::move(pongRoot));
+		}
 
-		auto ticTacToe = CreateTicTacToeGameNode();
-		ticTacToe->SetPosGlobal({80.f, 120.f});
-		scene->AddChild(std::move(ticTacToe));
+		{
+			auto ticTacToe = CreateTicTacToeGameNode();
+			ticTacToe->GetLocalTransform()->SetPosition({500, 500});
+			ticTacToe->GetLocalTransform()->SetScale({1.5, 1.5});
+			scene->AddChild(std::move(ticTacToe));
+		}
+
+		{
+			const float AquariumW = 800.f;
+			const float AquariumH = 800.f;
+			const float WallThickness = 60.f;
+			const float BaseRadius = 15.f;
+			const float RadiusVar = 0.f;
+			const sf::Color BaseColor(255, 200, 80, 230);
+			const float ColorVar = 0.f;
+			const int BallCount = 250;
+			const float BallRestitution = 0.95f;
+			const float WallRestitution = 1.f;
+			auto ballpit = CreateBallpitGameNode(AquariumW, AquariumH, WallThickness, BaseRadius, RadiusVar, BaseColor,
+			                                     ColorVar, BallCount, BallRestitution, WallRestitution);
+			ballpit->GetLocalTransform()->SetPosition({2100, 700});
+			scene->AddChild(std::move(ballpit));
+		}
 		return scene;
 	}
 

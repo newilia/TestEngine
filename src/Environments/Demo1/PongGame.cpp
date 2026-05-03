@@ -212,6 +212,7 @@ namespace Demo1 {
 			rigidBody->GetCollisionGroups().set(0, true);
 			rigidBody->GetCollisionGroups().set(1, true);
 			rigidBody->GetOverlappingGroups().set(0, true);
+			rigidBody->SetGravityScale(0.f);
 
 			root->AddChild(ball->GetNode());
 			ballNode->GetLocalTransform()->SetPosition(InitialBallPositionLocal());
