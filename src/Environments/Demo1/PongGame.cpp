@@ -21,7 +21,6 @@
 
 #include <fmt/format.h>
 
-#include <algorithm>
 #include <cmath>
 #include <memory>
 
@@ -34,13 +33,6 @@ namespace Demo1 {
 
 		constexpr float bodiesRestitution = 1;
 		constexpr int kPongScoreFontSize = 140;
-
-		/// Set in `CreatePongGameNode`; drives wall depth and inner edge inset for platforms.
-		float s_wallThickness = 200.f;
-
-		float WallInnerInset() {
-			return std::min(10.f, s_wallThickness * 0.49f);
-		}
 
 		shared_ptr<SceneNode> sUserPlatform;
 		shared_ptr<SceneNode> sAiPlatform;
@@ -65,12 +57,12 @@ namespace Demo1 {
 
 		sf::Vector2f InitialUserPlatformPositionLocal() {
 			const float hy = FieldHalfHeight();
-			return {0.f, hy - WallInnerInset() - 100.f};
+			return {0.f, hy - 100.f};
 		}
 
 		sf::Vector2f InitialAiPlatformPositionLocal() {
 			const float hy = FieldHalfHeight();
-			return {0.f, -hy + WallInnerInset() + 100.f};
+			return {0.f, -hy + 100.f};
 		}
 
 		void ResetRound() {
@@ -186,8 +178,7 @@ namespace Demo1 {
 			return m;
 		}
 
-		void AddBall(SceneNode* root) {
-			constexpr float radius = 35;
+		void AddBall(SceneNode* root, float radius) {
 			constexpr float pointsCountConstant = 3.f;
 			constexpr float speedDampingFactor = 0.1f;
 			const sf::Color color(40, 170, 255, 200);
@@ -232,14 +223,16 @@ namespace Demo1 {
 			const sf::Vector2f sz = GetPongPlayfieldRect().size;
 			const float hx = sz.x * 0.5f;
 			const float hy = sz.y * 0.5f;
+			const float t = wallThickness;
+
+			const sf::Vector2f horizSize{sz.x + 2.f * t, t};
+			const sf::Vector2f vertSize{t, sz.y + 2.f * t};
 
 			std::string wallNames[] = {"bottom", "top", "left", "right"};
-			sf::Vector2f wallSizes[] = {
-			    {sz.x, wallThickness}, {sz.x, wallThickness}, {wallThickness, sz.y}, {wallThickness, sz.y}};
+			sf::Vector2f wallSizes[] = {horizSize, horizSize, vertSize, vertSize};
 
-			const float wallOffset = wallThickness * 0.5f - WallInnerInset();
 			const sf::Vector2f wallCentersLocal[] = {
-			    {0.f, hy + wallOffset}, {0.f, -hy - wallOffset}, {-hx - wallOffset, 0.f}, {hx + wallOffset, 0.f}};
+			    {0.f, hy + t * 0.5f}, {0.f, -hy - t * 0.5f}, {-hx - t * 0.5f, 0.f}, {hx + t * 0.5f, 0.f}};
 			for (int i = 0; i < 4; ++i) {
 				auto wallNode = make_shared<SceneNode>();
 				wallNode->SetName(wallNames[i]);
@@ -355,7 +348,7 @@ namespace Demo1 {
 	} // namespace
 
 	std::shared_ptr<SceneNode> CreatePongGameNode(float fieldWidth, float fieldHeight, float platformWidth,
-	                                              float platformHeight, float wallThickness) {
+	                                              float platformHeight, float wallThickness, float ballRadius) {
 		if (fieldWidth <= 0.f || fieldHeight <= 0.f || platformWidth <= 0.f || platformHeight <= 0.f ||
 		    wallThickness <= 0.f) {
 			return nullptr;
@@ -369,8 +362,6 @@ namespace Demo1 {
 		const sf::Vector2f fieldPos{fieldCenter.x - fieldWidth * 0.5f, fieldCenter.y - fieldHeight * 0.5f};
 		SetPongPlayfieldRectOverride(sf::FloatRect(fieldPos, {fieldWidth, fieldHeight}));
 
-		s_wallThickness = wallThickness;
-
 		auto root = make_shared<SceneNode>();
 		root->SetName("Pong");
 		root->SetPosGlobal(GetPongPlayfieldRect().getCenter());
@@ -378,7 +369,7 @@ namespace Demo1 {
 		const sf::Vector2f platformSize{platformWidth, platformHeight};
 
 		AddWalls(root.get(), wallThickness);
-		AddBall(root.get());
+		AddBall(root.get(), ballRadius);
 		const MovementBoundNodes movementBounds = CreateMovementBoundRects(root.get());
 		AddUserPlatform(root.get(), platformSize);
 		AddAiPlatform(root.get(), platformSize);

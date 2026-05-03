@@ -83,8 +83,7 @@ void PongEnvironment::OnEvent(const sf::Event& event) {
 	}
 }
 
-void PongEnvironment::AddBall(Scene* scene) {
-	constexpr float radius = 35;
+void PongEnvironment::AddBall(Scene* scene, float radius) {
 	constexpr float pointsCountConstant = 3.f;
 	constexpr float speedDampingFactor = 0.1f;
 	const sf::Color color(40, 170, 255, 200);
@@ -301,7 +300,7 @@ std::shared_ptr<Scene> PongEnvironment::BuildScene() {
 	auto scene = make_shared<Scene>();
 
 	AddWalls(scene.get());
-	AddBall(scene.get());
+	AddBall(scene.get(), 20);
 	AddUserPlatform(scene.get());
 	AddAiPlatform(scene.get());
 	AddScoreboard(scene.get());

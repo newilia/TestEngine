@@ -9,5 +9,5 @@ namespace Demo1 {
 	/// `wallThickness` — глубина коллайдера стен (ось, перпендикулярная к границе поля).
 	[[nodiscard]] std::shared_ptr<SceneNode> CreatePongGameNode(float fieldWidth, float fieldHeight,
 	                                                            float platformWidth, float platformHeight,
-	                                                            float wallThickness);
+	                                                            float wallThickness, float ballRadius);
 } // namespace Demo1
