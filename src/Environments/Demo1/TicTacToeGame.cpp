@@ -56,7 +56,7 @@ namespace Demo1 {
 
 		void AddGridLine(const std::shared_ptr<SceneNode>& root, sf::Vector2f pos, sf::Vector2f size) {
 			auto node = std::make_shared<SceneNode>();
-			node->GetLocalTransform()->setLocalPosition(pos);
+			node->GetLocalTransform()->SetPosition(pos);
 			auto rect = std::make_shared<RectangleShapeVisual>();
 			rect->GetShape()->setSize(size);
 			rect->GetShape()->setFillColor(sf::Color(220, 220, 220));
@@ -80,7 +80,7 @@ namespace Demo1 {
 		hudText->setFillColor(sf::Color::White);
 		auto hudNode = std::make_shared<SceneNode>();
 		hudNode->SetName("TicTacToeHUD");
-		hudNode->GetLocalTransform()->setLocalPosition({0.f, -52.f});
+		hudNode->GetLocalTransform()->SetPosition({0.f, -52.f});
 		hudNode->SetVisual(std::make_shared<TextVisual>(hudText));
 		root->AddChild(hudNode);
 
@@ -110,7 +110,7 @@ namespace Demo1 {
 			cellNode->SetName(fmt::format("TicTacToeCell{}", i));
 			const float x = static_cast<float>(col) * (kCell + kLine);
 			const float y = static_cast<float>(row) * (kCell + kLine);
-			cellNode->GetLocalTransform()->setLocalPosition({x, y});
+			cellNode->GetLocalTransform()->SetPosition({x, y});
 
 			auto hit = std::make_shared<TicTacToeCellHitVisual>();
 			hit->GetShape()->setSize({kCell, kCell});
@@ -123,7 +123,7 @@ namespace Demo1 {
 			cellNode->SetSortingStrategy(std::move(cellSort));
 
 			auto markerNode = std::make_shared<SceneNode>();
-			markerNode->GetLocalTransform()->setLocalPosition({kCell * 0.5f, kCell * 0.5f});
+			markerNode->GetLocalTransform()->SetPosition({kCell * 0.5f, kCell * 0.5f});
 			markerNode->SetVisual(std::make_shared<TicTacToeMarkerTextVisual>(cellTexts[static_cast<std::size_t>(i)]));
 			auto markerSort = std::make_shared<RelativeSortingStrategy>();
 			markerSort->SetPriority(20);

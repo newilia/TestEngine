@@ -4,48 +4,48 @@
 #include "Engine/Core/SceneNode.h"
 #include "Transform.generated.hpp"
 
-void Transform::notifyTransformChanged() {
+void Transform::NotifyTransformChanged() {
 	if (auto n = GetNode()) {
 		n->MarkWorldTransformSubtreeDirty();
 	}
 }
 
-sf::Transform Transform::getTransform() const {
+sf::Transform Transform::GetTransform() const {
 	return _transformable.getTransform();
 }
 
-sf::Vector2f Transform::getLocalPosition() const {
+sf::Vector2f Transform::GetPosition() const {
 	return _transformable.getPosition();
 }
 
-void Transform::setLocalPosition(sf::Vector2f v) {
+void Transform::SetPosition(sf::Vector2f v) {
 	_transformable.setPosition(v);
-	notifyTransformChanged();
+	NotifyTransformChanged();
 }
 
-sf::Vector2f Transform::getLocalScale() const {
+sf::Vector2f Transform::GetScale() const {
 	return _transformable.getScale();
 }
 
-void Transform::setLocalScale(sf::Vector2f v) {
+void Transform::SetScale(sf::Vector2f v) {
 	_transformable.setScale(v);
-	notifyTransformChanged();
+	NotifyTransformChanged();
 }
 
-sf::Angle Transform::getLocalRotation() const {
+sf::Angle Transform::GetRotation() const {
 	return _transformable.getRotation();
 }
 
-void Transform::setLocalRotation(sf::Angle angle) {
+void Transform::SetRotation(sf::Angle angle) {
 	_transformable.setRotation(angle);
-	notifyTransformChanged();
+	NotifyTransformChanged();
 }
 
-sf::Vector2f Transform::getLocalOrigin() const {
+sf::Vector2f Transform::GetOrigin() const {
 	return _transformable.getOrigin();
 }
 
-void Transform::setLocalOrigin(sf::Vector2f v) {
+void Transform::SetOrigin(sf::Vector2f v) {
 	_transformable.setOrigin(v);
-	notifyTransformChanged();
+	NotifyTransformChanged();
 }

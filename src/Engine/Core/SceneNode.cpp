@@ -195,10 +195,10 @@ sf::Transform SceneNode::GetWorldTransform() const {
 		return _cachedWorldTransform;
 	}
 	if (auto parent = GetParent()) {
-		_cachedWorldTransform = parent->GetWorldTransform() * GetLocalTransform()->getTransform();
+		_cachedWorldTransform = parent->GetWorldTransform() * GetLocalTransform()->GetTransform();
 	}
 	else {
-		_cachedWorldTransform = GetLocalTransform()->getTransform();
+		_cachedWorldTransform = GetLocalTransform()->GetTransform();
 	}
 	_worldTransformDirty = false;
 	return _cachedWorldTransform;
@@ -218,10 +218,10 @@ sf::Vector2f SceneNode::GetPosGlobal() const {
 void SceneNode::SetPosGlobal(sf::Vector2f pos) {
 	if (auto parent = GetParent()) {
 		const sf::Vector2f local = parent->GetWorldTransform().getInverse().transformPoint(pos);
-		GetLocalTransform()->setLocalPosition(local);
+		GetLocalTransform()->SetPosition(local);
 	}
 	else {
-		GetLocalTransform()->setLocalPosition(pos);
+		GetLocalTransform()->SetPosition(pos);
 	}
 }
 
@@ -231,7 +231,7 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	}
 
 	sf::RenderStates nodeStates = states;
-	nodeStates.transform *= GetLocalTransform()->getTransform();
+	nodeStates.transform *= GetLocalTransform()->GetTransform();
 
 	if (_visual) {
 		_visual->Draw(target, nodeStates);

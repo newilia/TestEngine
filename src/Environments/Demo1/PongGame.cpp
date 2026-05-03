@@ -70,17 +70,17 @@ namespace Demo1 {
 				return;
 			}
 
-			sBall->GetNode()->GetLocalTransform()->setLocalPosition(InitialBallPositionLocal());
+			sBall->GetNode()->GetLocalTransform()->SetPosition(InitialBallPositionLocal());
 			auto ballRb = sBall->GetNode()->RequireBehaviour<PhysicsBodyBehaviour>();
 			ballRb->SetVelocity(InitialBallVelocity());
 			ballRb->SetAngularSpeed(0.f);
 
-			sUserPlatform->GetLocalTransform()->setLocalPosition(InitialUserPlatformPositionLocal());
+			sUserPlatform->GetLocalTransform()->SetPosition(InitialUserPlatformPositionLocal());
 			if (auto u = sUserPlatform->FindBehaviour<UserPlatformControllerBehaviour>()) {
 				u->ResyncSpawnFromNode();
 			}
 
-			sAiPlatform->GetLocalTransform()->setLocalPosition(InitialAiPlatformPositionLocal());
+			sAiPlatform->GetLocalTransform()->SetPosition(InitialAiPlatformPositionLocal());
 			if (auto ai = sAiPlatform->FindBehaviour<AiPlatformControllerBehaviour>()) {
 				ai->ResyncSpawnFromNode();
 				ai->ClearPendingObservations();
@@ -94,7 +94,7 @@ namespace Demo1 {
 			scoreText->setString(fmt::format("{}:{}", userScore, aiScore));
 			auto lb = scoreText->getLocalBounds();
 			scoreText->setOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
-			scoreboardNode->GetLocalTransform()->setLocalPosition({0.f, 0.f});
+			scoreboardNode->GetLocalTransform()->SetPosition({0.f, 0.f});
 		}
 
 		void OnLose() {
@@ -170,10 +170,10 @@ namespace Demo1 {
 			m.aiStrip = MakeMovementBoundsRect("PongBounds_AiStrip", {sz.x, stripH});
 
 			root->AddChild(m.userStrip);
-			m.userStrip->GetLocalTransform()->setLocalPosition({0.f, hy - stripH * 0.5f});
+			m.userStrip->GetLocalTransform()->SetPosition({0.f, hy - stripH * 0.5f});
 
 			root->AddChild(m.aiStrip);
-			m.aiStrip->GetLocalTransform()->setLocalPosition({0.f, -hy + stripH * 0.5f});
+			m.aiStrip->GetLocalTransform()->SetPosition({0.f, -hy + stripH * 0.5f});
 
 			return m;
 		}
@@ -214,7 +214,7 @@ namespace Demo1 {
 			rigidBody->GetOverlappingGroups().set(0, true);
 
 			root->AddChild(ball->GetNode());
-			ballNode->GetLocalTransform()->setLocalPosition(InitialBallPositionLocal());
+			ballNode->GetLocalTransform()->SetPosition(InitialBallPositionLocal());
 
 			sBall = ball;
 		}
@@ -244,7 +244,7 @@ namespace Demo1 {
 				rectShape->setOrigin(Utils::FindCenterOfMass(rectShape));
 
 				root->AddChild(wallNode);
-				wallNode->GetLocalTransform()->setLocalPosition(wallCentersLocal[i]);
+				wallNode->GetLocalTransform()->SetPosition(wallCentersLocal[i]);
 
 				auto bodyBeh = wallNode->RequireBehaviour<PhysicsBodyBehaviour>();
 				bodyBeh->SetImmovable();
@@ -289,7 +289,7 @@ namespace Demo1 {
 			userBehaviour->_speedFactor = velFactor;
 
 			root->AddChild(platformNode);
-			platformNode->GetLocalTransform()->setLocalPosition(InitialUserPlatformPositionLocal());
+			platformNode->GetLocalTransform()->SetPosition(InitialUserPlatformPositionLocal());
 
 			sUserPlatform = platformNode;
 		}
@@ -313,7 +313,7 @@ namespace Demo1 {
 			aiBehaviour->SetReactionDelay(sf::milliseconds(100));
 
 			root->AddChild(platformNode);
-			platformNode->GetLocalTransform()->setLocalPosition(InitialAiPlatformPositionLocal());
+			platformNode->GetLocalTransform()->SetPosition(InitialAiPlatformPositionLocal());
 
 			sAiPlatform = platformNode;
 		}
@@ -342,7 +342,7 @@ namespace Demo1 {
 			node->SetVisual(std::make_shared<TextVisual>(scoreText));
 			scoreboardNode = node;
 			root->AddChild(std::move(node));
-			scoreboardNode->GetLocalTransform()->setLocalPosition({0.f, 0.f});
+			scoreboardNode->GetLocalTransform()->SetPosition({0.f, 0.f});
 		}
 
 	} // namespace
