@@ -24,7 +24,7 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 
 ## `@property` argument syntax
 
-- Comma-separated `key=value`. Keys (v1): `name` / `label` (display label), `readonly`, `setter` (method name; **`bool` fields only** — forwards writes to `this->MethodName(bool)`), `minValue`, `maxValue`, `step`, `dragSpeed`, `tooltip`.
+- Comma-separated `key=value`. Keys (v1): `name` / `label` (display label), `readonly`, `setter` (method name; **`bool` fields only** — forwards writes to `this->MethodName(bool)`), `minValue`, `maxValue`, `dragSpeed`, `tooltip`.
 - Strings in double quotes. Booleans `true` / `false`. Numbers may use a trailing `f`.
 - Parser errors include `file:line:col:` messages; fix the tag or the following field line.
 - The key `name` (and `label`) sets the **inspector display string** only. The **property id** in the tree is still derived from the C++ field or method name (e.g. `GetPropValue` → `get_prop_value`).
@@ -45,7 +45,7 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 - **Pairing:** the string keys **`name`** and **`label`** are checked in that order; the first non-empty string on the getter must equal the first non-empty string on the setter so they refer to the same property (e.g. both `name="size"`).
 - **Implicit pairing:** if both getter and setter omit `name` / `label`, a **`GetXxx` / `SetXxx`** pair is matched by the same **`Xxx`** suffix (e.g. `GetPoints` / `SetPoints`). The same rule applies to **`getXxx` / `setXxx`** (lowercase prefix, next character uppercase). Comparison is **case-insensitive** for that key. If the setter cannot be inferred this way, use **`name="..."` / `label="..."`** on the setter (or getter).
 - **Alternative:** on `/// @getter` you can still use **`setter=MethodName`** instead of a separate `@setter` tag (do not use both for the same pair).
-- **Meta on paired `@setter`:** keys like **`dragSpeed`**, **`minValue`**, **`maxValue`**, **`step`**, **`tooltip`**, **`readonly`** on the setter are merged into the property if the getter line does not already set the same key (getter wins on conflict).
+- **Meta on paired `@setter`:** keys like **`dragSpeed`**, **`minValue`**, **`maxValue`**, **`tooltip`**, **`readonly`** on the setter are merged into the property if the getter line does not already set the same key (getter wins on conflict).
 
 ### Read-only vs writable
 
@@ -71,7 +71,7 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 - Declare **`std::vector<ElementType> memberName;`** on one line after `/// @property`, where **`ElementType`** is any **Supported field types (v1)** scalar (same list as plain fields).
 - The header must **`#include <vector>`** for that type.
 - Generated UI: `PropertyBuilder::beginSequence` / `endSequence` with **`PropAccessSequence`** (`resize` / `getSize`), one **object child per index** and one scalar editor (`addFloat`, …) per element. Inspector behaviour matches existing **`PropertyKind::Sequence`** support (`PropertyTreeDrawer`).
-- **`@property` meta:** `minCount` / `maxCount` map to `PropertyMeta::minElementCount` / `maxElementCount` (size drag limits). `readonly=true` removes list length editing and makes elements read-only. Per-element `minValue` / `maxValue` / `step` / `dragSpeed` apply to each item’s control.
+- **`@property` meta:** `minCount` / `maxCount` map to `PropertyMeta::minElementCount` / `maxElementCount` (size drag limits). `readonly=true` removes list length editing and makes elements read-only. Per-element `minValue` / `maxValue` / `dragSpeed` apply to each item’s control.
 - **Method-backed sequences:** pair `/// @getter` returning `std::vector<Elt>` (or `const std::vector<Elt>&` / `std::vector<Elt> const&`) with `/// @setter` taking the same `std::vector<Elt>` (by ref or value). Writable UI calls the getter, edits a copy, then calls the setter (including per-index edits and list length).
 - **Not supported:** `std::vector` of custom structs, nested vectors, or `@getter` returning types other than the supported scalars / `std::vector` of those scalars.
 

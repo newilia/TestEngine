@@ -14,7 +14,6 @@ namespace Engine {
 
 		std::optional<double> numericMin;
 		std::optional<double> numericMax;
-		std::optional<double> numericStep;
 		std::optional<double> dragSpeed;
 
 		bool stringMultiline = false;

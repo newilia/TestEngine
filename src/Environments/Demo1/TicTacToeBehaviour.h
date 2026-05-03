@@ -47,9 +47,9 @@ private:
 	static int MinimaxScore(std::array<std::uint8_t, 9>& board, bool aiTurn);
 
 private:
-	/// @property(name="AI mistake probability", minValue=0.f, maxValue=1.f, step=0.05f)
+	/// @property(name="AI mistake probability", minValue=0.f, maxValue=1.f)
 	float _aiMistakeProbability = 0.2f;
-	/// @property(name="AI think delay (s)", minValue=0.f, maxValue=5.f, step=0.1f)
+	/// @property(name="AI think delay (s)", minValue=0.f, maxValue=5.f)
 	float _aiThinkDelaySeconds = 2.f;
 
 private:
