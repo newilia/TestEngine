@@ -2,6 +2,7 @@
 
 #include "Engine/Core/EventsDispatcher.h"
 #include "Engine/Core/FontManager.h"
+#include "Engine/Core/TextureManager.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 
 #include <imgui-SFML.h>
@@ -41,6 +42,10 @@ namespace Engine {
 
 	shared_ptr<FontManager> MainContext::GetFontManager() const {
 		return _fontManager;
+	}
+
+	shared_ptr<TextureManager> MainContext::GetTextureManager() const {
+		return _textureManager;
 	}
 
 	float MainContext::GetSimSpeedMultiplier() const {
@@ -108,6 +113,7 @@ namespace Engine {
 		_eventsDispatcher = make_shared<EventsDispatcher>();
 		_physicsProcessor = make_shared<PhysicsProcessor>();
 		_fontManager = make_shared<FontManager>();
+		_textureManager = make_shared<TextureManager>();
 	}
 
 	MainContext::~MainContext() {}

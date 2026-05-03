@@ -8,6 +8,7 @@
 
 class PhysicsProcessor;
 class FontManager;
+class TextureManager;
 
 namespace Engine {
 	class EventsDispatcher;
@@ -27,6 +28,7 @@ namespace Engine {
 		shared_ptr<EventsDispatcher> GetEventsDispatcher() const;
 		shared_ptr<PhysicsProcessor> GetPhysicsProcessor() const;
 		shared_ptr<FontManager> GetFontManager() const;
+		shared_ptr<TextureManager> GetTextureManager() const;
 
 		std::shared_ptr<sf::RenderWindow> CreateMainWindow(sf::VideoMode mode, const sf::String& title,
 		                                                   std::uint32_t style = sf::Style::Default,
@@ -91,6 +93,7 @@ namespace Engine {
 		shared_ptr<EventsDispatcher> _eventsDispatcher;
 		shared_ptr<PhysicsProcessor> _physicsProcessor;
 		shared_ptr<FontManager> _fontManager;
+		shared_ptr<TextureManager> _textureManager;
 		sf::Clock _frameClock;
 		sf::Time _frameTime;
 		sf::Clock _tickClock;
