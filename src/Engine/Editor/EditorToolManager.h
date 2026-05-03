@@ -14,9 +14,6 @@ namespace sf {
 	class RenderWindow;
 }
 
-class PullTool;
-class VectorArrowVisual;
-
 /// Owns editor tools and routes input to the active tool before `EventsDispatcher`.
 class EditorToolManager
 {
@@ -34,8 +31,7 @@ public:
 	bool ProcessEvent(const sf::Event& event);
 	void OnPresent(const sf::Time& dt);
 	void DrawOverlay(sf::RenderWindow& window);
-
-	PullTool* GetPullTool();
+	void DrawActiveToolParametersUi();
 
 	static std::optional<int> TryToolIndexFromDigitKey(sf::Keyboard::Key key);
 	static std::string FormatToolPaletteLabel(int toolIndex, const char* displayName);
@@ -48,5 +44,4 @@ public:
 private:
 	int _activeToolIndex = 0;
 	std::unique_ptr<IEditorTool> _tools[kToolCount]; // TODO make dynamic
-	PullTool* _pullTool = nullptr;                   // TODO why is it here?
 };

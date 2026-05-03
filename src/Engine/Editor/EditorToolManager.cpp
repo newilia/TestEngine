@@ -63,21 +63,13 @@ int EditorToolManager::GetActiveToolIndex() const {
 	return _activeToolIndex;
 }
 
-PullTool* EditorToolManager::GetPullTool() {
-	return _pullTool;
-}
-
 EditorToolManager::EditorToolManager() {
 	const auto setHierarchySelection = [](std::shared_ptr<SceneNode> node) {
 		Engine::Editor::GetInstance().SetSelectedNode(std::move(node));
 	};
-	auto select = std::make_unique<SelectTool>(setHierarchySelection);
-	auto pull = std::make_unique<PullTool>(setHierarchySelection);
-	_pullTool = pull.get();
-
 	_tools[0] = std::make_unique<TapTool>();
-	_tools[1] = std::move(select);
-	_tools[2] = std::move(pull);
+	_tools[1] = std::make_unique<SelectTool>(setHierarchySelection);
+	_tools[2] = std::make_unique<PullTool>(setHierarchySelection);
 	_tools[3] = std::make_unique<MoveTool>(setHierarchySelection);
 	_tools[4] = std::make_unique<PolygonTool>(setHierarchySelection);
 }
@@ -105,4 +97,11 @@ void EditorToolManager::DrawOverlay(sf::RenderWindow& window) {
 		return;
 	}
 	_tools[_activeToolIndex]->drawOverlay(window);
+}
+
+void EditorToolManager::DrawActiveToolParametersUi() {
+	if (_activeToolIndex < 0 || _activeToolIndex >= kToolCount || !_tools[_activeToolIndex]) {
+		return;
+	}
+	_tools[_activeToolIndex]->drawToolParametersUi();
 }

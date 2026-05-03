@@ -20,6 +20,7 @@ public:
 
 	bool processEvent(const sf::Event& event) override;
 	void drawOverlay(sf::RenderWindow& window) override;
+	void drawToolParametersUi() override;
 
 private:
 	void beginStroke(const sf::Vector2f& world, const sf::Vector2i& pixel);
@@ -28,8 +29,9 @@ private:
 	void finalizeStroke();
 
 	SelectTool::SelectCallback _onSelect;
-	bool _drawing = false;
+	bool _isDrawing = false;
 	std::vector<sf::Vector2f> _worldSamples;
 	std::optional<sf::Vector2i> _lastSamplePixel;
 	sf::Vector2f _cursorWorld{};
+	bool _isAttachPhysicsBody = true;
 };

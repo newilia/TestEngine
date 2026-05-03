@@ -7,6 +7,8 @@
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/Mouse.hpp>
 
+#include <imgui.h>
+
 SelectTool::SelectTool(SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
 
 bool SelectTool::processEvent(const sf::Event& event) {
@@ -33,4 +35,8 @@ bool SelectTool::processEvent(const sf::Event& event) {
 		}
 	}
 	return false;
+}
+
+void SelectTool::drawToolParametersUi() {
+	ImGui::TextUnformatted("Click a body or tap target to select it in the hierarchy.");
 }

@@ -21,4 +21,7 @@ public:
 
 	/// Optional world overlay after the scene is drawn (same frame as ImGui `Update`…`Render`).
 	virtual void drawOverlay(sf::RenderWindow& window);
+
+	/// Optional ImGui block in the editor tools "Parameters" section while this tool is active.
+	virtual void drawToolParametersUi() {}
 };
