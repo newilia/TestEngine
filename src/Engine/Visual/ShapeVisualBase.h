@@ -30,4 +30,24 @@ public:
 	float GetOutlineThickness();
 	/// @setter
 	void SetOutlineThickness(float thickness);
+	/// @getter
+	sf::Vector2f GetPosition() const;
+	/// @setter
+	void SetPosition(const sf::Vector2f& position);
+	/// @getter
+	sf::Angle GetRotation() const;
+	/// @setter
+	void SetRotation(sf::Angle angle);
+	/// @getter
+	sf::Vector2f GetScale() const;
+	/// @setter
+	void SetScale(const sf::Vector2f& scale);
+	/// @getter
+	sf::Vector2f GetOrigin() const;
+	/// @setter
+	void SetOrigin(const sf::Vector2f& origin);
+	/// @getter
+	float GetMiterLimit() const;
+	/// @setter
+	void SetMiterLimit(float miterLimit);
 };
