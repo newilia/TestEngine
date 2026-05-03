@@ -2,6 +2,7 @@
 
 #include "Engine/Core/PropertyTree.h"
 #include "Engine/Core/SceneNode.h"
+#include "Transform.generated.hpp"
 
 void Transform::notifyTransformChanged() {
 	if (auto n = GetNode()) {
@@ -47,53 +48,4 @@ sf::Vector2f Transform::getLocalOrigin() const {
 void Transform::setLocalOrigin(sf::Vector2f v) {
 	_transformable.setOrigin(v);
 	notifyTransformChanged();
-}
-
-void Transform::BuildPropertyTree(Engine::PropertyBuilder& b) {
-	b.pushObject("transform", "Transform");
-
-	static const Engine::PropertyMeta globalReadOnly = [] {
-		Engine::PropertyMeta m;
-		m.readOnly = true;
-		return m;
-	}();
-
-	b.addVec2f(
-	    "position", "Local position",
-	    [this] {
-		    return getLocalPosition();
-	    },
-	    [this](sf::Vector2f v) {
-		    setLocalPosition(v);
-	    },
-	    {});
-	b.addVec2f(
-	    "global_position", "Global position",
-	    [this] {
-		    auto n = GetNode();
-		    return n ? n->GetPosGlobal() : sf::Vector2f{};
-	    },
-	    [](sf::Vector2f) {
-	    },
-	    globalReadOnly);
-	b.addVec2f(
-	    "scale", "Scale",
-	    [this] {
-		    return getLocalScale();
-	    },
-	    [this](sf::Vector2f v) {
-		    setLocalScale(v);
-	    },
-	    {});
-	b.addDouble(
-	    "rotation_deg", "Rotation (deg)",
-	    [this] {
-		    return static_cast<double>(getLocalRotation().asDegrees());
-	    },
-	    [this](double deg) {
-		    setLocalRotation(sf::degrees(static_cast<float>(deg)));
-	    },
-	    {});
-
-	b.pop();
 }

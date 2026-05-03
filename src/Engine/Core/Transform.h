@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Core/EntityOnNode.h"
+#include "Engine/Core/MetaClass.h"
 
 #include <SFML/Graphics/Transform.hpp>
 #include <SFML/Graphics/Transformable.hpp>
@@ -11,21 +12,30 @@
 /// Mutations use `setLocal*` only so hierarchy caches stay consistent (no public `sf::Transformable`).
 class Transform final : public EntityOnNode
 {
+	META_CLASS()
+	META_PROPERTY_BASE(EntityOnNode)
+
 public:
-	void BuildPropertyTree(Engine::PropertyBuilder& b) override;
+	sf::Transform getTransform() const;
 
-	[[nodiscard]] sf::Transform getTransform() const;
-
-	[[nodiscard]] sf::Vector2f getLocalPosition() const;
+	/// @getter
+	sf::Vector2f getLocalPosition() const;
+	/// @setter
 	void setLocalPosition(sf::Vector2f v);
 
-	[[nodiscard]] sf::Vector2f getLocalScale() const;
+	/// @getter
+	sf::Vector2f getLocalScale() const;
+	/// @setter
 	void setLocalScale(sf::Vector2f v);
 
-	[[nodiscard]] sf::Angle getLocalRotation() const;
+	/// @getter
+	sf::Angle getLocalRotation() const;
+	/// @setter
 	void setLocalRotation(sf::Angle angle);
 
-	[[nodiscard]] sf::Vector2f getLocalOrigin() const;
+	/// @getter
+	sf::Vector2f getLocalOrigin() const;
+	/// @setter
 	void setLocalOrigin(sf::Vector2f v);
 
 private:

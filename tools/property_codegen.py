@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 3
+CACHE_VERSION = 4
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
@@ -29,7 +29,7 @@ CLASS_HEAD_RE = re.compile(
 NS_HEAD_RE = re.compile(r"^\s*namespace\s+([A-Za-z_]\w*)\s*(?:\{)?\s*$")
 FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*"
-    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color)\s+"
+    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color|sf::Angle)\s+"
     r"(\w+)\s*.*;\s*$"
 )
 _VEC_ELT = r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color)"
@@ -65,7 +65,7 @@ BITSET_TYPEDEF_FIELD_RE = re.compile(
 GETTER_METHOD_RE = re.compile(
     r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?"
     r"(?:const\s+)?"
-    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color)"
+    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color|sf::Angle)"
     r"(?:\s*&)?\s+"
     r"(\w+)\s*\([^)]*\)\s*"
     r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
@@ -90,7 +90,7 @@ GETTER_VECTOR_CONSTREF2_RE = re.compile(
 SETTER_METHOD_RE = re.compile(
     r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?void\s+"
     r"(\w+)\s*\(\s*(?:const\s+)?"
-    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color)"
+    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color|sf::Angle)"
     r"(?:\s*&)?\s*\w*\s*\)\s*"
     r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
 )
@@ -111,6 +111,7 @@ KNOWN_TYPES = frozenset(
         "sf::Vector2f",
         "sf::Vector3f",
         "sf::Color",
+        "sf::Angle",
     }
 )
 
@@ -166,22 +167,25 @@ def normalize_pair_key(s: str) -> str:
     return s.strip().casefold()
 
 
-def implicit_accessor_pair_name(method: str, prefix: str) -> str | None:
-    if len(method) <= len(prefix):
-        return None
-    if not method.startswith(prefix):
-        return None
-    if not method[len(prefix)].isupper():
-        return None
-    return method[len(prefix) :]
+def implicit_accessor_core_suffix(method: str, role: Literal["get", "set"]) -> str | None:
+    prefs = ("Get", "get") if role == "get" else ("Set", "set")
+    for pref in prefs:
+        if len(method) <= len(pref):
+            continue
+        if not method.startswith(pref):
+            continue
+        if not method[len(pref)].isupper():
+            continue
+        return method[len(pref) :]
+    return None
 
 
 def getter_pair_raw_key(g: GetterDecl) -> str | None:
-    return pair_tag_key(g.attrs) or implicit_accessor_pair_name(g.method, "Get")
+    return pair_tag_key(g.attrs) or implicit_accessor_core_suffix(g.method, "get")
 
 
 def setter_pair_raw_key(s: SetterDecl) -> str | None:
-    return pair_tag_key(s.attrs) or implicit_accessor_pair_name(s.method, "Set")
+    return pair_tag_key(s.attrs) or implicit_accessor_core_suffix(s.method, "set")
 
 
 def merge_getter_setter_decls(
@@ -327,11 +331,8 @@ def _split_identifier_words(raw: str) -> list[str]:
 
 def _strip_accessor_prefix(identifier: str, *, is_getter: bool) -> str:
     n = identifier.lstrip("_")
-    if is_getter and len(n) > 3 and n.startswith("Get") and n[3].isupper():
-        return n[3:]
-    if (not is_getter) and len(n) > 3 and n.startswith("Set") and n[3].isupper():
-        return n[3:]
-    return n
+    suf = implicit_accessor_core_suffix(n, "get" if is_getter else "set")
+    return suf if suf is not None else n
 
 
 def _words_to_sentence_label(words: list[str]) -> str:
@@ -1722,6 +1723,9 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
         out.append('#include <SFML/System/Vector2.hpp>')
         out.append('#include <SFML/System/Vector3.hpp>')
         out.append("")
+    if any(p.cpp_type == "sf::Angle" for c in classes for p in c.props):
+        out.append("#include <SFML/System/Angle.hpp>")
+        out.append("")
     out.append("#include <cstdint>")
     out.append("#include <string>")
     if any(p.is_vector for c in classes for p in c.props):
@@ -1819,7 +1823,12 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                 k in a for k in ("tooltip", "minValue", "maxValue", "step", "dragSpeed")
             )
             meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
-            if p.is_getter:
+            if p.cpp_type == "sf::Angle":
+                if p.is_getter:
+                    get_lambda = f"[this]() {{ return this->{p.member}().asDegrees(); }}"
+                else:
+                    get_lambda = f"[this]() {{ return {p.member}.asDegrees(); }}"
+            elif p.is_getter:
                 get_lambda = f"[this]() {{ return this->{p.member}(); }}"
             else:
                 get_lambda = "[this] { return " + p.member + "; }"
@@ -1834,6 +1843,7 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                 "sf::Vector2f": "[this](sf::Vector2f) {}",
                 "sf::Vector3f": "[this](sf::Vector3f) {}",
                 "sf::Color": "[this](sf::Color) {}",
+                "sf::Angle": "[this](float) {}",
             }
             setters_rw = {
                 "float": f"[this](float v) {{ {p.member} = v; }}",
@@ -1846,6 +1856,7 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                 "sf::Vector2f": f"[this](sf::Vector2f v) {{ {p.member} = v; }}",
                 "sf::Vector3f": f"[this](sf::Vector3f v) {{ {p.member} = v; }}",
                 "sf::Color": f"[this](sf::Color c) {{ {p.member} = c; }}",
+                "sf::Angle": f"[this](float v) {{ {p.member} = sf::degrees(v); }}",
             }
             setter_method = a.get("setter")
             if p.is_getter and has_setter_method:
@@ -1861,6 +1872,7 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                     "sf::Vector2f": f"[this](sf::Vector2f v) {{ this->{sn}(v); }}",
                     "sf::Vector3f": f"[this](sf::Vector3f v) {{ this->{sn}(v); }}",
                     "sf::Color": f"[this](sf::Color c) {{ this->{sn}(c); }}",
+                    "sf::Angle": f"[this](float v) {{ this->{sn}(sf::degrees(v)); }}",
                 }
                 set_lambda = getter_gs[p.cpp_type]
             elif (
@@ -1893,6 +1905,8 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                 out.append(f'\tb.addVec3f("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
             elif p.cpp_type == "sf::Color":
                 out.append(f'\tb.addColor("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
+            elif p.cpp_type == "sf::Angle":
+                out.append(f'\tb.addFloat("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
         out.append("\tb.pop();")
         out.append("}")
         out.append("")
@@ -1935,6 +1949,7 @@ def run_label_inference_self_tests() -> int:
         (("GetHTTPPort", True, {}), "Http port"),
         (("_angle", False, {"name": "Angle (rad)"}), "Angle (rad)"),
         (("GetPoints", True, {"name": "Points"}), "Points"),
+        (("getLocalPosition", True, {}), "Local position"),
     ]
     for (member, is_getter, attrs), want in cases:
         got = inferred_display_label(member, attrs, is_getter=is_getter)
