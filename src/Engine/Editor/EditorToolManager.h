@@ -10,6 +10,10 @@
 #include <optional>
 #include <string>
 
+namespace sf {
+	class RenderWindow;
+}
+
 class PullTool;
 class VectorArrowVisual;
 
@@ -29,6 +33,7 @@ public:
 
 	bool ProcessEvent(const sf::Event& event);
 	void OnPresent(const sf::Time& dt);
+	void DrawOverlay(sf::RenderWindow& window);
 	void BindPullArrow(std::shared_ptr<VectorArrowVisual> arrow);
 
 	PullTool* GetPullTool();
@@ -39,7 +44,7 @@ public:
 	/// Main keyboard row digits 1–9 then 0; applies only while index is below `kToolCount`.
 	bool TryActivateToolViaDigitKey(sf::Keyboard::Key key);
 
-	static constexpr int kToolCount = 4;
+	static constexpr int kToolCount = 5;
 
 private:
 	int _activeToolIndex = 0;

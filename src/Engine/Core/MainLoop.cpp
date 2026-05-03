@@ -166,11 +166,12 @@ namespace Engine {
 		scene->NotifyPresentRec(dt);
 
 		auto& editor = Engine::Editor::GetInstance();
-		editor.GetEditorToolManager().OnPresent(dt);
+		editor.GetEditorToolManager().OnPresent(dt); // TODO combine with Update?
 		editor.Update(dt.asSeconds());
 		editor.Draw();
 
 		window->draw(*scene);
+		editor.GetEditorToolManager().DrawOverlay(*window);
 		ImGui::SFML::Render(*window);
 		window->display();
 		return true;
