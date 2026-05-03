@@ -10,6 +10,8 @@
 
 поревьюить инициализацию нод и сущностей
 
+динамический AddChild не вызывает NotifyLifecycleInitRecursive — поведения (в т.ч. PhysicsBodyBehaviour) не получают OnInit, тело не регистрируется в PhysicsProcessor; после добавления узла в активную сцену нужно явно вызывать NotifyLifecycleInitRecursive на поддереве (или централизовать это в AddChild/Scene)
+
 PhysicsProcessor::Update(const sf::Time& dt) удаление протухших при итерации
 
 предкомпилированные заголовки
