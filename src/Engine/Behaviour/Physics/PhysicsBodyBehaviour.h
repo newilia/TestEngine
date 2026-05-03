@@ -57,6 +57,8 @@ public:
 	float _restitution = 0.5f;
 	/// @property
 	float _friction = 0.5f;
+	/// @property(minValue=-1.f, maxValue=1.f, tooltip="Scales world gravity on this body. 0 = none; -1 = opposite.")
+	float _gravityScale = 1.f;
 
 	std::bitset<CollisionGroupsCount> _collisionGroups;
 	std::bitset<CollisionGroupsCount> _overlappingGroups;
