@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Scan src/**/*.h for META_CLASS(), /// @property, /// @getter, and /// @setter tags; emit src/Codegen/<Stem>.generated.hpp.
+Scan src/**/*.h for META_CLASS(), META_PROPERTY_BASE(), /// @property, /// @getter, and /// @setter tags; emit src/Codegen/<Stem>.generated.hpp.
 """
 
 from __future__ import annotations
@@ -20,6 +20,9 @@ PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
 SETTER_TAG_RE = re.compile(r"^\s*///\s*@setter\s*(?:\((.*)\))?\s*$")
 META_CLASS_RE = re.compile(r"\bMETA_CLASS\s*\(\s*\)")
+META_PROPERTY_BASE_RE = re.compile(
+    r"\bMETA_PROPERTY_BASE\s*\(\s*((?:[A-Za-z_]\w*\s*::\s*)*[A-Za-z_]\w*)\s*\)"
+)
 CLASS_HEAD_RE = re.compile(
     r"^\s*(?:template\s*<[^>{};]*>\s*)?(?:class|struct)\s+([A-Za-z_]\w*)\b"
 )
@@ -251,6 +254,7 @@ class ClassSpec:
     namespaces: tuple[str, ...]
     class_name: str
     props: list[PropSpec] = field(default_factory=list)
+    property_base: str | None = None
 
     def qualified(self) -> str:
         return "::".join((*self.namespaces, self.class_name))
@@ -469,6 +473,13 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
     pending: tuple[PendingKind, int, int, str] | None = None
 
     def close_class_block(b: dict[str, Any]) -> None:
+        if b.get("property_base") and not b.get("meta"):
+            raise ParseError(
+                "META_PROPERTY_BASE(...) requires META_CLASS() in the same class",
+                path,
+                b.get("property_base_line", 1),
+                1,
+            )
         if not b.get("meta"):
             return
         props: list[PropSpec] = list(b.get("props", []))
@@ -476,11 +487,16 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
         sdecls: list[SetterDecl] = list(b.get("setter_decls", []))
         if gdecls or sdecls:
             props.extend(merge_getter_setter_decls(path, gdecls, sdecls))
+        pb_raw = b.get("property_base")
+        property_base: str | None = None
+        if isinstance(pb_raw, str) and pb_raw.strip():
+            property_base = re.sub(r"\s*::\s*", "::", pb_raw.strip())
         finished.append(
             ClassSpec(
                 namespaces=tuple(b["namespaces"]),
                 class_name=b["name"],
                 props=props,
+                property_base=property_base,
             )
         )
 
@@ -769,6 +785,27 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
             inner["meta"] = True
             continue
 
+        m_meta_base = META_PROPERTY_BASE_RE.search(line)
+        if m_meta_base and not re.search(r"^\s*#\s*define\s+META_PROPERTY_BASE\b", line):
+            inner = find_innermost_class(block_stack)
+            if inner is None:
+                raise ParseError(
+                    "META_PROPERTY_BASE(...) must appear inside a class definition",
+                    path,
+                    line_no,
+                    1,
+                )
+            if inner.get("property_base") is not None:
+                raise ParseError(
+                    "duplicate META_PROPERTY_BASE(...) in the same class",
+                    path,
+                    line_no,
+                    1,
+                )
+            inner["property_base"] = m_meta_base.group(1)
+            inner["property_base_line"] = line_no
+            continue
+
         p_ns = line_opens_namespace(raw_line)
         if p_ns is not None:
             opens, _ = count_braces_outside_strings(raw_line)
@@ -864,7 +901,8 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
         raise ParseError(f"unfinished {tag} (no declaration line before EOF)", path, pline, pcol)
 
     for spec in finished:
-        log.append(f"  class {spec.qualified()} : {len(spec.props)} properties")
+        extra = f", property_base={spec.property_base}" if spec.property_base else ""
+        log.append(f"  class {spec.qualified()} : {len(spec.props)} properties{extra}")
 
     return finished, log
 
@@ -1641,6 +1679,8 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
         root_id = pascal_to_snake(c.class_name)
         root_label = cpp_escape_string(c.class_name)
         out.append(f"void {q}::BuildPropertyTree(Engine::PropertyBuilder& b) {{")
+        if c.property_base:
+            out.append(f"\t{c.property_base}::BuildPropertyTree(b);")
         out.append(f'\tb.pushObject("{root_id}", "{root_label}");')
         for p in c.props:
             a = p.attrs
