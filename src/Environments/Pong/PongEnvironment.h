@@ -14,7 +14,7 @@ class PongEnvironment : public EnvironmentBase, public Engine::EventHandlerBase
 public:
 	~PongEnvironment() override;
 	void Setup() override;
-	void OnEventsDispatcher(const sf::Event& event) override;
+	void OnEvent(const sf::Event& event) override;
 
 private:
 	std::shared_ptr<Scene> BuildScene();
