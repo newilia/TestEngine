@@ -67,9 +67,9 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 	auto pairNeedsNarrowPhase = [](const SceneNode& n1, const SceneNode& n2) {
 		auto pb1 = n1.FindBehaviour<PhysicsBodyBehaviour>();
 		auto pb2 = n2.FindBehaviour<PhysicsBodyBehaviour>();
-		const bool collisionPair = pb1 && pb2 && (pb1->GetCollisionGroups() & pb2->GetCollisionGroups()).any();
+		const bool interactionPair = pb1 && pb2 && (pb1->GetInteractionGroups() & pb2->GetInteractionGroups()).any();
 		const bool overlapPair = pb1 && pb2 && (pb1->GetOverlappingGroups() & pb2->GetOverlappingGroups()).any();
-		return collisionPair || overlapPair;
+		return interactionPair || overlapPair;
 	};
 
 	std::vector<BodySweepEntry> sweepEntries;
@@ -117,17 +117,17 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 			if (auto intersection = DetectIntersection(nFirst, nSecond, cFirst, cSecond, true)) {
 				auto b1Pb = nFirst->FindBehaviour<PhysicsBodyBehaviour>();
 				auto b2Pb = nSecond->FindBehaviour<PhysicsBodyBehaviour>();
-				if (b1Pb && b2Pb && (b1Pb->GetCollisionGroups() & b2Pb->GetCollisionGroups()).any()) {
+				if (b1Pb && b2Pb && (b1Pb->GetInteractionGroups() & b2Pb->GetInteractionGroups()).any()) {
 					if (!b1Pb->IsImmovable() || !b2Pb->IsImmovable()) {
 						ResolveCollision(*intersection);
-						b1Pb->GetCollisionCallbacks().Emit(*intersection);
-						b2Pb->GetCollisionCallbacks().Emit(*intersection);
+						b1Pb->GetOnCollideSignal().Emit(*intersection);
+						b2Pb->GetOnCollideSignal().Emit(*intersection);
 					}
 				}
 
 				if (b1Pb && b2Pb && (b1Pb->GetOverlappingGroups() & b2Pb->GetOverlappingGroups()).any()) {
-					b1Pb->GetOverlappingCallbacks().Emit(*intersection);
-					b2Pb->GetOverlappingCallbacks().Emit(*intersection);
+					b1Pb->GetOnOverlapSignal().Emit(*intersection);
+					b2Pb->GetOnOverlapSignal().Emit(*intersection);
 				}
 			}
 		}
@@ -214,10 +214,10 @@ PhysicsProcessor::DetectPolygonPolygonIntersection(const PhysicsBodyBehaviour* b
 	IntersectionDetails result;
 
 	for (size_t i = 0; i < pointsCount1; ++i) {
-		const Segment edge1 = {body1->GetPointGlobal(i), body1->GetPointGlobal((i + 1) % pointsCount1)};
+		const Segment edge1 = {body1->GetPointWorldPos(i), body1->GetPointWorldPos((i + 1) % pointsCount1)};
 
 		for (size_t j = 0; j < pointsCount2; ++j) {
-			const Segment edge2 = {body2->GetPointGlobal(j), body2->GetPointGlobal((j + 1) % pointsCount2)};
+			const Segment edge2 = {body2->GetPointWorldPos(j), body2->GetPointWorldPos((j + 1) % pointsCount2)};
 
 			if (auto i_point = FindSegmentsIntersectionPoint(edge1, edge2)) {
 				edges_i_p.emplace_back(i_point->p1);
@@ -256,7 +256,7 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectCirclePolygonIntersec
 	const sf::Vector2f circleCenterWorld = WorldCircleCenter(circleNode, *circle);
 
 	for (size_t i = 0; i < pointsCount; ++i) {
-		const Segment edge = {body->GetPointGlobal(i), body->GetPointGlobal((i + 1) % pointsCount)};
+		const Segment edge = {body->GetPointWorldPos(i), body->GetPointWorldPos((i + 1) % pointsCount)};
 
 		if (auto i_point = FindSegmentCircleIntersectionPoint(edge, circleCenterWorld, circle->getRadius())) {
 			edges_i_p.emplace_back(i_point->p1);
@@ -518,7 +518,7 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 			return 0.f;
 		}
 		for (size_t i = 0; i < body->GetPointCount(); ++i) {
-			auto penetrationVec = body->GetPointGlobal(i) - collisionPoint;
+			auto penetrationVec = body->GetPointWorldPos(i) - collisionPoint;
 			float depth = Utils::Project(penetrationVec, bodyNormal);
 			result = std::max(result, depth);
 		}

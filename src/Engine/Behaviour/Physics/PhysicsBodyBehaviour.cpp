@@ -74,7 +74,7 @@ size_t PhysicsBodyBehaviour::GetPointCount() const {
 	return GetShape()->getPointCount();
 }
 
-sf::Vector2f PhysicsBodyBehaviour::GetPointGlobal(std::size_t index) const {
+sf::Vector2f PhysicsBodyBehaviour::GetPointWorldPos(std::size_t index) const {
 	const auto* s = GetShape();
 	auto n = GetNode();
 	if (!s || !n) {
@@ -85,8 +85,13 @@ sf::Vector2f PhysicsBodyBehaviour::GetPointGlobal(std::size_t index) const {
 	return full.transformPoint(s->getPoint(index));
 }
 
-void PhysicsBodyBehaviour::SetImmovable() {
-	_mass = std::numeric_limits<float>::infinity();
+void PhysicsBodyBehaviour::SetImmovable(bool isImmovable) {
+	if (isImmovable) {
+		SetMass(std::numeric_limits<float>::infinity());
+	}
+	else {
+		assert(false); // TODO not supported yet
+	}
 }
 
 bool PhysicsBodyBehaviour::IsImmovable() const {
@@ -157,26 +162,26 @@ void PhysicsBodyBehaviour::SetGravityScale(float s) {
 	_gravityScale = s;
 }
 
-PhysicsBodyBehaviour::CollisionGroups& PhysicsBodyBehaviour::GetCollisionGroups() {
-	return _collisionGroups;
+PhysicsBodyBehaviour::GroupSet& PhysicsBodyBehaviour::GetInteractionGroups() {
+	return _interactionGroups;
 }
 
-const PhysicsBodyBehaviour::CollisionGroups& PhysicsBodyBehaviour::GetCollisionGroups() const {
-	return _collisionGroups;
+const PhysicsBodyBehaviour::GroupSet& PhysicsBodyBehaviour::GetInteractionGroups() const {
+	return _interactionGroups;
 }
 
-PhysicsBodyBehaviour::CollisionGroups& PhysicsBodyBehaviour::GetOverlappingGroups() {
+PhysicsBodyBehaviour::GroupSet& PhysicsBodyBehaviour::GetOverlappingGroups() {
 	return _overlappingGroups;
 }
 
-const PhysicsBodyBehaviour::CollisionGroups& PhysicsBodyBehaviour::GetOverlappingGroups() const {
+const PhysicsBodyBehaviour::GroupSet& PhysicsBodyBehaviour::GetOverlappingGroups() const {
 	return _overlappingGroups;
 }
 
-Signal<const IntersectionDetails&>& PhysicsBodyBehaviour::GetCollisionCallbacks() {
+Signal<const IntersectionDetails&>& PhysicsBodyBehaviour::GetOnCollideSignal() {
 	return _collisionCallbacks;
 }
 
-Signal<const IntersectionDetails&>& PhysicsBodyBehaviour::GetOverlappingCallbacks() {
+Signal<const IntersectionDetails&>& PhysicsBodyBehaviour::GetOnOverlapSignal() {
 	return _overlappingCallbacks;
 }

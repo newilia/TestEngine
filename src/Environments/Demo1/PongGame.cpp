@@ -152,8 +152,8 @@ namespace Demo1 {
 			shape->setFillColor(color);
 
 			auto physicsBody = node->RequireBehaviour<PhysicsBodyBehaviour>();
-			physicsBody->GetCollisionGroups().set(1, true);
-			physicsBody->SetImmovable();
+			physicsBody->GetInteractionGroups().set(1, true);
+			physicsBody->SetImmovable(true);
 			physicsBody->SetRestitution(bodiesRestitution);
 
 			return node;
@@ -230,8 +230,8 @@ namespace Demo1 {
 			rigidBody->SetMass(3.14f * radius * radius);
 			rigidBody->SetRestitution(bodiesRestitution);
 			rigidBody->SetVelocity(vel);
-			rigidBody->GetCollisionGroups().set(0, true);
-			rigidBody->GetCollisionGroups().set(1, true);
+			rigidBody->GetInteractionGroups().set(0, true);
+			rigidBody->GetInteractionGroups().set(1, true);
 			rigidBody->GetOverlappingGroups().set(0, true);
 			rigidBody->SetGravityScale(0.f);
 
@@ -271,7 +271,7 @@ namespace Demo1 {
 				wallNode->GetLocalTransform()->SetPosition(wallCentersLocal[i]);
 
 				auto bodyBeh = wallNode->RequireBehaviour<PhysicsBodyBehaviour>();
-				bodyBeh->SetImmovable();
+				bodyBeh->SetImmovable(true);
 				bodyBeh->SetRestitution(bodiesRestitution);
 
 				if (i < 2) {
@@ -280,20 +280,20 @@ namespace Demo1 {
 
 					if (i == 0) {
 						[[maybe_unused]] auto connection =
-						    bodyBeh->GetOverlappingCallbacks().Connect([](const IntersectionDetails&) {
+						    bodyBeh->GetOnOverlapSignal().Connect([](const IntersectionDetails&) {
 							    OnLose();
 						    });
 					}
 					else {
 						[[maybe_unused]] auto connection =
-						    bodyBeh->GetOverlappingCallbacks().Connect([](const IntersectionDetails&) {
+						    bodyBeh->GetOnOverlapSignal().Connect([](const IntersectionDetails&) {
 							    OnWin();
 						    });
 					}
 				}
 				else {
 					rectShape->setFillColor(sf::Color(200, 200, 200, 255));
-					bodyBeh->GetCollisionGroups().set(0, true);
+					bodyBeh->GetInteractionGroups().set(0, true);
 				}
 			}
 		}

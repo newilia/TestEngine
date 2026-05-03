@@ -9,14 +9,13 @@
 куча todos в коде
 
 поревьюить инициализацию нод и сущностей
-
 динамический AddChild не вызывает NotifyLifecycleInitRecursive — поведения (в т.ч. PhysicsBodyBehaviour) не получают OnInit, тело не регистрируется в PhysicsProcessor; после добавления узла в активную сцену нужно явно вызывать NotifyLifecycleInitRecursive на поддереве (или централизовать это в AddChild/Scene)
 
 PhysicsProcessor::Update(const sf::Time& dt) удаление протухших при итерации
 
 предкомпилированные заголовки
 
-пересмотреть неймспейсы Editor, Engine, Common (common.h), Utils
+пересмотреть неймспейсы Editor, Engine, App, Common (common.h), Utils
 
 перетаскивание нод в иерархии
 
@@ -55,3 +54,6 @@ del, ctrl c, ctrl x, ctrl v в иерархии
 кривая работа столкновений тел, если их глобальный трансформ не равен identity
 
 кастомные инспекторы для типов и членов
+
+/// @method
+

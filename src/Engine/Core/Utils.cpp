@@ -263,7 +263,7 @@ namespace Utils {
 			}
 		}
 		return pointInsideConvexFan(worldPoint, body->GetPointCount(), [&](std::size_t i) {
-			return body->GetPointGlobal(i);
+			return body->GetPointWorldPos(i);
 		});
 	}
 
