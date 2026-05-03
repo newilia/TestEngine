@@ -32,12 +32,14 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 
 ### Getter line
 
-- The line after a one-line `/// @getter(...)` must be a **non-static** method declaration (with `;`, no body) on a **single line**, with a return type from the same set as **Supported field types (v1)** (see below).
-- Optional prefixes/suffixes: `[[...]]`, `virtual`, optional `const` / `&` on the return type (e.g. `const sf::Vector2f&`), `const` / `noexcept` / `override` / `final` on the method. **Static** methods are rejected.
+- The line after a one-line `/// @getter(...)` must be a **non-static** method declaration (with `;`, no body) on a **single line**, with a return type that is either:
+  - a **scalar** from **Supported field types (v1)** (same list as plain `@getter` before), with optional `const` / `&` on the return type (e.g. `const sf::Vector2f&`), or
+  - **`std::vector<ElementType>`** (by value), **`const std::vector<ElementType>&`**, or **`std::vector<ElementType> const&`**, where **`ElementType`** is any supported scalar (same list as `std::vector` fields).
+- Optional prefixes/suffixes: `[[...]]`, `virtual`, `const` / `noexcept` / `override` / `final` on the method. **Static** methods are rejected.
 
 ### Setter line (optional, paired by name)
 
-- Use **`/// @setter(name="same_as_getter", ...)`** (or `label="..."`) on its **own** doc line; the next non-empty code line must be **`void MethodName(ValueType param)`** with **one** parameter whose type matches the getter’s value type (same rules as field types: optional `const`, optional `&` on the parameter type is allowed by the scanner).
+- Use **`/// @setter(name="same_as_getter", ...)`** (or `label="..."`) on its **own** doc line; the next non-empty code line must be **`void MethodName(ValueType param)`** with **one** parameter whose type matches the getter’s value type (same rules as field types: optional `const`, optional `&` on the parameter type is allowed by the scanner). For a vector-backed getter, use **`void MethodName(const std::vector<ElementType>& p)`** or **`void MethodName(std::vector<ElementType> p)`** (parameter name arbitrary).
 - **Pairing:** the string keys **`name`** and **`label`** are checked in that order; the first non-empty string on the getter must equal the first non-empty string on the setter so they refer to the same property (e.g. both `name="size"`).
 - **`@setter` must include `name="..."` or `label="..."`** so the generator can pair it. Unpaired `@setter` tags are an error.
 - **Alternative:** on `/// @getter` you can still use **`setter=MethodName`** instead of a separate `@setter` tag (do not use both for the same pair).
@@ -54,10 +56,19 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 
 `float`, `double`, `bool`, `int`, `std::int32_t`, `std::int64_t`, `std::string`, `sf::Vector2f`, `sf::Vector3f`, `sf::Color`. Other types → codegen error until mapped in `tools/property_codegen.py`.
 
+## `std::vector<T>` (sequences)
+
+- Declare **`std::vector<ElementType> memberName;`** on one line after `/// @property`, where **`ElementType`** is any **Supported field types (v1)** scalar (same list as plain fields).
+- The header must **`#include <vector>`** for that type.
+- Generated UI: `PropertyBuilder::beginSequence` / `endSequence` with **`PropAccessSequence`** (`resize` / `getSize`), one **object child per index** and one scalar editor (`addFloat`, …) per element. Inspector behaviour matches existing **`PropertyKind::Sequence`** support (`PropertyTreeDrawer`).
+- **`@property` meta:** `minCount` / `maxCount` map to `PropertyMeta::minElementCount` / `maxElementCount` (size drag limits). `readonly=true` removes list length editing and makes elements read-only. Per-element `minValue` / `maxValue` / `step` / `dragSpeed` apply to each item’s control.
+- **Method-backed sequences:** pair `/// @getter` returning `std::vector<Elt>` (or `const std::vector<Elt>&` / `std::vector<Elt> const&`) with `/// @setter` taking the same `std::vector<Elt>` (by ref or value). Writable UI calls the getter, edits a copy, then calls the setter (including per-index edits and list length).
+- **Not supported:** `std::vector` of custom structs, nested vectors, or `@getter` returning types other than the supported scalars / `std::vector` of those scalars.
+
 ## Limitations (maintainability)
 
 - One-line `/// @property` / `/// @getter` / `/// @setter` tags only. After each tag, the next non-empty code line must be the matching declaration ending in `;` (field, getter, or `void` setter with one parameter).
-- Templates, tricky macros, multi-line declarations, and container properties (`beginSequence` / `beginAssociative`) are **not** supported in v1.
+- Templates, tricky macros, multi-line declarations, **`beginAssociative` codegen**, and **nested** `std::vector`s are **not** supported in v1.
 - `#define META_CLASS()` in `MetaClass.h` is ignored by the scanner (not treated as usage).
 
 ## Cache and force rebuild
@@ -69,7 +80,7 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 ## Extending reflection
 
 1. Prefer extending **meta keys** → `Engine::PropertyMeta` / existing `PropertyBuilder::add*` in the generator.
-2. New C++ types: add to `KNOWN_TYPES`, `FIELD_RE`, `GETTER_METHOD_RE`, `SETTER_METHOD_RE`, and the emit branch in `generate_file_content`.
+2. New C++ types: add to `KNOWN_TYPES`, `FIELD_RE`, `VECTOR_FIELD_RE`, `GETTER_METHOD_RE`, `GETTER_VECTOR_*_RE`, `SETTER_METHOD_RE`, `SETTER_VECTOR_METHOD_RE`, scalar emit in `generate_file_content`, and `emit_std_vector_property` for vectors.
 3. If headers outgrow the scanner, plan a **Clang-based** extraction step; keep `_gen.hpp` output format stable.
 
 ## CMake
