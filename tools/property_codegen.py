@@ -29,10 +29,23 @@ FIELD_RE = re.compile(
     r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color)\s+"
     r"(\w+)\s*.*;\s*$"
 )
+_VEC_ELT = r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color)"
 VECTOR_FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*std::vector<\s*"
-    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color)"
-    r"\s*>\s+(\w+)\s*;\s*$"
+    + _VEC_ELT
+    + r"\s*>\s+(\w+)\s*;\s*$"
+)
+MAP_FIELD_RE = re.compile(
+    r"^\s*(?:inline\s+|static\s+|mutable\s+)*(std::map|std::unordered_map)\s*<\s*"
+    + _VEC_ELT
+    + r"\s*,\s*"
+    + _VEC_ELT
+    + r"\s*>\s+(\w+)\s*(?:\{[^}]*\}|=\s*[^;]+)?\s*;\s*$"
+)
+SET_FIELD_RE = re.compile(
+    r"^\s*(?:inline\s+|static\s+|mutable\s+)*(std::set|std::unordered_set)\s*<\s*"
+    + _VEC_ELT
+    + r"\s*>\s+(\w+)\s*(?:\{[^}]*\}|=\s*[^;]+)?\s*;\s*$"
 )
 BITSET_FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*std::bitset\s*<\s*[^>]+\s*>\s+(\w+)\s*(?:\{[^}]*\}|=\s*[^;]+)?\s*;\s*$"
@@ -54,7 +67,6 @@ GETTER_METHOD_RE = re.compile(
     r"(\w+)\s*\([^)]*\)\s*"
     r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
 )
-_VEC_ELT = r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector3f|sf::Color)"
 # std::vector<Elt> Method(...) const; or const std::vector<Elt>& Method(...) const;
 GETTER_VECTOR_VAL_RE = re.compile(
     r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?"
@@ -110,6 +122,10 @@ class PropSpec:
     is_getter: bool = False
     is_vector: bool = False
     is_bitset: bool = False
+    is_map: bool = False
+    is_set: bool = False
+    map_value_type: str | None = None
+    assoc_container: str | None = None
 
 
 PendingKind = Literal["property", "getter", "setter"]
@@ -215,6 +231,10 @@ def merge_getter_setter_decls(
                 is_getter=True,
                 is_vector=g.is_vector,
                 is_bitset=False,
+                is_map=False,
+                is_set=False,
+                map_value_type=None,
+                assoc_container=None,
             )
         )
 
@@ -499,6 +519,61 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                             is_getter=False,
                             is_vector=True,
                             is_bitset=False,
+                        )
+                    )
+                elif m_map := MAP_FIELD_RE.match(line):
+                    cont, kt, vt, member = (
+                        m_map.group(1),
+                        m_map.group(2),
+                        m_map.group(3),
+                        m_map.group(4),
+                    )
+                    if kt not in KNOWN_TYPES or vt not in KNOWN_TYPES:
+                        raise ParseError(
+                            f"std::map key/value must be supported scalar types (tag at line {pline})",
+                            path,
+                            line_no,
+                            1,
+                        )
+                    inner.setdefault("props", []).append(
+                        PropSpec(
+                            cpp_type=kt,
+                            member=member,
+                            line=pline,
+                            col=pcol,
+                            attrs=attrs,
+                            is_getter=False,
+                            is_vector=False,
+                            is_bitset=False,
+                            is_map=True,
+                            is_set=False,
+                            map_value_type=vt,
+                            assoc_container=cont,
+                        )
+                    )
+                elif m_set := SET_FIELD_RE.match(line):
+                    cont, et, member = m_set.group(1), m_set.group(2), m_set.group(3)
+                    if et not in KNOWN_TYPES:
+                        raise ParseError(
+                            f"std::set element must be a supported scalar type (tag at line {pline})",
+                            path,
+                            line_no,
+                            1,
+                        )
+                    inner.setdefault("props", []).append(
+                        PropSpec(
+                            cpp_type=et,
+                            member=member,
+                            line=pline,
+                            col=pcol,
+                            attrs=attrs,
+                            is_getter=False,
+                            is_vector=False,
+                            is_bitset=False,
+                            is_map=False,
+                            is_set=True,
+                            map_value_type=None,
+                            assoc_container=cont,
                         )
                     )
                 elif (m_bs := BITSET_FIELD_RE.match(line)) or (
@@ -872,6 +947,465 @@ def emit_bitset_property(
     out.append("\tb.endSequence();")
 
 
+def _default_cpp_value(t: str) -> str:
+    return {
+        "float": "0.f",
+        "double": "0.",
+        "bool": "false",
+        "int": "0",
+        "std::int32_t": "static_cast<std::int32_t>(0)",
+        "std::int64_t": "static_cast<std::int64_t>(0)",
+        "std::string": "std::string{}",
+        "sf::Vector2f": "sf::Vector2f{}",
+        "sf::Vector3f": "sf::Vector3f{}",
+        "sf::Color": "sf::Color{}",
+    }[t]
+
+
+def _int32_param_cpp(t: str) -> str:
+    return "std::int32_t" if t == "int" else t
+
+
+def _emit_scalar_leaf(
+    out: list[str],
+    t: str,
+    nid: str,
+    label_esc: str,
+    get_l: str,
+    set_l: str,
+    meta: str,
+    path: Path,
+    line: int,
+    col: int,
+) -> None:
+    if t == "float":
+        out.append(f'\t\tb.addFloat("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+    elif t == "double":
+        out.append(f'\t\tb.addDouble("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+    elif t == "bool":
+        out.append(f'\t\tb.addBool("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+    elif t in ("int", "std::int32_t"):
+        out.append(f'\t\tb.addInt32("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+    elif t == "std::int64_t":
+        out.append(f'\t\tb.addInt64("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+    elif t == "std::string":
+        out.append(f'\t\tb.addString("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+    elif t == "sf::Vector2f":
+        out.append(f'\t\tb.addVec2f("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+    elif t == "sf::Vector3f":
+        out.append(f'\t\tb.addVec3f("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+    elif t == "sf::Color":
+        out.append(f'\t\tb.addColor("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+    else:
+        raise ParseError(f"unsupported scalar type `{t}`", path, line, col)
+
+
+def _map_key_get(mem: str, idx: str, kt: str) -> str:
+    adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
+    if kt == "int":
+        return f"[this, {idx}]() {{ {adv}return static_cast<std::int32_t>(_it->first); }}"
+    return f"[this, {idx}]() {{ {adv}return _it->first; }}"
+
+
+def _map_key_set(mem: str, idx: str, kt: str, readonly: bool) -> str:
+    if readonly:
+        ro: dict[str, str] = {
+            "float": f"[this, {idx}](float) {{}}",
+            "double": f"[this, {idx}](double) {{}}",
+            "bool": f"[this, {idx}](bool) {{}}",
+            "int": f"[this, {idx}](std::int32_t) {{}}",
+            "std::int32_t": f"[this, {idx}](std::int32_t) {{}}",
+            "std::int64_t": f"[this, {idx}](std::int64_t) {{}}",
+            "std::string": f"[this, {idx}](std::string) {{}}",
+            "sf::Vector2f": f"[this, {idx}](sf::Vector2f) {{}}",
+            "sf::Vector3f": f"[this, {idx}](sf::Vector3f) {{}}",
+            "sf::Color": f"[this, {idx}](sf::Color) {{}}",
+        }
+        return ro[kt]
+    adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
+    mv = "auto _mapped = std::move(_it->second); " + f"{mem}.erase(_it); "
+    pk = _int32_param_cpp(kt)
+    if kt == "int":
+        ins = f"{mem}.insert_or_assign(static_cast<int>(newKey), std::move(_mapped))"
+    elif kt == "std::string":
+        ins = f"{mem}.insert_or_assign(std::move(newKey), std::move(_mapped))"
+    elif kt in ("sf::Vector2f", "sf::Vector3f", "sf::Color"):
+        ins = f"{mem}.insert_or_assign(std::move(newKey), std::move(_mapped))"
+    else:
+        ins = f"{mem}.insert_or_assign(newKey, std::move(_mapped))"
+    return f"[this, {idx}]({pk} newKey) {{ {adv}{mv}{ins}; }}"
+
+
+def _map_val_get(mem: str, idx: str, vt: str) -> str:
+    adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
+    if vt == "int":
+        return f"[this, {idx}]() {{ {adv}return static_cast<std::int32_t>(_it->second); }}"
+    return f"[this, {idx}]() {{ {adv}return _it->second; }}"
+
+
+def _map_val_set(mem: str, idx: str, vt: str, readonly: bool) -> str:
+    if readonly:
+        ro: dict[str, str] = {
+            "float": f"[this, {idx}](float) {{}}",
+            "double": f"[this, {idx}](double) {{}}",
+            "bool": f"[this, {idx}](bool) {{}}",
+            "int": f"[this, {idx}](std::int32_t) {{}}",
+            "std::int32_t": f"[this, {idx}](std::int32_t) {{}}",
+            "std::int64_t": f"[this, {idx}](std::int64_t) {{}}",
+            "std::string": f"[this, {idx}](std::string) {{}}",
+            "sf::Vector2f": f"[this, {idx}](sf::Vector2f) {{}}",
+            "sf::Vector3f": f"[this, {idx}](sf::Vector3f) {{}}",
+            "sf::Color": f"[this, {idx}](sf::Color) {{}}",
+        }
+        return ro[vt]
+    adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
+    if vt == "int":
+        return f"[this, {idx}](std::int32_t newVal) {{ {adv}_it->second = static_cast<int>(newVal); }}"
+    if vt == "std::string":
+        return f"[this, {idx}](std::string newVal) {{ {adv}_it->second = std::move(newVal); }}"
+    if vt in ("sf::Vector2f", "sf::Vector3f", "sf::Color"):
+        return f"[this, {idx}]({vt} newVal) {{ {adv}_it->second = std::move(newVal); }}"
+    return f"[this, {idx}]({vt} newVal) {{ {adv}_it->second = newVal; }}"
+
+
+def _cpp_map_emplace(mem: str, kt: str, key_var: str, dv: str) -> str:
+    if kt == "std::string":
+        return f"{mem}.emplace(std::move({key_var}), {dv})"
+    if kt in ("sf::Vector2f", "sf::Vector3f", "sf::Color"):
+        return f"{mem}.emplace(std::move({key_var}), {dv})"
+    return f"{mem}.emplace({key_var}, {dv})"
+
+
+def _cpp_set_insert(mem: str, et: str, val_var: str) -> str:
+    if et == "std::string":
+        return f"{mem}.insert(std::move({val_var}))"
+    if et in ("sf::Vector2f", "sf::Vector3f", "sf::Color"):
+        return f"{mem}.insert(std::move({val_var}))"
+    return f"{mem}.insert({val_var})"
+
+
+def _map_add_pair_body(mem: str, kt: str, vt: str, path: Path, line: int, col: int) -> str:
+    """Statements for addPair: choose a key not already present, then emplace."""
+    dv = _default_cpp_value(vt)
+    tab = "\t\t\t"
+    if kt in ("int", "std::int32_t"):
+        decl = "int _nk = 0;" if kt == "int" else "std::int32_t _nk = 0;"
+        return (
+            f"{tab}{decl}\n"
+            f"{tab}while ({mem}.find(_nk) != {mem}.end()) {{\n"
+            f"{tab}\t++_nk;\n"
+            f"{tab}}}\n"
+            f"{tab}{_cpp_map_emplace(mem, kt, '_nk', dv)};"
+        )
+    if kt == "std::int64_t":
+        return (
+            f"{tab}std::int64_t _nk = 0;\n"
+            f"{tab}while ({mem}.find(_nk) != {mem}.end()) {{\n"
+            f"{tab}\t++_nk;\n"
+            f"{tab}}}\n"
+            f"{tab}{_cpp_map_emplace(mem, kt, '_nk', dv)};"
+        )
+    if kt == "bool":
+        return (
+            f"{tab}if ({mem}.find(false) == {mem}.end()) {{\n"
+            f"{tab}\t{_cpp_map_emplace(mem, kt, 'false', dv)};\n"
+            f"{tab}}} else if ({mem}.find(true) == {mem}.end()) {{\n"
+            f"{tab}\t{_cpp_map_emplace(mem, kt, 'true', dv)};\n"
+            f"{tab}}}"
+        )
+    if kt == "float":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tfloat _nk = 0.f;\n"
+            f"{tab}\tfor (int _g = 0; _g < 1000000 && {mem}.find(_nk) != {mem}.end(); ++_g) {{\n"
+            f"{tab}\t\t_nk += 1.f;\n"
+            f"{tab}\t}}\n"
+            f"{tab}\tif ({mem}.find(_nk) == {mem}.end()) {{\n"
+            f"{tab}\t\t{_cpp_map_emplace(mem, kt, '_nk', dv)};\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
+    if kt == "double":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tdouble _nk = 0.;\n"
+            f"{tab}\tfor (int _g = 0; _g < 1000000 && {mem}.find(_nk) != {mem}.end(); ++_g) {{\n"
+            f"{tab}\t\t_nk += 1.;\n"
+            f"{tab}\t}}\n"
+            f"{tab}\tif ({mem}.find(_nk) == {mem}.end()) {{\n"
+            f"{tab}\t\t{_cpp_map_emplace(mem, kt, '_nk', dv)};\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
+    if kt == "std::string":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tstd::size_t _i = {mem}.size();\n"
+            f"{tab}\tstd::string _nk;\n"
+            f"{tab}\tdo {{\n"
+            f'{tab}\t\t_nk = std::string("__new_") + std::to_string(_i++);\n'
+            f"{tab}\t}} while ({mem}.find(_nk) != {mem}.end());\n"
+            f"{tab}\t{_cpp_map_emplace(mem, kt, '_nk', dv)};\n"
+            f"{tab}}}"
+        )
+    if kt == "sf::Vector2f":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tbool _placed = false;\n"
+            f"{tab}\tfor (int _ox = 0; _ox < 100000 && !_placed; ++_ox) {{\n"
+            f"{tab}\t\tsf::Vector2f _nk{{static_cast<float>(_ox), 0.f}};\n"
+            f"{tab}\t\tif ({mem}.find(_nk) == {mem}.end()) {{\n"
+            f"{tab}\t\t\t{_cpp_map_emplace(mem, kt, '_nk', dv)};\n"
+            f"{tab}\t\t\t_placed = true;\n"
+            f"{tab}\t\t}}\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
+    if kt == "sf::Vector3f":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tbool _placed = false;\n"
+            f"{tab}\tfor (int _ox = 0; _ox < 100000 && !_placed; ++_ox) {{\n"
+            f"{tab}\t\tsf::Vector3f _nk{{static_cast<float>(_ox), 0.f, 0.f}};\n"
+            f"{tab}\t\tif ({mem}.find(_nk) == {mem}.end()) {{\n"
+            f"{tab}\t\t\t{_cpp_map_emplace(mem, kt, '_nk', dv)};\n"
+            f"{tab}\t\t\t_placed = true;\n"
+            f"{tab}\t\t}}\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
+    if kt == "sf::Color":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tbool _placed = false;\n"
+            f"{tab}\tfor (unsigned _n = 0; _n < 0xFFFFFFu && !_placed; ++_n) {{\n"
+            f"{tab}\t\tsf::Color _nk{{\n"
+            f"{tab}\t\t\tstatic_cast<std::uint8_t>(_n & 0xFFu),\n"
+            f"{tab}\t\t\tstatic_cast<std::uint8_t>((_n >> 8) & 0xFFu),\n"
+            f"{tab}\t\t\tstatic_cast<std::uint8_t>((_n >> 16) & 0xFFu),\n"
+            f"{tab}\t\t\t255}};\n"
+            f"{tab}\t\tif ({mem}.find(_nk) == {mem}.end()) {{\n"
+            f"{tab}\t\t\t{_cpp_map_emplace(mem, kt, '_nk', dv)};\n"
+            f"{tab}\t\t\t_placed = true;\n"
+            f"{tab}\t\t}}\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
+    raise ParseError(f"map addPair: unsupported key type `{kt}`", path, line, col)
+
+
+def _set_add_pair_body(mem: str, et: str, path: Path, line: int, col: int) -> str:
+    """Statements for addPair on a set: choose a value not already present, then insert."""
+    tab = "\t\t\t"
+    if et in ("int", "std::int32_t"):
+        decl = "int _nv = 0;" if et == "int" else "std::int32_t _nv = 0;"
+        return (
+            f"{tab}{decl}\n"
+            f"{tab}while ({mem}.find(_nv) != {mem}.end()) {{\n"
+            f"{tab}\t++_nv;\n"
+            f"{tab}}}\n"
+            f"{tab}{_cpp_set_insert(mem, et, '_nv')};"
+        )
+    if et == "std::int64_t":
+        return (
+            f"{tab}std::int64_t _nv = 0;\n"
+            f"{tab}while ({mem}.find(_nv) != {mem}.end()) {{\n"
+            f"{tab}\t++_nv;\n"
+            f"{tab}}}\n"
+            f"{tab}{_cpp_set_insert(mem, et, '_nv')};"
+        )
+    if et == "bool":
+        return (
+            f"{tab}if ({mem}.find(false) == {mem}.end()) {{\n"
+            f"{tab}\t{_cpp_set_insert(mem, et, 'false')};\n"
+            f"{tab}}} else if ({mem}.find(true) == {mem}.end()) {{\n"
+            f"{tab}\t{_cpp_set_insert(mem, et, 'true')};\n"
+            f"{tab}}}"
+        )
+    if et == "float":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tfloat _nv = 0.f;\n"
+            f"{tab}\tfor (int _g = 0; _g < 1000000 && {mem}.find(_nv) != {mem}.end(); ++_g) {{\n"
+            f"{tab}\t\t_nv += 1.f;\n"
+            f"{tab}\t}}\n"
+            f"{tab}\tif ({mem}.find(_nv) == {mem}.end()) {{\n"
+            f"{tab}\t\t{_cpp_set_insert(mem, et, '_nv')};\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
+    if et == "double":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tdouble _nv = 0.;\n"
+            f"{tab}\tfor (int _g = 0; _g < 1000000 && {mem}.find(_nv) != {mem}.end(); ++_g) {{\n"
+            f"{tab}\t\t_nv += 1.;\n"
+            f"{tab}\t}}\n"
+            f"{tab}\tif ({mem}.find(_nv) == {mem}.end()) {{\n"
+            f"{tab}\t\t{_cpp_set_insert(mem, et, '_nv')};\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
+    if et == "std::string":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tstd::size_t _i = {mem}.size();\n"
+            f"{tab}\tstd::string _nv;\n"
+            f"{tab}\tdo {{\n"
+            f'{tab}\t\t_nv = std::string("__new_") + std::to_string(_i++);\n'
+            f"{tab}\t}} while ({mem}.find(_nv) != {mem}.end());\n"
+            f"{tab}\t{_cpp_set_insert(mem, et, '_nv')};\n"
+            f"{tab}}}"
+        )
+    if et == "sf::Vector2f":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tbool _placed = false;\n"
+            f"{tab}\tfor (int _ox = 0; _ox < 100000 && !_placed; ++_ox) {{\n"
+            f"{tab}\t\tsf::Vector2f _nv{{static_cast<float>(_ox), 0.f}};\n"
+            f"{tab}\t\tif ({mem}.find(_nv) == {mem}.end()) {{\n"
+            f"{tab}\t\t\t{_cpp_set_insert(mem, et, '_nv')};\n"
+            f"{tab}\t\t\t_placed = true;\n"
+            f"{tab}\t\t}}\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
+    if et == "sf::Vector3f":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tbool _placed = false;\n"
+            f"{tab}\tfor (int _ox = 0; _ox < 100000 && !_placed; ++_ox) {{\n"
+            f"{tab}\t\tsf::Vector3f _nv{{static_cast<float>(_ox), 0.f, 0.f}};\n"
+            f"{tab}\t\tif ({mem}.find(_nv) == {mem}.end()) {{\n"
+            f"{tab}\t\t\t{_cpp_set_insert(mem, et, '_nv')};\n"
+            f"{tab}\t\t\t_placed = true;\n"
+            f"{tab}\t\t}}\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
+    if et == "sf::Color":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tbool _placed = false;\n"
+            f"{tab}\tfor (unsigned _n = 0; _n < 0xFFFFFFu && !_placed; ++_n) {{\n"
+            f"{tab}\t\tsf::Color _nv{{\n"
+            f"{tab}\t\t\tstatic_cast<std::uint8_t>(_n & 0xFFu),\n"
+            f"{tab}\t\t\tstatic_cast<std::uint8_t>((_n >> 8) & 0xFFu),\n"
+            f"{tab}\t\t\tstatic_cast<std::uint8_t>((_n >> 16) & 0xFFu),\n"
+            f"{tab}\t\t\t255}};\n"
+            f"{tab}\t\tif ({mem}.find(_nv) == {mem}.end()) {{\n"
+            f"{tab}\t\t\t{_cpp_set_insert(mem, et, '_nv')};\n"
+            f"{tab}\t\t\t_placed = true;\n"
+            f"{tab}\t\t}}\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
+    raise ParseError(f"set addPair: unsupported element type `{et}`", path, line, col)
+
+
+def emit_assoc_map_property(
+    out: list[str],
+    p: PropSpec,
+    path: Path,
+    meta_arg: str,
+    readonly: bool,
+) -> None:
+    vt = p.map_value_type
+    if vt is None:
+        raise ParseError("internal: map without map_value_type", path, p.line, p.col)
+    kt = p.cpp_type
+    mem = p.member
+    fid = member_to_field_id(p.member)
+    label_esc = cpp_escape_string(default_label(p.member, p.attrs))
+    idx = f"_pv_{fid}_i"
+    leaf_meta = "Engine::PropertyMeta{}"
+
+    if readonly:
+        asc = "Engine::PropAccessAssociative{\n\t\t{},\n\t\t{}\n\t}"
+    else:
+        add_body = _map_add_pair_body(mem, kt, vt, path, p.line, p.col)
+        asc = (
+            "Engine::PropAccessAssociative{\n"
+            f"\t\t[this]() {{\n{add_body}\n\t\t}},\n"
+            "\t\t[this](std::size_t pairIndex) {\n"
+            f"\t\t\tauto _it = {mem}.begin();\n"
+            "\t\t\tstd::advance(_it, pairIndex);\n"
+            f"\t\t\t{mem}.erase(_it);\n"
+            "\t\t}\n"
+            "\t}"
+        )
+    out.append(f'\tb.beginAssociative("{fid}", "{label_esc}", {asc}, {meta_arg});')
+    out.append(f"\tfor (std::size_t {idx} = 0; {idx} < {mem}.size(); ++{idx}) {{")
+    out.append(
+        f'\t\tb.pushObject(std::to_string({idx}), "[" + std::to_string({idx}) + "]", Engine::PropertyMeta{{}});'
+    )
+    gk, sk = _map_key_get(mem, idx, kt), _map_key_set(mem, idx, kt, readonly)
+    gv, sv = _map_val_get(mem, idx, vt), _map_val_set(mem, idx, vt, readonly)
+    _emit_scalar_leaf(out, kt, "key", "Key", gk, sk, leaf_meta, path, p.line, p.col)
+    _emit_scalar_leaf(out, vt, "value", "Value", gv, sv, leaf_meta, path, p.line, p.col)
+    out.append("\t\tb.pop();")
+    out.append("\t}")
+    out.append("\tb.endAssociative();")
+
+
+def emit_assoc_set_property(
+    out: list[str],
+    p: PropSpec,
+    path: Path,
+    meta_arg: str,
+    readonly: bool,
+) -> None:
+    et = p.cpp_type
+    mem = p.member
+    fid = member_to_field_id(p.member)
+    label_esc = cpp_escape_string(default_label(p.member, p.attrs))
+    idx = f"_pv_{fid}_i"
+    leaf_meta = "Engine::PropertyMeta{}"
+
+    if readonly:
+        asc = "Engine::PropAccessAssociative{\n\t\t{},\n\t\t{}\n\t}"
+    else:
+        add_body = _set_add_pair_body(mem, et, path, p.line, p.col)
+        asc = (
+            "Engine::PropAccessAssociative{\n"
+            f"\t\t[this]() {{\n{add_body}\n\t\t}},\n"
+            "\t\t[this](std::size_t pairIndex) {\n"
+            f"\t\t\tauto _it = {mem}.begin();\n"
+            "\t\t\tstd::advance(_it, pairIndex);\n"
+            f"\t\t\t{mem}.erase(_it);\n"
+            "\t\t}\n"
+            "\t}"
+        )
+    out.append(f'\tb.beginAssociative("{fid}", "{label_esc}", {asc}, {meta_arg});')
+    out.append(f"\tfor (std::size_t {idx} = 0; {idx} < {mem}.size(); ++{idx}) {{")
+    out.append(
+        f'\t\tb.pushObject(std::to_string({idx}), "[" + std::to_string({idx}) + "]", Engine::PropertyMeta{{}});'
+    )
+    if et == "int":
+        g = f"[this, {idx}]() {{ auto _it = {mem}.begin(); std::advance(_it, {idx}); return static_cast<std::int32_t>(*_it); }}"
+    else:
+        g = f"[this, {idx}]() {{ auto _it = {mem}.begin(); std::advance(_it, {idx}); return *_it; }}"
+    if readonly:
+        if et in ("int", "std::int32_t"):
+            s = f"[this, {idx}](std::int32_t) {{}}"
+        else:
+            s = f"[this, {idx}]({et}) {{}}"
+    else:
+        adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); {mem}.erase(_it); "
+        if et == "int":
+            s = f"[this, {idx}](std::int32_t v) {{ {adv}{mem}.insert(static_cast<int>(v)); }}"
+        elif et == "std::string":
+            s = f"[this, {idx}](std::string v) {{ {adv}{mem}.insert(std::move(v)); }}"
+        elif et in ("sf::Vector2f", "sf::Vector3f", "sf::Color"):
+            s = f"[this, {idx}]({et} v) {{ {adv}{mem}.insert(std::move(v)); }}"
+        else:
+            s = f"[this, {idx}]({et} v) {{ {adv}{mem}.insert(v); }}"
+    _emit_scalar_leaf(out, et, "v", "", g, s, leaf_meta, path, p.line, p.col)
+    out.append("\t\tb.pop();")
+    out.append("\t}")
+    out.append("\tb.endAssociative();")
+
+
 def emit_std_vector_property(
     out: list[str],
     p: PropSpec,
@@ -1062,7 +1596,15 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
         "#include <functional>",
         "",
     ]
-    needs_sfml = any(p.cpp_type.startswith("sf::") for c in classes for p in c.props)
+    def uses_sfml(p: PropSpec) -> bool:
+        if p.is_map:
+            mv = p.map_value_type or ""
+            return p.cpp_type.startswith("sf::") or mv.startswith("sf::")
+        if p.is_set:
+            return p.cpp_type.startswith("sf::")
+        return p.cpp_type.startswith("sf::")
+
+    needs_sfml = any(uses_sfml(p) for c in classes for p in c.props)
     if needs_sfml:
         out.append('#include <SFML/Graphics/Color.hpp>')
         out.append('#include <SFML/System/Vector2.hpp>')
@@ -1074,6 +1616,24 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
         out.append("#include <cstddef>")
     if any(p.is_bitset for c in classes for p in c.props):
         out.append("#include <bitset>")
+    assoc_headers: set[str] = set()
+    for c in classes:
+        for p in c.props:
+            if not (p.is_map or p.is_set):
+                continue
+            ac = p.assoc_container
+            if ac == "std::map":
+                assoc_headers.add("<map>")
+            elif ac == "std::unordered_map":
+                assoc_headers.add("<unordered_map>")
+            elif ac == "std::set":
+                assoc_headers.add("<set>")
+            elif ac == "std::unordered_set":
+                assoc_headers.add("<unordered_set>")
+    for h in sorted(assoc_headers):
+        out.append(f"#include {h}")
+    if assoc_headers:
+        out.append("#include <iterator>")
     out.append("")
 
     for c in classes:
@@ -1101,6 +1661,24 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                 )
                 meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
                 emit_bitset_property(out, p, meta_arg, readonly)
+                continue
+
+            if p.is_map or p.is_set:
+                if p.is_getter:
+                    raise ParseError(
+                        "std::map / std::set fields must be data members (not @getter) in codegen v1",
+                        path,
+                        p.line,
+                        p.col,
+                    )
+                has_meta = readonly or any(
+                    k in a for k in ("tooltip", "minValue", "maxValue", "step", "dragSpeed")
+                )
+                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
+                if p.is_map:
+                    emit_assoc_map_property(out, p, path, meta_arg, readonly)
+                else:
+                    emit_assoc_set_property(out, p, path, meta_arg, readonly)
                 continue
 
             if p.cpp_type not in KNOWN_TYPES:
