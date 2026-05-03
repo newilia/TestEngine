@@ -196,6 +196,9 @@ namespace Engine {
 			Toggle();
 			return;
 		}
+		if (e.control && e.code == sf::Keyboard::Key::D) {
+			ClearNodeSelection();
+		}
 		if (e.code == sf::Keyboard::Key::Space) {
 			MainContext::GetInstance().ToggleSimPaused();
 		}
