@@ -1,6 +1,6 @@
 #include "Engine/Visual/PolygonShapeVisual.h"
 
-#include "Engine/App/Utils.h"
+#include "Engine/Core/Utils.h"
 
 PolygonShapeVisual::PolygonShapeVisual(sf::Shape* shape) : ShapeVisualBase(shape) {}
 

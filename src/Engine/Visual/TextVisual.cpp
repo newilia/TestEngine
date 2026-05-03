@@ -1,6 +1,6 @@
 #include "TextVisual.h"
 
-#include "Engine/App/Utils.h"
+#include "Engine/Core/Utils.h"
 
 #include <SFML/Graphics/Text.hpp>
 

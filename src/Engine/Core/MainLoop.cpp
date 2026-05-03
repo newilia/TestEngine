@@ -1,7 +1,7 @@
 #include "MainLoop.h"
 
-#include "Engine/App/EventsDispatcher.h"
-#include "Engine/App/MainContext.h"
+#include "Engine/Core/EventsDispatcher.h"
+#include "Engine/Core/MainContext.h"
 #include "Engine/Core/PeriodicTaskExecutor.h"
 #include "Engine/Editor/Editor.h"
 #include "Engine/Simulation/PhysicsProcessor.h"

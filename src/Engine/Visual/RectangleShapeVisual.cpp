@@ -1,6 +1,6 @@
 #include "Engine/Visual/RectangleShapeVisual.h"
 
-#include "Engine/App/Utils.h"
+#include "Engine/Core/Utils.h"
 
 RectangleShapeVisual::RectangleShapeVisual(sf::RectangleShape* rect) : ShapeVisualBase(rect), _rect(rect) {}
 

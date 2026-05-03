@@ -1,6 +1,6 @@
 #include "Engine/Editor/DebugSettingsWidget.h"
 
-#include "Engine/App/MainContext.h"
+#include "Engine/Core/MainContext.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 
 #include <SFML/System/Time.hpp>

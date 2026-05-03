@@ -1,6 +1,6 @@
 #include "PongPlayfield.h"
 
-#include "Engine/App/MainContext.h"
+#include "Engine/Core/MainContext.h"
 
 namespace {
 	/// Fraction of the window size used as margin on each side (symmetric inset).

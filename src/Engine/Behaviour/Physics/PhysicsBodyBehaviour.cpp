@@ -1,6 +1,6 @@
 #include "PhysicsBodyBehaviour.h"
 
-#include "Engine/App/MainContext.h"
+#include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "Engine/Visual/MakeShapeVisual.h"
