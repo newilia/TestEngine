@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 6
+CACHE_VERSION = 7
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
@@ -1008,7 +1008,6 @@ def format_meta_inline(p: PropSpec) -> str:
     for key, mk in (
         ("minValue", "numericMin"),
         ("maxValue", "numericMax"),
-        ("step", "numericStep"),
         ("dragSpeed", "dragSpeed"),
     ):
         if key not in a:
@@ -1860,7 +1859,7 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                         p.col,
                     )
                 has_meta = readonly or any(
-                    k in a for k in ("tooltip", "minValue", "maxValue", "step", "dragSpeed")
+                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed")
                 )
                 meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
                 emit_bitset_property(out, p, meta_arg, readonly)
@@ -1875,7 +1874,7 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                         p.col,
                     )
                 has_meta = readonly or any(
-                    k in a for k in ("tooltip", "minValue", "maxValue", "step", "dragSpeed")
+                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed")
                 )
                 meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
                 if p.is_map:
@@ -1894,7 +1893,6 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                         "tooltip",
                         "minValue",
                         "maxValue",
-                        "step",
                         "dragSpeed",
                         "minCount",
                         "maxCount",
@@ -1905,7 +1903,7 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                 continue
 
             has_meta = readonly or any(
-                k in a for k in ("tooltip", "minValue", "maxValue", "step", "dragSpeed")
+                k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed")
             )
             meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
             if p.cpp_type == "sf::Angle":

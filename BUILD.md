@@ -58,7 +58,9 @@ cmake --build build-ninja
 
 ## Codegen (дерево свойств)
 
-Скрипт [`tools/property_codegen.py`](tools/property_codegen.py) генерирует заголовки `src/Codegen/<ИмяИсходника>_gen.hpp` из тегов `META_CLASS()` и `/// @property` в `src/**/*.h`. Каталог `src/Codegen/` в `.gitignore`; при сборке `TestEngine` цель **`Codegen`** запускается автоматически первой (`add_dependencies`).
+Скрипт [`tools/property_codegen.py`](tools/property_codegen.py) генерирует заголовки `src/Codegen/<ИмяИсходника>.generated.hpp` из тегов `META_CLASS()` и `/// @property` в `src/**/*.h`. Каталог `src/Codegen/` в `.gitignore`; при сборке `TestEngine` цель **`Codegen`** запускается автоматически первой (`add_dependencies`).
+
+**Пользовательская справка** (типы, теги, мета-ключи и ограничения): [`docs/PROPERTY_CODEGEN.md`](docs/PROPERTY_CODEGEN.md).
 
 | CMake-цель | Назначение |
 |------------|------------|
