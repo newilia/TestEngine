@@ -23,7 +23,7 @@ public:
 	void OnDeinit() override;
 
 private:
-	/// @property(name="Text color")
+	/// @property
 	sf::Color _textColor{255, 255, 255, 255};
 
 	std::shared_ptr<sf::Text> _text;

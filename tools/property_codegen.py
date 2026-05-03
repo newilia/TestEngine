@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 2
+CACHE_VERSION = 3
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
@@ -162,6 +162,28 @@ def pair_tag_key(attrs: dict[str, Any]) -> str | None:
     return None
 
 
+def normalize_pair_key(s: str) -> str:
+    return s.strip().casefold()
+
+
+def implicit_accessor_pair_name(method: str, prefix: str) -> str | None:
+    if len(method) <= len(prefix):
+        return None
+    if not method.startswith(prefix):
+        return None
+    if not method[len(prefix)].isupper():
+        return None
+    return method[len(prefix) :]
+
+
+def getter_pair_raw_key(g: GetterDecl) -> str | None:
+    return pair_tag_key(g.attrs) or implicit_accessor_pair_name(g.method, "Get")
+
+
+def setter_pair_raw_key(s: SetterDecl) -> str | None:
+    return pair_tag_key(s.attrs) or implicit_accessor_pair_name(s.method, "Set")
+
+
 def merge_getter_setter_decls(
     path: Path,
     getters: list[GetterDecl],
@@ -172,27 +194,35 @@ def merge_getter_setter_decls(
 
     by_key: dict[str, SetterDecl] = {}
     for s in setters:
-        key = pair_tag_key(s.attrs)
-        if key is None:
+        raw = setter_pair_raw_key(s)
+        if raw is None:
             raise ParseError(
-                '@setter requires name="..." or label="..." to pair with @getter',
+                '@setter requires name="..." or label="..." to pair with @getter, '
+                "or use void SetXxx(...) with a matching GetXxx(...) (same Xxx after Get/Set)",
                 path,
                 s.line,
                 s.col,
             )
-        if key in by_key:
-            raise ParseError(f'duplicate @setter for name="{key}"', path, s.line, s.col)
-        by_key[key] = s
+        nk = normalize_pair_key(raw)
+        if nk in by_key:
+            raise ParseError(
+                f'duplicate @setter for name="{raw}"',
+                path,
+                s.line,
+                s.col,
+            )
+        by_key[nk] = s
 
     seen_gkeys: set[str] = set()
     out: list[PropSpec] = []
 
     for g in getters:
-        gkey = pair_tag_key(g.attrs)
-        if gkey is not None:
-            if gkey in seen_gkeys:
-                raise ParseError(f'duplicate @getter for name="{gkey}"', path, g.line, g.col)
-            seen_gkeys.add(gkey)
+        graw = getter_pair_raw_key(g)
+        if graw is not None:
+            nk = normalize_pair_key(graw)
+            if nk in seen_gkeys:
+                raise ParseError(f'duplicate @getter for name="{graw}"', path, g.line, g.col)
+            seen_gkeys.add(nk)
 
         merged = dict(g.attrs)
         inline = g.attrs.get("setter")
@@ -201,18 +231,18 @@ def merge_getter_setter_decls(
         setter_method: str | None = None
         if inline_ok:
             setter_method = inline.strip()
-            if gkey is not None and gkey in by_key:
+            if graw is not None and normalize_pair_key(graw) in by_key:
                 raise ParseError(
-                    f'@getter uses both setter= and @setter with name="{gkey}"; use only one',
+                    f'@getter uses both setter= and @setter with name="{graw}"; use only one',
                     path,
                     g.line,
                     g.col,
                 )
-        elif gkey is not None and gkey in by_key:
-            s = by_key.pop(gkey)
+        elif graw is not None and normalize_pair_key(graw) in by_key:
+            s = by_key.pop(normalize_pair_key(graw))
             if s.cpp_type != g.cpp_type or s.is_vector != g.is_vector:
                 raise ParseError(
-                    f'@getter / @setter pair "{gkey}": type mismatch ({g.cpp_type} vs {s.cpp_type})',
+                    f'@getter / @setter pair "{graw}": type mismatch ({g.cpp_type} vs {s.cpp_type})',
                     path,
                     g.line,
                     g.col,
@@ -243,7 +273,7 @@ def merge_getter_setter_decls(
 
     if by_key:
         s = next(iter(by_key.values()))
-        k = pair_tag_key(s.attrs) or "?"
+        k = setter_pair_raw_key(s) or "?"
         raise ParseError(f'@setter name="{k}" has no matching @getter', path, s.line, s.col)
 
     return out
