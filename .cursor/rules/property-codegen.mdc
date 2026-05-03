@@ -1,5 +1,5 @@
 ---
-description: Property reflection codegen (META_CLASS, @property, Python generator)
+description: Property reflection codegen (META_CLASS, @property, @getter, @setter, Python generator)
 globs: src/**/*.h, tools/property_codegen.py, CMakeLists.txt, src/Codegen/**/*
 alwaysApply: false
 ---
@@ -17,15 +17,38 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 ## Author workflow
 
 1. In the class header: `#include "Engine/Core/MetaClass.h"`, then put `META_CLASS()` inside the class (typically before `public:`).
-2. Above each reflected member: `/// @property` or `/// @property(key=value, ...)`.
-3. In **one** corresponding `.cpp`: `#include "<HeaderStem>_gen.hpp"` after the class header so out-of-line `BuildPropertyTree` sees the full class type.
+2. Above each reflected **data member** use `/// @property` or `/// @property(key=value, ...)`. For method-backed properties use `/// @getter` on the getter line and optionally `/// @setter` on the setter line (see below).
+3. In **one** corresponding `.cpp`: `#include "<HeaderStem>.generated.hpp"` after the class header so out-of-line `BuildPropertyTree` sees the full class type.
 4. Build `TestEngine`; CMake target **`Codegen`** runs first. Include generated headers as `#include "Foo_gen.hpp"` (`src/Codegen` is on the include path).
 
 ## `@property` argument syntax
 
-- Comma-separated `key=value`. Keys (v1): `name` / `label` (display label), `readonly`, `minValue`, `maxValue`, `step`, `dragSpeed`, `tooltip`.
+- Comma-separated `key=value`. Keys (v1): `name` / `label` (display label), `readonly`, `setter` (method name; **`bool` fields only** — forwards writes to `this->MethodName(bool)`), `minValue`, `maxValue`, `step`, `dragSpeed`, `tooltip`.
 - Strings in double quotes. Booleans `true` / `false`. Numbers may use a trailing `f`.
 - Parser errors include `file:line:col:` messages; fix the tag or the following field line.
+- The key `name` (and `label`) sets the **inspector display string** only. The **property id** in the tree is still derived from the C++ field or method name (e.g. `GetPropValue` → `get_prop_value`).
+
+## `@getter` / `@setter` (method-backed get/set)
+
+### Getter line
+
+- The line after a one-line `/// @getter(...)` must be a **non-static** method declaration (with `;`, no body) on a **single line**, with a return type from the same set as **Supported field types (v1)** (see below).
+- Optional prefixes/suffixes: `[[...]]`, `virtual`, optional `const` / `&` on the return type (e.g. `const sf::Vector2f&`), `const` / `noexcept` / `override` / `final` on the method. **Static** methods are rejected.
+
+### Setter line (optional, paired by name)
+
+- Use **`/// @setter(name="same_as_getter", ...)`** (or `label="..."`) on its **own** doc line; the next non-empty code line must be **`void MethodName(ValueType param)`** with **one** parameter whose type matches the getter’s value type (same rules as field types: optional `const`, optional `&` on the parameter type is allowed by the scanner).
+- **Pairing:** the string keys **`name`** and **`label`** are checked in that order; the first non-empty string on the getter must equal the first non-empty string on the setter so they refer to the same property (e.g. both `name="size"`).
+- **`@setter` must include `name="..."` or `label="..."`** so the generator can pair it. Unpaired `@setter` tags are an error.
+- **Alternative:** on `/// @getter` you can still use **`setter=MethodName`** instead of a separate `@setter` tag (do not use both for the same pair).
+
+### Read-only vs writable
+
+- **Read-only** if there is no `setter=` on `@getter` and no matching `@setter` for the same `name`/`label`.
+- **Writable** if `setter=MethodName` is on `@getter`, or getter and setter are paired by matching `name` / `label`.
+- **`readonly=true`** on `@getter` keeps the property read-only even if a setter is specified.
+- Other meta keys mirror `@property` where applicable (`tooltip`, numeric hints, …).
+- Parameter lists use a simple `(...)` match (no nested parens in parameters in v1).
 
 ## Supported field types (v1)
 
@@ -33,7 +56,7 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 
 ## Limitations (maintainability)
 
-- One-line `/// @property` tags only; the next non-empty code line must be the field declaration ending in `;`.
+- One-line `/// @property` / `/// @getter` / `/// @setter` tags only. After each tag, the next non-empty code line must be the matching declaration ending in `;` (field, getter, or `void` setter with one parameter).
 - Templates, tricky macros, multi-line declarations, and container properties (`beginSequence` / `beginAssociative`) are **not** supported in v1.
 - `#define META_CLASS()` in `MetaClass.h` is ignored by the scanner (not treated as usage).
 
@@ -46,7 +69,7 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 ## Extending reflection
 
 1. Prefer extending **meta keys** → `Engine::PropertyMeta` / existing `PropertyBuilder::add*` in the generator.
-2. New C++ types: add to `KNOWN_TYPES`, `FIELD_RE`, and the emit branch in `generate_file_content`.
+2. New C++ types: add to `KNOWN_TYPES`, `FIELD_RE`, `GETTER_METHOD_RE`, `SETTER_METHOD_RE`, and the emit branch in `generate_file_content`.
 3. If headers outgrow the scanner, plan a **Clang-based** extraction step; keep `_gen.hpp` output format stable.
 
 ## CMake
