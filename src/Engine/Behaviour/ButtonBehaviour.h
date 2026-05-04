@@ -12,23 +12,14 @@ class ButtonBehaviour : public InputHandlerBehaviourBase
 public:
 	void OnEvent(const sf::Event& event) override;
 
-	template <class F>
-	    requires std::is_invocable_v<F, const sf::Event&>
-	[[nodiscard]] Signal<const sf::Event&>::Connection SubscribeOnTap(F&& callable) {
-		return _onTap.Connect(std::forward<F>(callable));
-	}
-
-	template <class F>
-	    requires std::is_invocable_v<F, const sf::Event&>
-	[[nodiscard]] Signal<const sf::Event&>::Connection SubscribeOnRelease(F&& callable) {
-		return _onRelease.Connect(std::forward<F>(callable));
-	}
+	Signal<>& GetOnTapSignal() const;
+	Signal<>& GetOnReleaseSignal() const;
 
 private:
-	[[nodiscard]] bool HitTestWorld(const sf::Vector2f& worldPoint) const;
+	bool HitTestWorld(const sf::Vector2f& worldPoint) const;
 
-	Signal<const sf::Event&> _onTap;
-	Signal<const sf::Event&> _onRelease;
+	mutable Signal<> _onTap;
+	mutable Signal<> _onRelease;
 
 	bool _mouseDown = false;
 	bool _touchDown = false;
