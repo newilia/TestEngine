@@ -27,11 +27,11 @@ namespace {
 } // namespace
 
 void PhysicsProcessor::Update(const sf::Time& dt) {
-	Utils::RemoveExpiredPointers(_bodies);
 	// motion step
-	for (auto& wBody : _bodies) {
-		auto body = wBody.lock();
+	for (auto it = _bodies.begin(); it != _bodies.end();) {
+		auto body = it->lock();
 		if (!body) {
+			it = _bodies.erase(it);
 			continue;
 		}
 		auto rigidBody = body->RequireBehaviour<PhysicsBodyBehaviour>();
@@ -43,6 +43,7 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 
 		pos += rigidBody->GetVelocity() * dt.asSeconds();
 		body->SetPosGlobal(pos);
+		++it;
 	}
 
 	// handle intersections — sweep-and-prune broad phase, then masks + narrow phase

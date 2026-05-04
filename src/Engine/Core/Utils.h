@@ -21,13 +21,6 @@ namespace Utils {
 	float Project(const sf::Vector2f& a, const sf::Vector2f& b);
 	bool ArePointsCollinear(const sf::Vector2f& p1, const sf::Vector2f& p2, const sf::Vector2f& p3);
 
-	void RemoveExpiredPointers(auto& containter) {
-		auto [first, last] = std::ranges::remove_if(containter, [](auto ptr) {
-			return ptr.expired();
-		});
-		containter.erase(first, last);
-	}
-
 	sf::Vector2f Rotate(const sf::Vector2f& v, float angle);
 
 	bool IsPointInsideOfTriangle(const sf::Vector2f& p, const sf::Vector2f& t1, const sf::Vector2f& t2,
