@@ -269,9 +269,16 @@ void SceneNode::SetSortingStrategy(const shared_ptr<RelativeSortingStrategy>& so
 }
 
 void SceneNode::AddChild(const std::shared_ptr<SceneNode>& child) {
+	AddChildAt(child, _children.size());
+}
+
+void SceneNode::AddChildAt(const std::shared_ptr<SceneNode>& child, std::size_t index) {
 	assert(!HasChild(child));
 
-	_children.push_back(child);
+	if (index > _children.size()) {
+		index = _children.size();
+	}
+	_children.insert(_children.begin() + static_cast<std::ptrdiff_t>(index), child);
 	child->SetParent(shared_from_this());
 	child->MarkWorldTransformSubtreeDirty();
 }
@@ -332,6 +339,17 @@ void SceneNode::AddBehaviour(shared_ptr<Behaviour> behaviour) {
 	behaviour->AttachTo(shared_from_this());
 	_behaviours.push_back(std::move(behaviour));
 	_behaviours.back()->OnAttached();
+}
+
+void SceneNode::RemoveBehaviour(Behaviour* behaviour) {
+	auto it = std::ranges::find_if(_behaviours.begin(), _behaviours.end(), [behaviour](const auto& ptr) {
+		return ptr.get() == behaviour;
+	});
+	if (it == _behaviours.end()) {
+		return;
+	}
+	DetachBehaviourForRemove(*it);
+	_behaviours.erase(it);
 }
 
 void SceneNode::SetEnabled(bool isEnabled) {
