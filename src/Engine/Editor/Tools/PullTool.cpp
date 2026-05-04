@@ -149,11 +149,11 @@ void PullTool::onPresent(const sf::Time& dt) {
 		return;
 	}
 	_arrow.SetColor(sf::Color::Green);
-	_arrow.SetStartPos(body->GetPosGlobal());
+	_arrow.SetStartPos(Utils::GetWorldPos(body));
 	_arrow.SetEndPos(_destination);
 
 	if (auto rigidBody = body->FindBehaviour<PhysicsBodyBehaviour>()) {
-		auto pullVector = _destination - body->GetPosGlobal();
+		auto pullVector = _destination - Utils::GetWorldPos(body);
 		auto distance = Utils::Length(pullVector);
 		if (distance <= std::numeric_limits<float>::epsilon()) {
 			return;

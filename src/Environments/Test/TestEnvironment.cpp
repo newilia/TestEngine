@@ -114,7 +114,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		}
 		rect->SetSize(wallSizes[i]);
 		rect->SetOrigin(Utils::FindCenterOfMass(rect->GetShape()));
-		node->SetPosGlobal(wallPositions[i]);
+		Utils::SetWorldPos(node, wallPositions[i]);
 		rect->SetFillColor(sf::Color(30, 255, 30, 50));
 		rect->SetOutlineColor(sf::Color(30, 255, 30, 120));
 		rect->SetOutlineThickness(1.f);
@@ -167,7 +167,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		auto maxY = static_cast<int>(viewSize.y - wallVisibleWidth - radius);
 		auto x = static_cast<float>(minX + rand() % (maxX - minX));
 		auto y = static_cast<float>(minY + rand() % (maxY - minY));
-		node->SetPosGlobal(sf::Vector2f{x, y});
+		Utils::SetWorldPos(node, sf::Vector2f{x, y});
 
 		auto rb = node->RequireBehaviour<PhysicsBodyBehaviour>();
 		rb->SetMass(3.14f * radius * radius);

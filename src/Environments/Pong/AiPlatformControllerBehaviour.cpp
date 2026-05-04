@@ -3,6 +3,7 @@
 #include "AiPlatformControllerBehaviour.generated.hpp"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Core/Utils.h"
 #include "PongPlatform.h"
 
 #include <SFML/System/Time.hpp>
@@ -21,10 +22,10 @@ void AiPlatformControllerBehaviour::OnInit() {
 
 void AiPlatformControllerBehaviour::ResyncSpawnFromNode() {
 	if (auto p = GetNode()) {
-		_targetPos = _defaultPos = p->GetPosGlobal();
+		_targetPos = _defaultPos = Utils::GetWorldPos(p);
 		ClampPongPlatformDesiredCenter(_targetPos, false, p, _movementBounds);
 		ClampPongPlatformDesiredCenter(_defaultPos, false, p, _movementBounds);
-		p->SetPosGlobal(_defaultPos);
+		Utils::SetWorldPos(p, _defaultPos);
 	}
 }
 
@@ -35,7 +36,7 @@ void AiPlatformControllerBehaviour::ClearPendingObservations() {
 	_observeTimer.restart();
 	if (auto ball = _ball.lock()) {
 		if (auto ballNode = ball->GetNode()) {
-			_curExState.ballPos = ballNode->GetPosGlobal();
+			_curExState.ballPos = Utils::GetWorldPos(ballNode);
 			_prevExState = _curExState;
 		}
 	}
@@ -63,7 +64,7 @@ void AiPlatformControllerBehaviour::BeginObserve(const std::weak_ptr<SceneNode>&
 void AiPlatformControllerBehaviour::ObserveState() {
 	if (auto ball = _ball.lock()) {
 		if (auto ballNode = ball->GetNode()) {
-			ExternalState state = {.ballPos = ballNode->GetPosGlobal()};
+			ExternalState state = {.ballPos = Utils::GetWorldPos(ballNode)};
 			_externalStateTimers.push({sf::Clock(), state});
 		}
 	}
@@ -82,7 +83,7 @@ void AiPlatformControllerBehaviour::MovePlatformTowardsBall() {
 	if (!bodyBeh) {
 		return;
 	}
-	const sf::Vector2f selfPos = node->GetPosGlobal();
+	const sf::Vector2f selfPos = Utils::GetWorldPos(node);
 	float distanceToBall = 0.f;
 	if (auto ball = _ball.lock()) {
 		if (auto* ballShape = ball->GetShape()) {
@@ -93,7 +94,7 @@ void AiPlatformControllerBehaviour::MovePlatformTowardsBall() {
 
 	float steadyRatio = 0.f;
 	if (auto opponentPlatform = _opponentPlatform.lock()) {
-		const float distanceBetweenPlatforms = std::abs(selfPos.y - opponentPlatform->GetPosGlobal().y);
+		const float distanceBetweenPlatforms = std::abs(selfPos.y - Utils::GetWorldPos(opponentPlatform).y);
 		if (distanceBetweenPlatforms > 0.f) {
 			steadyRatio = 0.2f * std::clamp(distanceToBall / distanceBetweenPlatforms, 0.f, 1.f);
 		}

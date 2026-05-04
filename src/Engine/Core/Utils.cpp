@@ -6,6 +6,7 @@
 
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Core/Transform.h"
 #include "Engine/Visual/ShapeVisualBase.h"
 #include "Engine/Visual/SpriteVisual.h"
 #include "Engine/Visual/TextVisual.h"
@@ -418,6 +419,22 @@ namespace Utils {
 		}
 		lower.insert(lower.end(), upper.begin(), upper.end());
 		return lower;
+	}
+
+	sf::Vector2f GetWorldPos(const std::shared_ptr<const SceneNode>& node) {
+		const auto n = Verify(node);
+		return n->GetWorldTransform().transformPoint(sf::Vector2f{});
+	}
+
+	void SetWorldPos(const std::shared_ptr<SceneNode>& node, sf::Vector2f pos) {
+		const auto n = Verify(node);
+		if (auto parent = n->GetParent()) {
+			const sf::Vector2f local = parent->GetWorldTransform().getInverse().transformPoint(pos);
+			n->GetLocalTransform()->SetPosition(local);
+		}
+		else {
+			n->GetLocalTransform()->SetPosition(pos);
+		}
 	}
 
 } // namespace Utils

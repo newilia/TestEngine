@@ -1,5 +1,5 @@
 #pragma once
-class PhysicsBodyBehaviour;
+
 #include "SFML/Graphics.hpp"
 
 #include <limits>
@@ -11,6 +11,8 @@ class PhysicsBodyBehaviour;
 #include <vector>
 
 class Visual;
+class PhysicsBodyBehaviour;
+class SceneNode;
 
 namespace Utils {
 	float Length(const sf::Vector2f& vec);
@@ -69,5 +71,8 @@ namespace Utils {
 
 	/// Counter-clockwise convex hull; collinear boundary points may be omitted. Size may be 0..n.
 	std::vector<sf::Vector2f> ConvexHull2D(std::vector<sf::Vector2f> points);
+
+	sf::Vector2f GetWorldPos(const std::shared_ptr<const SceneNode>& node);
+	void SetWorldPos(const std::shared_ptr<SceneNode>& node, sf::Vector2f pos);
 
 } // namespace Utils

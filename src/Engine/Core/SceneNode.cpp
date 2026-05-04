@@ -90,7 +90,7 @@ namespace {
 				return;
 			}
 		}
-		const sf::Vector2f pos = node.GetPosGlobal();
+		const sf::Vector2f pos = Utils::GetWorldPos(node.shared_from_this());
 		sf::CircleShape marker(kHierarchySelectionFallbackHalfSize);
 		marker.setOrigin({kHierarchySelectionFallbackHalfSize, kHierarchySelectionFallbackHalfSize});
 		marker.setPosition(pos);
@@ -198,20 +198,6 @@ void SceneNode::MarkWorldTransformSubtreeDirty() const {
 	_worldTransformDirty = true;
 	for (const auto& child : _children) {
 		child->MarkWorldTransformSubtreeDirty();
-	}
-}
-
-sf::Vector2f SceneNode::GetPosGlobal() const {
-	return GetWorldTransform().transformPoint(sf::Vector2f{});
-}
-
-void SceneNode::SetPosGlobal(sf::Vector2f pos) {
-	if (auto parent = GetParent()) {
-		const sf::Vector2f local = parent->GetWorldTransform().getInverse().transformPoint(pos);
-		GetLocalTransform()->SetPosition(local);
-	}
-	else {
-		GetLocalTransform()->SetPosition(pos);
 	}
 }
 
