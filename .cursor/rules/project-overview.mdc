@@ -16,7 +16,7 @@ alwaysApply: true
 | Area | Role |
 |------|------|
 | **`Engine/App/`** | Entry (`main.cpp`), `EngineInterface`, input, fonts |
-| **`Engine/Core/`** | Scene, nodes (`SceneNode`), properties/reflection (`MetaClass`, `IPropertiesProvider`, property trees) |
+| **`Engine/Core/`** | Scene, nodes (`SceneNode`), signals (`Signal`, `SubscriptionsHolderBase`), properties/reflection (`MetaClass`, `IPropertiesProvider`, property trees) |
 | **`Engine/Behaviour/`** | Base `Behaviour` → components on nodes; subfolders by domain (e.g. `Physics/`) |
 | **`Engine/Visual/`** | Rendering (shapes, text, arrows, etc.) |
 | **`Engine/Editor/`** | ImGui editor widgets (hierarchy, inspector, property tree) |
@@ -46,3 +46,4 @@ Include roots: **`src/`** and **`src/Codegen/`**. Quote paths relative to those 
 - Build verification after edits: **`debug-build-verify.mdc`**; build details: **`BUILD.md`**.
 - Commit message format: **`commit-messages.mdc`**.
 - Property generation: **`property-codegen.mdc`**.
+- Signal subscriptions / lifetime: **`signal-subscriptions.mdc`**.
