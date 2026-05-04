@@ -82,13 +82,13 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 			++bodyListIndex;
 			continue;
 		}
-		auto* collider = node->FindPhysicsBody();
-		if (!collider) {
+		auto bodyBeh = node->FindBehaviour<PhysicsBodyBehaviour>().get();
+		if (!bodyBeh) {
 			++bodyListIndex;
 			continue;
 		}
-		auto [minX, maxX] = bboxXExtents(collider->GetBbox());
-		sweepEntries.push_back({std::move(node), collider, minX, maxX, bodyListIndex});
+		auto [minX, maxX] = bboxXExtents(bodyBeh->GetBbox());
+		sweepEntries.push_back({std::move(node), bodyBeh, minX, maxX, bodyListIndex});
 		++bodyListIndex;
 	}
 
@@ -500,12 +500,12 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 	auto getPenetrationDepth = [collisionPoint = collision.intersection.start](SceneNode* node,
 	                                                                           const sf::Vector2f& bodyNormal) {
 		float result = 0.f;
-		auto* body = node->FindPhysicsBody();
-		if (!body) {
+		auto* bodyBeh = node->FindBehaviour<PhysicsBodyBehaviour>().get();
+		if (!bodyBeh) {
 			return 0.f;
 		}
-		for (size_t i = 0; i < body->GetPointCount(); ++i) {
-			auto penetrationVec = body->GetPointWorldPos(i) - collisionPoint;
+		for (size_t i = 0; i < bodyBeh->GetPointCount(); ++i) {
+			auto penetrationVec = bodyBeh->GetPointWorldPos(i) - collisionPoint;
 			float depth = Utils::Project(penetrationVec, bodyNormal);
 			result = std::max(result, depth);
 		}

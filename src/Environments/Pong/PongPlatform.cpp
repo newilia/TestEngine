@@ -94,10 +94,6 @@ void ApplyPongPlatformVelocityTowardsTarget(const std::shared_ptr<SceneNode>& pl
 	if (!platformNode) {
 		return;
 	}
-	auto* collider = platformNode->FindPhysicsBody();
-	if (!collider) {
-		return;
-	}
 	auto vel = (targetPos - platformNode->GetPosGlobal()) * speedFactor;
 	vel.x = std::clamp(vel.x, -velLimit.x, velLimit.x);
 	vel.y = std::clamp(vel.y, -velLimit.y, velLimit.y);
@@ -110,11 +106,11 @@ void ClampPongPlatformDesiredCenter(sf::Vector2f& center, bool isBottomPlayer,
 	if (!platformNode) {
 		return;
 	}
-	auto* collider = platformNode->FindPhysicsBody();
-	if (!collider) {
+	auto* body = platformNode->FindBehaviour<PhysicsBodyBehaviour>().get();
+	if (!body) {
 		return;
 	}
-	const sf::FloatRect bb = collider->GetBbox();
+	const sf::FloatRect bb = body->GetBbox();
 
 	if (auto boundsNode = movementBounds.lock()) {
 		const sf::FloatRect region = GetRectangleNodeWorldAabb(*boundsNode);
@@ -141,10 +137,6 @@ void ClampPongPlatformDesiredCenter(sf::Vector2f& center, bool isBottomPlayer,
 void ClampPongPlatformToPlayfield(const std::shared_ptr<SceneNode>& platformNode, bool isBottomPlayer,
                                   const std::weak_ptr<SceneNode>& movementBounds) {
 	if (!platformNode) {
-		return;
-	}
-	auto* collider = platformNode->FindPhysicsBody();
-	if (!collider) {
 		return;
 	}
 	sf::Vector2f pos = platformNode->GetPosGlobal();

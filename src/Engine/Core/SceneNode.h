@@ -66,6 +66,15 @@ public:
 
 	void AddBehaviour(shared_ptr<Behaviour> behaviour);
 
+	template <typename TVisual>
+	shared_ptr<TVisual> GetVisual() const {
+		static_assert(std::is_base_of_v<Visual, TVisual>, "GetVisual<T> is only for Visual types");
+		if (auto v = std::dynamic_pointer_cast<TVisual>(_visual)) {
+			return v;
+		}
+		return nullptr;
+	}
+
 	template <typename T>
 	void RemoveBehaviour() {
 		for (auto it = _behaviours.begin(); it != _behaviours.end();) {
@@ -119,8 +128,6 @@ public:
 		AddBehaviour(created);
 		return created;
 	}
-
-	PhysicsBodyBehaviour* FindPhysicsBody() const; // todo remove
 
 	shared_ptr<SceneNode> FindTopMostNodeAtPoint(const sf::Vector2f& worldPoint, bool tapResponsiveOnly = false);
 	void FindNodesAtPoint(const sf::Vector2f& worldPoint, std::vector<shared_ptr<SceneNode>>& result,

@@ -180,15 +180,6 @@ void SceneNode::SetParent(const shared_ptr<SceneNode>& parent) {
 	_parent = parent;
 }
 
-PhysicsBodyBehaviour* SceneNode::FindPhysicsBody() const {
-	for (auto& b : _behaviours) {
-		if (auto p = std::dynamic_pointer_cast<PhysicsBodyBehaviour>(b)) {
-			return p.get();
-		}
-	}
-	return nullptr;
-}
-
 const sf::Transform& SceneNode::GetWorldTransform() const {
 	if (!_worldTransformDirty) {
 		return _cachedWorldTransform;

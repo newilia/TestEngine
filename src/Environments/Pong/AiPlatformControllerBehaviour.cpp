@@ -78,15 +78,15 @@ void AiPlatformControllerBehaviour::MovePlatformTowardsBall() {
 	if (!node) {
 		return;
 	}
-	auto* selfCollider = node->FindPhysicsBody();
-	if (!selfCollider) {
+	auto* bodyBeh = node->FindBehaviour<PhysicsBodyBehaviour>().get();
+	if (!bodyBeh) {
 		return;
 	}
 	const sf::Vector2f selfPos = node->GetPosGlobal();
 	float distanceToBall = 0.f;
 	if (auto ball = _ball.lock()) {
 		if (auto* ballShape = ball->GetShape()) {
-			const sf::FloatRect selfBbox = selfCollider->GetBbox();
+			const sf::FloatRect selfBbox = bodyBeh->GetBbox();
 			distanceToBall = std::abs(_curExState.ballPos.y - selfPos.y) - ballShape->getRadius() - selfBbox.size.y;
 		}
 	}

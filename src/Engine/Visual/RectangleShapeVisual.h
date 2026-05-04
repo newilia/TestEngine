@@ -17,9 +17,9 @@ public:
 	sf::RectangleShape* GetShape();
 
 	/// @getter
-	sf::Vector2f GetRectSize() const;
+	sf::Vector2f GetSize() const;
 	/// @setter
-	void SetRectSize(const sf::Vector2f& size);
+	void SetSize(const sf::Vector2f& size);
 
 private:
 	sf::RectangleShape _rect;
