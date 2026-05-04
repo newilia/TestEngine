@@ -3,10 +3,11 @@
 #include "Engine/Core/FontManager.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Core/Transform.h"
 #include "Engine/Visual/TextVisual.h"
-#include "FpsCounterBehaviour.generated.hpp"
 
-#include <SFML/Graphics/Text.hpp>
+#include <SFML/Graphics/Color.hpp>
+#include <SFML/System/Vector2.hpp>
 
 #include <fmt/format.h>
 
@@ -21,43 +22,26 @@ std::shared_ptr<SceneNode> CreateFpsCounterNode() {
 	assert(font);
 
 	sf::Vector2f pos = {context.GetMainWindow()->getSize().x - 220.f, 0.f};
-	auto text = std::make_shared<sf::Text>(*font, "", 15);
-	text->setFillColor(sf::Color::White);
-	text->setPosition(pos);
+	auto text = std::make_shared<TextVisual>();
+	text->Init(*font);
+	text->SetFillColor(sf::Color::White);
+	node->GetLocalTransform()->SetPosition(pos);
+	node->SetVisual(text);
 
-	node->AddBehaviour(std::make_shared<FpsCounterBehaviour>(std::move(text)));
+	auto beh = std::make_shared<FpsCounterBehaviour>();
+	beh->SetTextVisual(text);
+	node->AddBehaviour(beh);
 	return node;
 }
 
-FpsCounterBehaviour::FpsCounterBehaviour(std::shared_ptr<sf::Text> text) : _text(std::move(text)) {}
-
-void FpsCounterBehaviour::OnInit() {
-	if (!_text) {
-		return;
-	}
-	_text->setFillColor(_textColor);
-	auto visual = std::make_shared<TextVisual>(_text);
-	if (auto node = GetNode()) {
-		node->SetVisual(std::move(visual));
-		_ownsDisplayVisual = true;
-	}
-}
-
-void FpsCounterBehaviour::OnDeinit() {
-	if (!_ownsDisplayVisual) {
-		return;
-	}
-	if (auto node = GetNode()) {
-		node->SetVisual(nullptr);
-	}
-	_ownsDisplayVisual = false;
-}
-
 void FpsCounterBehaviour::OnUpdate(const sf::Time&) {
-	if (_text) {
+	if (auto textVisual = _textVisual.lock()) {
 		auto fps = Engine::MainContext::GetInstance().GetCurrentFps();
 		auto tickRate = Engine::MainContext::GetInstance().GetCurrentTickRate();
-		_text->setString(fmt::format("FPS = {:.0f} | Tick = {:.0f}", fps, tickRate));
-		_text->setFillColor(_textColor);
+		textVisual->SetString(fmt::format("FPS = {:.0f} | Tick = {:.0f}", fps, tickRate));
 	}
+}
+
+void FpsCounterBehaviour::SetTextVisual(std::shared_ptr<TextVisual> textVisual) {
+	_textVisual = std::move(textVisual);
 }

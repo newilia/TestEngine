@@ -9,8 +9,6 @@
 #include "Engine/Visual/TextVisual.h"
 #include "TicTacToeBehaviour.h"
 
-#include <SFML/Graphics/Text.hpp>
-
 #include <fmt/format.h>
 
 #include <array>
@@ -76,12 +74,13 @@ namespace Demo1 {
 		auto* font = ctx.GetFontManager()->GetDefaultFont();
 		assert(font);
 
-		auto hudText = std::make_shared<sf::Text>(*font, "", 18u);
-		hudText->setFillColor(sf::Color::White);
+		auto hudVisual = std::make_shared<TextVisual>();
+		hudVisual->Init(*font, "", 18);
+		hudVisual->SetFillColor(sf::Color::White);
 		auto hudNode = std::make_shared<SceneNode>();
 		hudNode->SetName("TicTacToeHUD");
 		hudNode->GetLocalTransform()->SetPosition({0.f, -52.f});
-		hudNode->SetVisual(std::make_shared<TextVisual>(hudText));
+		hudNode->SetVisual(hudVisual);
 		root->AddChild(hudNode);
 
 		AddGridLine(root, {kCell, 0.f}, {kLine, kBoard});
@@ -89,18 +88,20 @@ namespace Demo1 {
 		AddGridLine(root, {0.f, kCell}, {kBoard, kLine});
 		AddGridLine(root, {0.f, 2.f * kCell + kLine}, {kBoard, kLine});
 
-		std::array<std::shared_ptr<sf::Text>, 9> cellTexts{};
+		std::array<std::shared_ptr<TextVisual>, 9> cellTexts{};
 		for (int i = 0; i < 9; ++i) {
-			cellTexts[static_cast<std::size_t>(i)] = std::make_shared<sf::Text>(*font, "", 44u);
-			cellTexts[static_cast<std::size_t>(i)]->setFillColor(sf::Color::White);
-			cellTexts[static_cast<std::size_t>(i)]->setString("X");
-			const sf::FloatRect b = cellTexts[static_cast<std::size_t>(i)]->getLocalBounds();
-			cellTexts[static_cast<std::size_t>(i)]->setOrigin(
-			    {b.position.x + b.size.x * 0.5f, b.position.y + b.size.y * 0.5f});
-			cellTexts[static_cast<std::size_t>(i)]->setString("");
+			auto cellV = std::make_shared<TicTacToeMarkerTextVisual>();
+			cellV->Init(*font);
+			cellV->SetCharacterSize(44);
+			cellV->SetFillColor(sf::Color::White);
+			cellV->SetString("X");
+			const sf::FloatRect b = cellV->GetLocalBounds();
+			cellV->SetOrigin({b.position.x + b.size.x * 0.5f, b.position.y + b.size.y * 0.5f});
+			cellV->SetString("");
+			cellTexts[static_cast<std::size_t>(i)] = cellV;
 		}
 
-		auto behaviour = std::make_shared<TicTacToeBehaviour>(hudText, cellTexts);
+		auto behaviour = std::make_shared<TicTacToeBehaviour>(hudVisual, cellTexts);
 		root->AddBehaviour(behaviour);
 
 		for (int i = 0; i < 9; ++i) {
@@ -124,7 +125,7 @@ namespace Demo1 {
 
 			auto markerNode = std::make_shared<SceneNode>();
 			markerNode->GetLocalTransform()->SetPosition({kCell * 0.5f, kCell * 0.5f});
-			markerNode->SetVisual(std::make_shared<TicTacToeMarkerTextVisual>(cellTexts[static_cast<std::size_t>(i)]));
+			markerNode->SetVisual(std::shared_ptr<TextVisual>(cellTexts[static_cast<std::size_t>(i)]));
 			auto markerSort = std::make_shared<RelativeSortingStrategy>();
 			markerSort->SetPriority(20);
 			markerNode->SetSortingStrategy(std::move(markerSort));

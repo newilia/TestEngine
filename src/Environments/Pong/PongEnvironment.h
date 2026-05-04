@@ -5,11 +5,8 @@
 
 #include <memory>
 
-namespace sf {
-	class Text;
-}
-
 class SceneNode;
+class TextVisual;
 
 class PongEnvironment : public EnvironmentBase, public Engine::EventHandlerBase
 {
@@ -32,7 +29,7 @@ private:
 	void ResetRound();
 	void UpdateScoreText();
 
-	std::shared_ptr<sf::Text> _scoreText;
+	std::shared_ptr<TextVisual> _scoreText;
 	std::shared_ptr<SceneNode> _scoreboardNode;
 	int _userScore = 0;
 	int _aiScore = 0;

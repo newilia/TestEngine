@@ -13,6 +13,7 @@ namespace sf {
 class SpriteVisual : public Visual
 {
 	META_CLASS()
+	META_PROPERTY_BASE(Visual)
 
 public:
 	SpriteVisual();

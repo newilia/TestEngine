@@ -2,14 +2,11 @@
 
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Core/MetaClass.h"
+#include "Engine/Visual/TextVisual.h"
 
 #include <array>
 #include <memory>
 #include <random>
-
-namespace sf {
-	class Text;
-}
 
 enum class TicTacToeTurnPhase : std::uint8_t
 {
@@ -24,7 +21,8 @@ class TicTacToeBehaviour : public Behaviour
 	META_CLASS()
 
 public:
-	explicit TicTacToeBehaviour(std::shared_ptr<sf::Text> hudText, std::array<std::shared_ptr<sf::Text>, 9> cellTexts);
+	explicit TicTacToeBehaviour(std::shared_ptr<TextVisual> hudText,
+	                            std::array<std::shared_ptr<TextVisual>, 9> cellTexts);
 
 	void OnInit() override;
 	void OnUpdate(const sf::Time& dt) override;
@@ -53,8 +51,8 @@ private:
 	float _aiThinkDelaySeconds = 2.f;
 
 private:
-	std::shared_ptr<sf::Text> _hudText;
-	std::array<std::shared_ptr<sf::Text>, 9> _cellTexts;
+	std::shared_ptr<TextVisual> _hudText;
+	std::array<std::shared_ptr<TextVisual>, 9> _cellTexts;
 	std::array<std::uint8_t, 9> _board{};
 	TicTacToeTurnPhase _phase = TicTacToeTurnPhase::PlayerTurn;
 	float _aiThinkElapsed = 0.f;

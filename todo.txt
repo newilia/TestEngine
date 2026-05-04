@@ -37,17 +37,9 @@ del, ctrl c, ctrl x, ctrl v в иерархии
 
 перенести вызов Scene::DispatchTapAt в MainLoop/Scene?
 
-дублирование?
-	std::bitset<CollisionGroupsCount> _collisionGroups;
-	std::bitset<CollisionGroupsCount> _overlappingGroups;
-	Signal<const IntersectionDetails&> _collisionCallbacks;
-	Signal<const IntersectionDetails&> _overlappingCallbacks;
-
 добавить LOG_DEBUG(), LOG_INFO() и т.д. и панельку с логом
 
 невыпуклые многоугольники в Polygon tool
-
-более медленный drag float для scale
 
 убрать SetPosGlobal
 
@@ -57,3 +49,6 @@ del, ctrl c, ctrl x, ctrl v в иерархии
 
 /// @method
 
+inverse attraction
+
+удалить PhysicsDebugBehaviour, debug draw

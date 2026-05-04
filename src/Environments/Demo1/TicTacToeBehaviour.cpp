@@ -2,8 +2,6 @@
 
 #include "TicTacToeBehaviour.generated.hpp"
 
-#include <SFML/Graphics/Text.hpp>
-
 #include <fmt/format.h>
 
 #include <algorithm>
@@ -23,8 +21,8 @@ namespace {
 
 } // namespace
 
-TicTacToeBehaviour::TicTacToeBehaviour(std::shared_ptr<sf::Text> hudText,
-                                       std::array<std::shared_ptr<sf::Text>, 9> cellTexts)
+TicTacToeBehaviour::TicTacToeBehaviour(std::shared_ptr<TextVisual> hudText,
+                                       std::array<std::shared_ptr<TextVisual>, 9> cellTexts)
     : _hudText(std::move(hudText)), _cellTexts(std::move(cellTexts)) {}
 
 void TicTacToeBehaviour::OnInit() {
@@ -77,7 +75,7 @@ void TicTacToeBehaviour::RefreshHud() {
 		break;
 	}
 
-	_hudText->setString(fmt::format("You: {}  AI: {}  Draws: {}\n{}", _playerWins, _aiWins, _draws, status));
+	_hudText->SetString(fmt::format("You: {}  AI: {}  Draws: {}\n{}", _playerWins, _aiWins, _draws, status));
 }
 
 void TicTacToeBehaviour::BeginNewRound() {
@@ -166,7 +164,7 @@ void TicTacToeBehaviour::ApplyMove(const int cellIndex, const std::uint8_t mark)
 void TicTacToeBehaviour::ClearCellVisuals() {
 	for (int i = 0; i < 9; ++i) {
 		if (_cellTexts[static_cast<std::size_t>(i)]) {
-			_cellTexts[static_cast<std::size_t>(i)]->setString("");
+			_cellTexts[static_cast<std::size_t>(i)]->SetString("");
 		}
 	}
 }
@@ -178,13 +176,13 @@ void TicTacToeBehaviour::UpdateCellVisual(const int cellIndex) {
 	}
 	const std::uint8_t v = _board[static_cast<std::size_t>(cellIndex)];
 	if (v == kX) {
-		t->setString("X");
+		t->SetString("X");
 	}
 	else if (v == kO) {
-		t->setString("O");
+		t->SetString("O");
 	}
 	else {
-		t->setString("");
+		t->SetString("");
 	}
 }
 
