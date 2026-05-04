@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Core/EntityOnNode.h"
+#include "Engine/Core/MetaClass.h"
 
 #include <SFML/Graphics/RenderStates.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
@@ -8,6 +9,7 @@
 
 class Visual : public EntityOnNode
 {
+	META_CLASS()
 public:
 	~Visual() override = default;
 
@@ -19,5 +21,6 @@ public:
 	bool IsTapHandlingEnabled() const;
 
 private:
+	/// @property
 	bool _tapHandlingEnabled = false;
 };

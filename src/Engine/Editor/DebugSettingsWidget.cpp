@@ -22,6 +22,7 @@ namespace Engine {
 		if (ImGui::SliderFloat("dt multiplier", &speedMul, 0.05f, 8.f, "%.3f")) {
 			mainContext.SetSimSpeedMultiplier(std::max(1e-4f, speedMul));
 		}
+		// todo добавить обработку ПКМ по dt multiplier для сброса значения в 1.0
 
 		ImGui::SeparatorText("Timing");
 		bool vsync = mainContext.IsVerticalSyncEnabled();

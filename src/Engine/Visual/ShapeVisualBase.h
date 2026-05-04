@@ -9,6 +9,7 @@
 class ShapeVisualBase : public Visual
 {
 	META_CLASS()
+	META_PROPERTY_BASE(Visual)
 
 public:
 	ShapeVisualBase();

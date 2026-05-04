@@ -18,8 +18,6 @@
 #include "Environments/Pong/PongPlayfield.h"
 #include "Environments/Pong/UserPlatformControllerBehaviour.h"
 
-#include <SFML/Graphics/Text.hpp>
-
 #include <fmt/format.h>
 
 #include <cmath>
@@ -42,7 +40,7 @@ namespace Demo1 {
 
 		int userScore = 0;
 		int aiScore = 0;
-		shared_ptr<sf::Text> scoreText;
+		shared_ptr<TextVisual> scoreText;
 		shared_ptr<SceneNode> scoreboardNode;
 
 		bool sAwaitingFirstTap = false;
@@ -112,9 +110,9 @@ namespace Demo1 {
 			if (!scoreText || !scoreboardNode) {
 				return;
 			}
-			scoreText->setString(fmt::format("{}:{}", userScore, aiScore));
-			auto lb = scoreText->getLocalBounds();
-			scoreText->setOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
+			scoreText->SetString(fmt::format("{}:{}", userScore, aiScore));
+			const auto lb = scoreText->GetLocalBounds();
+			scoreText->SetOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
 			scoreboardNode->GetLocalTransform()->SetPosition({0.f, 0.f});
 		}
 
@@ -357,13 +355,15 @@ namespace Demo1 {
 			node->SetSortingStrategy(sorting);
 			node->SetName("Score");
 
-			scoreText = std::make_shared<sf::Text>(*font, "Tap to play", static_cast<unsigned>(kTapPromptFontSize));
-			scoreText->setFillColor(sf::Color(255, 255, 255, static_cast<std::uint8_t>(0.3f * 255.f)));
+			auto textVisual = std::make_shared<TextVisual>();
+			textVisual->Init(*font, "Tap to play", kTapPromptFontSize);
+			textVisual->SetFillColor(sf::Color(255, 255, 255, static_cast<std::uint8_t>(0.3f * 255.f)));
+			const auto lb = textVisual->GetLocalBounds();
+			textVisual->SetOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
 
-			auto lb = scoreText->getLocalBounds();
-			scoreText->setOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
+			scoreText = textVisual;
+			node->SetVisual(std::move(textVisual));
 
-			node->SetVisual(std::make_shared<TextVisual>(scoreText));
 			scoreboardNode = node;
 
 			auto button = std::make_shared<ButtonBehaviour>();
@@ -387,7 +387,7 @@ namespace Demo1 {
 			if (auto ai = sAiPlatform->FindBehaviour<AiPlatformControllerBehaviour>()) {
 				ai->BeginObserve(sUserPlatform, sBall);
 			}
-			scoreText->setCharacterSize(static_cast<unsigned>(kPongScoreFontSize));
+			scoreText->SetCharacterSize(kPongScoreFontSize);
 			UpdateScoreText();
 		}
 

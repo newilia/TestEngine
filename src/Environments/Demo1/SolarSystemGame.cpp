@@ -11,7 +11,6 @@
 #include "SolarSystemBehaviour.h"
 
 #include <SFML/Graphics/RectangleShape.hpp>
-#include <SFML/Graphics/Text.hpp>
 
 #include <memory>
 
@@ -47,13 +46,14 @@ namespace Demo1 {
 		}
 
 		if (auto* font = Engine::MainContext::GetInstance().GetFontManager()->GetDefaultFont()) {
-			auto restartText = make_shared<sf::Text>(*font, "Restart", 22u);
-			restartText->setFillColor(sf::Color(235, 240, 255, 255));
-			const auto lb = restartText->getLocalBounds();
-			restartText->setOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
+			auto labelVisual = make_shared<TextVisual>();
+			labelVisual->Init(*font, "Restart", 22);
+			labelVisual->SetFillColor(sf::Color(235, 240, 255, 255));
+			const auto lb = labelVisual->GetLocalBounds();
+			labelVisual->SetOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
 			auto labelNode = make_shared<SceneNode>();
 			labelNode->SetName("SolarControlLabel");
-			labelNode->SetVisual(make_shared<TextVisual>(restartText));
+			labelNode->SetVisual(std::move(labelVisual));
 			control->AddChild(labelNode);
 		}
 

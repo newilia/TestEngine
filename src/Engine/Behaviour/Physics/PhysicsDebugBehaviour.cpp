@@ -6,6 +6,7 @@
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
+#include "Engine/Visual/TextVisual.h"
 #include "Engine/Visual/VectorArrowVisual.h"
 
 #include <fmt/format.h>
@@ -25,20 +26,24 @@ void PhysicsDebugBehaviour::DebugDraw(sf::RenderTarget& target, sf::RenderStates
 		return;
 	}
 
-	auto font = Engine::MainContext::GetInstance().GetFontManager()->GetDefaultFont();
-	sf::Text text(*font, "", 15);
-	text.setFillColor(sf::Color::White);
-	text.setOutlineColor(sf::Color::Black);
-	text.setOutlineThickness(1.f);
-
-	auto pos = node->GetPosGlobal();
-	text.setPosition(pos);
-	text.setString(fmt::format("{}\n{:.1f}, {:.1f}", node->GetName(), pos.x, pos.y));
+	const auto pos = node->GetPosGlobal();
 	sf::RenderStates dbg = states;
 	dbg.transform = sf::Transform{};
-	target.draw(text, dbg);
 
-	VectorArrow velArrow(node->GetPosGlobal(), node->GetPosGlobal() + rigidBody->GetVelocity());
+	auto* font = Engine::MainContext::GetInstance().GetFontManager()->GetDefaultFont();
+	if (font) {
+		TextVisual label;
+		label.Init(*font);
+		label.SetCharacterSize(15);
+		label.SetFillColor(sf::Color::White);
+		label.SetOutlineColor(sf::Color::Black);
+		label.SetOutlineThickness(1.f);
+		label.SetPosition(pos);
+		label.SetString(fmt::format("{}\n{:.1f}, {:.1f}", node->GetName(), pos.x, pos.y));
+		label.Draw(target, dbg);
+	}
+
+	VectorArrow velArrow(pos, pos + rigidBody->GetVelocity());
 	target.draw(velArrow, dbg);
 
 	if (auto fieldSrc = node->FindBehaviour<AttractiveBehaviour>()) {

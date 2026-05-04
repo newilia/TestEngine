@@ -18,8 +18,6 @@
 #include "PongPlayfield.h"
 #include "UserPlatformControllerBehaviour.h"
 
-#include <SFML/Graphics/Text.hpp>
-
 #include <fmt/format.h>
 
 using std::make_shared;
@@ -271,14 +269,15 @@ void PongEnvironment::AddScoreboard(Scene* scene) {
 	node->SetSortingStrategy(sorting);
 	node->SetName("Score");
 
-	_scoreText = std::make_shared<sf::Text>(*font, "0:0", static_cast<unsigned>(kPongScoreFontSize));
-	_scoreText->setFillColor(sf::Color(255, 255, 255, static_cast<std::uint8_t>(0.3f * 255.f)));
+	_scoreText = std::make_shared<TextVisual>();
+	_scoreText->Init(*font, "0:0", kPongScoreFontSize);
+	_scoreText->SetFillColor(sf::Color(255, 255, 255, static_cast<std::uint8_t>(0.3f * 255.f)));
 
 	const sf::Vector2f center = GetPongPlayfieldRect().getCenter();
-	auto lb = _scoreText->getLocalBounds();
-	_scoreText->setOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
+	const auto lb = _scoreText->GetLocalBounds();
+	_scoreText->SetOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
 
-	node->SetVisual(std::make_shared<TextVisual>(_scoreText));
+	node->SetVisual(std::shared_ptr<TextVisual>(_scoreText));
 	node->SetPosGlobal(center);
 	_scoreboardNode = node;
 	scene->AddChild(std::move(node));
@@ -288,10 +287,10 @@ void PongEnvironment::UpdateScoreText() {
 	if (!_scoreText || !_scoreboardNode) {
 		return;
 	}
-	auto text = fmt::format("{}:{}", _userScore, _aiScore);
-	_scoreText->setString(text);
-	auto lb = _scoreText->getLocalBounds();
-	_scoreText->setOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
+	const auto text = fmt::format("{}:{}", _userScore, _aiScore);
+	_scoreText->SetString(text);
+	const auto lb = _scoreText->GetLocalBounds();
+	_scoreText->SetOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
 	_scoreboardNode->SetPosGlobal(GetPongPlayfieldRect().getCenter());
 }
 
