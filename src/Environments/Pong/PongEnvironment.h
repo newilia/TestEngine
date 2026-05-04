@@ -1,6 +1,7 @@
 #pragma once
 #include "Engine/Core/EventHandlerBase.h"
 #include "Engine/Core/Scene.h"
+#include "Engine/Core/SubscriptionsHolderBase.h"
 #include "Environments/EnvironmentBase.h"
 
 #include <memory>
@@ -8,7 +9,7 @@
 class SceneNode;
 class TextVisual;
 
-class PongEnvironment : public EnvironmentBase, public Engine::EventHandlerBase
+class PongEnvironment : public EnvironmentBase, public Engine::EventHandlerBase, public SubscriptionsHolderBase
 {
 public:
 	~PongEnvironment() override;
