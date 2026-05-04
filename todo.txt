@@ -47,8 +47,4 @@ del, ctrl c, ctrl x, ctrl v в иерархии
 
 кастомные инспекторы для типов и членов
 
-/// @method
-
 inverse attraction
-
-удалить PhysicsDebugBehaviour, debug draw

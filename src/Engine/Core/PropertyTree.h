@@ -8,9 +8,16 @@
 
 namespace Engine {
 
+	struct ReflectedInspectorMethod
+	{
+		std::string menuLabel;
+		std::function<void()> invoke;
+	};
+
 	struct PropertyTree
 	{
 		std::vector<PropertyNode> roots;
+		std::vector<ReflectedInspectorMethod> inspectorMethods;
 	};
 
 	/// Stack-based helper used from `IInspectable::BuildPropertyTree`.
@@ -70,6 +77,8 @@ namespace Engine {
 		                      PropertyMeta meta = {});
 
 		void endAssociative();
+
+		void registerInspectorMethod(std::string menuLabel, std::function<void()> invoke);
 
 	private:
 		PropertyTree* _tree = nullptr;

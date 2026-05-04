@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Scan src/**/*.h for META_CLASS(), META_PROPERTY_BASE(), /// @property, /// @getter, and /// @setter tags; emit src/Codegen/<Stem>.generated.hpp.
+Scan src/**/*.h for META_CLASS(), META_PROPERTY_BASE(), /// @property, /// @getter, /// @setter, and /// @method tags; emit src/Codegen/<Stem>.generated.hpp.
 """
 
 from __future__ import annotations
@@ -14,11 +14,12 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 7
+CACHE_VERSION = 8
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
 SETTER_TAG_RE = re.compile(r"^\s*///\s*@setter\s*(?:\((.*)\))?\s*$")
+METHOD_TAG_RE = re.compile(r"^\s*///\s*@method\s*(?:\((.*)\))?\s*$")
 META_CLASS_RE = re.compile(r"\bMETA_CLASS\s*\(\s*\)")
 META_PROPERTY_BASE_RE = re.compile(
     r"\bMETA_PROPERTY_BASE\s*\(\s*((?:[A-Za-z_]\w*\s*::\s*)*[A-Za-z_]\w*)\s*\)"
@@ -99,6 +100,12 @@ SETTER_VECTOR_METHOD_RE = re.compile(
     r"(\w+)\s*\(\s*(?:const\s+)?std::vector<\s*" + _VEC_ELT + r"\s*>\s*(?:const\s*)?(?:&)?\s*\w+\s*\)\s*"
     r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
 )
+# void Method(); — no parameters (v1).
+VOID_METHOD_RE = re.compile(
+    r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?void\s+"
+    r"(\w+)\s*\(\s*\)\s*"
+    r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
+)
 KNOWN_TYPES = frozenset(
     {
         "float",
@@ -134,7 +141,26 @@ class PropSpec:
     assoc_container: str | None = None
 
 
-PendingKind = Literal["property", "getter", "setter"]
+@dataclass
+class MethodSpec:
+    method: str
+    line: int
+    col: int
+    attrs: dict[str, Any] = field(default_factory=dict)
+
+
+PendingKind = Literal["property", "getter", "setter", "method"]
+
+PENDING_TAG_NAME: dict[PendingKind, str] = {
+    "property": "@property",
+    "getter": "@getter",
+    "setter": "@setter",
+    "method": "@method",
+}
+
+PENDING_TAGS_UNFINISHED = (
+    "unfinished @property, @getter, @setter, or @method (a new tag started before the declaration line)"
+)
 
 
 @dataclass
@@ -293,6 +319,7 @@ class ClassSpec:
     namespaces: tuple[str, ...]
     class_name: str
     props: list[PropSpec] = field(default_factory=list)
+    methods: list[MethodSpec] = field(default_factory=list)
     property_base: str | None = None
 
     def qualified(self) -> str:
@@ -568,6 +595,7 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
         if not b.get("meta"):
             return
         props: list[PropSpec] = list(b.get("props", []))
+        methods: list[MethodSpec] = list(b.get("methods", []))
         gdecls: list[GetterDecl] = list(b.get("getter_decls", []))
         sdecls: list[SetterDecl] = list(b.get("setter_decls", []))
         if gdecls or sdecls:
@@ -581,6 +609,7 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                 namespaces=tuple(b["namespaces"]),
                 class_name=b["name"],
                 props=props,
+                methods=methods,
                 property_base=property_base,
             )
         )
@@ -598,7 +627,7 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                 continue
             inner = find_innermost_class(block_stack)
             if inner is None or not inner.get("meta"):
-                tag = {"property": "@property", "getter": "@getter", "setter": "@setter"}[kind]
+                tag = PENDING_TAG_NAME[kind]
                 raise ParseError(
                     f"{tag} must appear inside a class marked with META_CLASS()",
                     path,
@@ -762,7 +791,7 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                         line_no,
                         1,
                     )
-            else:
+            elif kind == "setter":
                 if re.search(r"\bstatic\b", line):
                     raise ParseError(
                         f"@setter does not support static methods (tag at line {pline})",
@@ -803,6 +832,30 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                             is_vector=False,
                         )
                     )
+            else:
+                if re.search(r"\bstatic\b", line):
+                    raise ParseError(
+                        f"@method does not support static methods (tag at line {pline})",
+                        path,
+                        line_no,
+                        1,
+                    )
+                m_void = VOID_METHOD_RE.match(line)
+                if not m_void:
+                    raise ParseError(
+                        f"expected void Method() after @method (tag at line {pline})",
+                        path,
+                        line_no,
+                        1,
+                    )
+                inner.setdefault("methods", []).append(
+                    MethodSpec(
+                        method=m_void.group(1),
+                        line=pline,
+                        col=pcol,
+                        attrs=attrs,
+                    )
+                )
             pending = None
             continue
 
@@ -816,7 +869,7 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
         if m_prop:
             if pending is not None:
                 raise ParseError(
-                    "unfinished @property, @getter, or @setter (a new tag started before the declaration line)",
+                    PENDING_TAGS_UNFINISHED,
                     path,
                     line_no,
                     1,
@@ -833,7 +886,7 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
         if m_getter_tag:
             if pending is not None:
                 raise ParseError(
-                    "unfinished @property, @getter, or @setter (a new tag started before the declaration line)",
+                    PENDING_TAGS_UNFINISHED,
                     path,
                     line_no,
                     1,
@@ -850,7 +903,7 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
         if m_setter_tag:
             if pending is not None:
                 raise ParseError(
-                    "unfinished @property, @getter, or @setter (a new tag started before the declaration line)",
+                    PENDING_TAGS_UNFINISHED,
                     path,
                     line_no,
                     1,
@@ -861,6 +914,23 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
             except ValueError:
                 col = 1
             pending = ("setter", line_no, col, args)
+            continue
+
+        m_method_tag = METHOD_TAG_RE.match(raw_line)
+        if m_method_tag:
+            if pending is not None:
+                raise ParseError(
+                    PENDING_TAGS_UNFINISHED,
+                    path,
+                    line_no,
+                    1,
+                )
+            args = m_method_tag.group(1) or ""
+            try:
+                col = raw_line.index("@method") + 1
+            except ValueError:
+                col = 1
+            pending = ("method", line_no, col, args)
             continue
 
         if META_CLASS_RE.search(line) and not re.search(r"^\s*#\s*define\s+META_CLASS\b", line):
@@ -918,6 +988,7 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                         "name": p_cl,
                         "meta": False,
                         "props": [],
+                        "methods": [],
                         "namespaces": tuple(ns_stack),
                     }
                 )
@@ -933,6 +1004,7 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                     "name": pending_class,
                     "meta": False,
                     "props": [],
+                    "methods": [],
                     "namespaces": tuple(ns_stack),
                 }
             )
@@ -959,6 +1031,7 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                             "name": name,
                             "meta": False,
                             "props": [],
+                            "methods": [],
                             "namespaces": tuple(ns_stack),
                         }
                     )
@@ -982,18 +1055,24 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
 
     if pending:
         kind, pline, pcol, _ = pending
-        tag = {"property": "@property", "getter": "@getter", "setter": "@setter"}[kind]
+        tag = PENDING_TAG_NAME[kind]
         raise ParseError(f"unfinished {tag} (no declaration line before EOF)", path, pline, pcol)
 
     for spec in finished:
         extra = f", property_base={spec.property_base}" if spec.property_base else ""
-        log.append(f"  class {spec.qualified()} : {len(spec.props)} properties{extra}")
+        log.append(
+            f"  class {spec.qualified()} : {len(spec.props)} properties, {len(spec.methods)} methods{extra}"
+        )
 
     return finished, log
 
 
 def default_label(p: PropSpec) -> str:
     return inferred_display_label(p.member, p.attrs, is_getter=p.is_getter)
+
+
+def method_menu_label(m: MethodSpec) -> str:
+    return inferred_display_label(m.method, m.attrs, is_getter=False)
 
 
 def format_meta_inline(p: PropSpec) -> str:
@@ -2000,6 +2079,9 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                 out.append(f'\tb.addColor("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
             elif p.cpp_type == "sf::Angle":
                 out.append(f'\tb.addFloat("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
+        for m in c.methods:
+            label_esc = cpp_escape_string(method_menu_label(m))
+            out.append(f'\tb.registerInspectorMethod("{label_esc}", [this]() {{ this->{m.method}(); }});')
         out.append("\tb.pop();")
         out.append("}")
         out.append("")

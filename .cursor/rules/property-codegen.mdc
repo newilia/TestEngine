@@ -1,5 +1,5 @@
 ---
-description: Property reflection codegen (META_CLASS, META_PROPERTY_BASE, @property, @getter, @setter, Python generator)
+description: Property reflection codegen (META_CLASS, META_PROPERTY_BASE, @property, @getter, @setter, @method, Python generator)
 globs: src/**/*.h, tools/property_codegen.py, CMakeLists.txt, src/Codegen/**/*
 alwaysApply: false
 ---
@@ -18,7 +18,7 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 
 1. In the class header: `#include "Engine/Core/MetaClass.h"`, then put `META_CLASS()` inside the class (typically before `public:`).
 2. If a **derived** class should show the inspector tree of an **immediate base** that also uses codegen, add **`META_PROPERTY_BASE(ImmediateBase)`** on its own line in the same class (usually right after `META_CLASS()`). The generator emits `ImmediateBase::BuildPropertyTree(b);` before this class’s properties. Omit on root reflecting types (e.g. `ShapeVisualBase` has no `META_PROPERTY_BASE`). The name may be `Qualified::Base` if needed.
-3. Above each reflected **data member** use `/// @property` or `/// @property(key=value, ...)`. For method-backed properties use `/// @getter` on the getter line and optionally `/// @setter` on the setter line (see below).
+3. Above each reflected **data member** use `/// @property` or `/// @property(key=value, ...)`. For method-backed properties use `/// @getter` on the getter line and optionally `/// @setter` on the setter line (see below). For **editor-invokable actions** (no arguments), use `/// @method` on the line before a `void Method();` declaration (see **`@method`** below).
 4. In **one** corresponding `.cpp`: `#include "<HeaderStem>.generated.hpp"` after the class header so out-of-line `BuildPropertyTree` sees the full class type.
 5. Build `TestEngine`; CMake target **`Codegen`** runs first. Include generated headers as `#include "Foo_gen.hpp"` (`src/Codegen` is on the include path).
 
@@ -29,6 +29,15 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 - Parser errors include `file:line:col:` messages; fix the tag or the following field line.
 - The key `name` (and `label`) sets the **inspector display string** only. The **property id** in the tree is still derived from the C++ field or method name (e.g. `GetPropValue` → `get_prop_value`).
 - If neither `name` nor `label` is set to a **non-empty** string, the display label is **inferred**: from the **field** name (`_thisIsAProperty` → `This is a property`; snake segments → sentence case, e.g. `_angular_speed` → `Angular speed`), or from a **`Get…` / `Set…` method** for `@getter` / `@setter` pairs (`GetSomeProp` → `Some prop` after stripping the `Get`/`Set` prefix and splitting PascalCase). Use `name="..."` when you need exact wording.
+
+## `@method` (inspector context menu)
+
+- One-line `/// @method` or `/// @method(name="...", label="...", tooltip="...")` (display uses **`name` / `label`** like `@property`; `tooltip` is accepted for parity but the v1 menu uses the label text only).
+- The next non-empty code line must be a **non-static** instance method: **`void MethodName();`** with an **empty parameter list** only (optional `const`, `noexcept`, `override`, `final`, `[[...]]`, `virtual`). **Static** methods are a parse error. Same single-line `;`-terminated declaration rule as `@getter` / `@setter`.
+- The generator emits `PropertyBuilder::registerInspectorMethod(...)`, which stores a `[this]() { this->MethodName(); }` callback on `PropertyTree::inspectorMethods`.
+- **Inheritance:** order matches `@property`: if the class has `META_PROPERTY_BASE(Base)`, generated `BuildPropertyTree` calls `Base::BuildPropertyTree(b)` first, so **base** `@method` entries are registered **before** this class’s methods (flat list: parent actions, then child).
+- **Inspector:** right-click the **section header** (the `CollapsingHeader` for that provider — e.g. Behaviour, Visual, SceneNode). If any methods were registered, a context menu lists them; choosing an item runs the method. Sections with **only** `@method` and no properties still appear when there is at least one registered method.
+- If the same method name appears on base and derived with `@method`, you may get two menu entries with the same inferred label; use `name="..."` on the tag to disambiguate. Both entries call `this->Name()` (usual C++ virtual dispatch applies).
 
 ## `@getter` / `@setter` (method-backed get/set)
 
@@ -87,7 +96,7 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 
 ## Limitations (maintainability)
 
-- One-line `/// @property` / `/// @getter` / `/// @setter` tags only. After each tag, the next non-empty code line must be the matching declaration ending in `;` (field, getter, or `void` setter with one parameter).
+- One-line `/// @property` / `/// @getter` / `/// @setter` / `/// @method` tags only. After each tag, the next non-empty code line must be the matching declaration ending in `;` (field, getter, `void` setter with one parameter, or `void` method with **no** parameters).
 - At most one `META_PROPERTY_BASE(...)` per class; it must appear in the same class as `META_CLASS()` (scanner error if `META_PROPERTY_BASE` is used without `META_CLASS`).
 - Templates, tricky macros, multi-line declarations, and **nested** `std::vector`s are **not** supported in v1.
 - `#define META_CLASS()` / `#define META_PROPERTY_BASE(...)` in `MetaClass.h` are ignored by the scanner (not treated as usage).
@@ -101,8 +110,8 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 
 ## Extending reflection
 
-1. Prefer extending **meta keys** → `Engine::PropertyMeta` / existing `PropertyBuilder::add*` in the generator.
-2. New C++ types: add to `KNOWN_TYPES`, `FIELD_RE`, `VECTOR_FIELD_RE`, `MAP_FIELD_RE`, `SET_FIELD_RE`, `BITSET_FIELD_RE` / alias tracking / `GETTER_METHOD_RE`, `GETTER_VECTOR_*_RE`, `SETTER_METHOD_RE`, `SETTER_VECTOR_METHOD_RE`, scalar emit in `generate_file_content`, `emit_std_vector_property`, `emit_assoc_map_property` / `emit_assoc_set_property`, and `emit_bitset_property` where applicable.
+1. Prefer extending **meta keys** → `Engine::PropertyMeta` / existing `PropertyBuilder::add*` in the generator. For side-effect actions without editor fields, extend **`@method`** / `PropertyBuilder::registerInspectorMethod` before adding bespoke virtuals on `IPropertiesProvider`.
+2. New C++ types: add to `KNOWN_TYPES`, `FIELD_RE`, `VECTOR_FIELD_RE`, `MAP_FIELD_RE`, `SET_FIELD_RE`, `BITSET_FIELD_RE` / alias tracking / `GETTER_METHOD_RE`, `GETTER_VECTOR_*_RE`, `SETTER_METHOD_RE`, `SETTER_VECTOR_METHOD_RE`, `VOID_METHOD_RE` (for `@method`), scalar emit in `generate_file_content`, `emit_std_vector_property`, `emit_assoc_map_property` / `emit_assoc_set_property`, and `emit_bitset_property` where applicable.
 3. If headers outgrow the scanner, plan a **Clang-based** extraction step; keep `_gen.hpp` output format stable.
 
 ## CMake
