@@ -52,6 +52,7 @@ public:
 	const std::vector<shared_ptr<SceneNode>>& GetChildren() const;
 
 	void AddChild(const std::shared_ptr<SceneNode>& child);
+	void AddChildAt(const std::shared_ptr<SceneNode>& child, std::size_t index);
 	void RemoveChild(SceneNode* child);
 	shared_ptr<SceneNode> FindChild(const std::string& id, bool recursively);
 	bool HasChild(const std::shared_ptr<SceneNode>& child);
@@ -65,6 +66,7 @@ public:
 	const std::vector<shared_ptr<Behaviour>>& GetBehaviours() const;
 
 	void AddBehaviour(shared_ptr<Behaviour> behaviour);
+	void RemoveBehaviour(Behaviour* behaviour);
 
 	template <typename TVisual>
 	shared_ptr<TVisual> GetVisual() const {

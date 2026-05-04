@@ -1,5 +1,7 @@
 #include "Engine/Editor/SceneHierarchyWidget.h"
 
+#include "Engine/Editor/Editor.h"
+
 #include <imgui.h>
 
 namespace Engine {
@@ -29,7 +31,9 @@ namespace Engine {
 		const bool isSelected = (currentSelection.get() == &node);
 		void* const id = static_cast<void*>(std::addressof(node));
 
-		ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_SpanFullWidth;
+		ImGui::PushID(id);
+
+		ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 		if (isSelected) {
 			nodeFlags |= ImGuiTreeNodeFlags_Selected;
 		}
@@ -42,9 +46,41 @@ namespace Engine {
 			nodeFlags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet;
 		}
 
-		const bool isOpen = ImGui::TreeNodeEx(id, nodeFlags, "%s", displayCStr);
+		const bool isOpen = ImGui::TreeNodeEx("##hierarchy_node", nodeFlags, "%s", displayCStr);
 		if (ImGui::IsItemClicked()) {
 			Select(node.shared_from_this());
+		}
+
+		if (ImGui::BeginPopupContextItem("hierarchy_node_ctx", ImGuiPopupFlags_MouseButtonRight)) {
+			auto nodePtr = node.shared_from_this();
+			Editor& editor = Editor::GetInstance();
+			if (ImGui::MenuItem("Copy")) {
+				(void)editor.CopyNode(nodePtr);
+			}
+			const bool canCut = nodePtr->GetParent() != nullptr;
+			if (!canCut) {
+				ImGui::BeginDisabled();
+			}
+			if (ImGui::MenuItem("Cut")) {
+				(void)editor.CutNode(nodePtr);
+			}
+			if (ImGui::MenuItem("Delete")) {
+				(void)editor.DeleteNode(nodePtr);
+			}
+			if (!canCut) {
+				ImGui::EndDisabled();
+			}
+			const bool canPaste = editor.CanPasteClipboard();
+			if (!canPaste) {
+				ImGui::BeginDisabled();
+			}
+			if (ImGui::MenuItem("Paste")) {
+				(void)editor.PasteClipboardOnto(nodePtr);
+			}
+			if (!canPaste) {
+				ImGui::EndDisabled();
+			}
+			ImGui::EndPopup();
 		}
 		if (_selectedNode.lock().get() == &node && _scrollSelectionIntoViewPending) {
 			ImGui::SetScrollHereY(0.5f);
@@ -61,6 +97,8 @@ namespace Engine {
 			}
 			ImGui::TreePop();
 		}
+
+		ImGui::PopID();
 	}
 
 	void SceneHierarchyWidget::Draw(const std::shared_ptr<Scene>& scene) {

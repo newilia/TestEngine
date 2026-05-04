@@ -3,6 +3,12 @@
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Editor/Commands/CutEntityCommand.h"
+#include "Engine/Editor/Commands/CutNodeCommand.h"
+#include "Engine/Editor/Commands/DeleteEntityCommand.h"
+#include "Engine/Editor/Commands/DeleteNodeCommand.h"
+#include "Engine/Editor/Commands/PasteEntityCommand.h"
+#include "Engine/Editor/Commands/PasteNodeCommand.h"
 
 #include <SFML/Window/Event.hpp>
 
@@ -55,6 +61,18 @@ namespace {
 		ImGui::DockBuilderFinish(dockspace_id);
 		layout_finished = true;
 	}
+
+	bool IsNodeInSubtree(const std::shared_ptr<SceneNode>& candidate, const std::shared_ptr<SceneNode>& treeRoot) {
+		if (!treeRoot || !candidate) {
+			return false;
+		}
+		for (auto cur = candidate; cur; cur = cur->GetParent()) {
+			if (cur == treeRoot) {
+				return true;
+			}
+		}
+		return false;
+	}
 } // namespace
 
 namespace Engine {
@@ -85,6 +103,116 @@ namespace Engine {
 
 	void Editor::SetSelectedNode(std::shared_ptr<SceneNode> node) {
 		_sceneHierarchyWidget.Select(std::move(node));
+	}
+
+	bool Editor::CopySelectedNode() {
+		return CopyNode(GetSelectedNode());
+	}
+
+	bool Editor::CutSelectedNode() {
+		return CutNode(GetSelectedNode());
+	}
+
+	bool Editor::PasteClipboard() {
+		return PasteClipboardOnto(GetSelectedNode());
+	}
+
+	bool Editor::CopyNode(const std::shared_ptr<SceneNode>& node) {
+		return node && _clipboard.CopyNode(node);
+	}
+
+	bool Editor::CutNode(const std::shared_ptr<SceneNode>& node) {
+		if (!node || !node->GetParent()) {
+			return false;
+		}
+		if (!_clipboard.CopyNode(node)) {
+			return false;
+		}
+		const auto cutRoot = node;
+		const bool executed = _history.Execute(std::make_unique<EditorCommands::CutNodeCommand>(node));
+		if (executed && IsNodeInSubtree(GetSelectedNode(), cutRoot)) {
+			ClearNodeSelection();
+		}
+		return executed;
+	}
+
+	bool Editor::PasteClipboardOnto(const std::shared_ptr<SceneNode>& parent) {
+		if (!parent) {
+			return false;
+		}
+		if (_clipboard.HasNode()) {
+			auto pasted = _clipboard.InstantiateNode();
+			if (!pasted) {
+				return false;
+			}
+			const bool executed = _history.Execute(std::make_unique<EditorCommands::PasteNodeCommand>(parent, pasted));
+			if (executed) {
+				SetSelectedNode(std::move(pasted));
+			}
+			return executed;
+		}
+		if (_clipboard.HasEntity()) {
+			auto entity = _clipboard.InstantiateEntity();
+			if (!entity) {
+				return false;
+			}
+			return _history.Execute(
+			    std::make_unique<EditorCommands::PasteEntityCommand>(parent, entity, _clipboard.GetEntitySlot()));
+		}
+		return false;
+	}
+
+	bool Editor::CanPasteClipboard() const {
+		return _clipboard.HasNode() || _clipboard.HasEntity();
+	}
+
+	bool Editor::DeleteSelectedNode() {
+		return DeleteNode(GetSelectedNode());
+	}
+
+	bool Editor::DeleteNode(const std::shared_ptr<SceneNode>& node) {
+		if (!node || !node->GetParent()) {
+			return false;
+		}
+		const auto removedRoot = node;
+		const bool executed = _history.Execute(std::make_unique<EditorCommands::DeleteNodeCommand>(node));
+		if (executed && IsNodeInSubtree(GetSelectedNode(), removedRoot)) {
+			ClearNodeSelection();
+		}
+		return executed;
+	}
+
+	bool Editor::DeleteEntity(const std::shared_ptr<EntityOnNode>& entity, EntitySlot slot) {
+		if (!entity || slot == EntitySlot::Transform) {
+			return false;
+		}
+		auto node = GetSelectedNode();
+		if (!node) {
+			return false;
+		}
+		return _history.Execute(std::make_unique<EditorCommands::DeleteEntityCommand>(node, entity, slot));
+	}
+
+	bool Editor::CopyEntity(const std::shared_ptr<EntityOnNode>& entity, EntitySlot slot) {
+		return entity && _clipboard.CopyEntity(entity, slot);
+	}
+
+	bool Editor::CutEntity(const std::shared_ptr<EntityOnNode>& entity, EntitySlot slot) {
+		if (!entity || slot == EntitySlot::Transform) {
+			return false;
+		}
+		auto node = GetSelectedNode();
+		if (!node) {
+			return false;
+		}
+		if (!_clipboard.CopyEntity(entity, slot)) {
+			return false;
+		}
+		return _history.Execute(std::make_unique<EditorCommands::CutEntityCommand>(node, entity, slot));
+	}
+
+	bool Editor::CanPasteEntityToSelectedNode() const {
+		return GetSelectedNode() && _clipboard.HasEntity();
 	}
 
 	EditorToolManager& Editor::GetEditorToolManager() {
@@ -195,6 +323,33 @@ namespace Engine {
 		if (e.code == sf::Keyboard::Key::F1) {
 			Toggle();
 			return;
+		}
+		if (!ImGui::GetIO().WantCaptureKeyboard) {
+			if (e.control && !e.shift && e.code == sf::Keyboard::Key::Z) {
+				(void)_history.Undo();
+				return;
+			}
+			if ((e.control && e.code == sf::Keyboard::Key::Y) ||
+			    (e.control && e.shift && e.code == sf::Keyboard::Key::Z)) {
+				(void)_history.Redo();
+				return;
+			}
+			if (e.control && e.code == sf::Keyboard::Key::C) {
+				(void)CopySelectedNode();
+				return;
+			}
+			if (e.control && e.code == sf::Keyboard::Key::X) {
+				(void)CutSelectedNode();
+				return;
+			}
+			if (e.control && e.code == sf::Keyboard::Key::V) {
+				(void)PasteClipboard();
+				return;
+			}
+			if (e.code == sf::Keyboard::Key::Delete) {
+				(void)DeleteSelectedNode();
+				return;
+			}
 		}
 		if (e.control && e.code == sf::Keyboard::Key::D) {
 			ClearNodeSelection();

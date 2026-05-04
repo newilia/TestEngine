@@ -18,7 +18,7 @@ namespace Engine {
 		void Draw(const PropertyTree& tree, PropertyTreeDrawOptions options = {}) const;
 
 	private:
-		void drawNode(const PropertyNode& node) const;
+		void DrawNode(const PropertyNode& node) const;
 	};
 
 } // namespace Engine
