@@ -47,7 +47,7 @@ namespace Demo1 {
 		std::weak_ptr<SceneNode> sPongGameRoot;
 		float sBallRadius = 0.f;
 
-		void OnScoreboardTap(const sf::Event&);
+		void OnScoreboardTap();
 
 		void ConfigureNewPongSession(float ballRadius) {
 			sAwaitingFirstTap = true;
@@ -277,14 +277,14 @@ namespace Demo1 {
 					bodyBeh->GetOverlappingGroups().set(0, true);
 
 					if (i == 0) {
-						[[maybe_unused]] auto connection =
-						    bodyBeh->GetOnOverlapSignal().Connect([](const IntersectionDetails&) {
+						[[maybe_unused]] auto subscription =
+						    bodyBeh->GetOnOverlapSignal().Subscribe([](const IntersectionDetails&) {
 							    OnLose();
 						    });
 					}
 					else {
-						[[maybe_unused]] auto connection =
-						    bodyBeh->GetOnOverlapSignal().Connect([](const IntersectionDetails&) {
+						[[maybe_unused]] auto subscription =
+						    bodyBeh->GetOnOverlapSignal().Subscribe([](const IntersectionDetails&) {
 							    OnWin();
 						    });
 					}
@@ -368,13 +368,15 @@ namespace Demo1 {
 
 			auto button = std::make_shared<ButtonBehaviour>();
 			node->AddBehaviour(button);
-			[[maybe_unused]] auto tapConn = button->SubscribeOnTap(OnScoreboardTap);
+			[[maybe_unused]] const auto tapConn = button->GetOnTapSignal().Subscribe([]() {
+				OnScoreboardTap();
+			});
 
 			root->AddChild(std::move(node));
 			scoreboardNode->GetLocalTransform()->SetPosition({0.f, 0.f});
 		}
 
-		void OnScoreboardTap(const sf::Event&) {
+		void OnScoreboardTap() {
 			if (!sAwaitingFirstTap) {
 				return;
 			}

@@ -21,7 +21,7 @@ void ButtonBehaviour::OnEvent(const sf::Event& event) {
 		if (pressed->button == sf::Mouse::Button::Left) {
 			if (HitTestWorld(toWorld(pressed->position))) {
 				_mouseDown = true;
-				_onTap(event);
+				_onTap();
 			}
 		}
 		return;
@@ -30,7 +30,7 @@ void ButtonBehaviour::OnEvent(const sf::Event& event) {
 	if (const auto* released = event.getIf<sf::Event::MouseButtonReleased>()) {
 		if (released->button == sf::Mouse::Button::Left && _mouseDown) {
 			_mouseDown = false;
-			_onRelease(event);
+			_onRelease();
 		}
 		return;
 	}
@@ -40,7 +40,7 @@ void ButtonBehaviour::OnEvent(const sf::Event& event) {
 			if (HitTestWorld(toWorld(began->position))) {
 				_touchDown = true;
 				_touchFinger = began->finger;
-				_onTap(event);
+				_onTap();
 			}
 		}
 		return;
@@ -49,9 +49,17 @@ void ButtonBehaviour::OnEvent(const sf::Event& event) {
 	if (const auto* ended = event.getIf<sf::Event::TouchEnded>()) {
 		if (_touchDown && ended->finger == _touchFinger) {
 			_touchDown = false;
-			_onRelease(event);
+			_onRelease();
 		}
 	}
+}
+
+Signal<>& ButtonBehaviour::GetOnTapSignal() const {
+	return _onTap;
+}
+
+Signal<>& ButtonBehaviour::GetOnReleaseSignal() const {
+	return _onRelease;
 }
 
 bool ButtonBehaviour::HitTestWorld(const sf::Vector2f& worldPoint) const {

@@ -63,11 +63,12 @@ namespace Demo1 {
 		auto solarBeh = control->RequireBehaviour<SolarSystemBehaviour>();
 		solarBeh->SetSolarSystemRoot(solarRoot);
 
-		(void)button->SubscribeOnTap([weakSolar = std::weak_ptr<SolarSystemBehaviour>(solarBeh)](const sf::Event&) {
-			if (auto s = weakSolar.lock()) {
-				s->Restart();
-			}
-		});
+		[[maybe_unused]] const auto subscription =
+		    button->GetOnTapSignal().Subscribe([weakSolar = std::weak_ptr<SolarSystemBehaviour>(solarBeh)]() {
+			    if (auto s = weakSolar.lock()) {
+				    s->Restart();
+			    }
+		    });
 
 		mainRoot->AddChild(control);
 		control->GetLocalTransform()->SetPosition({0.f, -320.f});

@@ -1,6 +1,6 @@
 #pragma once
 
-// Multicast signal with explicit disconnect handles. Single-threaded (expected: main / game thread).
+// Multicast signal with explicit unsubscribe handles. Single-threaded (expected: main / game thread).
 // Subscribers are stored as IDelegate instances; use createDelegate(...) for weak bindings to shared owners.
 
 #include "Engine/Core/Delegates.h"
@@ -17,16 +17,15 @@ template <class... Args>
 class Signal
 {
 public:
-	class Connection; // grant friendship before member definitions use private Signal API
+	class Subscription;
+	friend class Subscription;
 
-	friend class Connection;
-
-	class Connection
+	class Subscription
 	{
 	public:
-		Connection() = default;
+		Subscription() = default;
 
-		void Disconnect() {
+		void Unsubscribe() {
 			if (_signal && _id != 0) {
 				_signal->RemoveSlot(_id);
 				_signal = nullptr;
@@ -38,15 +37,15 @@ public:
 			return _signal != nullptr && _id != 0;
 		}
 
-		Connection(const Connection&) = delete;
-		Connection& operator=(const Connection&) = delete;
+		Subscription(const Subscription&) = delete;
+		Subscription& operator=(const Subscription&) = delete;
 
-		Connection(Connection&& o) noexcept : _signal(o._signal), _id(o._id) {
+		Subscription(Subscription&& o) noexcept : _signal(o._signal), _id(o._id) {
 			o._signal = nullptr;
 			o._id = 0;
 		}
 
-		Connection& operator=(Connection&& o) noexcept {
+		Subscription& operator=(Subscription&& o) noexcept {
 			if (this != &o) {
 				_signal = o._signal;
 				_id = o._id;
@@ -59,44 +58,44 @@ public:
 	private:
 		friend class Signal<Args...>;
 
-		Connection(Signal* sig, std::uint64_t id) : _signal(sig), _id(id) {}
+		Subscription(Signal* sig, std::uint64_t id) : _signal(sig), _id(id) {}
 
 		Signal* _signal{};
 		std::uint64_t _id{};
 	};
 
-	/// Disconnects in the destructor (move-only).
-	class ScopedConnection
+	/// Unsubscribes in the destructor (move-only).
+	class ScopedSubscription
 	{
 	public:
-		ScopedConnection() = default;
+		ScopedSubscription() = default;
 
-		explicit ScopedConnection(Connection&& c) : _conn(std::move(c)) {}
+		explicit ScopedSubscription(Subscription&& c) : _conn(std::move(c)) {}
 
-		~ScopedConnection() {
-			_conn.Disconnect();
+		~ScopedSubscription() {
+			_conn.Unsubscribe();
 		}
 
-		ScopedConnection(const ScopedConnection&) = delete;
-		ScopedConnection& operator=(const ScopedConnection&) = delete;
+		ScopedSubscription(const ScopedSubscription&) = delete;
+		ScopedSubscription& operator=(const ScopedSubscription&) = delete;
 
-		ScopedConnection(ScopedConnection&&) noexcept = default;
+		ScopedSubscription(ScopedSubscription&&) noexcept = default;
 
-		ScopedConnection& operator=(ScopedConnection&& o) noexcept {
+		ScopedSubscription& operator=(ScopedSubscription&& o) noexcept {
 			if (this != &o) {
-				_conn.Disconnect();
+				_conn.Unsubscribe();
 				_conn = std::move(o._conn);
 			}
 			return *this;
 		}
 
-		[[nodiscard]] Connection Release() {
-			Connection out = std::move(_conn);
+		[[nodiscard]] Subscription Release() {
+			Subscription out = std::move(_conn);
 			return out;
 		}
 
 	private:
-		Connection _conn;
+		Subscription _conn;
 	};
 
 	using DelegatePtr = std::unique_ptr<IDelegate<Args...>>;
@@ -107,20 +106,20 @@ public:
 	Signal(Signal&&) = delete;
 	Signal& operator=(Signal&&) = delete;
 
-	[[nodiscard]] Connection Connect(DelegatePtr&& delegate) {
+	[[nodiscard]] Subscription Subscribe(DelegatePtr&& delegate) {
 		const std::uint64_t id = _nextId++;
 		_slots.push_back(Slot{id, std::move(delegate)});
-		return Connection(this, id);
+		return Subscription(this, id);
 	}
 
-	[[nodiscard]] Connection Connect(std::function<void(Args...)> func) {
-		return Connect(std::make_unique<FunctionDelegate<Args...>>(std::move(func)));
+	[[nodiscard]] Subscription Subscribe(std::function<void(Args...)> func) {
+		return Subscribe(std::make_unique<FunctionDelegate<Args...>>(std::move(func)));
 	}
 
 	template <class F>
 	    requires std::is_invocable_v<F, Args...>
-	[[nodiscard]] Connection Connect(F&& callable) {
-		return Connect(std::function<void(Args...)>(std::forward<F>(callable)));
+	[[nodiscard]] Subscription Subscribe(F&& callable) {
+		return Subscribe(std::function<void(Args...)>(std::forward<F>(callable)));
 	}
 
 	template <class... UArgs>
