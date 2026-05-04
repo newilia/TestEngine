@@ -185,16 +185,14 @@ void PongEnvironment::AddWalls(Scene* scene) {
 			bodyBeh->GetOverlappingGroups().set(0, true);
 
 			if (i == 0) {
-				[[maybe_unused]] auto subscription =
-				    bodyBeh->GetOnOverlapSignal().Subscribe([this](const IntersectionDetails&) {
-					    OnLose();
-				    });
+				Subscribe(bodyBeh->GetOnOverlapSignal(), [this](const IntersectionDetails&) {
+					OnLose();
+				});
 			}
 			else {
-				[[maybe_unused]] auto subscription =
-				    bodyBeh->GetOnOverlapSignal().Subscribe([this](const IntersectionDetails&) {
-					    OnWin();
-				    });
+				Subscribe(bodyBeh->GetOnOverlapSignal(), [this](const IntersectionDetails&) {
+					OnWin();
+				});
 			}
 		}
 		else {
