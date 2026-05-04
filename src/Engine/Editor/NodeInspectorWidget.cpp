@@ -25,16 +25,31 @@ namespace {
 		Engine::PropertyTree tree;
 		Engine::PropertyBuilder builder(tree);
 		inspectable->BuildPropertyTree(builder);
-		if (tree.roots.empty()) {
+		if (tree.roots.empty() && tree.inspectorMethods.empty()) {
 			return;
 		}
+		ImGui::PushID(static_cast<const void*>(inspectable));
 		Engine::EditorVisualTheme::PushInspectorSectionHeaderColors(sectionStyle);
 		const bool open = ImGui::CollapsingHeader(title, ImGuiTreeNodeFlags_DefaultOpen);
 		Engine::EditorVisualTheme::PopInspectorSectionHeaderColors();
+		if (!tree.inspectorMethods.empty()) {
+			if (ImGui::BeginPopupContextItem("inspector_reflected_methods", ImGuiPopupFlags_MouseButtonRight)) {
+				for (const auto& m : tree.inspectorMethods) {
+					if (ImGui::MenuItem(fmt::format("Call {}", m.menuLabel).c_str()) && m.invoke) {
+						m.invoke();
+					}
+				}
+				ImGui::EndPopup();
+			}
+		}
 		if (!open) {
+			ImGui::PopID();
 			return;
 		}
-		drawer.Draw(tree, {.unwrapSingleRootObject = true});
+		if (!tree.roots.empty()) {
+			drawer.Draw(tree, {.unwrapSingleRootObject = true});
+		}
+		ImGui::PopID();
 	}
 } // namespace
 

@@ -27,6 +27,7 @@ namespace Engine {
 
 	void PropertyBuilder::clear() {
 		_tree->roots.clear();
+		_tree->inspectorMethods.clear();
 		_stack.clear();
 	}
 
@@ -160,5 +161,9 @@ namespace Engine {
 
 	void PropertyBuilder::endAssociative() {
 		pop();
+	}
+
+	void PropertyBuilder::registerInspectorMethod(std::string menuLabel, std::function<void()> invoke) {
+		_tree->inspectorMethods.push_back(ReflectedInspectorMethod{std::move(menuLabel), std::move(invoke)});
 	}
 } // namespace Engine

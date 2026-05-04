@@ -17,6 +17,7 @@ public:
 	void OnInit() override;
 	void OnUpdate(const sf::Time& dt) override;
 
+	/// @method
 	void Restart();
 	void SetSolarSystemRoot(std::weak_ptr<SceneNode> root);
 
