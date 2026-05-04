@@ -1,0 +1,18 @@
+---
+description: C++ style — [[nodiscard]], override order in class headers (TestEngine src)
+globs:
+  - src/**/*.h
+  - src/**/*.hpp
+  - src/**/*.cpp
+alwaysApply: false
+---
+
+# C++ style (`src/`)
+
+## `[[nodiscard]]`
+
+Use only when ignoring the return risks **bugs, leaks, or broken invariants** (ownership handles, required status, protocol steps). Avoid on benign getters or debug helpers. Do not change generated `src/Codegen/*_gen.hpp` attributes unless codegen does.
+
+## Class member order (per access section)
+
+Within each `public:` / `protected:` / `private:` block, declare **virtual overrides** (`override` / `override final`) **above** other **member functions** in that block. Constructors, destructors, `static` methods, and ordinary methods stay below the override group. Do not reorder across access sections; nested types / data members: follow file style. Do not reorder generated or third-party headers.

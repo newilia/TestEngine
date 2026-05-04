@@ -1,0 +1,25 @@
+---
+description: TestEngine — Debug build, commits, comments, assertions (always-on agent defaults)
+alwaysApply: true
+---
+
+# Agent defaults (TestEngine)
+
+## Debug build
+
+After non-trivial edits to `src/`, `CMakeLists.txt`, or build-related files, run a **Debug** build (e.g. `cmake --build <build-dir> --config Debug`) and fix failures. Prefer an existing tree (`build`, `out/vs18`, …); see [`BUILD.md`](BUILD.md). Skip for docs-only changes that cannot affect compilation.
+
+## Commit messages
+
+- **Language:** English. **Subject:** state **what** changed concretely (area + nature), not vague labels (`refactor`, `fix`, `update` alone).
+- **Examples — bad:** `refactor: engine structure`
+- **Examples — good:** `move FontManager from Visual to App`, `fix: fps drop when sim paused and fps limit is on`
+- Optional `fix:` / `chore:` / `docs:` prefix is fine if the rest stays specific. Second paragraph only when the user or context already gave a **why**.
+
+## Comments
+
+Add **why**-comments only when purpose or constraints are **not** clear from names and structure. Skip routine “what this does” comments. No hand-written commentary in `src/Codegen/*_gen.hpp` beyond what codegen owns.
+
+## Assertions (`assert`, `Verify`, `VerifyFalse`)
+
+Macros live in **`TestEngineGlobals.h`** (CMake force-includes it for `TestEngine` — no extra `#include` in normal sources). **`assert(expr)`** — condition only. **`Verify(expr)`** — evaluate once, assert truth, **return** the value. **`VerifyFalse(expr)`** — assert falsity, **return** the bool. Use for internal invariants and subsystem contracts, not user/network errors, not security, not Release-mandatory checks. Do not hand-edit **`src/Codegen/*_gen.hpp`** for asserts. Prefer few sharp checks at boundaries over noise.

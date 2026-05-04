@@ -7,43 +7,36 @@ alwaysApply: true
 
 ## Stack
 
-- **C++20**, single **`TestEngine`** target (CMake `WIN32` on Windows — entry via `WinMain`; see `main.cpp`).
-- **Build:** CMake 3.28+; build directory is usually **`build`** (not inside source roots). Details: [`BUILD.md`](BUILD.md).
-- **Dependencies:** SFML, Dear ImGui + **ImGui-SFML**, **fmt** (`third-party/`). Python 3 is required at **configure** time (codegen).
+- **C++20**, single **`TestEngine`** target (CMake `WIN32` on Windows — `WinMain`; see `main.cpp`).
+- **Build:** CMake 3.28+; build dir usually **`build`**. Details: [`BUILD.md`](BUILD.md).
+- **Dependencies:** SFML, Dear ImGui + **ImGui-SFML**, **fmt** (`third-party/`). Python 3 at **configure** time (codegen).
 
 ## `src/` layout
 
 | Area | Role |
 |------|------|
 | **`Engine/App/`** | Entry (`main.cpp`), `EngineInterface`, input, fonts |
-| **`Engine/Core/`** | Scene, nodes (`SceneNode`), signals (`Signal`, `SubscriptionsHolderBase`), properties/reflection (`MetaClass`, `IPropertiesProvider`, property trees) |
-| **`Engine/Behaviour/`** | Base `Behaviour` → components on nodes; subfolders by domain (e.g. `Physics/`) |
-| **`Engine/Visual/`** | Rendering (shapes, text, arrows, etc.) |
-| **`Engine/Editor/`** | ImGui editor widgets (hierarchy, inspector, property tree) |
-| **`Engine/Simulation/`** | Simulation glue (e.g. physics — `PhysicsHandler`) |
-| **`Environments/<Name>/`** | Demos/games (**`Test`**, **`Pong`**); default **Test**, switch with `--env=test` / `--env=pong` (see `BUILD.md`, `main.cpp`) |
-| **`Codegen/`** | Generated `*_gen.hpp` for the editor — **do not edit by hand**; see [`property-codegen.mdc`](property-codegen.mdc) |
+| **`Engine/Core/`** | Scene, `SceneNode`, `Signal` / **`SubscriptionsHolderBase`**, reflection (`MetaClass`, `IPropertiesProvider`) |
+| **`Engine/Behaviour/`** | `Behaviour` on nodes; subfolders by domain (e.g. `Physics/`) |
+| **`Engine/Visual/`** | Rendering |
+| **`Engine/Editor/`** | ImGui editor (hierarchy, inspector, property tree) |
+| **`Engine/Simulation/`** | Simulation glue (e.g. physics) |
+| **`Environments/<Name>/`** | Demos (**`Test`**, **`Pong`**); `--env=test` / `--env=pong` |
+| **`Codegen/`** | Generated `*_gen.hpp` — **do not edit**; see [`property-codegen.mdc`](property-codegen.mdc) |
 
-Sources are collected with **`file(GLOB_RECURSE ... CONFIGURE_DEPENDS ... src/**/*.cpp)`** — new `.cpp` files are detected on the next configure/build pass.
+New `src/**/*.cpp` files are picked up on the next configure/build (`CONFIGURE_DEPENDS` glob in CMake).
 
 ## Includes
 
-Include roots: **`src/`** and **`src/Codegen/`**. Quote paths relative to those roots, for example:
-
-```cpp
-#include "Engine/Core/SceneNode.h"
-#include "Environments/Pong/PongEnvironment.h"
-```
+Roots: **`src/`**, **`src/Codegen/`**. Paths relative to those roots, e.g. `#include "Engine/Core/SceneNode.h"`.
 
 ## Code idioms
 
-- **`Scene` / `SceneNode`**: entity hierarchy; nodes carry **`Behaviour`**s and visuals.
-- **`EntityOnNode`**: binds an entity to a node; common base for behaviours.
-- Editor and inspector rely on **`IPropertiesProvider`** and generated property trees — read the **property-codegen** rule before adding reflected fields.
+- **`Scene` / `SceneNode`**, **`EntityOnNode`**, **`Behaviour`**, **`IPropertiesProvider`** + codegen for inspector fields.
+- **Signals:** for subscriptions tied to an owner’s lifetime, prefer **`SubscriptionsHolderBase`** + **`Subscribe(signal, handler)`**; otherwise keep an explicit **`ScopedSubscription`** member. Avoid bare **`signal.Subscribe(...)`** with no stored handle.
 
-## Related rules
+## Other rules
 
-- Build verification after edits: **`debug-build-verify.mdc`**; build details: **`BUILD.md`**.
-- Commit message format: **`commit-messages.mdc`**.
-- Property generation: **`property-codegen.mdc`**.
-- Signal subscriptions / lifetime: **`signal-subscriptions.mdc`**.
+- **Agent defaults** (build, commits, comments, asserts): [`testengine-agent.mdc`](testengine-agent.mdc)
+- **C++ style** (`[[nodiscard]]`, override order): [`cpp-style.mdc`](cpp-style.mdc)
+- **Property / inspector codegen**: [`property-codegen.mdc`](property-codegen.mdc)
