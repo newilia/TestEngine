@@ -72,9 +72,6 @@ void PongEnvironment::OnEvent(const sf::Event& event) {
 		if (e->code == sf::Keyboard::Key::R) {
 			mainContext.SetScene(BuildScene());
 		}
-		else if (e->code == sf::Keyboard::Key::D) {
-			mainContext.SetDebugDrawEnabled(!mainContext.IsDebugDrawEnabled());
-		}
 		else if (e->code == sf::Keyboard::Key::Escape) {
 			std::exit(EXIT_SUCCESS);
 		}

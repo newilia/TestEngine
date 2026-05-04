@@ -1,7 +1,6 @@
 #include "SceneNode.h"
 
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
-#include "Engine/Behaviour/Physics/PhysicsDebugBehaviour.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/Transform.h"
 #include "Engine/Core/Utils.h"
@@ -242,12 +241,6 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 
 	for (auto& child : sorted) {
 		child->draw(target, nodeStates);
-	}
-
-	if (Engine::MainContext::GetInstance().IsDebugDrawEnabled()) {
-		if (auto debugBehaviour = FindBehaviour<PhysicsDebugBehaviour>()) { // todo fix (некрасиво)
-			debugBehaviour->DebugDraw(target, nodeStates);
-		}
 	}
 
 	DrawHierarchySelectionHighlightIfSelected(*this, target, nodeStates);

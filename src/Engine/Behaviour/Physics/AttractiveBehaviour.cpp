@@ -2,7 +2,6 @@
 
 #include "AttractiveBehaviour.generated.hpp"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
-#include "Engine/Behaviour/Physics/PhysicsDebugBehaviour.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Simulation/AttractionField.h"
@@ -15,7 +14,6 @@ void AttractiveBehaviour::OnInit() {
 	}
 	_rigidBody = node->RequireBehaviour<PhysicsBodyBehaviour>();
 
-	node->RequireBehaviour<PhysicsDebugBehaviour>();
 	if (const auto self = node->FindBehaviour<AttractiveBehaviour>()) {
 		if (const auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
 			if (auto field = ph->GetAttractionField()) {

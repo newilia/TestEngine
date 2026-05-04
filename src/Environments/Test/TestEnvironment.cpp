@@ -73,9 +73,6 @@ void TestEnvironment::OnEvent(const sf::Event& event) {
 			mainContext->GetPhysicsProcessor()->SetGravityEnabled(
 			    !mainContext->GetPhysicsProcessor()->IsGravityEnabled());
 		}
-		else if (key->code == sf::Keyboard::Key::D) {
-			mainContext->SetDebugDrawEnabled(!mainContext->IsDebugDrawEnabled());
-		}
 		else if (key->code == sf::Keyboard::Key::R) {
 			mainContext->SetScene(BuildScene());
 		}

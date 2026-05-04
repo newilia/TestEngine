@@ -314,12 +314,6 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectCircleCircleIntersect
 		result.intersection.end.x = x0 - b * mult;
 		result.intersection.end.y = y0 + a * mult;
 	}
-	if (Engine::MainContext::GetInstance().IsDebugDrawEnabled()) {
-		if (auto wnd = Engine::MainContext::GetInstance().GetMainWindow()) {
-			wnd->draw(CreateCircle(result.intersection.start, 2, sf::Color::White));
-			wnd->draw(CreateCircle(result.intersection.end, 2, sf::Color::White));
-		}
-	}
 	return result;
 }
 
@@ -468,14 +462,6 @@ PhysicsProcessor::FindSegmentCircleIntersectionPoint(const Segment& seg, const s
 		*result.p2 += circleCenter;
 	}
 
-	if (Engine::MainContext::GetInstance().IsDebugDrawEnabled()) {
-		if (auto window = Engine::MainContext::GetInstance().GetMainWindow()) {
-			window->draw(CreateCircle(result.p1, 2.f, sf::Color::White));
-			if (result.p2) {
-				window->draw(CreateCircle(*result.p2, 2.f, sf::Color::White));
-			}
-		}
-	}
 	return result;
 }
 
@@ -564,51 +550,6 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 
 		auto isNan = Utils::IsNan(pb1->GetVelocity()) || Utils::IsNan(pb2->GetVelocity());
 		assert(!isNan);
-
-		if (Engine::MainContext::GetInstance().IsDebugDrawEnabled()) {
-			if (auto window = Engine::MainContext::GetInstance().GetMainWindow()) {
-				{
-					VectorArrow force1(body1->GetPosGlobal(), body1->GetPosGlobal() + dv1);
-					if (auto* collider = body1->FindPhysicsBody()) {
-						if (auto* shape = collider->GetShape()) {
-							auto color = shape->getFillColor();
-							color.a = 255u;
-							force1.SetColor(color);
-						}
-					}
-					window->draw(force1);
-				}
-				{
-					VectorArrow force2(body2->GetPosGlobal(), body2->GetPosGlobal() + dv2);
-					if (auto* collider = body2->FindPhysicsBody()) {
-						if (auto* shape = collider->GetShape()) {
-							auto color = shape->getFillColor();
-							color.a = 255u;
-							force2.SetColor(color);
-						}
-					}
-					window->draw(force2);
-				}
-			}
-		}
-	}
-
-	if (Engine::MainContext::GetInstance().IsDebugDrawEnabled()) {
-		if (auto window = Engine::MainContext::GetInstance().GetMainWindow()) {
-			const sf::Vector2f middlePoint((collision.intersection.start + collision.intersection.end) * 0.5f);
-
-			{ // collision segment
-				VectorArrow segment(collision.intersection.start, collision.intersection.end, sf::Color::Magenta);
-				window->draw(segment);
-			}
-
-			{ // normal
-				VectorArrow tangentArrow(middlePoint, middlePoint + b1_normal * 50.f, sf::Color::Yellow);
-				window->draw(tangentArrow);
-			}
-
-			window->draw(Utils::CreateCircle(middlePoint, 2, sf::Color::White));
-		}
 	}
 }
 

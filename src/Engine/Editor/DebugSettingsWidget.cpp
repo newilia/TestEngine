@@ -73,15 +73,6 @@ namespace Engine {
 		}
 
 		ImGui::SeparatorText("Debug & field");
-		bool debugDraw = mainContext.IsDebugDrawEnabled();
-		if (ImGui::Checkbox("Debug draw (velocities, labels, ...)", &debugDraw)) {
-			mainContext.SetDebugDrawEnabled(debugDraw);
-		}
-		float forceArrowScale = mainContext.GetFieldForceDebugArrowScale();
-		if (ImGui::SliderFloat("Field force arrow scale", &forceArrowScale, 1e-5f, 20.f, "%.5f",
-		                       ImGuiSliderFlags_Logarithmic)) {
-			mainContext.SetFieldForceDebugArrowScale(forceArrowScale);
-		}
 		if (const auto ph = mainContext.GetPhysicsProcessor()) {
 			if (auto field = ph->GetAttractionField()) {
 				float strength = field->GetGlobalStrengthScale();
