@@ -60,13 +60,6 @@ namespace Engine {
 		void SetVerticalSyncEnabled(bool enabled);
 		bool IsVerticalSyncEnabled() const;
 
-		bool IsDebugDrawEnabled() const;
-		void SetDebugDrawEnabled(bool enabled);
-
-		/// World-space force arrows: endpoint = pos + (m * a) * scale (attraction field on entities).
-		float GetFieldForceDebugArrowScale() const;
-		void SetFieldForceDebugArrowScale(float scale);
-
 		std::uint32_t GetFramerateLimit() const;
 		void SetFramerateLimit(std::uint32_t maxFps);
 
@@ -100,9 +93,7 @@ namespace Engine {
 		sf::Time _tickTime;
 		float _simSpeedMultiplier = 1.f;
 		bool _isSimPaused = false;
-		bool _isDebugDrawEnabled = false;
 		bool _isImGuiInitialized = false;
-		float _fieldForceDebugArrowScale = 0.02f;
 		std::uint32_t _framerateLimit = 100;
 		bool _isFramerateLimitEnabled = false;
 		bool _verticalSyncEnabled = false;

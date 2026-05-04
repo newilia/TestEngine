@@ -72,22 +72,6 @@ namespace Engine {
 		return _mainWindow.get();
 	}
 
-	bool MainContext::IsDebugDrawEnabled() const {
-		return _isDebugDrawEnabled;
-	}
-
-	void MainContext::SetDebugDrawEnabled(bool enabled) {
-		_isDebugDrawEnabled = enabled;
-	}
-
-	float MainContext::GetFieldForceDebugArrowScale() const {
-		return _fieldForceDebugArrowScale;
-	}
-
-	void MainContext::SetFieldForceDebugArrowScale(float scale) {
-		_fieldForceDebugArrowScale = scale >= 0.f ? scale : 0.f;
-	}
-
 	std::uint32_t MainContext::GetFramerateLimit() const {
 		return _framerateLimit;
 	}
