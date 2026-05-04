@@ -92,7 +92,7 @@ void PolygonTool::finalizeStroke() {
 	visual->SetPoints(localPts);
 	node->SetVisual(std::move(visual));
 	parent->AddChild(node);
-	node->SetPosGlobal(centerWorld);
+	Utils::SetWorldPos(node, centerWorld);
 	if (_isAttachPhysicsBody) {
 		auto body = node->RequireBehaviour<PhysicsBodyBehaviour>();
 	}

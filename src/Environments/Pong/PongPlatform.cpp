@@ -94,7 +94,7 @@ void ApplyPongPlatformVelocityTowardsTarget(const std::shared_ptr<SceneNode>& pl
 	if (!platformNode) {
 		return;
 	}
-	auto vel = (targetPos - platformNode->GetPosGlobal()) * speedFactor;
+	auto vel = (targetPos - Utils::GetWorldPos(platformNode)) * speedFactor;
 	vel.x = std::clamp(vel.x, -velLimit.x, velLimit.x);
 	vel.y = std::clamp(vel.y, -velLimit.y, velLimit.y);
 	platformNode->RequireBehaviour<PhysicsBodyBehaviour>()->SetVelocity(vel);
@@ -116,7 +116,7 @@ void ClampPongPlatformDesiredCenter(sf::Vector2f& center, bool isBottomPlayer,
 		const sf::FloatRect region = GetRectangleNodeWorldAabb(*boundsNode);
 		if (region.size.x > 0.f && region.size.y > 0.f) {
 			float minX, maxX, minY, maxY;
-			ComputeClampFromAxisAlignedRegion(platformNode->GetPosGlobal(), bb, region, minX, maxX, minY, maxY);
+			ComputeClampFromAxisAlignedRegion(Utils::GetWorldPos(platformNode), bb, region, minX, maxX, minY, maxY);
 			center.x = std::clamp(center.x, minX, maxX);
 			center.y = std::clamp(center.y, minY, maxY);
 			return;
@@ -127,7 +127,7 @@ void ClampPongPlatformDesiredCenter(sf::Vector2f& center, bool isBottomPlayer,
 	const float screenH = GetPongWindowSize().y;
 
 	float minX, maxX, minY, maxY;
-	ComputePlatformCenterBounds(platformNode->GetPosGlobal(), bb, isBottomPlayer, field, screenH, minX, maxX, minY,
+	ComputePlatformCenterBounds(Utils::GetWorldPos(platformNode), bb, isBottomPlayer, field, screenH, minX, maxX, minY,
 	                            maxY);
 
 	center.x = std::clamp(center.x, minX, maxX);
@@ -139,7 +139,7 @@ void ClampPongPlatformToPlayfield(const std::shared_ptr<SceneNode>& platformNode
 	if (!platformNode) {
 		return;
 	}
-	sf::Vector2f pos = platformNode->GetPosGlobal();
+	sf::Vector2f pos = Utils::GetWorldPos(platformNode);
 	ClampPongPlatformDesiredCenter(pos, isBottomPlayer, platformNode, movementBounds);
-	platformNode->SetPosGlobal(pos);
+	Utils::SetWorldPos(platformNode, pos);
 }

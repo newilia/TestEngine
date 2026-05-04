@@ -411,7 +411,7 @@ namespace Demo1 {
 
 		auto root = make_shared<SceneNode>();
 		root->SetName("Pong");
-		root->SetPosGlobal(GetPongPlayfieldRect().getCenter());
+		Utils::SetWorldPos(root, GetPongPlayfieldRect().getCenter());
 		RegisterPongGameRoot(root);
 
 		const sf::Vector2f platformSize{platformWidth, platformHeight};

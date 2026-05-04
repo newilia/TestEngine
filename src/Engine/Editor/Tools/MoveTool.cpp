@@ -42,7 +42,7 @@ bool MoveTool::processEvent(const sf::Event& event) {
 			return true;
 		}
 		_onSelect(picked);
-		const sf::Vector2f nodePos = picked->GetPosGlobal();
+		const sf::Vector2f nodePos = Utils::GetWorldPos(picked);
 		_grabOffset = nodePos - pos;
 		_grabbed = picked;
 		_dragging = true;
@@ -57,7 +57,7 @@ bool MoveTool::processEvent(const sf::Event& event) {
 		if (!node) {
 			return;
 		}
-		node->SetPosGlobal(pos + _grabOffset);
+		Utils::SetWorldPos(node, pos + _grabOffset);
 		if (auto rb = node->FindBehaviour<PhysicsBodyBehaviour>()) {
 			ZeroMotion(rb.get());
 		}

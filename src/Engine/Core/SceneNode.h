@@ -135,8 +135,6 @@ public:
 	bool DispatchTapAt(const sf::Vector2f& worldPoint);
 	const sf::Transform& GetWorldTransform() const;
 	void MarkWorldTransformSubtreeDirty() const;
-	sf::Vector2f GetPosGlobal() const;
-	void SetPosGlobal(sf::Vector2f pos);
 
 	void SetEnabled(bool isEnabled);
 	void SetVisible(bool isVisible);

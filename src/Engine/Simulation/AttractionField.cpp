@@ -3,6 +3,7 @@
 #include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Core/Utils.h"
 
 #include <cmath>
 
@@ -45,7 +46,7 @@ sf::Vector2f AttractionField::EvaluateAcceleration(const shared_ptr<AttractiveBe
 	if (!recvNode) {
 		return {};
 	}
-	const sf::Vector2f posI = recvNode->GetPosGlobal();
+	const sf::Vector2f posI = Utils::GetWorldPos(recvNode);
 
 	sf::Vector2f acc{};
 	for (const auto& w : _sources) {
@@ -65,7 +66,7 @@ sf::Vector2f AttractionField::EvaluateAcceleration(const shared_ptr<AttractiveBe
 		if (!(recvRb->GetInteractionGroups() & otherRb->GetInteractionGroups()).any()) {
 			continue;
 		}
-		sf::Vector2f d = otherNode->GetPosGlobal() - posI; // from receiver toward source
+		sf::Vector2f d = Utils::GetWorldPos(otherNode) - posI; // from receiver toward source
 		const float d2 = d.x * d.x + d.y * d.y;
 		const float e2 = _softeningEps * _softeningEps;
 		const float r2 = d2 + e2;

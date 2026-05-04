@@ -105,7 +105,7 @@ void PongEnvironment::AddBall(Scene* scene, float radius) {
 	shape->setOutlineColor(outlineColor);
 	shape->setOutlineThickness(1);
 	shape->setOrigin(Utils::FindCenterOfMass(shape));
-	ballNode->SetPosGlobal(pos);
+	Utils::SetWorldPos(ballNode, pos);
 
 	auto rigidBody = ball->GetNode()->RequireBehaviour<PhysicsBodyBehaviour>();
 	rigidBody->SetMass(3.14f * radius * radius);
@@ -140,7 +140,7 @@ shared_ptr<SceneNode> PongEnvironment::CreateDefaultPlatform(sf::Vector2f size, 
 	}
 	shape->setRotation(sf::degrees(rotationDeg));
 	shape->setOrigin(Utils::FindCenterOfMass(shape));
-	node->SetPosGlobal(pos);
+	Utils::SetWorldPos(node, pos);
 	shape->setFillColor(color);
 
 	auto physicsBody = node->RequireBehaviour<PhysicsBodyBehaviour>();
@@ -174,7 +174,7 @@ void PongEnvironment::AddWalls(Scene* scene) {
 		auto rectShape = rectVisual->GetShape();
 		rectShape->setSize(wallSizes[i]);
 		rectShape->setOrigin(Utils::FindCenterOfMass(rectShape));
-		wallNode->SetPosGlobal(wallPositions[i]);
+		Utils::SetWorldPos(wallNode, wallPositions[i]);
 
 		auto bodyBeh = wallNode->RequireBehaviour<PhysicsBodyBehaviour>();
 		bodyBeh->SetImmovable(true);
@@ -275,7 +275,7 @@ void PongEnvironment::AddScoreboard(Scene* scene) {
 	_scoreText->SetOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
 
 	node->SetVisual(std::shared_ptr<TextVisual>(_scoreText));
-	node->SetPosGlobal(center);
+	Utils::SetWorldPos(node, center);
 	_scoreboardNode = node;
 	scene->AddChild(std::move(node));
 }
@@ -288,7 +288,7 @@ void PongEnvironment::UpdateScoreText() {
 	_scoreText->SetString(text);
 	const auto lb = _scoreText->GetLocalBounds();
 	_scoreText->SetOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
-	_scoreboardNode->SetPosGlobal(GetPongPlayfieldRect().getCenter());
+	Utils::SetWorldPos(_scoreboardNode, GetPongPlayfieldRect().getCenter());
 }
 
 std::shared_ptr<Scene> PongEnvironment::BuildScene() {
@@ -320,17 +320,17 @@ void PongEnvironment::ResetRound() {
 		return;
 	}
 
-	sBall->GetNode()->SetPosGlobal(InitialBallPosition());
+	Utils::SetWorldPos(sBall->GetNode(), InitialBallPosition());
 	auto ballRb = sBall->GetNode()->RequireBehaviour<PhysicsBodyBehaviour>();
 	ballRb->SetVelocity(InitialBallVelocity());
 	ballRb->SetAngularSpeed(0.f);
 
-	sUserPlatform->SetPosGlobal(InitialUserPlatformPosition());
+	Utils::SetWorldPos(sUserPlatform, InitialUserPlatformPosition());
 	if (auto u = sUserPlatform->FindBehaviour<UserPlatformControllerBehaviour>()) {
 		u->ResyncSpawnFromNode();
 	}
 
-	sAiPlatform->SetPosGlobal(InitialAiPlatformPosition());
+	Utils::SetWorldPos(sAiPlatform, InitialAiPlatformPosition());
 	if (auto ai = sAiPlatform->FindBehaviour<AiPlatformControllerBehaviour>()) {
 		ai->ResyncSpawnFromNode();
 		ai->ClearPendingObservations();

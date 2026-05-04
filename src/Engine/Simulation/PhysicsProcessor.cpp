@@ -35,14 +35,14 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 			continue;
 		}
 		auto rigidBody = body->RequireBehaviour<PhysicsBodyBehaviour>();
-		auto pos = body->GetPosGlobal();
+		auto pos = Utils::GetWorldPos(body);
 
 		if (_isGravityEnabled && !rigidBody->IsImmovable()) {
 			rigidBody->AddVelocity(_gravity * rigidBody->GetGravityScale() * dt.asSeconds());
 		}
 
 		pos += rigidBody->GetVelocity() * dt.asSeconds();
-		body->SetPosGlobal(pos);
+		Utils::SetWorldPos(body, pos);
 		++it;
 	}
 
@@ -491,7 +491,7 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 	auto v1_to_v2 = pb2->GetVelocity() - pb1->GetVelocity();
 	auto b1_tangent = collision.intersection.getDirVector();
 	auto b1_normal = Utils::Normalize(sf::Vector2f(-b1_tangent.y, b1_tangent.x));
-	if (Utils::Dot(body2->GetPosGlobal() - body1->GetPosGlobal(), b1_normal) < 0.f) {
+	if (Utils::Dot(Utils::GetWorldPos(body2) - Utils::GetWorldPos(body1), b1_normal) < 0.f) {
 		b1_tangent = -b1_tangent;
 		b1_normal = -b1_normal;
 	}
@@ -515,14 +515,14 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 	    getPenetrationDepth(body1.get(), b1_normal) + getPenetrationDepth(body2.get(), -b1_normal);
 
 	if (pb2->IsImmovable()) {
-		auto b1_pos = body1->GetPosGlobal() - b1_normal * penetrationDepthSum;
-		body1->SetPosGlobal(b1_pos);
+		auto b1_pos = Utils::GetWorldPos(body1) - b1_normal * penetrationDepthSum;
+		Utils::SetWorldPos(body1, b1_pos);
 	}
 	else {
-		auto b1_pos = body1->GetPosGlobal() - b1_normal * penetrationDepthSum * (m1 / (m1 + m2));
-		body1->SetPosGlobal(b1_pos);
-		auto b2_pos = body2->GetPosGlobal() + b1_normal * penetrationDepthSum * (m2 / (m1 + m2));
-		body2->SetPosGlobal(b2_pos);
+		auto b1_pos = Utils::GetWorldPos(body1) - b1_normal * penetrationDepthSum * (m1 / (m1 + m2));
+		Utils::SetWorldPos(body1, b1_pos);
+		auto b2_pos = Utils::GetWorldPos(body2) + b1_normal * penetrationDepthSum * (m2 / (m1 + m2));
+		Utils::SetWorldPos(body2, b2_pos);
 	}
 
 	/* velocities handling */
