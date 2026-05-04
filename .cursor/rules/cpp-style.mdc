@@ -1,5 +1,5 @@
 ---
-description: C++ style — [[nodiscard]], override order in class headers (TestEngine src)
+description: C++ style — naming, [[nodiscard]], class member order (TestEngine src)
 globs:
   - src/**/*.h
   - src/**/*.hpp
@@ -9,10 +9,26 @@ alwaysApply: false
 
 # C++ style (`src/`)
 
+## Naming
+
+- **Classes / structs / enums / concepts:** **`PascalCase`** (`SceneNode`, `PhysicsBodyBehaviour`).
+- **Member functions:** **`PascalCase`**; common verbs **`Get` / `Set` / `Add` / `Remove`** for accessors and mutators.
+- **Booleans** (predicate **functions** / **methods**, and **variables** / **constants** / **class data members**): start with **`Is`** / **`is`** — methods like **`IsVisible()`**; fields like **`_isEnabled`** (leading **`_`**, then **`is`** + **`camelCase`**); locals/constants like **`isPaused`** or **`kIsDebug`**. When **`Is`/`is`** is awkward, use other clear predicate prefixes instead: **`Has`**, **`Should`**, **`Was`**, **`Can`**, **`Needs`**, **`Are`** (plural), and similar.
+- **Data members (fields):** leading **`_`** + **`camelCase`** (`_name`, `_localTransform`, `_slots`).
+- **`static` data members:** same as fields (`_instance`, …) or match the dominant pattern in the enclosing type.
+- **Namespaces:** **`PascalCase`** per segment (`Engine`, `Engine::EditorCommands`, `Utils`).
+- **Free functions** at namespace or file scope (including `static` helpers in `.cpp`): **`PascalCase`** (`Utils::Length`, `EffectiveSourceMass` in an anonymous namespace).
+- **Named constants** (`constexpr` / `const` at namespace or file scope, and `static constexpr` in class): prefer **`kPascalCase`** for new code; existing files may use **`camelCase`** — stay consistent within the file.
+- **File-scope `static` state** (mutable globals in `.cpp`): optional **`s` + `PascalCase`** when the value is long-lived shared state (`sUserPlatform`).
+
 ## `[[nodiscard]]`
 
 Use only when ignoring the return risks **bugs, leaks, or broken invariants** (ownership handles, required status, protocol steps). Avoid on benign getters or debug helpers. Do not change generated `src/Codegen/*_gen.hpp` attributes unless codegen does.
 
 ## Class member order (per access section)
 
-Within each `public:` / `protected:` / `private:` block, declare **virtual overrides** (`override` / `override final`) **above** other **member functions** in that block. Constructors, destructors, `static` methods, and ordinary methods stay below the override group. Do not reorder across access sections; nested types / data members: follow file style. Do not reorder generated or third-party headers.
+Within each `public:` / `protected:` / `private:` block, order **member functions**: constructors and destructor; `virtual` without `override` (if any); `override` / `override final`; remaining **instance** methods; then **`static` member functions** (unless the file already groups a few next to constructors as factories — keep that local pattern).
+
+**Data members:** `static` and instance fields together, usually **`static` data after instance data** in that section when adding new members; nested types / enums: follow dominant style in the file.
+
+Do not reorder across access sections. Do not reorder generated or third-party headers.
