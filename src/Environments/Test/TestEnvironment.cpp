@@ -108,13 +108,16 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 
 		node->SetName(wallNames[i]);
 
-		auto* rect = dynamic_cast<sf::RectangleShape*>(node->FindPhysicsBody()->GetShape());
-		rect->setSize(wallSizes[i]);
-		rect->setOrigin(Utils::FindCenterOfMass(rect));
+		auto rect = node->GetVisual<RectangleShapeVisual>();
+		if (!rect) {
+			continue;
+		}
+		rect->SetSize(wallSizes[i]);
+		rect->SetOrigin(Utils::FindCenterOfMass(rect->GetShape()));
 		node->SetPosGlobal(wallPositions[i]);
-		rect->setFillColor(sf::Color(30, 255, 30, 50));
-		rect->setOutlineColor(sf::Color(30, 255, 30, 120));
-		rect->setOutlineThickness(1.f);
+		rect->SetFillColor(sf::Color(30, 255, 30, 50));
+		rect->SetOutlineColor(sf::Color(30, 255, 30, 120));
+		rect->SetOutlineThickness(1.f);
 
 		auto rb = node->RequireBehaviour<PhysicsBodyBehaviour>();
 		rb->SetImmovable(true);
@@ -138,23 +141,26 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 
 		bool isAttractive = true;
 
-		auto* circle = dynamic_cast<sf::CircleShape*>(node->FindPhysicsBody()->GetShape());
+		auto circle = node->GetVisual<CircleShapeVisual>();
+		if (!circle) {
+			continue;
+		}
 		float radius = 20.f;
-		circle->setRadius(radius);
+		circle->SetRadius(radius);
 
 		/* render optimization */
 		constexpr float pointsCountConstant = 3.f;
 		auto pointsCount = static_cast<size_t>(pointsCountConstant * (7 + radius / 8));
-		circle->setPointCount(pointsCount);
+		circle->SetPointCount(pointsCount);
 
 		sf::Color color = isAttractive ? sf::Color(40, 170, 255, 200) : sf::Color(255, 100, 100, 200);
 		auto outlineColor = color;
 		outlineColor.a = 255;
 
-		circle->setFillColor(color);
-		circle->setOutlineColor(outlineColor);
-		circle->setOutlineThickness(1);
-		circle->setOrigin(Utils::FindCenterOfMass(circle));
+		circle->SetFillColor(color);
+		circle->SetOutlineColor(outlineColor);
+		circle->SetOutlineThickness(1);
+		circle->SetOrigin(Utils::FindCenterOfMass(circle->GetShape()));
 		auto minX = static_cast<int>(wallVisibleWidth + radius);
 		auto maxX = static_cast<int>(viewSize.x - wallVisibleWidth - radius);
 		auto minY = static_cast<int>(wallVisibleWidth + radius);

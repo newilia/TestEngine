@@ -2,7 +2,9 @@
 
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
+#include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Utils.h"
+#include "Engine/Visual/CircleShapeVisual.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
 
@@ -55,9 +57,8 @@ void PongBall::SetupBehaviours() {
 }
 
 sf::CircleShape* PongBall::GetShape() const {
-	auto* c = _node->FindPhysicsBody();
-	if (!c) {
-		return nullptr;
+	if (_node) {
+		return _node->GetVisual<CircleShapeVisual>()->GetShape();
 	}
-	return dynamic_cast<sf::CircleShape*>(c->GetShape());
+	return nullptr;
 }

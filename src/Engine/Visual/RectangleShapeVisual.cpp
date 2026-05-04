@@ -12,10 +12,10 @@ sf::RectangleShape* RectangleShapeVisual::GetShape() {
 	return &_rect;
 }
 
-sf::Vector2f RectangleShapeVisual::GetRectSize() const {
+sf::Vector2f RectangleShapeVisual::GetSize() const {
 	return _rect.getSize();
 }
 
-void RectangleShapeVisual::SetRectSize(const sf::Vector2f& size) {
+void RectangleShapeVisual::SetSize(const sf::Vector2f& size) {
 	_rect.setSize(size);
 }
