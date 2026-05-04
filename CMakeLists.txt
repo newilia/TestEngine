@@ -20,16 +20,16 @@ file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/Codegen")
 
 add_custom_target(
 	Codegen
-	COMMAND Python3::Interpreter "${CMAKE_SOURCE_DIR}/tools/property_codegen.py" --root "${CMAKE_SOURCE_DIR}"
-	WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+	COMMAND "${CMAKE_COMMAND}" "-DROOT=${CMAKE_SOURCE_DIR}" "-DPython3_EXECUTABLE=${Python3_EXECUTABLE}" -P
+		"${CMAKE_SOURCE_DIR}/cmake/RunPropertyCodegen.cmake"
 	COMMENT "Running tools/property_codegen.py"
 	VERBATIM
 )
 
 add_custom_target(
 	Codegen_Force
-	COMMAND Python3::Interpreter "${CMAKE_SOURCE_DIR}/tools/property_codegen.py" --root "${CMAKE_SOURCE_DIR}" --force
-	WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+	COMMAND "${CMAKE_COMMAND}" "-DROOT=${CMAKE_SOURCE_DIR}" "-DPython3_EXECUTABLE=${Python3_EXECUTABLE}" -DFORCE=ON -P
+		"${CMAKE_SOURCE_DIR}/cmake/RunPropertyCodegen.cmake"
 	COMMENT "Running tools/property_codegen.py --force"
 	VERBATIM
 )
@@ -52,6 +52,9 @@ if(ENGINE_CODEGEN)
 endif()
 
 add_dependencies(TestEngine Codegen)
+if(TARGET ALL_BUILD)
+	add_dependencies(ALL_BUILD Codegen)
+endif()
 
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "" FILES ${ENGINE_SOURCES} ${ENGINE_HEADERS})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src/Codegen" PREFIX "Codegen" FILES ${ENGINE_CODEGEN})
