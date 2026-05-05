@@ -44,20 +44,24 @@ namespace {
 		ImGui::DockBuilderSetNodeSize(dockspace_id, dockspace_size);
 
 		ImGuiID id_left = 0;
+		ImGuiID id_center = 0;
 		ImGuiID id_right = 0;
-		ImGuiID id_bottom = 0;
 		ImGuiID id_left_top = 0;
 		ImGuiID id_left_bottom = 0;
+		ImGuiID id_right_top = 0;
+		ImGuiID id_right_bottom = 0;
 		ImGuiID id_main = dockspace_id;
-		ImGui::DockBuilderSplitNode(id_main, ImGuiDir_Left, 0.22f, &id_left, &id_main);
-		ImGui::DockBuilderSplitNode(id_left, ImGuiDir_Down, 0.32f, &id_left_bottom, &id_left_top);
-		ImGui::DockBuilderSplitNode(id_main, ImGuiDir_Right, 0.30f, &id_right, &id_main);
-		ImGui::DockBuilderSplitNode(id_main, ImGuiDir_Down, 0.20f, &id_bottom, &id_main);
+
+		ImGui::DockBuilderSplitNode(id_main, ImGuiDir_Left, 0.25f, &id_left, &id_main);
+		ImGui::DockBuilderSplitNode(id_main, ImGuiDir_Right, 0.33f, &id_right, &id_center);
+		ImGui::DockBuilderSplitNode(id_left, ImGuiDir_Down, 0.55f, &id_left_bottom, &id_left_top);
+		ImGui::DockBuilderSplitNode(id_right, ImGuiDir_Down, 0.55f, &id_right_bottom, &id_right_top);
 
 		ImGui::DockBuilderDockWindow(kSceneWindowTitle, id_left_top);
-		ImGui::DockBuilderDockWindow(kToolsWindowTitle, id_left_bottom);
-		ImGui::DockBuilderDockWindow(kInspectorWindowTitle, id_right);
-		ImGui::DockBuilderDockWindow(kDebugWindowTitle, id_bottom);
+		ImGui::DockBuilderDockWindow(kInspectorWindowTitle, id_left_bottom);
+		ImGui::DockBuilderDockWindow(kToolsWindowTitle, id_right_top);
+		ImGui::DockBuilderDockWindow(kDebugWindowTitle, id_right_bottom);
+
 		ImGui::DockBuilderFinish(dockspace_id);
 		layout_finished = true;
 	}
@@ -89,12 +93,12 @@ namespace Engine {
 	}
 
 	void Editor::Update(float /*dt*/) {
-		Engine::MainContext::GetInstance().SetHierarchySelectedForViewport(_isOpen ? _sceneHierarchyWidget.GetSelected()
-		                                                                           : nullptr);
+		auto& mainContext = Engine::MainContext::GetInstance();
+		mainContext.SetHierarchySelectedForViewport(_isOpen ? _sceneHierarchyWidget.GetSelectedNode() : nullptr);
 	}
 
 	std::shared_ptr<SceneNode> Editor::GetSelectedNode() const {
-		return _sceneHierarchyWidget.GetSelected();
+		return _sceneHierarchyWidget.GetSelectedNode();
 	}
 
 	void Editor::ClearNodeSelection() {
@@ -374,13 +378,13 @@ namespace Engine {
 	}
 
 	void Editor::OnMouseButtonPressed(const sf::Event::MouseButtonPressed& e) {
-		if (e.button == sf::Mouse::Button::Middle) {
+		if (e.button == sf::Mouse::Button::Middle || e.button == sf::Mouse::Button::Right) {
 			_cameraMoveMouseOriginPos = e.position;
 		}
 	}
 
 	void Editor::OnMouseButtonReleased(const sf::Event::MouseButtonReleased& e) {
-		if (e.button == sf::Mouse::Button::Middle) {
+		if (e.button == sf::Mouse::Button::Middle || e.button == sf::Mouse::Button::Right) {
 			_cameraMoveMouseOriginPos.reset();
 		}
 	}
@@ -388,7 +392,7 @@ namespace Engine {
 	void Editor::OnMouseWheelScrolled(const sf::Event::MouseWheelScrolled& e) {
 		if (e.wheel == sf::Mouse::Wheel::Vertical) {
 			if (!ImGui::GetIO().WantCaptureMouse) {
-				auto zoomFactor = 1 - e.delta * 0.05f;
+				auto zoomFactor = 1 - e.delta * 0.15f;
 				MainContext::GetInstance().ZoomCamera(zoomFactor, e.position);
 			}
 		}

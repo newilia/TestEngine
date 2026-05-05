@@ -10,7 +10,7 @@ namespace Engine {
 	class SceneHierarchyWidget
 	{
 	public:
-		[[nodiscard]] std::shared_ptr<SceneNode> GetSelected() const;
+		std::shared_ptr<SceneNode> GetSelectedNode() const;
 		void ClearSelection();
 		void Select(std::shared_ptr<SceneNode> node);
 		/// Renders the hierarchy and optional "no scene" state; may clear selection when `scene` is null.
@@ -18,6 +18,8 @@ namespace Engine {
 
 	private:
 		void DrawNode(SceneNode& node, const char* emptyNamePlaceholder, int depth);
+
+	private:
 		std::weak_ptr<SceneNode> _selectedNode;
 		bool _scrollSelectionIntoViewPending = false;
 	};
