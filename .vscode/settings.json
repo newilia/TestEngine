@@ -1,4 +1,20 @@
 {
+	"cmake.options.statusBarVisibility": "hidden",
+	"cmake.options.advanced": {
+		"variant": {
+			"statusBarVisibility": "visible"
+		},
+		"launchTarget": {
+			"statusBarVisibility": "visible"
+		}
+	},
+	"cmake.buildDirectory": "${workspaceFolder}/build",
+	"cmake.buildBeforeRun": true,
+	"cmake.debugConfig": {
+		"type": "lldb",
+		"request": "launch",
+		"cwd": "${workspaceFolder}"
+	},
 	"editor.formatOnSave": true,
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
@@ -26,7 +42,8 @@
 		"-I${workspaceFolder}/third-party/fmt/include",
 		"-I${workspaceFolder}/third-party/imgui",
 		"-I${workspaceFolder}/third-party/imgui-sfml",
-		"-include", "${workspaceFolder}/src/TestEngineGlobals.h"
+		"-include",
+		"${workspaceFolder}/src/TestEngineGlobals.h"
 	],
 	"files.exclude": {
 		"**/build": true
