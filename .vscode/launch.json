@@ -16,7 +16,7 @@
 			"type": "lldb",
 			"request": "launch",
 			"program": "${input:testEngineLaunchPath}",
-			"args": [],
+			"args": ["${config:testEngine.launch.envArg}"],
 			"cwd": "${workspaceFolder}"
 		},
 		{
@@ -24,7 +24,7 @@
 			"type": "lldb",
 			"request": "launch",
 			"program": "${workspaceFolder}/build/bin/Debug/TestEngine.exe",
-			"args": [],
+			"args": ["${config:testEngine.launch.envArg}"],
 			"cwd": "${workspaceFolder}",
 			"preLaunchTask": "CMake: prelaunch Debug"
 		},
@@ -33,7 +33,7 @@
 			"type": "lldb",
 			"request": "launch",
 			"program": "${workspaceFolder}/build/bin/Release/TestEngine.exe",
-			"args": [],
+			"args": ["${config:testEngine.launch.envArg}"],
 			"cwd": "${workspaceFolder}",
 			"preLaunchTask": "CMake: prelaunch Release"
 		}
