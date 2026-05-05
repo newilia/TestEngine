@@ -13,6 +13,15 @@
 	"clangd.arguments": [
 		"--compile-commands-dir=${workspaceFolder}/build"
 	],
+	"clangd.fallbackFlags": [
+		"-I${workspaceFolder}/src",
+		"-I${workspaceFolder}/src/Codegen",
+		"-I${workspaceFolder}/third-party/SFML/include",
+		"-I${workspaceFolder}/third-party/fmt/include",
+		"-I${workspaceFolder}/third-party/imgui",
+		"-I${workspaceFolder}/third-party/imgui-sfml",
+		"-include", "${workspaceFolder}/src/TestEngineGlobals.h"
+	],
 	"files.exclude": {
 		"**/build": true
 	}
