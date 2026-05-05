@@ -1,0 +1,41 @@
+{
+	"version": "0.2.0",
+	"inputs": [
+		{
+			"id": "testEngineLaunchPath",
+			"type": "command",
+			"command": "cmake.launchTargetPath",
+			"args": {
+				"targetName": "TestEngine"
+			}
+		}
+	],
+	"configurations": [
+		{
+			"name": "TestEngine",
+			"type": "lldb",
+			"request": "launch",
+			"program": "${input:testEngineLaunchPath}",
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"name": "TestEngine (Debug, fixed path)",
+			"type": "lldb",
+			"request": "launch",
+			"program": "${workspaceFolder}/build/bin/Debug/TestEngine.exe",
+			"args": [],
+			"cwd": "${workspaceFolder}",
+			"preLaunchTask": "CMake: prelaunch Debug"
+		},
+		{
+			"name": "TestEngine (Release, fixed path)",
+			"type": "lldb",
+			"request": "launch",
+			"program": "${workspaceFolder}/build/bin/Release/TestEngine.exe",
+			"args": [],
+			"cwd": "${workspaceFolder}",
+			"preLaunchTask": "CMake: prelaunch Release"
+		}
+	]
+}

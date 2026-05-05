@@ -1,0 +1,101 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cmake",
+			"label": "CMake: build (active variant)",
+			"command": "build",
+			"targets": [
+				"all"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": "$msCompile",
+			"detail": "Uses CMake Tools variant (status bar Debug/Release)."
+		},
+		{
+			"label": "CMake: configure",
+			"type": "process",
+			"command": "cmake",
+			"args": [
+				"-S",
+				"${workspaceFolder}",
+				"-B",
+				"${workspaceFolder}/build",
+				"-A",
+				"x64"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": "build",
+			"presentation": {
+				"reveal": "silent",
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "CMake: build Debug",
+			"type": "process",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"${workspaceFolder}/build",
+				"--config",
+				"Debug",
+				"--parallel"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": "build",
+			"presentation": {
+				"reveal": "silent",
+				"panel": "shared"
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "CMake: build Release",
+			"type": "process",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"${workspaceFolder}/build",
+				"--config",
+				"Release",
+				"--parallel"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": "build",
+			"presentation": {
+				"reveal": "silent",
+				"panel": "shared"
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "CMake: prelaunch Debug",
+			"dependsOrder": "sequence",
+			"dependsOn": [
+				"CMake: configure",
+				"CMake: build Debug"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "CMake: prelaunch Release",
+			"dependsOrder": "sequence",
+			"dependsOn": [
+				"CMake: configure",
+				"CMake: build Release"
+			],
+			"problemMatcher": []
+		}
+	]
+}
