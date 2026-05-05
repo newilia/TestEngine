@@ -5,7 +5,7 @@
 #include <imgui.h>
 
 namespace Engine {
-	std::shared_ptr<SceneNode> SceneHierarchyWidget::GetSelected() const {
+	std::shared_ptr<SceneNode> SceneHierarchyWidget::GetSelectedNode() const {
 		return _selectedNode.lock();
 	}
 
