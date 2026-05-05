@@ -3,6 +3,7 @@
 #include "Engine/Core/MainLoop.h"
 #include "Engine/Core/PeriodicTaskExecutor.h"
 #include "Engine/Editor/Editor.h"
+#include "Environments/BallGame1/Env.h"
 #include "Environments/Demo1/Env.h"
 #include "Environments/EnvironmentBase.h"
 #include "Environments/Pong/PongEnvironment.h"
@@ -23,7 +24,8 @@ namespace {
 	{
 		Test,
 		Pong,
-		Demo1
+		Demo1,
+		BallGame1,
 	};
 
 	bool EqualsIgnoreCaseAscii(std::string_view a, std::string_view b) {
@@ -53,6 +55,9 @@ namespace {
 				if (EqualsIgnoreCaseAscii(value, "demo1")) {
 					return AppEnvironmentKind::Demo1;
 				}
+				if (EqualsIgnoreCaseAscii(value, "ballgame1")) {
+					return AppEnvironmentKind::BallGame1;
+				}
 			}
 		}
 		return AppEnvironmentKind::Test;
@@ -81,6 +86,9 @@ namespace {
 			if (EqualsIgnoreCaseAscii(value, "demo1")) {
 				return AppEnvironmentKind::Demo1;
 			}
+			if (EqualsIgnoreCaseAscii(value, "ballgame1")) {
+				return AppEnvironmentKind::BallGame1;
+			}
 			pos = valEnd;
 		}
 		return AppEnvironmentKind::Test;
@@ -90,13 +98,15 @@ namespace {
 		switch (kind) {
 		case AppEnvironmentKind::Test:
 			return std::make_shared<TestEnvironment>();
-		case AppEnvironmentKind::Pong: {
+		case AppEnvironmentKind::Pong:
 			return std::make_shared<PongEnvironment>();
-		}
 		case AppEnvironmentKind::Demo1:
 			return std::make_shared<Demo1::Env>();
+		case AppEnvironmentKind::BallGame1:
+			return std::make_shared<BallGame1::Env>();
+		default:
+			return nullptr;
 		}
-		return nullptr;
 	}
 } // namespace
 

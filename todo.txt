@@ -39,3 +39,6 @@
 кастомные инспекторы для типов и членов
 
 inverse attraction
+
+уменьшить dragSpeed на @propery scale в Visual-ах
+
