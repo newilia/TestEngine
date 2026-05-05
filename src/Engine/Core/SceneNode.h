@@ -121,6 +121,21 @@ public:
 	}
 
 	template <typename T>
+	shared_ptr<T> FindBehaviourInSubtree() const {
+		for (auto& b : _behaviours) {
+			if (auto t = std::dynamic_pointer_cast<T>(b)) {
+				return t;
+			}
+		}
+		for (auto& child : _children) {
+			if (auto found = child->FindBehaviourInSubtree<T>()) {
+				return found;
+			}
+		}
+		return nullptr;
+	}
+
+	template <typename T>
 	shared_ptr<T> RequireBehaviour() {
 		static_assert(std::is_base_of_v<Behaviour, T>, "RequireBehaviour is only for Behaviour types");
 		if (auto existing = FindBehaviour<T>()) {
