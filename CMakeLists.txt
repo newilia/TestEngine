@@ -18,6 +18,19 @@ find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
 file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/Codegen")
 
+message(STATUS "Running property codegen (configure)")
+execute_process(
+	COMMAND "${CMAKE_COMMAND}" "-DROOT=${CMAKE_SOURCE_DIR}" "-DPython3_EXECUTABLE=${Python3_EXECUTABLE}" -P
+		"${CMAKE_SOURCE_DIR}/cmake/RunPropertyCodegen.cmake"
+	RESULT_VARIABLE _TestEngine_codegen_configure_exit_code
+)
+if(NOT _TestEngine_codegen_configure_exit_code EQUAL 0)
+	message(
+		FATAL_ERROR
+		"Property codegen failed during configure (exit code: ${_TestEngine_codegen_configure_exit_code})."
+	)
+endif()
+
 add_custom_target(
 	Codegen
 	COMMAND "${CMAKE_COMMAND}" "-DROOT=${CMAKE_SOURCE_DIR}" "-DPython3_EXECUTABLE=${Python3_EXECUTABLE}" -P
