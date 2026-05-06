@@ -11,12 +11,12 @@ class CircleShapeVisual : public ShapeVisualBase
 	META_PROPERTY_BASE(ShapeVisualBase)
 
 public:
+	CircleShapeVisual() = default;
 	sf::Shape* GetBaseShape() override;
-
-	CircleShapeVisual();
 
 	sf::CircleShape* GetShape();
 
+public:
 	/// @getter
 	float GetRadius() const;
 	/// @setter

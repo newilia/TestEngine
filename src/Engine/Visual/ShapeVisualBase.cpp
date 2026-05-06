@@ -7,8 +7,6 @@
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/System/Angle.hpp>
 
-ShapeVisualBase::ShapeVisualBase() {}
-
 const sf::Shape* ShapeVisualBase::GetBaseShape() const {
 	return const_cast<ShapeVisualBase*>(this)->GetBaseShape();
 }

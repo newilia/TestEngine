@@ -4,6 +4,7 @@
 #include "Engine/Core/EventHandlerBase.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/Scene.h"
+#include "Engine/Core/SceneNode.h"
 #include "Engine/Core/TextureManager.h"
 #include "Engine/Core/Transform.h"
 #include "Engine/Core/Utils.h"
@@ -12,6 +13,7 @@
 #include "Engine/Visual/RectangleShapeVisual.h"
 #include "Engine/Visual/SpriteVisual.h"
 #include "Engine/Visual/VectorArrowVisual.h"
+#include "GameControllerBehaviour.h"
 #include "GunControllerBehaviour.h"
 #include "fmt/format.h"
 
@@ -25,12 +27,12 @@ namespace BallGame1 {
 		if (!mainWindow) {
 			std::exit(EXIT_FAILURE);
 		}
+		EventHandlerBase::SubscribeForEvents();
 		Utils::MaximizeWindow(*mainWindow);
 		mainContext.GetPhysicsProcessor()->SetGravity({0, 1000});
-		mainContext.GetPhysicsProcessor()->SetGravityEnabled(true);
-		mainContext.SetScene(BuildScene());
+		mainContext.GetPhysicsProcessor()->SetGravityEnabled(false);
 		mainContext.SetVerticalSyncEnabled(false);
-		EventHandlerBase::SubscribeForEvents();
+		mainContext.SetScene(BuildScene());
 	}
 
 	void Env::OnEvent(const sf::Event& event) {
@@ -58,32 +60,29 @@ namespace BallGame1 {
 			auto fieldNode = CreateFieldNode();
 			gameNode->AddChild(fieldNode);
 		}
-		{
-			auto ballNode = CreateBallNode();
-			gameNode->AddChild(ballNode);
-		}
-		{
-			auto platformNode = CreateGunNode();
-			gameNode->AddChild(platformNode);
-		}
-		{
+
+		if (auto gameController = gameNode->FindBehaviourInSubtree<GameControllerBehaviour>()) {
+			auto gunNode = CreateGunNode();
+			gameNode->AddChild(gunNode);
 			auto scoreNode = CreateScoreNode();
 			gameNode->AddChild(scoreNode);
-		}
 
-		return scene;
+			gameController->SetRootNode(gameNode);
+			gameController->SetGunNode(gunNode);
+			gameController->SetScoreNode(scoreNode);
+			gameController->StartNewGame();
+		}
 	}
 
 	std::shared_ptr<SceneNode> Env::CreateBackgroundNode() {
 		auto& mainContext = Engine::MainContext::GetInstance();
 		auto node = make_shared<SceneNode>();
 		node->SetName("Background");
-		auto sprite = make_shared<SpriteVisual>();
+		auto sprite = node->RequireVisual<SpriteVisual>();
 		auto texture = mainContext.GetTextureManager()->LoadTexture("resources/textures/ballgame1_background.jpg");
 		if (texture) {
 			sprite->SetTexture(*texture);
 		}
-		node->SetVisual(std::move(sprite));
 		auto sorting = make_shared<RelativeSortingStrategy>();
 		sorting->SetPriority(-10);
 		return node;
@@ -113,8 +112,7 @@ namespace BallGame1 {
 		for (int i = 0; i < 4; ++i) {
 			auto wallNode = make_shared<SceneNode>();
 			wallNode->SetName(wallNames[i]);
-			auto rectVisual = make_shared<RectangleShapeVisual>();
-			wallNode->SetVisual(rectVisual);
+			auto rectVisual = wallNode->RequireVisual<RectangleShapeVisual>();
 			auto* rectShape = rectVisual->GetShape();
 			rectShape->setSize(wallSizes[i]);
 			rectShape->setOrigin(rectShape->getGeometricCenter());
@@ -150,11 +148,10 @@ namespace BallGame1 {
 
 		auto arrowNode = make_shared<SceneNode>();
 		arrowNode->SetName("Arrow");
-		auto arrowVisual = make_shared<VectorArrowVisual>();
+		auto arrowVisual = arrowNode->RequireVisual<VectorArrowVisual>();
 		arrowVisual->SetStartPos({0, 0});
 		arrowVisual->SetEndPos({0, -100});
 		arrowVisual->SetColor(sf::Color::White);
-		arrowNode->SetVisual(std::move(arrowVisual));
 		node->AddChild(arrowNode);
 
 		auto gunController = node->RequireBehaviour<GunControllerBehaviour>();

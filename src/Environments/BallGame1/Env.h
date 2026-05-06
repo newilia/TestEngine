@@ -7,7 +7,6 @@
 #include <memory>
 
 class SceneNode;
-class TextVisual;
 
 namespace BallGame1 {
 

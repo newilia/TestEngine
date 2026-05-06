@@ -10,7 +10,6 @@
 namespace BallGame1 {
 	void GameControllerBehaviour::OnInit() {
 		EventHandlerBehaviourBase::OnInit();
-		_ballNode = CreateBallNode();
 	}
 
 	void GameControllerBehaviour::OnUpdate(const sf::Time& dt) {
@@ -23,12 +22,25 @@ namespace BallGame1 {
 		}
 	}
 
+	void GameControllerBehaviour::SetRootNode(const std::weak_ptr<SceneNode>& rootNode) {
+		_rootNode = rootNode;
+	}
+
 	void GameControllerBehaviour::SetBallNode(const std::weak_ptr<SceneNode>& ballNode) {
 		_ballNode = ballNode;
 	}
 
 	void GameControllerBehaviour::SetGunNode(const std::weak_ptr<SceneNode>& gunNode) {
 		_gunNode = gunNode;
+	}
+
+	void GameControllerBehaviour::SetScoreNode(const std::weak_ptr<SceneNode>& scoreNode) {
+		_scoreNode = scoreNode;
+	}
+
+	void GameControllerBehaviour::StartNewGame() {
+		_ballNode = CreateBallNode();
+		AttachBallToGun();
 	}
 
 	void GameControllerBehaviour::Shoot() {
@@ -42,9 +54,12 @@ namespace BallGame1 {
 		auto ballBody = ballNode->RequireBehaviour<PhysicsBodyBehaviour>();
 		auto moveDirection = sf::Vector2f(std::cos(gunRotation.asRadians()), std::sin(gunRotation.asRadians()));
 		ballBody->SetVelocity(moveDirection * _ballSpeed);
+		DetachBallFromGun();
 
 		auto newBallNode = CreateBallNode();
 		newBallNode->GetLocalTransform()->SetPosition(gunNode->GetLocalTransform()->GetPosition());
+		_ballNode = newBallNode;
+		AttachBallToGun();
 	}
 
 	std::shared_ptr<SceneNode> GameControllerBehaviour::CreateBallNode() const {
@@ -57,9 +72,26 @@ namespace BallGame1 {
 		auto visual = newBallNode->RequireVisual<CircleShapeVisual>();
 		visual->SetRadius(_ballRadius);
 		visual->SetFillColor(_ballColor);
-
-		if ()
-			return newBallNode;
 	}
 
+	void GameControllerBehaviour::AttachBallToGun() {
+		auto ballNode = _ballNode.lock();
+		auto gunNode = _gunNode.lock();
+		if (!ballNode || !gunNode) {
+			return;
+		}
+		ballNode->RemoveFromParent();
+		gunNode->AddChild(ballNode);
+	}
+
+	void GameControllerBehaviour::DetachBallFromGun() {
+		auto ballNode = _ballNode.lock();
+		auto rootNode = _rootNode.lock();
+		if (!ballNode || !rootNode) {
+			return;
+		}
+
+		ballNode->RemoveFromParent();
+		rootNode->AddChild(ballNode);
+	}
 } // namespace BallGame1
