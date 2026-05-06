@@ -14,16 +14,24 @@ namespace BallGame1 {
 		void OnUpdate(const sf::Time& dt) override;
 		void OnEvent(const sf::Event& event) override;
 
-		void SetBallNode(const std::weak_ptr<SceneNode>& ballNode);
+		void SetRootNode(const std::weak_ptr<SceneNode>& rootNode);
 		void SetGunNode(const std::weak_ptr<SceneNode>& gunNode);
+		void SetScoreNode(const std::weak_ptr<SceneNode>& scoreNode);
+
+		void StartNewGame();
 
 	private:
-		void Shoot();
 		std::shared_ptr<SceneNode> CreateBallNode() const;
+		void SetBallNode(const std::weak_ptr<SceneNode>& ballNode);
+		void Shoot();
+		void AttachBallToGun();
+		void DetachBallFromGun();
 
 	private:
+		std::weak_ptr<SceneNode> _rootNode;
 		std::weak_ptr<SceneNode> _ballNode;
 		std::weak_ptr<SceneNode> _gunNode;
+		std::weak_ptr<SceneNode> _scoreNode;
 		float _ballSpeed = 1000.0f;
 		float _ballMass = 1.0f;
 		float _ballRestitution = 0.5f;

@@ -12,7 +12,7 @@ class ShapeVisualBase : public Visual
 	META_PROPERTY_BASE(Visual)
 
 public:
-	ShapeVisualBase();
+	ShapeVisualBase() = default;
 	void Draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 	bool HitTest(const sf::Vector2f& worldPoint) const override;
 	virtual sf::Shape* GetBaseShape() = 0;
