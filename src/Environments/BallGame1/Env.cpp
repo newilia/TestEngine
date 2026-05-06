@@ -15,7 +15,6 @@
 #include "Engine/Visual/VectorArrowVisual.h"
 #include "GameControllerBehaviour.h"
 #include "GunControllerBehaviour.h"
-#include "fmt/format.h"
 
 #include <cstdlib>
 #include <memory>
@@ -41,6 +40,9 @@ namespace BallGame1 {
 			if (e->code == sf::Keyboard::Key::R) {
 				mainContext.SetScene(BuildScene());
 			}
+			else if (e->code == sf::Keyboard::Key::Escape) {
+				std::exit(EXIT_SUCCESS);
+			}
 		}
 	}
 
@@ -52,17 +54,15 @@ namespace BallGame1 {
 		gameNode->GetLocalTransform()->SetPosition({1700, 700});
 		scene->AddChild(gameNode);
 
-		{
-			auto background = CreateBackgroundNode();
-			gameNode->AddChild(background);
-		}
-		{
-			auto fieldNode = CreateFieldNode();
-			gameNode->AddChild(fieldNode);
-		}
+		gameNode->AddChild(CreateBackgroundNode());
+		gameNode->AddChild(CreateFieldNode());
 
-		if (auto gameController = gameNode->FindBehaviourInSubtree<GameControllerBehaviour>()) {
+		if (auto gameController = gameNode->RequireBehaviour<GameControllerBehaviour>()) {
 			auto gunNode = CreateGunNode();
+			if (auto gunController = gunNode->RequireBehaviour<GunControllerBehaviour>()) {
+				constexpr auto halfAngle = sf::degrees(70);
+				gunController->SetRotationLimits(-halfAngle, halfAngle);
+			}
 			gameNode->AddChild(gunNode);
 			auto scoreNode = CreateScoreNode();
 			gameNode->AddChild(scoreNode);
@@ -72,6 +72,7 @@ namespace BallGame1 {
 			gameController->SetScoreNode(scoreNode);
 			gameController->StartNewGame();
 		}
+		return scene;
 	}
 
 	std::shared_ptr<SceneNode> Env::CreateBackgroundNode() {
@@ -79,7 +80,9 @@ namespace BallGame1 {
 		auto node = make_shared<SceneNode>();
 		node->SetName("Background");
 		auto sprite = node->RequireVisual<SpriteVisual>();
-		auto texture = mainContext.GetTextureManager()->LoadTexture("resources/textures/ballgame1_background.jpg");
+
+		constexpr auto path = "resources/textures/background.png";
+		auto texture = mainContext.GetTextureManager()->LoadTexture(path);
 		if (texture) {
 			sprite->SetTexture(*texture);
 		}

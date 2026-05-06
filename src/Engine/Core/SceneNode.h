@@ -121,14 +121,14 @@ public:
 	}
 
 	template <typename T>
-	shared_ptr<T> FindBehaviourInSubtree() const {
+	shared_ptr<T> FindBehaviourRec() const {
 		for (auto& b : _behaviours) {
 			if (auto t = std::dynamic_pointer_cast<T>(b)) {
 				return t;
 			}
 		}
 		for (auto& child : _children) {
-			if (auto found = child->FindBehaviourInSubtree<T>()) {
+			if (auto found = child->FindBehaviourRec<T>()) {
 				return found;
 			}
 		}
