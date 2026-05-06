@@ -1,13 +1,13 @@
 #pragma once
 
-#include "Engine/Behaviour/InputHandlerBehaviourBase.h"
+#include "Engine/Behaviour/EventHandlerBehaviourBase.h"
 #include "Engine/Core/Signal.h"
 
 #include <SFML/Window/Event.hpp>
 
 /// Registers for window input and emits **signals** when the pointer taps / releases over this node's `Visual`
 /// (see `Visual::HitTest`). Mouse: left button. Touch: first finger (`finger == 0`) only.
-class ButtonBehaviour : public InputHandlerBehaviourBase
+class ButtonBehaviour : public EventHandlerBehaviourBase
 {
 public:
 	void OnEvent(const sf::Event& event) override;
