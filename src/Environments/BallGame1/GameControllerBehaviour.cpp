@@ -18,16 +18,14 @@ namespace BallGame1 {
 
 	void GameControllerBehaviour::OnEvent(const sf::Event& event) {
 		if (auto e = event.getIf<sf::Event::MouseButtonPressed>()) {
-			if (e->button == sf::Mouse::Button::Left) {}
+			if (e->button == sf::Mouse::Button::Left) {
+				Shoot();
+			}
 		}
 	}
 
 	void GameControllerBehaviour::SetRootNode(const std::weak_ptr<SceneNode>& rootNode) {
 		_rootNode = rootNode;
-	}
-
-	void GameControllerBehaviour::SetBallNode(const std::weak_ptr<SceneNode>& ballNode) {
-		_ballNode = ballNode;
 	}
 
 	void GameControllerBehaviour::SetGunNode(const std::weak_ptr<SceneNode>& gunNode) {
@@ -39,8 +37,8 @@ namespace BallGame1 {
 	}
 
 	void GameControllerBehaviour::StartNewGame() {
-		_ballNode = CreateBallNode();
-		AttachBallToGun();
+		auto ballNode = CreateBallNode();
+		AttachBallToGun(ballNode);
 	}
 
 	void GameControllerBehaviour::Shoot() {
@@ -59,7 +57,7 @@ namespace BallGame1 {
 		auto newBallNode = CreateBallNode();
 		newBallNode->GetLocalTransform()->SetPosition(gunNode->GetLocalTransform()->GetPosition());
 		_ballNode = newBallNode;
-		AttachBallToGun();
+		AttachBallToGun(newBallNode);
 	}
 
 	std::shared_ptr<SceneNode> GameControllerBehaviour::CreateBallNode() const {
@@ -72,14 +70,15 @@ namespace BallGame1 {
 		auto visual = newBallNode->RequireVisual<CircleShapeVisual>();
 		visual->SetRadius(_ballRadius);
 		visual->SetFillColor(_ballColor);
+		return newBallNode;
 	}
 
-	void GameControllerBehaviour::AttachBallToGun() {
-		auto ballNode = _ballNode.lock();
+	void GameControllerBehaviour::AttachBallToGun(const std::shared_ptr<SceneNode>& ballNode) {
 		auto gunNode = _gunNode.lock();
 		if (!ballNode || !gunNode) {
 			return;
 		}
+		_ballNode = ballNode;
 		ballNode->RemoveFromParent();
 		gunNode->AddChild(ballNode);
 	}

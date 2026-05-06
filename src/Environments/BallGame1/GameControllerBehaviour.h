@@ -22,9 +22,8 @@ namespace BallGame1 {
 
 	private:
 		std::shared_ptr<SceneNode> CreateBallNode() const;
-		void SetBallNode(const std::weak_ptr<SceneNode>& ballNode);
 		void Shoot();
-		void AttachBallToGun();
+		void AttachBallToGun(const std::shared_ptr<SceneNode>& ballNode);
 		void DetachBallFromGun();
 
 	private:
