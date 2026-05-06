@@ -20,7 +20,7 @@
 				"${config:testEngine.launch.envArg}"
 			],
 			"cwd": "${workspaceFolder}",
-			"preLaunchTask": "CMake: build Debug"
+			"preLaunchTask": "Prelaunch Debug"
 		},
 		{
 			"name": "Release",
@@ -31,7 +31,7 @@
 				"${config:testEngine.launch.envArg}"
 			],
 			"cwd": "${workspaceFolder}",
-			"preLaunchTask": "CMake: build Release"
+			"preLaunchTask": "Prelaunch Release"
 		}
 	]
 }

@@ -38,6 +38,25 @@
 			"problemMatcher": []
 		},
 		{
+			"label": "Property codegen",
+			"type": "process",
+			"command": "python",
+			"args": [
+				"${workspaceFolder}/tools/property_codegen.py",
+				"--root",
+				"${workspaceFolder}"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": "build",
+			"presentation": {
+				"reveal": "silent",
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
 			"label": "CMake: build Debug",
 			"type": "process",
 			"command": "cmake",
@@ -80,19 +99,19 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "CMake: prelaunch Debug",
+			"label": "Prelaunch Debug",
 			"dependsOrder": "sequence",
 			"dependsOn": [
-				"CMake: configure",
+				"Property codegen",
 				"CMake: build Debug"
 			],
 			"problemMatcher": []
 		},
 		{
-			"label": "CMake: prelaunch Release",
+			"label": "Prelaunch Release",
 			"dependsOrder": "sequence",
 			"dependsOn": [
-				"CMake: configure",
+				"Property codegen",
 				"CMake: build Release"
 			],
 			"problemMatcher": []
