@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/Behaviour/InputHandlerBehaviourBase.h"
+#include "Engine/Behaviour/EventHandlerBehaviourBase.h"
 #include "Engine/Core/MetaClass.h"
 
 #include <SFML/System/Vector2.hpp>
@@ -14,7 +14,7 @@ namespace sf {
 class SceneNode;
 
 /// Player paddle: mouse-driven target + velocity toward target.
-class UserPlatformControllerBehaviour : public InputHandlerBehaviourBase
+class UserPlatformControllerBehaviour : public EventHandlerBehaviourBase
 {
 	META_CLASS()
 public:

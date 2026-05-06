@@ -12,7 +12,7 @@ void UserPlatformControllerBehaviour::SetMovementBounds(std::weak_ptr<SceneNode>
 
 void UserPlatformControllerBehaviour::OnInit() {
 	ResyncSpawnFromNode();
-	InputHandlerBehaviourBase::OnInit();
+	EventHandlerBehaviourBase::OnInit();
 }
 
 void UserPlatformControllerBehaviour::ResyncSpawnFromNode() {
@@ -25,7 +25,7 @@ void UserPlatformControllerBehaviour::ResyncSpawnFromNode() {
 }
 
 void UserPlatformControllerBehaviour::OnDeinit() {
-	InputHandlerBehaviourBase::OnDeinit();
+	EventHandlerBehaviourBase::OnDeinit();
 }
 
 void UserPlatformControllerBehaviour::OnUpdate(const sf::Time& /*dt*/) {
