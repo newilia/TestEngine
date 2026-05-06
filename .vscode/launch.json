@@ -12,30 +12,26 @@
 	],
 	"configurations": [
 		{
-			"name": "TestEngine",
-			"type": "lldb",
-			"request": "launch",
-			"program": "${input:testEngineLaunchPath}",
-			"args": ["${config:testEngine.launch.envArg}"],
-			"cwd": "${workspaceFolder}"
-		},
-		{
-			"name": "TestEngine (Debug, fixed path)",
+			"name": "Debug",
 			"type": "lldb",
 			"request": "launch",
 			"program": "${workspaceFolder}/build/bin/Debug/TestEngine.exe",
-			"args": ["${config:testEngine.launch.envArg}"],
+			"args": [
+				"${config:testEngine.launch.envArg}"
+			],
 			"cwd": "${workspaceFolder}",
-			"preLaunchTask": "CMake: prelaunch Debug"
+			"preLaunchTask": "CMake: build Debug"
 		},
 		{
-			"name": "TestEngine (Release, fixed path)",
+			"name": "Release",
 			"type": "lldb",
 			"request": "launch",
 			"program": "${workspaceFolder}/build/bin/Release/TestEngine.exe",
-			"args": ["${config:testEngine.launch.envArg}"],
+			"args": [
+				"${config:testEngine.launch.envArg}"
+			],
 			"cwd": "${workspaceFolder}",
-			"preLaunchTask": "CMake: prelaunch Release"
+			"preLaunchTask": "CMake: build Release"
 		}
 	]
 }
