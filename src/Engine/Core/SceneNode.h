@@ -146,6 +146,17 @@ public:
 		return created;
 	}
 
+	template <typename T>
+	shared_ptr<T> RequireVisual() {
+		static_assert(std::is_base_of_v<Visual, T>, "RequireVisual is only for Visual types");
+		if (auto existing = dynamic_pointer_cast<T>(_visual)) {
+			return existing;
+		}
+		auto created = std::make_shared<T>();
+		SetVisual(created);
+		return created;
+	}
+
 	shared_ptr<SceneNode> FindTopMostNodeAtPoint(const sf::Vector2f& worldPoint, bool tapResponsiveOnly = false);
 	void FindNodesAtPoint(const sf::Vector2f& worldPoint, std::vector<shared_ptr<SceneNode>>& result,
 	                      bool tapResponsiveOnly = false);

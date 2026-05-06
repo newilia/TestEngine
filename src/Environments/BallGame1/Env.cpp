@@ -8,9 +8,11 @@
 #include "Engine/Core/Transform.h"
 #include "Engine/Core/Utils.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
+#include "Engine/Visual/CircleShapeVisual.h"
 #include "Engine/Visual/RectangleShapeVisual.h"
 #include "Engine/Visual/SpriteVisual.h"
 #include "Engine/Visual/VectorArrowVisual.h"
+#include "GunControllerBehaviour.h"
 #include "fmt/format.h"
 
 #include <cstdlib>
@@ -42,26 +44,33 @@ namespace BallGame1 {
 
 	std::shared_ptr<Scene> Env::BuildScene() {
 		auto scene = make_shared<Scene>();
+
+		auto gameNode = make_shared<SceneNode>();
+		gameNode->SetName("Game");
+		gameNode->GetLocalTransform()->SetPosition({1700, 700});
+		scene->AddChild(gameNode);
+
 		{
 			auto background = CreateBackgroundNode();
-			scene->AddChild(background);
+			gameNode->AddChild(background);
 		}
 		{
 			auto fieldNode = CreateFieldNode();
-			scene->AddChild(fieldNode);
+			gameNode->AddChild(fieldNode);
 		}
 		{
 			auto ballNode = CreateBallNode();
-			scene->AddChild(ballNode);
+			gameNode->AddChild(ballNode);
 		}
 		{
-			auto platformNode = CreateStartNode();
-			scene->AddChild(platformNode);
+			auto platformNode = CreateGunNode();
+			gameNode->AddChild(platformNode);
 		}
 		{
 			auto scoreNode = CreateScoreNode();
-			scene->AddChild(scoreNode);
+			gameNode->AddChild(scoreNode);
 		}
+
 		return scene;
 	}
 
@@ -124,23 +133,32 @@ namespace BallGame1 {
 	std::shared_ptr<SceneNode> Env::CreateBallNode() {
 		auto node = make_shared<SceneNode>();
 		node->SetName("Ball");
+		node->RequireBehaviour<PhysicsBodyBehaviour>();
+		auto visual = node->RequireVisual<CircleShapeVisual>();
+		visual->SetRadius(10);
+		visual->SetFillColor(sf::Color::Red);
+		visual->SetOutlineColor(sf::Color::White);
+		visual->SetOutlineThickness(1);
 		return node;
 	}
 
-	std::shared_ptr<SceneNode> Env::CreateStartNode() {
+	std::shared_ptr<SceneNode> Env::CreateGunNode() {
 		auto& mainContext = Engine::MainContext::GetInstance();
 		auto node = make_shared<SceneNode>();
+		node->GetLocalTransform()->SetPosition({0, _fieldSize.y * 0.5f});
 		node->SetName("Start");
 
 		auto arrowNode = make_shared<SceneNode>();
 		arrowNode->SetName("Arrow");
-		arrowNode->GetLocalTransform()->SetPosition({0, _fieldSize.y * 0.5f});
 		auto arrowVisual = make_shared<VectorArrowVisual>();
 		arrowVisual->SetStartPos({0, 0});
 		arrowVisual->SetEndPos({0, -100});
 		arrowVisual->SetColor(sf::Color::White);
 		arrowNode->SetVisual(std::move(arrowVisual));
 		node->AddChild(arrowNode);
+
+		auto gunController = node->RequireBehaviour<GunControllerBehaviour>();
+		gunController->SetRotationSpeed(0.01f);
 		return node;
 	}
 
