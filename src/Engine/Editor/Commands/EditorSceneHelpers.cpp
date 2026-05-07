@@ -1,6 +1,7 @@
 #include "Engine/Editor/Commands/EditorSceneHelpers.h"
 
 #include "Engine/Core/MainContext.h"
+#include "Engine/Core/Scene.h"
 #include "Engine/Core/SceneNode.h"
 
 namespace Engine::EditorCommands {
@@ -10,11 +11,15 @@ namespace Engine::EditorCommands {
 		if (!active || !node) {
 			return false;
 		}
+		const auto activeRoot = active->GetRoot();
+		if (!activeRoot) {
+			return false;
+		}
 		auto current = node;
 		while (auto parent = current->GetParent()) {
 			current = std::move(parent);
 		}
-		return current.get() == active.get();
+		return current.get() == activeRoot.get();
 	}
 
 } // namespace Engine::EditorCommands
