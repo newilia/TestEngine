@@ -31,6 +31,17 @@ void PhysicsBodyBehaviour::OnDeinit() {
 	}
 }
 
+void PhysicsBodyBehaviour::OnEnabled(bool isEnabled) {
+	if (auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
+		if (isEnabled) {
+			ph->RegisterBody(shared_from_this());
+		}
+		else {
+			ph->UnregisterBody(this);
+		}
+	}
+}
+
 sf::Shape* PhysicsBodyBehaviour::GetShape() {
 	if (auto node = GetNode()) {
 		if (auto visual = node->GetVisual()) {
