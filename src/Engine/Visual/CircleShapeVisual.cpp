@@ -20,6 +20,15 @@ float CircleShapeVisual::GetRadius() const {
 
 void CircleShapeVisual::SetRadius(float radius) {
 	_circle.setRadius(radius);
+	_circle.setOrigin({radius, radius});
+}
+
+sf::Vector2f CircleShapeVisual::GetOrigin() const {
+	return _circle.getOrigin();
+}
+
+void CircleShapeVisual::SetOrigin(const sf::Vector2f& origin) {
+	_circle.setOrigin(origin);
 }
 
 int CircleShapeVisual::GetPointCount() const {
