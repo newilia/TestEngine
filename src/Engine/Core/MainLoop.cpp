@@ -172,7 +172,10 @@ namespace Engine {
 		editor.Draw();
 
 		PresentMainWindowScene(*window, scene);
+
+		editor.DrawViewportSelectionOverlay(*window);
 		editor.GetEditorToolManager().DrawOverlay(*window);
+
 		ImGui::SFML::Render(*window);
 		window->display();
 		return true;

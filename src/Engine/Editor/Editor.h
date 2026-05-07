@@ -16,6 +16,10 @@
 
 #include <memory>
 
+namespace sf {
+	class RenderWindow;
+}
+
 namespace Engine {
 
 	class Editor : public Singleton<Editor>
@@ -28,6 +32,7 @@ namespace Engine {
 		bool IsOpen() const;
 		void Update(float dt);
 		void Draw();
+		void DrawViewportSelectionOverlay(sf::RenderWindow& window);
 		void OnEvent(const sf::Event& event);
 		void OnResize(const sf::Event::Resized& e);
 		void OnKeyPress(const sf::Event::KeyPressed& e);

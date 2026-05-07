@@ -7,6 +7,7 @@
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Transform.h"
+#include "Engine/Sorting/SortingStrategy.h"
 #include "Engine/Visual/ShapeVisualBase.h"
 #include "Engine/Visual/SpriteVisual.h"
 #include "Engine/Visual/TextVisual.h"
@@ -435,6 +436,21 @@ namespace Utils {
 		else {
 			n->GetLocalTransform()->SetPosition(pos);
 		}
+	}
+
+	void SortSceneNodesByDrawOrder(std::vector<std::shared_ptr<SceneNode>>& nodes) {
+		std::stable_sort(nodes.begin(), nodes.end(),
+		                 [](const std::shared_ptr<SceneNode>& a, const std::shared_ptr<SceneNode>& b) {
+			                 int la = 0;
+			                 int lb = 0;
+			                 if (auto sa = a->FindEntity<RelativeSortingStrategy>()) {
+				                 la = sa->GetPriority();
+			                 }
+			                 if (auto sb = b->FindEntity<RelativeSortingStrategy>()) {
+				                 lb = sb->GetPriority();
+			                 }
+			                 return la < lb;
+		                 });
 	}
 
 } // namespace Utils

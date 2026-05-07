@@ -4,113 +4,14 @@
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/Transform.h"
 #include "Engine/Core/Utils.h"
-#include "Engine/Editor/EditorVisualTheme.h"
 #include "Engine/Visual/ShapeVisualBase.h"
 #include "Engine/Visual/SpriteVisual.h"
 #include "Engine/Visual/TextVisual.h"
 #include "SceneNode.generated.hpp"
 
-#include <SFML/Graphics/CircleShape.hpp>
-#include <SFML/Graphics/RectangleShape.hpp>
-
-#include <algorithm>
 #include <cassert>
 #include <memory>
-#include <optional>
 #include <vector>
-
-namespace {
-	using Engine::EditorVisualTheme::kHierarchySelectionChildOutlineColor;
-	using Engine::EditorVisualTheme::kHierarchySelectionFallbackHalfSize;
-	using Engine::EditorVisualTheme::kHierarchySelectionOutlineColor;
-	using Engine::EditorVisualTheme::kHierarchySelectionOutlinePadPx;
-	using Engine::EditorVisualTheme::kHierarchySelectionOutlineThickness;
-
-	std::optional<sf::FloatRect> TryGetHierarchySelectionBounds(const SceneNode& node) {
-		sf::Transform fullTransform = node.GetWorldTransform();
-		if (auto visual = node.GetVisual()) {
-			const auto bounds = visual->GetLocalBounds();
-			if (const auto transform = visual->GetTransform()) {
-				fullTransform *= *transform;
-			}
-			return Utils::AxisAlignedBoundsAfterTransform(fullTransform, bounds);
-		}
-		return std::nullopt;
-	}
-
-	void SortChildrenByDrawOrder(std::vector<shared_ptr<SceneNode>>& nodes) {
-		std::stable_sort(nodes.begin(), nodes.end(),
-		                 [](const shared_ptr<SceneNode>& a, const shared_ptr<SceneNode>& b) {
-			                 int la = 0;
-			                 int lb = 0;
-			                 if (auto sa = a->FindEntity<RelativeSortingStrategy>()) {
-				                 la = sa->GetPriority();
-			                 }
-			                 if (auto sb = b->FindEntity<RelativeSortingStrategy>()) {
-				                 lb = sb->GetPriority();
-			                 }
-			                 return la < lb;
-		                 });
-	}
-
-	void DrawAabbOutline(sf::RenderTarget& target, sf::RenderStates states, const sf::FloatRect& bounds,
-	                     const sf::Color& outlineColor) {
-		sf::RectangleShape frame;
-		frame.setPosition(
-		    {bounds.position.x - kHierarchySelectionOutlinePadPx, bounds.position.y - kHierarchySelectionOutlinePadPx});
-		frame.setSize({bounds.size.x + 2.f * kHierarchySelectionOutlinePadPx,
-		               bounds.size.y + 2.f * kHierarchySelectionOutlinePadPx});
-		frame.setFillColor(sf::Color::Transparent);
-		frame.setOutlineColor(outlineColor);
-		frame.setOutlineThickness(kHierarchySelectionOutlineThickness);
-		target.draw(frame, states);
-	}
-
-	void DrawNodeHierarchySelectionBounds(const SceneNode& node, sf::RenderTarget& target, sf::RenderStates worldOnly,
-	                                      const sf::Color& outlineColor) {
-		if (const std::optional<sf::FloatRect> bb = TryGetHierarchySelectionBounds(node)) {
-			const sf::FloatRect& b = *bb;
-			if (b.size.x > 0.f && b.size.y > 0.f) {
-				DrawAabbOutline(target, worldOnly, b, outlineColor);
-				return;
-			}
-		}
-		const sf::Vector2f pos = Utils::GetWorldPos(node.shared_from_this());
-		sf::CircleShape marker(kHierarchySelectionFallbackHalfSize);
-		marker.setOrigin({kHierarchySelectionFallbackHalfSize, kHierarchySelectionFallbackHalfSize});
-		marker.setPosition(pos);
-		marker.setFillColor(sf::Color::Transparent);
-		marker.setOutlineColor(outlineColor);
-		marker.setOutlineThickness(kHierarchySelectionOutlineThickness);
-		target.draw(marker, worldOnly);
-	}
-
-	void DrawDescendantHierarchySelectionOutlines(const SceneNode& parent, sf::RenderTarget& target,
-	                                              sf::RenderStates worldOnly) {
-		std::vector<shared_ptr<SceneNode>> sorted = parent.GetChildren();
-		SortChildrenByDrawOrder(sorted);
-		for (const auto& child : sorted) {
-			if (!child || !child->IsEnabled() || !child->IsVisible()) {
-				continue;
-			}
-			DrawNodeHierarchySelectionBounds(*child, target, worldOnly, kHierarchySelectionChildOutlineColor);
-			DrawDescendantHierarchySelectionOutlines(*child, target, worldOnly);
-		}
-	}
-
-	void DrawHierarchySelectionHighlightIfSelected(const SceneNode& node, sf::RenderTarget& target,
-	                                               sf::RenderStates states) {
-		const auto selected = Engine::MainContext::GetInstance().GetHierarchySelectedForViewport();
-		if (!selected || selected.get() != &node) {
-			return;
-		}
-		sf::RenderStates worldOnly = states;
-		worldOnly.transform = sf::Transform{};
-		DrawDescendantHierarchySelectionOutlines(node, target, worldOnly);
-		DrawNodeHierarchySelectionBounds(node, target, worldOnly, kHierarchySelectionOutlineColor);
-	}
-
-} // namespace
 
 void SceneNode::OnInit() {}
 
@@ -199,13 +100,11 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	}
 
 	std::vector<shared_ptr<SceneNode>> sorted = _children;
-	SortChildrenByDrawOrder(sorted);
+	Utils::SortSceneNodesByDrawOrder(sorted);
 
 	for (auto& child : sorted) {
 		child->draw(target, nodeStates);
 	}
-
-	DrawHierarchySelectionHighlightIfSelected(*this, target, nodeStates);
 }
 
 void SceneNode::Update(const sf::Time& dt) {
@@ -443,7 +342,7 @@ void SceneNode::DetachBehaviourForRemove(const shared_ptr<Behaviour>& b) {
 
 shared_ptr<SceneNode> SceneNode::FindTopMostNodeAtPoint(const sf::Vector2f& worldPoint, bool tapResponsiveOnly) {
 	std::vector<shared_ptr<SceneNode>> sorted = _children;
-	SortChildrenByDrawOrder(sorted);
+	Utils::SortSceneNodesByDrawOrder(sorted);
 	for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
 		if (auto hit = (*it)->FindTopMostNodeAtPoint(worldPoint, tapResponsiveOnly)) {
 			return hit;
@@ -458,7 +357,7 @@ shared_ptr<SceneNode> SceneNode::FindTopMostNodeAtPoint(const sf::Vector2f& worl
 void SceneNode::FindNodesAtPoint(const sf::Vector2f& worldPoint, std::vector<shared_ptr<SceneNode>>& result,
                                  bool tapResponsiveOnly) {
 	std::vector<shared_ptr<SceneNode>> sorted = _children;
-	SortChildrenByDrawOrder(sorted);
+	Utils::SortSceneNodesByDrawOrder(sorted);
 	for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
 		(*it)->FindNodesAtPoint(worldPoint, result, tapResponsiveOnly);
 	}
