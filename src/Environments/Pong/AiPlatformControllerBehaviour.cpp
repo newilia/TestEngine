@@ -4,6 +4,7 @@
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Utils.h"
+#include "Engine/Visual/CircleShapeVisual.h"
 #include "PongPlatform.h"
 
 #include <SFML/System/Time.hpp>
@@ -86,9 +87,9 @@ void AiPlatformControllerBehaviour::MovePlatformTowardsBall() {
 	const sf::Vector2f selfPos = Utils::GetWorldPos(node);
 	float distanceToBall = 0.f;
 	if (auto ball = _ball.lock()) {
-		if (auto* ballShape = ball->GetShape()) {
+		if (auto ballVisual = ball->GetNode()->GetVisual<CircleShapeVisual>()) {
 			const sf::FloatRect selfBbox = bodyBeh->GetBbox();
-			distanceToBall = std::abs(_curExState.ballPos.y - selfPos.y) - ballShape->getRadius() - selfBbox.size.y;
+			distanceToBall = std::abs(_curExState.ballPos.y - selfPos.y) - ballVisual->GetRadius() - selfBbox.size.y;
 		}
 	}
 

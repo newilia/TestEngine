@@ -35,7 +35,7 @@ private:
 	float _pullForceScale = 1.f;
 	sf::Vector2f _destination;
 	bool _debugArrowEnabled = true;
-	VectorArrow _arrow;
+	VectorArrowShape _arrow;
 	std::weak_ptr<SceneNode> _pullingBody;
 	bool _isDragging = false;
 };

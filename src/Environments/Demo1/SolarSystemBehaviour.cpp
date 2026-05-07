@@ -101,16 +101,14 @@ void SolarSystemBehaviour::Restart() {
 	{
 		auto sunNode = std::make_shared<SceneNode>();
 		sunNode->SetName("SolarSun");
-		auto circleVisual = std::make_shared<CircleShapeVisual>();
-		sunNode->SetVisual(circleVisual);
-		auto* shape = circleVisual->GetShape();
+		auto circleVisual = sunNode->RequireVisual<CircleShapeVisual>();
 		const float sunVisR = std::max(8.f, 6.96f * _visualRadiusScale);
-		shape->setRadius(sunVisR);
-		shape->setPointCount(48);
-		shape->setFillColor(sf::Color(255, 220, 60, 255));
-		shape->setOutlineColor(sf::Color(255, 180, 40, 255));
-		shape->setOutlineThickness(_outlineThickness);
-		shape->setOrigin(Utils::FindCenterOfMass(shape));
+		circleVisual->SetRadius(sunVisR);
+		circleVisual->SetPointCount(48);
+		circleVisual->SetFillColor(sf::Color(255, 220, 60, 255));
+		circleVisual->SetOutlineColor(sf::Color(255, 180, 40, 255));
+		circleVisual->SetOutlineThickness(_outlineThickness);
+		circleVisual->SetOrigin(circleVisual->GetLocalBounds().getCenter());
 
 		auto sunRb = sunNode->RequireBehaviour<PhysicsBodyBehaviour>();
 		sunRb->SetFixed(true);
@@ -144,17 +142,15 @@ void SolarSystemBehaviour::Restart() {
 
 		auto planet = std::make_shared<SceneNode>();
 		planet->SetName(std::string("Planet_") + p.name);
-		auto circleVisual = std::make_shared<CircleShapeVisual>();
-		planet->SetVisual(circleVisual);
-		auto* shape = circleVisual->GetShape();
+		auto circleVisual = planet->RequireVisual<CircleShapeVisual>();
 		const float visR = std::max(2.f, p.radiusEarthRadii * _visualRadiusScale);
-		shape->setRadius(visR);
+		circleVisual->SetRadius(visR);
 		const auto pc = static_cast<unsigned>(std::max(8.f, 3.f * (7.f + visR * (1.f / 8.f))));
-		shape->setPointCount(pc);
-		shape->setFillColor(p.fill);
-		shape->setOutlineColor(p.outline);
-		shape->setOutlineThickness(_outlineThickness);
-		shape->setOrigin(Utils::FindCenterOfMass(shape));
+		circleVisual->SetPointCount(pc);
+		circleVisual->SetFillColor(p.fill);
+		circleVisual->SetOutlineColor(p.outline);
+		circleVisual->SetOutlineThickness(_outlineThickness);
+		circleVisual->SetOrigin(circleVisual->GetLocalBounds().getCenter());
 
 		auto rb = planet->RequireBehaviour<PhysicsBodyBehaviour>();
 		rb->SetMass(std::max(1e-6f, p.massEarthMasses * _massScale));

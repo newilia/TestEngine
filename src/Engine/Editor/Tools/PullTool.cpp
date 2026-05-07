@@ -148,7 +148,7 @@ void PullTool::onPresent(const sf::Time& dt) {
 	if (!body) {
 		return;
 	}
-	_arrow.SetColor(sf::Color::Green);
+	_arrow.setFillColor(sf::Color::Green);
 	_arrow.SetStartPos(Utils::GetWorldPos(body));
 	_arrow.SetEndPos(_destination);
 

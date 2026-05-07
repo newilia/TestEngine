@@ -15,11 +15,8 @@ class PongBall : public std::enable_shared_from_this<PongBall>
 {
 public:
 	explicit PongBall(std::shared_ptr<SceneNode> node);
-	void SetupBehaviours();
-
 	std::shared_ptr<SceneNode> GetNode() const;
-
-	sf::CircleShape* GetShape() const;
+	void SetupBehaviours();
 
 	float GetMaxSpeed() const;
 	void SetMaxSpeed(float maxSpeed);

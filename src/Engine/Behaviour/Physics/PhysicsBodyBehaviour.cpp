@@ -35,7 +35,7 @@ sf::Shape* PhysicsBodyBehaviour::GetShape() {
 	if (auto node = GetNode()) {
 		if (auto visual = node->GetVisual()) {
 			if (auto shapeVisual = std::dynamic_pointer_cast<ShapeVisualBase>(visual)) {
-				return shapeVisual->GetBaseShape();
+				return const_cast<sf::Shape*>(shapeVisual->GetBaseShape());
 			}
 		}
 	}

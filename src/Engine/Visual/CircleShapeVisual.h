@@ -12,9 +12,7 @@ class CircleShapeVisual : public ShapeVisualBase
 
 public:
 	CircleShapeVisual() = default;
-	sf::Shape* GetBaseShape() override;
-
-	sf::CircleShape* GetShape();
+	const sf::Shape* GetBaseShape() const override;
 
 public:
 	/// @getter

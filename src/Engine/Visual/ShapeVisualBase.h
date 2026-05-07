@@ -13,22 +13,25 @@ class ShapeVisualBase : public Visual
 
 public:
 	ShapeVisualBase() = default;
+
 	void Draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 	bool HitTest(const sf::Vector2f& worldPoint) const override;
-	virtual sf::Shape* GetBaseShape() = 0;
-	const sf::Shape* GetBaseShape() const;
+	sf::FloatRect GetLocalBounds() const override;
+
+public:
+	virtual const sf::Shape* GetBaseShape() const = 0;
 
 public:
 	/// @getter
-	sf::Color GetFillColor();
+	sf::Color GetFillColor() const;
 	/// @setter
 	void SetFillColor(const sf::Color& color);
 	/// @getter
-	sf::Color GetOutlineColor();
+	sf::Color GetOutlineColor() const;
 	/// @setter
 	void SetOutlineColor(const sf::Color& color);
 	/// @getter
-	float GetOutlineThickness();
+	float GetOutlineThickness() const;
 	/// @setter
 	void SetOutlineThickness(float thickness);
 	/// @getter
@@ -51,4 +54,7 @@ public:
 	float GetMiterLimit() const;
 	/// @setter
 	void SetMiterLimit(float miterLimit);
+
+protected:
+	sf::Shape* GetBaseShapeToChange();
 };

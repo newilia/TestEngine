@@ -4,7 +4,7 @@
 
 RectangleShapeVisual::RectangleShapeVisual() {}
 
-sf::Shape* RectangleShapeVisual::GetBaseShape() {
+const sf::Shape* RectangleShapeVisual::GetBaseShape() const {
 	return &_rect;
 }
 

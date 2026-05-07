@@ -42,3 +42,5 @@ inverse attraction
 
 уменьшить dragSpeed на @propery scale в Visual-ах
 
+переделать наследников ShapeVisual на шаблон?
+
