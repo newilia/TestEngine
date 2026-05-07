@@ -84,6 +84,13 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 - **Method-backed sequences:** pair `/// @getter` returning `std::vector<Elt>` (or `const std::vector<Elt>&` / `std::vector<Elt> const&`) with `/// @setter` taking the same `std::vector<Elt>` (by ref or value). Writable UI calls the getter, edits a copy, then calls the setter (including per-index edits and list length).
 - **Not supported:** `std::vector` of custom structs, nested vectors, or `@getter` returning types other than the supported scalars / `std::vector` of those scalars.
 
+## `std::pair<First, Second>`
+
+- Declare **`std::pair<FirstType, SecondType> memberName;`** on one line after `/// @property` (optional `= …` / `{…}` before `;`). **`FirstType`** and **`SecondType`** must each be a **Supported field types (v1)** scalar (same list as plain `@property` fields, including **`sf::Angle`**). `std::vector` / map / set **elements** still use the narrower vector-element list (no `sf::Angle` there in v1). Include **`<utility>`** in the header where the type appears.
+- Generated UI: one collapsible **object** with two scalar editors: **`first` / `First`** and **`second` / `Second`** (`pushObject` + `add*`, not a map/set list).
+- **`@property` meta:** `readonly`, `tooltip`, and numeric hints apply to the **group**; per-component editors use default leaf meta (same as map row scalars).
+- **Not supported in v1:** `@getter` / `@setter` for `std::pair`; nested commas inside template arguments beyond the single `First, Second` pair.
+
 ## `std::map` / `std::unordered_map` / `std::set` / `std::unordered_set`
 
 - **`std::map<Key, Value>`** or **`std::unordered_map<Key, Value>`** on one line after `/// @property` (optional `= …` / `{…}` before `;`). **`Key`** and **`Value`** must each be a **Supported field types (v1)** scalar (same list as `std::vector` elements). Include **`<map>`** / **`<unordered_map>`** in the header as appropriate.
@@ -111,7 +118,7 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 ## Extending reflection
 
 1. Prefer extending **meta keys** → `Engine::PropertyMeta` / existing `PropertyBuilder::add*` in the generator. For side-effect actions without editor fields, extend **`@method`** / `PropertyBuilder::registerInspectorMethod` before adding bespoke virtuals on `IPropertiesProvider`.
-2. New C++ types: add to `KNOWN_TYPES`, `FIELD_RE`, `VECTOR_FIELD_RE`, `MAP_FIELD_RE`, `SET_FIELD_RE`, `BITSET_FIELD_RE` / alias tracking / `GETTER_METHOD_RE`, `GETTER_VECTOR_*_RE`, `SETTER_METHOD_RE`, `SETTER_VECTOR_METHOD_RE`, `VOID_METHOD_RE` (for `@method`), scalar emit in `generate_file_content`, `emit_std_vector_property`, `emit_assoc_map_property` / `emit_assoc_set_property`, and `emit_bitset_property` where applicable.
+2. New C++ types: add to `KNOWN_TYPES`, `FIELD_RE`, `VECTOR_FIELD_RE`, `PAIR_FIELD_RE`, `MAP_FIELD_RE`, `SET_FIELD_RE`, `BITSET_FIELD_RE` / alias tracking / `GETTER_METHOD_RE`, `GETTER_VECTOR_*_RE`, `SETTER_METHOD_RE`, `SETTER_VECTOR_METHOD_RE`, `VOID_METHOD_RE` (for `@method`), scalar emit in `generate_file_content`, `emit_std_vector_property`, `emit_std_pair_property`, `emit_assoc_map_property` / `emit_assoc_set_property`, and `emit_bitset_property` where applicable.
 3. If headers outgrow the scanner, plan a **Clang-based** extraction step; keep `_gen.hpp` output format stable.
 
 ## CMake

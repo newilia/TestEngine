@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 8
+CACHE_VERSION = 9
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
@@ -38,6 +38,14 @@ VECTOR_FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*std::vector<\s*"
     + _VEC_ELT
     + r"\s*>\s+(\w+)\s*;\s*$"
+)
+_PAIR_ELT = "(" + _VEC_ELT[1:-1] + "|sf::Angle)"
+PAIR_FIELD_RE = re.compile(
+    r"^\s*(?:inline\s+|static\s+|mutable\s+)*std::pair\s*<\s*"
+    + _PAIR_ELT
+    + r"\s*,\s*"
+    + _PAIR_ELT
+    + r"\s*>\s+(\w+)\s*(?:\{[^}]*\}|=\s*[^;]+)?\s*;\s*$"
 )
 MAP_FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*(std::map|std::unordered_map)\s*<\s*"
@@ -137,6 +145,7 @@ class PropSpec:
     is_bitset: bool = False
     is_map: bool = False
     is_set: bool = False
+    is_pair: bool = False
     map_value_type: str | None = None
     assoc_container: str | None = None
 
@@ -301,6 +310,7 @@ def merge_getter_setter_decls(
                 is_bitset=False,
                 is_map=False,
                 is_set=False,
+                is_pair=False,
                 map_value_type=None,
                 assoc_container=None,
             )
@@ -649,6 +659,32 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                             is_getter=False,
                             is_vector=True,
                             is_bitset=False,
+                        )
+                    )
+                elif m_pair := PAIR_FIELD_RE.match(line):
+                    ft, st, member = m_pair.group(1), m_pair.group(2), m_pair.group(3)
+                    if ft not in KNOWN_TYPES or st not in KNOWN_TYPES:
+                        raise ParseError(
+                            f"std::pair first/second must be supported scalar types (tag at line {pline})",
+                            path,
+                            line_no,
+                            1,
+                        )
+                    inner.setdefault("props", []).append(
+                        PropSpec(
+                            cpp_type=ft,
+                            member=member,
+                            line=pline,
+                            col=pcol,
+                            attrs=attrs,
+                            is_getter=False,
+                            is_vector=False,
+                            is_bitset=False,
+                            is_map=False,
+                            is_set=False,
+                            is_pair=True,
+                            map_value_type=st,
+                            assoc_container=None,
                         )
                     )
                 elif m_map := MAP_FIELD_RE.match(line):
@@ -1198,6 +1234,8 @@ def _emit_scalar_leaf(
         out.append(f'\t\tb.addVec3f("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
     elif t == "sf::Color":
         out.append(f'\t\tb.addColor("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+    elif t == "sf::Angle":
+        out.append(f'\t\tb.addFloat("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
     else:
         raise ParseError(f"unsupported scalar type `{t}`", path, line, col)
 
@@ -1664,6 +1702,69 @@ def emit_assoc_set_property(
     out.append("\tb.endAssociative();")
 
 
+def _pair_member_get(mem: str, which: str, t: str) -> str:
+    acc = f"{mem}.{which}"
+    if t == "sf::Angle":
+        return f"[this]() {{ return {acc}.asDegrees(); }}"
+    if t == "int":
+        return f"[this]() {{ return static_cast<std::int32_t>({acc}); }}"
+    return f"[this]() {{ return {acc}; }}"
+
+
+def _pair_member_set(mem: str, which: str, t: str, readonly: bool) -> str:
+    acc = f"{mem}.{which}"
+    if readonly:
+        ro: dict[str, str] = {
+            "float": "[this](float) {}",
+            "double": "[this](double) {}",
+            "bool": "[this](bool) {}",
+            "int": "[this](std::int32_t) {}",
+            "std::int32_t": "[this](std::int32_t) {}",
+            "std::int64_t": "[this](std::int64_t) {}",
+            "std::string": "[this](std::string) {}",
+            "sf::Vector2f": "[this](sf::Vector2f) {}",
+            "sf::Vector2i": "[this](sf::Vector2i) {}",
+            "sf::Vector2u": "[this](sf::Vector2u) {}",
+            "sf::Vector3f": "[this](sf::Vector3f) {}",
+            "sf::Color": "[this](sf::Color) {}",
+            "sf::Angle": "[this](float) {}",
+        }
+        return ro[t]
+    if t == "int":
+        return f"[this](std::int32_t v) {{ {acc} = static_cast<int>(v); }}"
+    if t == "sf::Angle":
+        return f"[this](float v) {{ {acc} = sf::degrees(v); }}"
+    if t == "std::string":
+        return f"[this](std::string v) {{ {acc} = std::move(v); }}"
+    if t in ("sf::Vector2f", "sf::Vector2i", "sf::Vector2u", "sf::Vector3f", "sf::Color"):
+        return f"[this]({t} v) {{ {acc} = std::move(v); }}"
+    return f"[this]({t} v) {{ {acc} = v; }}"
+
+
+def emit_std_pair_property(
+    out: list[str],
+    p: PropSpec,
+    path: Path,
+    meta_arg: str,
+    readonly: bool,
+) -> None:
+    st = p.map_value_type
+    if st is None:
+        raise ParseError("internal: std::pair without second type", path, p.line, p.col)
+    ft = p.cpp_type
+    mem = p.member
+    fid = member_to_field_id(p.member)
+    label_esc = cpp_escape_string(default_label(p))
+    leaf_meta = "Engine::PropertyMeta{}"
+
+    out.append(f'\tb.pushObject("{fid}", "{label_esc}", {meta_arg});')
+    g1, s1 = _pair_member_get(mem, "first", ft), _pair_member_set(mem, "first", ft, readonly)
+    _emit_scalar_leaf(out, ft, "first", "First", g1, s1, leaf_meta, path, p.line, p.col)
+    g2, s2 = _pair_member_get(mem, "second", st), _pair_member_set(mem, "second", st, readonly)
+    _emit_scalar_leaf(out, st, "second", "Second", g2, s2, leaf_meta, path, p.line, p.col)
+    out.append("\tb.pop();")
+
+
 def emit_std_vector_property(
     out: list[str],
     p: PropSpec,
@@ -1876,6 +1977,9 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
         if p.is_map:
             mv = p.map_value_type or ""
             return p.cpp_type.startswith("sf::") or mv.startswith("sf::")
+        if p.is_pair:
+            st = p.map_value_type or ""
+            return p.cpp_type.startswith("sf::") or st.startswith("sf::")
         if p.is_set:
             return p.cpp_type.startswith("sf::")
         return p.cpp_type.startswith("sf::")
@@ -1886,7 +1990,11 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
         out.append('#include <SFML/System/Vector2.hpp>')
         out.append('#include <SFML/System/Vector3.hpp>')
         out.append("")
-    if any(p.cpp_type == "sf::Angle" for c in classes for p in c.props):
+    if any(p.cpp_type == "sf::Angle" for c in classes for p in c.props) or any(
+        p.is_pair and (p.cpp_type == "sf::Angle" or p.map_value_type == "sf::Angle")
+        for c in classes
+        for p in c.props
+    ):
         out.append("#include <SFML/System/Angle.hpp>")
         out.append("")
     out.append("#include <cstdint>")
@@ -1895,6 +2003,8 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
         out.append("#include <cstddef>")
     if any(p.is_bitset for c in classes for p in c.props):
         out.append("#include <bitset>")
+    if any(p.is_pair for c in classes for p in c.props):
+        out.append("#include <utility>")
     assoc_headers: set[str] = set()
     for c in classes:
         for p in c.props:
@@ -1960,6 +2070,21 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                     emit_assoc_map_property(out, p, path, meta_arg, readonly)
                 else:
                     emit_assoc_set_property(out, p, path, meta_arg, readonly)
+                continue
+
+            if p.is_pair:
+                if p.is_getter:
+                    raise ParseError(
+                        "std::pair fields must be data members (not @getter) in codegen v1",
+                        path,
+                        p.line,
+                        p.col,
+                    )
+                has_meta = readonly or any(
+                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed")
+                )
+                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
+                emit_std_pair_property(out, p, path, meta_arg, readonly)
                 continue
 
             if p.cpp_type not in KNOWN_TYPES:
