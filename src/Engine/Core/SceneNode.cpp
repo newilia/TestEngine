@@ -292,8 +292,12 @@ bool SceneNode::IsInActiveScene() const {
 	if (!active) {
 		return false;
 	}
+	const auto activeRoot = active->GetRoot();
+	if (!activeRoot) {
+		return false;
+	}
 	auto root = GetSubtreeRoot();
-	return root && root.get() == active.get();
+	return root && root.get() == activeRoot.get();
 }
 
 void SceneNode::NotifyLifecycleInitRecursive() {
@@ -340,20 +344,6 @@ void SceneNode::DetachBehaviourForRemove(const shared_ptr<Behaviour>& b) {
 	b->OnDetached();
 }
 
-shared_ptr<SceneNode> SceneNode::FindTopMostNodeAtPoint(const sf::Vector2f& worldPoint, bool tapResponsiveOnly) {
-	std::vector<shared_ptr<SceneNode>> sorted = _children;
-	Utils::SortSceneNodesByDrawOrder(sorted);
-	for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
-		if (auto hit = (*it)->FindTopMostNodeAtPoint(worldPoint, tapResponsiveOnly)) {
-			return hit;
-		}
-	}
-	if (_visual && _visual->HitTest(worldPoint) && (!tapResponsiveOnly || _visual->IsTapHandlingEnabled())) {
-		return shared_from_this();
-	}
-	return nullptr;
-}
-
 void SceneNode::FindNodesAtPoint(const sf::Vector2f& worldPoint, std::vector<shared_ptr<SceneNode>>& result,
                                  bool tapResponsiveOnly) {
 	std::vector<shared_ptr<SceneNode>> sorted = _children;
@@ -364,14 +354,4 @@ void SceneNode::FindNodesAtPoint(const sf::Vector2f& worldPoint, std::vector<sha
 	if (_visual && _visual->HitTest(worldPoint) && (!tapResponsiveOnly || _visual->IsTapHandlingEnabled())) {
 		result.push_back(shared_from_this());
 	}
-}
-
-bool SceneNode::DispatchTapAt(const sf::Vector2f& worldPoint) {
-	if (auto hit = FindTopMostNodeAtPoint(worldPoint)) {
-		if (auto v = hit->GetVisual()) {
-			v->OnTap(worldPoint);
-			return true;
-		}
-	}
-	return false;
 }

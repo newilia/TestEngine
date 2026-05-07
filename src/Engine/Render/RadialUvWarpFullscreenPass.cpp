@@ -1,6 +1,7 @@
 #include "Engine/Render/RadialUvWarpFullscreenPass.h"
 
 #include "Engine/Behaviour/RadialUvWarpBehaviour.h"
+#include "Engine/Core/Scene.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Utils.h"
 
@@ -135,7 +136,11 @@ namespace Engine {
 		if (!_shaderReady) {
 			return false;
 		}
-		return SceneHasEnabledRadialUvWarpRecursive(scene);
+		const auto root = scene.GetRoot();
+		if (!root) {
+			return false;
+		}
+		return SceneHasEnabledRadialUvWarpRecursive(*root);
 	}
 
 	void RadialUvWarpFullscreenPass::Prepare(const std::shared_ptr<Scene>& scene,
@@ -144,7 +149,11 @@ namespace Engine {
 		if (!scene) {
 			return;
 		}
-		CollectRadialUvWarpsRecursive(scene, _activeWarps);
+		const auto root = scene->GetRoot();
+		if (!root) {
+			return;
+		}
+		CollectRadialUvWarpsRecursive(root, _activeWarps);
 		if (_activeWarps.size() > kMaxWarpCenters) {
 			_activeWarps.resize(kMaxWarpCenters);
 		}

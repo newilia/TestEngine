@@ -80,7 +80,9 @@ void PolygonTool::finalizeStroke() {
 
 	auto parent = Engine::Editor::GetInstance().GetSelectedNode();
 	if (!parent) {
-		parent = Engine::MainContext::GetInstance().GetScene();
+		if (const auto scene = Engine::MainContext::GetInstance().GetScene()) {
+			parent = scene->GetRoot();
+		}
 	}
 	if (!parent) {
 		return;
@@ -103,7 +105,8 @@ void PolygonTool::finalizeStroke() {
 		while (auto p = root->GetParent()) {
 			root = std::move(p);
 		}
-		if (active && root == active) {
+		const auto activeRoot = active ? active->GetRoot() : nullptr;
+		if (activeRoot && root == activeRoot) {
 			node->NotifyLifecycleInitRecursive();
 		}
 	}

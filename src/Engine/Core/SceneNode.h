@@ -98,11 +98,9 @@ public:
 	template <typename T>
 	shared_ptr<T> FindEntity() const; // TODO is it necessary?
 
-	// Hit-testing (TODO move to Scene)
-	shared_ptr<SceneNode> FindTopMostNodeAtPoint(const sf::Vector2f& worldPoint, bool tapResponsiveOnly = false);
+	// Hit-testing: subtree nodes under a world point (scene picks top-most / dispatches taps).
 	void FindNodesAtPoint(const sf::Vector2f& worldPoint, std::vector<shared_ptr<SceneNode>>& result,
 	                      bool tapResponsiveOnly = false);
-	bool DispatchTapAt(const sf::Vector2f& worldPoint);
 
 	// Active-scene subtree lifecycle
 	void NotifyLifecycleInitRecursive();

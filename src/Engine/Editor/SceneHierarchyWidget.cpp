@@ -107,10 +107,16 @@ namespace Engine {
 			ImGui::TextUnformatted("No active scene");
 			return;
 		}
+		const auto root = scene->GetRoot();
+		if (!root) {
+			ClearSelection();
+			ImGui::TextUnformatted("No active scene");
+			return;
+		}
 		ImGui::TextUnformatted("Hierarchy");
 		ImGui::Separator();
 		ImGui::BeginChild("##scene_hierarchy_widget_tree", ImVec2(0, 0.0f), true);
-		DrawNode(*scene, "Scene", 0);
+		DrawNode(*root, "Scene", 0);
 		ImGui::EndChild();
 	}
 } // namespace Engine
