@@ -86,25 +86,25 @@ void PongEnvironment::AddBall(Scene* scene, float radius) {
 	const sf::Vector2f pos = InitialBallPosition();
 
 	auto ballNode = make_shared<SceneNode>();
-	auto circleVisual = std::make_shared<CircleShapeVisual>();
-	ballNode->SetVisual(circleVisual);
+	ballNode->SetName("Ball");
+
 	auto ball = make_shared<PongBall>(ballNode);
 	ball->SetupBehaviours();
 	ball->SetMaxSpeed(400.f);
 	ball->SetSpeedDampingFactor(speedDampingFactor);
-	auto shape = circleVisual->GetShape();
-	ball->GetNode()->SetName("Ball");
 
-	shape->setRadius(radius);
+	auto circleVisual = ballNode->RequireVisual<CircleShapeVisual>();
+
+	circleVisual->SetRadius(radius);
 	auto pointsCount = static_cast<size_t>(pointsCountConstant * (7 + radius / 8));
-	shape->setPointCount(pointsCount);
+	circleVisual->SetPointCount(pointsCount);
 	auto outlineColor = color;
 	outlineColor.a = 255;
 
-	shape->setFillColor(color);
-	shape->setOutlineColor(outlineColor);
-	shape->setOutlineThickness(1);
-	shape->setOrigin(Utils::FindCenterOfMass(shape));
+	circleVisual->SetFillColor(color);
+	circleVisual->SetOutlineColor(outlineColor);
+	circleVisual->SetOutlineThickness(1);
+	circleVisual->SetOrigin(circleVisual->GetLocalBounds().getCenter());
 	Utils::SetWorldPos(ballNode, pos);
 
 	auto rigidBody = ball->GetNode()->RequireBehaviour<PhysicsBodyBehaviour>();

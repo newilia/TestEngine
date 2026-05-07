@@ -1,18 +1,23 @@
 #pragma once
 
 #include "Engine/Core/MetaClass.h"
+#include "Engine/Visual/ShapeVisualBase.h"
 #include "Engine/Visual/Visual.h"
 #include "SFML/Graphics.hpp"
-#include "VectorArrow.h"
+#include "VectorArrowShape.h"
 
-class VectorArrowVisual : public Visual
+class VectorArrowVisual : public ShapeVisualBase
 {
 	META_CLASS()
-	META_PROPERTY_BASE(Visual)
+	META_PROPERTY_BASE(ShapeVisualBase)
 
 public:
+	VectorArrowVisual() = default;
+
 	void Draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 	bool HitTest(const sf::Vector2f& worldPoint) const override;
+	const sf::Shape* GetBaseShape() const override;
+	sf::FloatRect GetLocalBounds() const override;
 
 public:
 	/// @getter
@@ -20,9 +25,9 @@ public:
 	/// @getter
 	sf::Vector2f GetEndPos() const;
 	/// @getter
-	sf::Color GetColor() const;
+	sf::Color GetFillColor() const;
 	/// @getter
-	float GetArrowHeadAngle() const;
+	sf::Angle GetArrowHeadAngle() const;
 	/// @getter
 	float GetArrowHeadSize() const;
 
@@ -31,12 +36,12 @@ public:
 	/// @setter
 	void SetEndPos(const sf::Vector2f& end);
 	/// @setter
-	void SetColor(const sf::Color& color);
+	void SetFillColor(const sf::Color& color);
 	/// @setter
-	void SetArrowHeadAngle(float angle);
+	void SetArrowHeadAngle(sf::Angle angle);
 	/// @setter
 	void SetArrowHeadSize(float size);
 
 private:
-	VectorArrow _arrow;
+	VectorArrowShape _arrowShape;
 };

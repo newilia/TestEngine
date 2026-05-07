@@ -18,15 +18,16 @@ class TextVisual : public Visual
 	META_PROPERTY_BASE(Visual)
 
 public:
-	TextVisual();
+	TextVisual() = default;
+
 	void Draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 	bool HitTest(const sf::Vector2f& worldPoint) const override;
+	sf::FloatRect GetLocalBounds() const override;
 
-	const sf::Font* GetFont() const;
+public:
 	void Init(const sf::Font& font, const std::string& string = "", int characterSize = 0);
-
+	const sf::Font* GetFont() const;
 	const sf::Text* GetText() const;
-	sf::FloatRect GetLocalBounds() const;
 
 public:
 	/// @getter

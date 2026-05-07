@@ -7,8 +7,8 @@
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/System/Angle.hpp>
 
-const sf::Shape* ShapeVisualBase::GetBaseShape() const {
-	return const_cast<ShapeVisualBase*>(this)->GetBaseShape();
+sf::Shape* ShapeVisualBase::GetBaseShapeToChange() {
+	return const_cast<sf::Shape*>(GetBaseShape());
 }
 
 bool ShapeVisualBase::HitTest(const sf::Vector2f& worldPoint) const {
@@ -23,7 +23,7 @@ void ShapeVisualBase::Draw(sf::RenderTarget& target, sf::RenderStates states) co
 	}
 }
 
-sf::Color ShapeVisualBase::GetFillColor() {
+sf::Color ShapeVisualBase::GetFillColor() const {
 	if (auto shape = GetBaseShape()) {
 		return shape->getFillColor();
 	}
@@ -31,12 +31,12 @@ sf::Color ShapeVisualBase::GetFillColor() {
 }
 
 void ShapeVisualBase::SetFillColor(const sf::Color& color) {
-	if (auto shape = GetBaseShape()) {
+	if (auto shape = GetBaseShapeToChange()) {
 		shape->setFillColor(color);
 	}
 }
 
-sf::Color ShapeVisualBase::GetOutlineColor() {
+sf::Color ShapeVisualBase::GetOutlineColor() const {
 	if (auto shape = GetBaseShape()) {
 		return shape->getOutlineColor();
 	}
@@ -44,12 +44,12 @@ sf::Color ShapeVisualBase::GetOutlineColor() {
 }
 
 void ShapeVisualBase::SetOutlineColor(const sf::Color& color) {
-	if (auto shape = GetBaseShape()) {
+	if (auto shape = GetBaseShapeToChange()) {
 		shape->setOutlineColor(color);
 	}
 }
 
-float ShapeVisualBase::GetOutlineThickness() {
+float ShapeVisualBase::GetOutlineThickness() const {
 	if (auto shape = GetBaseShape()) {
 		return shape->getOutlineThickness();
 	}
@@ -57,7 +57,7 @@ float ShapeVisualBase::GetOutlineThickness() {
 }
 
 void ShapeVisualBase::SetOutlineThickness(float thickness) {
-	if (auto shape = GetBaseShape()) {
+	if (auto shape = GetBaseShapeToChange()) {
 		shape->setOutlineThickness(thickness);
 	}
 }
@@ -70,7 +70,7 @@ sf::Vector2f ShapeVisualBase::GetPosition() const {
 }
 
 void ShapeVisualBase::SetPosition(const sf::Vector2f& position) {
-	if (auto shape = GetBaseShape()) {
+	if (auto shape = GetBaseShapeToChange()) {
 		shape->setPosition(position);
 	}
 }
@@ -83,7 +83,7 @@ sf::Angle ShapeVisualBase::GetRotation() const {
 }
 
 void ShapeVisualBase::SetRotation(sf::Angle angle) {
-	if (auto shape = GetBaseShape()) {
+	if (auto shape = GetBaseShapeToChange()) {
 		shape->setRotation(angle);
 	}
 }
@@ -96,7 +96,7 @@ sf::Vector2f ShapeVisualBase::GetScale() const {
 }
 
 void ShapeVisualBase::SetScale(const sf::Vector2f& scale) {
-	if (auto shape = GetBaseShape()) {
+	if (auto shape = GetBaseShapeToChange()) {
 		shape->setScale(scale);
 	}
 }
@@ -109,7 +109,7 @@ sf::Vector2f ShapeVisualBase::GetOrigin() const {
 }
 
 void ShapeVisualBase::SetOrigin(const sf::Vector2f& origin) {
-	if (auto shape = GetBaseShape()) {
+	if (auto shape = GetBaseShapeToChange()) {
 		shape->setOrigin(origin);
 	}
 }
@@ -122,7 +122,14 @@ float ShapeVisualBase::GetMiterLimit() const {
 }
 
 void ShapeVisualBase::SetMiterLimit(float miterLimit) {
-	if (auto shape = GetBaseShape()) {
+	if (auto shape = GetBaseShapeToChange()) {
 		shape->setMiterLimit(miterLimit);
 	}
+}
+
+sf::FloatRect ShapeVisualBase::GetLocalBounds() const {
+	if (const auto* shape = GetBaseShape()) {
+		return shape->getLocalBounds();
+	}
+	return {};
 }

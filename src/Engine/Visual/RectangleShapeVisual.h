@@ -12,7 +12,7 @@ class RectangleShapeVisual : public ShapeVisualBase
 
 public:
 	RectangleShapeVisual();
-	sf::Shape* GetBaseShape() override;
+	const sf::Shape* GetBaseShape() const override;
 
 	sf::RectangleShape* GetShape();
 

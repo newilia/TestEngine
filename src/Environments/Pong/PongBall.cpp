@@ -55,10 +55,3 @@ void PongBall::SetSpeedDampingFactor(float speedDampingFactor) {
 void PongBall::SetupBehaviours() {
 	_node->AddBehaviour(std::make_shared<PongBallDampingBehaviour>(weak_from_this()));
 }
-
-sf::CircleShape* PongBall::GetShape() const {
-	if (_node) {
-		return _node->GetVisual<CircleShapeVisual>()->GetShape();
-	}
-	return nullptr;
-}

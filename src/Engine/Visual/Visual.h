@@ -16,6 +16,7 @@ public:
 	virtual void Draw(sf::RenderTarget& target, sf::RenderStates states) const = 0;
 	virtual bool HitTest(const sf::Vector2f& worldPoint) const = 0;
 	virtual void OnTap(const sf::Vector2f& worldPoint); // TODO Remove, I guess this is not a Visual's responsibility
+	virtual sf::FloatRect GetLocalBounds() const = 0;
 
 	void SetTapHandlingEnabled(bool enabled);
 	bool IsTapHandlingEnabled() const;

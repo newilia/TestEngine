@@ -10,11 +10,7 @@ namespace {
 	constexpr int kMaxCirclePoints = 512;
 } // namespace
 
-sf::Shape* CircleShapeVisual::GetBaseShape() {
-	return &_circle;
-}
-
-sf::CircleShape* CircleShapeVisual::GetShape() {
+const sf::Shape* CircleShapeVisual::GetBaseShape() const {
 	return &_circle;
 }
 

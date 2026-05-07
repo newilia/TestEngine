@@ -6,49 +6,57 @@
 #include <SFML/Graphics/RenderTarget.hpp>
 
 void VectorArrowVisual::Draw(sf::RenderTarget& target, sf::RenderStates states) const {
-	target.draw(_arrow, states);
+	target.draw(_arrowShape, states);
 }
 
 bool VectorArrowVisual::HitTest(const sf::Vector2f& /*worldPoint*/) const {
 	return false;
 }
 
+const sf::Shape* VectorArrowVisual::GetBaseShape() const {
+	return &_arrowShape;
+}
+
+sf::FloatRect VectorArrowVisual::GetLocalBounds() const {
+	return _arrowShape.GetLocalBounds();
+}
+
 sf::Vector2f VectorArrowVisual::GetStartPos() const {
-	return _arrow.GetStartPos();
+	return _arrowShape.GetStartPos();
 }
 
 sf::Vector2f VectorArrowVisual::GetEndPos() const {
-	return _arrow.GetEndPos();
+	return _arrowShape.GetEndPos();
 }
 
-sf::Color VectorArrowVisual::GetColor() const {
-	return _arrow.GetColor();
+sf::Color VectorArrowVisual::GetFillColor() const {
+	return _arrowShape.getFillColor();
 }
 
 void VectorArrowVisual::SetStartPos(const sf::Vector2f& start) {
-	_arrow.SetStartPos(start);
+	_arrowShape.SetStartPos(start);
 }
 
 void VectorArrowVisual::SetEndPos(const sf::Vector2f& end) {
-	_arrow.SetEndPos(end);
+	_arrowShape.SetEndPos(end);
 }
 
-void VectorArrowVisual::SetColor(const sf::Color& color) {
-	_arrow.SetColor(color);
+void VectorArrowVisual::SetFillColor(const sf::Color& color) {
+	_arrowShape.setFillColor(color);
 }
 
-float VectorArrowVisual::GetArrowHeadAngle() const {
-	return _arrow.GetArrowHeadAngle();
+sf::Angle VectorArrowVisual::GetArrowHeadAngle() const {
+	return _arrowShape.GetArrowHeadAngle();
 }
 
 float VectorArrowVisual::GetArrowHeadSize() const {
-	return _arrow.GetArrowHeadSize();
+	return _arrowShape.GetArrowHeadSize();
 }
 
-void VectorArrowVisual::SetArrowHeadAngle(float angle) {
-	_arrow.SetArrowHeadAngle(angle);
+void VectorArrowVisual::SetArrowHeadAngle(sf::Angle angle) {
+	_arrowShape.SetArrowHeadAngle(angle);
 }
 
 void VectorArrowVisual::SetArrowHeadSize(float size) {
-	_arrow.SetArrowHeadSize(size);
+	_arrowShape.SetArrowHeadSize(size);
 }

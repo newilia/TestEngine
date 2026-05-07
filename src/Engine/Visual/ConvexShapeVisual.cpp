@@ -4,7 +4,7 @@
 
 ConvexShapeVisual::ConvexShapeVisual() {}
 
-sf::Shape* ConvexShapeVisual::GetBaseShape() {
+const sf::Shape* ConvexShapeVisual::GetBaseShape() const {
 	return &_convex;
 }
 

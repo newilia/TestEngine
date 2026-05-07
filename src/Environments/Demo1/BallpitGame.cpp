@@ -120,21 +120,17 @@ namespace Demo1 {
 
 				auto ballNode = make_shared<SceneNode>();
 				ballNode->SetName("Ballpit_ball");
-				auto circleVisual = make_shared<CircleShapeVisual>();
-				ballNode->SetVisual(circleVisual);
-				auto* shape = circleVisual->GetShape();
-				shape->setPointCount(32);
-				shape->setRadius(r);
-				const auto pointCount = static_cast<unsigned>(std::max(8.f, 3.f * (7.f + r * (1.f / 8.f))));
-				shape->setPointCount(pointCount);
+				auto circleVisual = ballNode->RequireVisual<CircleShapeVisual>();
+				circleVisual->SetPointCount(32);
+				circleVisual->SetRadius(r);
 
 				const sf::Color fill = RandomBallColor(baseColor, colorVar, gen);
-				shape->setFillColor(fill);
+				circleVisual->SetFillColor(fill);
 				sf::Color outline = fill;
 				outline.a = 255;
-				shape->setOutlineColor(outline);
-				shape->setOutlineThickness(1);
-				shape->setOrigin(Utils::FindCenterOfMass(shape));
+				circleVisual->SetOutlineColor(outline);
+				circleVisual->SetOutlineThickness(1);
+				circleVisual->SetOrigin(circleVisual->GetLocalBounds().getCenter());
 
 				auto rb = ballNode->RequireBehaviour<PhysicsBodyBehaviour>();
 				rb->SetMass(3.14159265f * r * r);

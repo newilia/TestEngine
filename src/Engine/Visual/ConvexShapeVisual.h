@@ -14,7 +14,7 @@ class ConvexShapeVisual : public ShapeVisualBase
 
 public:
 	ConvexShapeVisual();
-	sf::Shape* GetBaseShape() override;
+	const sf::Shape* GetBaseShape() const override;
 
 	sf::ConvexShape* GetShape();
 	/// @getter

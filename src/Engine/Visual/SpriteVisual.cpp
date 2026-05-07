@@ -6,8 +6,6 @@
 
 #include <SFML/Graphics/Sprite.hpp>
 
-SpriteVisual::SpriteVisual() {}
-
 const sf::Sprite* SpriteVisual::GetSprite() const {
 	return _sprite.get();
 }
@@ -22,6 +20,13 @@ bool SpriteVisual::HitTest(const sf::Vector2f& worldPoint) const {
 	auto node = GetNode();
 	const sf::Transform nw = node ? node->GetWorldTransform() : sf::Transform{};
 	return Utils::IsWorldPointInsideOfVisual(worldPoint, this, nw);
+}
+
+sf::FloatRect SpriteVisual::GetLocalBounds() const {
+	if (_sprite) {
+		return _sprite->getLocalBounds();
+	}
+	return {};
 }
 
 void SpriteVisual::SetTexture(const sf::Texture& texture) {

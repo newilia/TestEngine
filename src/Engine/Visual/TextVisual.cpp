@@ -10,8 +10,6 @@
 
 #include <string>
 
-TextVisual::TextVisual() {}
-
 void TextVisual::Draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	if (_text) {
 		target.draw(*_text, states);

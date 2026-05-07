@@ -30,7 +30,7 @@ namespace Demo1 {
 
 	namespace {
 
-		constexpr float bodiesRestitution = 1;
+		constexpr float kBodiesRestitution = 1;
 		constexpr int kPongScoreFontSize = 140;
 		constexpr int kTapPromptFontSize = 56;
 
@@ -152,7 +152,7 @@ namespace Demo1 {
 			auto physicsBody = node->RequireBehaviour<PhysicsBodyBehaviour>();
 			physicsBody->GetInteractionGroups().set(1, true);
 			physicsBody->SetFixed(true);
-			physicsBody->SetRestitution(bodiesRestitution);
+			physicsBody->SetRestitution(kBodiesRestitution);
 
 			return node;
 		}
@@ -204,29 +204,27 @@ namespace Demo1 {
 			const sf::Vector2f vel = initialVelocity;
 
 			auto ballNode = make_shared<SceneNode>();
-			auto circleVisual = std::make_shared<CircleShapeVisual>();
-			ballNode->SetVisual(circleVisual);
+			auto circleVisual = ballNode->RequireVisual<CircleShapeVisual>();
 			auto ball = make_shared<PongBall>(ballNode);
 			ball->SetupBehaviours();
 			ball->SetMaxSpeed(400.f);
 			ball->SetSpeedDampingFactor(speedDampingFactor);
-			auto shape = circleVisual->GetShape();
 			ball->GetNode()->SetName("Ball");
 
-			shape->setRadius(radius);
+			circleVisual->SetRadius(radius);
 			auto pointsCount = static_cast<size_t>(pointsCountConstant * (7 + radius / 8));
-			shape->setPointCount(pointsCount);
+			circleVisual->SetPointCount(pointsCount);
 			auto outlineColor = color;
 			outlineColor.a = 255;
 
-			shape->setFillColor(color);
-			shape->setOutlineColor(outlineColor);
-			shape->setOutlineThickness(1);
-			shape->setOrigin(Utils::FindCenterOfMass(shape));
+			circleVisual->SetFillColor(color);
+			circleVisual->SetOutlineColor(outlineColor);
+			circleVisual->SetOutlineThickness(1);
+			circleVisual->SetOrigin(circleVisual->GetLocalBounds().getCenter());
 
 			auto rigidBody = ball->GetNode()->RequireBehaviour<PhysicsBodyBehaviour>();
 			rigidBody->SetMass(3.14f * radius * radius);
-			rigidBody->SetRestitution(bodiesRestitution);
+			rigidBody->SetRestitution(kBodiesRestitution);
 			rigidBody->SetVelocity(vel);
 			rigidBody->GetInteractionGroups().set(0, true);
 			rigidBody->GetInteractionGroups().set(1, true);
@@ -270,7 +268,7 @@ namespace Demo1 {
 
 				auto bodyBeh = wallNode->RequireBehaviour<PhysicsBodyBehaviour>();
 				bodyBeh->SetFixed(true);
-				bodyBeh->SetRestitution(bodiesRestitution);
+				bodyBeh->SetRestitution(kBodiesRestitution);
 
 				if (i < 2) {
 					rectShape->setFillColor(sf::Color(200, 200, 200, 50));

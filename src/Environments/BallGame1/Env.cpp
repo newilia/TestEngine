@@ -59,10 +59,7 @@ namespace BallGame1 {
 
 		if (auto gameController = gameNode->RequireBehaviour<GameControllerBehaviour>()) {
 			auto gunNode = CreateGunNode();
-			if (auto gunController = gunNode->RequireBehaviour<GunControllerBehaviour>()) {
-				constexpr auto halfAngle = sf::degrees(65);
-				gunController->SetRotationLimits(-halfAngle, halfAngle);
-			}
+
 			gameNode->AddChild(gunNode);
 			auto scoreNode = CreateScoreNode();
 			gameNode->AddChild(scoreNode);
@@ -137,18 +134,26 @@ namespace BallGame1 {
 		auto& mainContext = Engine::MainContext::GetInstance();
 		auto node = make_shared<SceneNode>();
 		node->GetLocalTransform()->SetPosition({0, _fieldSize.y * 0.5f});
-		node->SetName("Start");
+		node->SetName("Gun");
+
+		auto rectangle = node->RequireVisual<RectangleShapeVisual>();
+		rectangle->SetSize({200, 40});
+		rectangle->SetOrigin({200.f, 20.f});
+		rectangle->SetFillColor(sf::Color::White);
 
 		auto arrowNode = make_shared<SceneNode>();
 		arrowNode->SetName("Arrow");
 		auto arrowVisual = arrowNode->RequireVisual<VectorArrowVisual>();
 		arrowVisual->SetStartPos({0, 0});
 		arrowVisual->SetEndPos({0, -100});
-		arrowVisual->SetColor(sf::Color::White);
+		arrowVisual->SetFillColor(sf::Color::White);
 		node->AddChild(arrowNode);
 
 		auto gunController = node->RequireBehaviour<GunControllerBehaviour>();
 		gunController->SetRotationSpeed(0.01f);
+		constexpr auto halfAngle = sf::degrees(65);
+		gunController->SetRotationLimits(-halfAngle, halfAngle);
+
 		return node;
 	}
 

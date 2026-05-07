@@ -160,7 +160,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		circle->SetFillColor(color);
 		circle->SetOutlineColor(outlineColor);
 		circle->SetOutlineThickness(1);
-		circle->SetOrigin(Utils::FindCenterOfMass(circle->GetShape()));
+		circle->SetOrigin(circle->GetLocalBounds().getCenter());
 		auto minX = static_cast<int>(wallVisibleWidth + radius);
 		auto maxX = static_cast<int>(viewSize.x - wallVisibleWidth - radius);
 		auto minY = static_cast<int>(wallVisibleWidth + radius);
