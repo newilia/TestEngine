@@ -22,6 +22,10 @@ bool TextVisual::HitTest(const sf::Vector2f& worldPoint) const {
 	return Utils::IsWorldPointInsideOfVisual(worldPoint, this, nw);
 }
 
+const sf::Transform* TextVisual::GetTransform() const {
+	return &_text->getTransform();
+}
+
 const sf::Font* TextVisual::GetFont() const {
 	if (_text) {
 		return &_text->getFont();
