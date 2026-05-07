@@ -72,7 +72,7 @@ namespace Engine {
 			if (n.children.empty()) {
 				ImGui::TextUnformatted(n.label.c_str());
 			}
-			else if (ImGui::TreeNodeEx("##obj", ImGuiTreeNodeFlags_DefaultOpen, "%s", n.label.c_str())) {
+			else if (ImGui::TreeNodeEx("##obj", 0, "%s", n.label.c_str())) {
 				for (const auto& c : n.children) {
 					DrawNode(c);
 				}
@@ -83,7 +83,7 @@ namespace Engine {
 		}
 		case PropertyKind::Sequence: {
 			const auto* seq = std::get_if<PropAccessSequence>(&n.access);
-			if (ImGui::TreeNodeEx("##seq", ImGuiTreeNodeFlags_DefaultOpen, "%s", n.label.c_str())) {
+			if (ImGui::TreeNodeEx("##seq", 0, "%s", n.label.c_str())) {
 				if (seq && seq->getSize) {
 					const int sz = static_cast<int>(seq->getSize());
 					ImGui::AlignTextToFramePadding();
@@ -120,7 +120,7 @@ namespace Engine {
 		}
 		case PropertyKind::Associative: {
 			const auto* asc = std::get_if<PropAccessAssociative>(&n.access);
-			if (ImGui::TreeNodeEx("##asc", ImGuiTreeNodeFlags_DefaultOpen, "%s", n.label.c_str())) {
+			if (ImGui::TreeNodeEx("##asc", 0, "%s", n.label.c_str())) {
 				if (asc && asc->addPair && !readOnly) {
 					if (ImGui::Button("Add entry")) {
 						asc->addPair();
