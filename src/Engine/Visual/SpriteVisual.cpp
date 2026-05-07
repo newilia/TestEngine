@@ -37,6 +37,16 @@ void SpriteVisual::SetTexture(const sf::Texture& texture) {
 	_sprite = std::make_shared<sf::Sprite>(texture);
 }
 
+void SpriteVisual::SetOrigin(const sf::Vector2f& origin) {
+	if (_sprite) {
+		_sprite->setOrigin(origin);
+	}
+}
+
+sf::Vector2f SpriteVisual::GetOrigin() const {
+	return _sprite ? _sprite->getOrigin() : sf::Vector2f{};
+}
+
 sf::Vector2f SpriteVisual::GetSize() const {
 	if (!_sprite) {
 		return {};
