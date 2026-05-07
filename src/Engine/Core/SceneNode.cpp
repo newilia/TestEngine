@@ -281,6 +281,9 @@ void SceneNode::AddChildAt(const std::shared_ptr<SceneNode>& child, std::size_t 
 	_children.insert(_children.begin() + static_cast<std::ptrdiff_t>(index), child);
 	child->SetParent(shared_from_this());
 	child->MarkWorldTransformSubtreeDirty();
+	if (IsInActiveScene()) {
+		child->NotifyLifecycleInitRecursive();
+	}
 }
 
 void SceneNode::RemoveChild(SceneNode* child) {
