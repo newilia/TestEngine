@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 9
+CACHE_VERSION = 10
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
@@ -33,18 +33,18 @@ FIELD_RE = re.compile(
     r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector2i|sf::Vector2u|sf::Vector3f|sf::Color|sf::Angle)\s+"
     r"(\w+)\s*.*;\s*$"
 )
-_VEC_ELT = r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector2i|sf::Vector2u|sf::Vector3f|sf::Color)"
+# Element / component types for std::vector, std::pair, std::map, std::set (same set everywhere).
+_VEC_ELT = r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector2i|sf::Vector2u|sf::Vector3f|sf::Color|sf::Angle)"
 VECTOR_FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*std::vector<\s*"
     + _VEC_ELT
     + r"\s*>\s+(\w+)\s*;\s*$"
 )
-_PAIR_ELT = "(" + _VEC_ELT[1:-1] + "|sf::Angle)"
 PAIR_FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*std::pair\s*<\s*"
-    + _PAIR_ELT
+    + _VEC_ELT
     + r"\s*,\s*"
-    + _PAIR_ELT
+    + _VEC_ELT
     + r"\s*>\s+(\w+)\s*(?:\{[^}]*\}|=\s*[^;]+)?\s*;\s*$"
 )
 MAP_FIELD_RE = re.compile(
@@ -1193,6 +1193,7 @@ def _default_cpp_value(t: str) -> str:
         "sf::Vector2u": "sf::Vector2u{}",
         "sf::Vector3f": "sf::Vector3f{}",
         "sf::Color": "sf::Color{}",
+        "sf::Angle": "sf::Angle{}",
     }[t]
 
 
@@ -1244,6 +1245,8 @@ def _map_key_get(mem: str, idx: str, kt: str) -> str:
     adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
     if kt == "int":
         return f"[this, {idx}]() {{ {adv}return static_cast<std::int32_t>(_it->first); }}"
+    if kt == "sf::Angle":
+        return f"[this, {idx}]() {{ {adv}return _it->first.asDegrees(); }}"
     return f"[this, {idx}]() {{ {adv}return _it->first; }}"
 
 
@@ -1262,10 +1265,14 @@ def _map_key_set(mem: str, idx: str, kt: str, readonly: bool) -> str:
             "sf::Vector2u": f"[this, {idx}](sf::Vector2u) {{}}",
             "sf::Vector3f": f"[this, {idx}](sf::Vector3f) {{}}",
             "sf::Color": f"[this, {idx}](sf::Color) {{}}",
+            "sf::Angle": f"[this, {idx}](float) {{}}",
         }
         return ro[kt]
     adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
     mv = "auto _mapped = std::move(_it->second); " + f"{mem}.erase(_it); "
+    if kt == "sf::Angle":
+        ins = f"{mem}.insert_or_assign(sf::degrees(newKey), std::move(_mapped))"
+        return f"[this, {idx}](float newKey) {{ {adv}{mv}{ins}; }}"
     pk = _int32_param_cpp(kt)
     if kt == "int":
         ins = f"{mem}.insert_or_assign(static_cast<int>(newKey), std::move(_mapped))"
@@ -1282,6 +1289,8 @@ def _map_val_get(mem: str, idx: str, vt: str) -> str:
     adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
     if vt == "int":
         return f"[this, {idx}]() {{ {adv}return static_cast<std::int32_t>(_it->second); }}"
+    if vt == "sf::Angle":
+        return f"[this, {idx}]() {{ {adv}return _it->second.asDegrees(); }}"
     return f"[this, {idx}]() {{ {adv}return _it->second; }}"
 
 
@@ -1300,11 +1309,14 @@ def _map_val_set(mem: str, idx: str, vt: str, readonly: bool) -> str:
             "sf::Vector2u": f"[this, {idx}](sf::Vector2u) {{}}",
             "sf::Vector3f": f"[this, {idx}](sf::Vector3f) {{}}",
             "sf::Color": f"[this, {idx}](sf::Color) {{}}",
+            "sf::Angle": f"[this, {idx}](float) {{}}",
         }
         return ro[vt]
     adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
     if vt == "int":
         return f"[this, {idx}](std::int32_t newVal) {{ {adv}_it->second = static_cast<int>(newVal); }}"
+    if vt == "sf::Angle":
+        return f"[this, {idx}](float newVal) {{ {adv}_it->second = sf::degrees(newVal); }}"
     if vt == "std::string":
         return f"[this, {idx}](std::string newVal) {{ {adv}_it->second = std::move(newVal); }}"
     if vt in ("sf::Vector2f", "sf::Vector2i", "sf::Vector2u", "sf::Vector3f", "sf::Color"):
@@ -1461,6 +1473,18 @@ def _map_add_pair_body(mem: str, kt: str, vt: str, path: Path, line: int, col: i
             f"{tab}\t}}\n"
             f"{tab}}}"
         )
+    if kt == "sf::Angle":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tfloat _d = 0.f;\n"
+            f"{tab}\tfor (int _g = 0; _g < 1000000 && {mem}.find(sf::degrees(_d)) != {mem}.end(); ++_g) {{\n"
+            f"{tab}\t\t_d += 1.f;\n"
+            f"{tab}\t}}\n"
+            f"{tab}\tif ({mem}.find(sf::degrees(_d)) == {mem}.end()) {{\n"
+            f"{tab}\t\t{_cpp_map_emplace(mem, kt, 'sf::degrees(_d)', dv)};\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
     raise ParseError(f"map addPair: unsupported key type `{kt}`", path, line, col)
 
 
@@ -1596,6 +1620,18 @@ def _set_add_pair_body(mem: str, et: str, path: Path, line: int, col: int) -> st
             f"{tab}\t}}\n"
             f"{tab}}}"
         )
+    if et == "sf::Angle":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tfloat _d = 0.f;\n"
+            f"{tab}\tfor (int _g = 0; _g < 1000000 && {mem}.find(sf::degrees(_d)) != {mem}.end(); ++_g) {{\n"
+            f"{tab}\t\t_d += 1.f;\n"
+            f"{tab}\t}}\n"
+            f"{tab}\tif ({mem}.find(sf::degrees(_d)) == {mem}.end()) {{\n"
+            f"{tab}\t\t{_cpp_set_insert(mem, et, 'sf::degrees(_d)')};\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
     raise ParseError(f"set addPair: unsupported element type `{et}`", path, line, col)
 
 
@@ -1679,17 +1715,23 @@ def emit_assoc_set_property(
     )
     if et == "int":
         g = f"[this, {idx}]() {{ auto _it = {mem}.begin(); std::advance(_it, {idx}); return static_cast<std::int32_t>(*_it); }}"
+    elif et == "sf::Angle":
+        g = f"[this, {idx}]() {{ auto _it = {mem}.begin(); std::advance(_it, {idx}); return _it->asDegrees(); }}"
     else:
         g = f"[this, {idx}]() {{ auto _it = {mem}.begin(); std::advance(_it, {idx}); return *_it; }}"
     if readonly:
         if et in ("int", "std::int32_t"):
             s = f"[this, {idx}](std::int32_t) {{}}"
+        elif et == "sf::Angle":
+            s = f"[this, {idx}](float) {{}}"
         else:
             s = f"[this, {idx}]({et}) {{}}"
     else:
         adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); {mem}.erase(_it); "
         if et == "int":
             s = f"[this, {idx}](std::int32_t v) {{ {adv}{mem}.insert(static_cast<int>(v)); }}"
+        elif et == "sf::Angle":
+            s = f"[this, {idx}](float v) {{ {adv}{mem}.insert(sf::degrees(v)); }}"
         elif et == "std::string":
             s = f"[this, {idx}](std::string v) {{ {adv}{mem}.insert(std::move(v)); }}"
         elif et in ("sf::Vector2f", "sf::Vector2i", "sf::Vector2u", "sf::Vector3f", "sf::Color"):
@@ -1831,12 +1873,17 @@ def emit_std_vector_property(
     else:
         acc = f"{mem}[{idx}]"
 
-    g = f"[this, {idx}] {{ return {acc}; }}"
+    t = p.cpp_type
+    if t == "int":
+        g = f"[this, {idx}]() {{ return static_cast<std::int32_t>({acc}); }}"
+    elif t == "sf::Angle":
+        g = f"[this, {idx}]() {{ return {acc}.asDegrees(); }}"
+    else:
+        g = f"[this, {idx}] {{ return {acc}; }}"
 
     def add_inner(call: str) -> None:
         out.append(f"\t\t{call}")
 
-    t = p.cpp_type
     if readonly:
         ro = {
             "float": f"[this, {idx}](float) {{}}",
@@ -1851,6 +1898,7 @@ def emit_std_vector_property(
             "sf::Vector2u": f"[this, {idx}](sf::Vector2u) {{}}",
             "sf::Vector3f": f"[this, {idx}](sf::Vector3f) {{}}",
             "sf::Color": f"[this, {idx}](sf::Color) {{}}",
+            "sf::Angle": f"[this, {idx}](float) {{}}",
         }
         sl = ro[t]
         if t == "float":
@@ -1875,6 +1923,8 @@ def emit_std_vector_property(
             add_inner(f'b.addVec3f("v", "", {g}, {sl}, {meta_arg});')
         elif t == "sf::Color":
             add_inner(f'b.addColor("v", "", {g}, {sl}, {meta_arg});')
+        elif t == "sf::Angle":
+            add_inner(f'b.addFloat("v", "", {g}, {sl}, {meta_arg});')
         else:
             raise ParseError(f"unsupported vector element type `{t}`", path, p.line, p.col)
     elif p.is_getter:
@@ -1891,6 +1941,7 @@ def emit_std_vector_property(
             "sf::Vector2u": f"[this, {idx}](sf::Vector2u v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
             "sf::Vector3f": f"[this, {idx}](sf::Vector3f v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
             "sf::Color": f"[this, {idx}](sf::Color c) {{ auto _pv = {vec_access}; _pv[{idx}] = c; this->{setter_name}(std::move(_pv)); }}",
+            "sf::Angle": f"[this, {idx}](float v) {{ auto _pv = {vec_access}; _pv[{idx}] = sf::degrees(v); this->{setter_name}(std::move(_pv)); }}",
         }
         wl = wl_vec[t]
         if t == "float":
@@ -1915,6 +1966,8 @@ def emit_std_vector_property(
             add_inner(f'b.addVec3f("v", "", {g}, {wl}, {meta_arg});')
         elif t == "sf::Color":
             add_inner(f'b.addColor("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "sf::Angle":
+            add_inner(f'b.addFloat("v", "", {g}, {wl}, {meta_arg});')
         else:
             raise ParseError(f"unsupported vector element type `{t}`", path, p.line, p.col)
     else:
@@ -1931,6 +1984,7 @@ def emit_std_vector_property(
             "sf::Vector2u": f"[this, {idx}](sf::Vector2u v) {{ {acc} = v; }}",
             "sf::Vector3f": f"[this, {idx}](sf::Vector3f v) {{ {acc} = v; }}",
             "sf::Color": f"[this, {idx}](sf::Color c) {{ {acc} = c; }}",
+            "sf::Angle": f"[this, {idx}](float v) {{ {acc} = sf::degrees(v); }}",
         }
         wl = rw[t]
         if t == "float":
@@ -1955,6 +2009,8 @@ def emit_std_vector_property(
             add_inner(f'b.addVec3f("v", "", {g}, {wl}, {meta_arg});')
         elif t == "sf::Color":
             add_inner(f'b.addColor("v", "", {g}, {wl}, {meta_arg});')
+        elif t == "sf::Angle":
+            add_inner(f'b.addFloat("v", "", {g}, {wl}, {meta_arg});')
         else:
             raise ParseError(f"unsupported vector element type `{t}`", path, p.line, p.col)
 
@@ -1990,8 +2046,8 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
         out.append('#include <SFML/System/Vector2.hpp>')
         out.append('#include <SFML/System/Vector3.hpp>')
         out.append("")
-    if any(p.cpp_type == "sf::Angle" for c in classes for p in c.props) or any(
-        p.is_pair and (p.cpp_type == "sf::Angle" or p.map_value_type == "sf::Angle")
+    if any(
+        p.cpp_type == "sf::Angle" or p.map_value_type == "sf::Angle"
         for c in classes
         for p in c.props
     ):
