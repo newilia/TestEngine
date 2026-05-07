@@ -20,7 +20,7 @@ namespace Engine {
 		friend class Singleton<GravitationalLensFullscreenPass>;
 
 	public:
-		static constexpr std::size_t kMaxLenses = 8u;
+		static constexpr std::size_t kMaxLenses = 32u;
 
 		bool IsShaderReady() const;
 		bool ShouldUseEffect(const Scene& scene) const;
