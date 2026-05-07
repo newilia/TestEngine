@@ -47,11 +47,6 @@ namespace Engine {
 
 	} // namespace
 
-	GravitationalLensFullscreenPass& GravitationalLensFullscreenPass::Instance() {
-		static GravitationalLensFullscreenPass instance;
-		return instance;
-	}
-
 	bool GravitationalLensFullscreenPass::IsShaderReady() const {
 		return _shaderReady;
 	}

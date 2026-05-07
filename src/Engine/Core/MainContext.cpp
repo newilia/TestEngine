@@ -100,8 +100,6 @@ namespace Engine {
 		_textureManager = make_shared<TextureManager>();
 	}
 
-	MainContext::~MainContext() {}
-
 	void MainContext::SetScene(const shared_ptr<Scene>& scene) {
 		if (_scene) {
 			_scene->NotifyLifecycleDeinitRecursive();

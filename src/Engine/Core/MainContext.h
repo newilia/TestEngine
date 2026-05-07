@@ -15,10 +15,9 @@ namespace Engine {
 
 	class MainContext : public Singleton<MainContext>
 	{
-	public:
-		MainContext();
-		~MainContext() override;
+		friend class Singleton<MainContext>;
 
+	public:
 		void Init();
 		void Shutdown();
 		bool IsImGuiInitialized() const;
@@ -79,8 +78,11 @@ namespace Engine {
 		void OnMainWindowResized(const sf::Vector2u& newPixelSize);
 
 	private:
+		MainContext();
+
 		void ApplyWindowFrameSettings();
 
+	private:
 		shared_ptr<sf::RenderWindow> _mainWindow;
 		shared_ptr<Scene> _scene;
 		shared_ptr<EventsDispatcher> _eventsDispatcher;
