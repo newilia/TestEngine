@@ -83,10 +83,11 @@ namespace BallGame1 {
 		node->SetName("Background");
 		auto sprite = node->RequireVisual<SpriteVisual>();
 
-		constexpr auto path = "resources/textures/background.png";
+		constexpr auto path = "resources/textures/fern_dark_green.jpg";
 		auto texture = mainContext.GetTextureManager()->LoadTexture(path);
 		if (texture) {
 			sprite->SetTexture(*texture);
+			sprite->SetOrigin({texture->getSize().x * 0.5f, texture->getSize().y * 0.5f});
 		}
 		auto sorting = make_shared<RelativeSortingStrategy>();
 		sorting->SetPriority(-10);

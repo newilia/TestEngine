@@ -23,6 +23,9 @@ public:
 	sf::FloatRect GetLocalBounds() const override;
 	const sf::Transform* GetTransform() const override;
 
+	void SetOrigin(const sf::Vector2f& origin);
+	sf::Vector2f GetOrigin() const;
+
 public:
 	const sf::Sprite* GetSprite() const;
 	void SetTexture(const sf::Texture& texture);
