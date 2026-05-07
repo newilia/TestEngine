@@ -17,9 +17,9 @@ namespace BallGame1 {
 		void SetRotationLimits(sf::Angle min, sf::Angle max);
 
 	private:
-		/// @property(dragSpeed=0.001f)
+		/// @property(dragSpeed=0.05f)
 		float _rotationSpeed = 0.0f;
-		// @property(dragSpeed=0.01f) // TODO add codegen support
+		// TODO add codegen support @property(dragSpeed=0.01f)
 		std::pair<sf::Angle, sf::Angle> _rotationLimits{};
 	};
 } // namespace BallGame1

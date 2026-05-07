@@ -2,6 +2,7 @@
 
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Transform.h"
+#include "Engine/Core/Utils.h"
 #include "Engine/Visual/CircleShapeVisual.h"
 #include "GameControllerBehaviour.generated.hpp"
 
@@ -24,8 +25,8 @@ namespace BallGame1 {
 		}
 	}
 
-	void GameControllerBehaviour::SetRootNode(const std::weak_ptr<SceneNode>& rootNode) {
-		_rootNode = rootNode;
+	void GameControllerBehaviour::SetFieldNode(const std::weak_ptr<SceneNode>& fieldNode) {
+		_fieldNode = fieldNode;
 	}
 
 	void GameControllerBehaviour::SetGunNode(const std::weak_ptr<SceneNode>& gunNode) {
@@ -48,16 +49,12 @@ namespace BallGame1 {
 		if (!ballNode || !gunNode) {
 			return;
 		}
-		auto gunRotation = gunNode->GetLocalTransform()->GetRotation();
+		auto gunRotation = gunNode->GetLocalTransform()->GetRotation().asRadians();
 		auto ballBody = ballNode->RequireBehaviour<PhysicsBodyBehaviour>();
-		auto moveDirection = sf::Vector2f(std::cos(gunRotation.asRadians()), std::sin(gunRotation.asRadians()));
+		auto moveDirection = sf::Vector2f(std::sin(gunRotation), -std::cos(gunRotation));
 		ballBody->SetVelocity(moveDirection * _ballSpeed);
 		DetachBallFromGun();
-
-		auto newBallNode = CreateBallNode();
-		newBallNode->GetLocalTransform()->SetPosition(gunNode->GetLocalTransform()->GetPosition());
-		_ballNode = newBallNode;
-		AttachBallToGun(newBallNode);
+		AttachBallToGun(CreateBallNode());
 	}
 
 	std::shared_ptr<SceneNode> GameControllerBehaviour::CreateBallNode() const {
@@ -89,13 +86,14 @@ namespace BallGame1 {
 
 	void GameControllerBehaviour::DetachBallFromGun() {
 		auto ballNode = _ballNode.lock();
-		auto rootNode = _rootNode.lock();
+		auto rootNode = _fieldNode.lock();
 		if (!ballNode || !rootNode) {
 			return;
 		}
-
+		auto worldPos = Utils::GetWorldPos(ballNode);
 		ballNode->RemoveFromParent();
 		rootNode->AddChild(ballNode);
+		Utils::SetWorldPos(ballNode, worldPos);
 		if (auto body = ballNode->FindBehaviour<PhysicsBodyBehaviour>()) {
 			body->SetFixed(false);
 		}
