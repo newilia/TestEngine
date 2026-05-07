@@ -49,22 +49,25 @@ namespace BallGame1 {
 	std::shared_ptr<Scene> Env::BuildScene() {
 		auto scene = make_shared<Scene>();
 
-		auto gameNode = make_shared<SceneNode>();
-		gameNode->SetName("Game");
-		gameNode->GetLocalTransform()->SetPosition({1700, 700});
-		scene->AddChild(gameNode);
+		auto rootNode = make_shared<SceneNode>();
+		rootNode->SetName("Game");
+		rootNode->GetLocalTransform()->SetPosition({1700, 700});
+		scene->AddChild(rootNode);
 
-		gameNode->AddChild(CreateBackgroundNode());
-		gameNode->AddChild(CreateFieldNode());
+		rootNode->AddChild(CreateBackgroundNode());
+		rootNode->AddChild(CreateFieldNode());
 
-		if (auto gameController = gameNode->RequireBehaviour<GameControllerBehaviour>()) {
+		if (auto gameController = rootNode->RequireBehaviour<GameControllerBehaviour>()) {
 			auto gunNode = CreateGunNode();
 
-			gameNode->AddChild(gunNode);
+			rootNode->AddChild(gunNode);
 			auto scoreNode = CreateScoreNode();
-			gameNode->AddChild(scoreNode);
+			rootNode->AddChild(scoreNode);
 
-			gameController->SetRootNode(gameNode);
+			auto tmpNode = make_shared<SceneNode>();
+			rootNode->AddChild(tmpNode);
+
+			gameController->SetFieldNode(tmpNode);
 			gameController->SetGunNode(gunNode);
 			gameController->SetScoreNode(scoreNode);
 			gameController->StartNewGame();
@@ -137,8 +140,8 @@ namespace BallGame1 {
 		node->SetName("Gun");
 
 		auto rectangle = node->RequireVisual<RectangleShapeVisual>();
-		rectangle->SetSize({200, 40});
-		rectangle->SetOrigin({200.f, 20.f});
+		rectangle->SetSize({40, 200});
+		rectangle->SetOrigin({20, 200});
 		rectangle->SetFillColor(sf::Color::White);
 
 		auto arrowNode = make_shared<SceneNode>();
@@ -150,7 +153,7 @@ namespace BallGame1 {
 		node->AddChild(arrowNode);
 
 		auto gunController = node->RequireBehaviour<GunControllerBehaviour>();
-		gunController->SetRotationSpeed(0.01f);
+		gunController->SetRotationSpeed(1.5f);
 		constexpr auto halfAngle = sf::degrees(65);
 		gunController->SetRotationLimits(-halfAngle, halfAngle);
 

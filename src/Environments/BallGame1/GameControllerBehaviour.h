@@ -14,7 +14,7 @@ namespace BallGame1 {
 		void OnUpdate(const sf::Time& dt) override;
 		void OnEvent(const sf::Event& event) override;
 
-		void SetRootNode(const std::weak_ptr<SceneNode>& rootNode);
+		void SetFieldNode(const std::weak_ptr<SceneNode>& fieldNode);
 		void SetGunNode(const std::weak_ptr<SceneNode>& gunNode);
 		void SetScoreNode(const std::weak_ptr<SceneNode>& scoreNode);
 
@@ -27,7 +27,7 @@ namespace BallGame1 {
 		void DetachBallFromGun();
 
 	private:
-		std::weak_ptr<SceneNode> _rootNode;
+		std::weak_ptr<SceneNode> _fieldNode;
 		std::weak_ptr<SceneNode> _ballNode;
 		std::weak_ptr<SceneNode> _gunNode;
 		std::weak_ptr<SceneNode> _scoreNode;

@@ -67,7 +67,7 @@ namespace BallGame1 {
 		if (const auto* e = event.getIf<sf::Event::MouseMovedRaw>()) {
 			if (auto node = GetNode()) {
 				auto xf = node->GetLocalTransform();
-				const float deltaRad = e->delta.x * _rotationSpeed;
+				const float deltaRad = e->delta.x * _rotationSpeed / 1000.f;
 				const float minDeg = _rotationLimits.first.asDegrees();
 				const float maxDeg = _rotationLimits.second.asDegrees();
 
