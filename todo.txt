@@ -44,3 +44,5 @@ inverse attraction
 
 переделать наследников ShapeVisual на шаблон?
 
+isEnabledLocal, isVisibleLocal
+

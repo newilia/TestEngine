@@ -345,9 +345,7 @@ void SceneNode::SetEnabled(bool isEnabled) {
 		return;
 	}
 	_isEnabled = isEnabled;
-	for (auto& b : _behaviours) {
-		b->OnEnabled(isEnabled);
-	}
+	NotifyEnabledRecursive(isEnabled);
 }
 
 void SceneNode::SetVisible(bool isVisible) {
@@ -355,8 +353,24 @@ void SceneNode::SetVisible(bool isVisible) {
 		return;
 	}
 	_isVisible = isVisible;
+	NotifyVisibleRecursive(isVisible);
+}
+
+void SceneNode::NotifyEnabledRecursive(bool isEnabled) {
+	for (auto& b : _behaviours) {
+		b->OnEnabled(isEnabled);
+	}
+	for (auto& child : _children) {
+		child->NotifyEnabledRecursive(isEnabled);
+	}
+}
+
+void SceneNode::NotifyVisibleRecursive(bool isVisible) {
 	for (auto& b : _behaviours) {
 		b->OnVisible(isVisible);
+	}
+	for (auto& child : _children) {
+		child->NotifyVisibleRecursive(isVisible);
 	}
 }
 
