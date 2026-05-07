@@ -32,30 +32,32 @@ namespace Engine {
 		}
 	} // namespace
 
-	void PresentSceneWithFullscreenEffects(sf::RenderWindow& window, Scene& scene,
+	void PresentSceneWithFullscreenEffects(sf::RenderWindow& window, const std::shared_ptr<Scene>& scene,
 	                                       const std::vector<IViewportFullscreenEffect*>& effectChain) {
+		if (!scene) {
+			return;
+		}
 		if (effectChain.empty()) {
-			window.draw(scene);
+			window.draw(*scene);
 			return;
 		}
 
 		const sf::Vector2u pixelSize = window.getSize();
 		if (!EnsureFullscreenRenderTextures(pixelSize)) {
-			window.draw(scene);
+			window.draw(*scene);
 			return;
 		}
 
 		const sf::View savedView = window.getView();
 		ViewportFullscreenPresentContext ctx{window, pixelSize, savedView};
 
-		const auto scenePtr = std::static_pointer_cast<Scene>(scene.shared_from_this());
 		for (IViewportFullscreenEffect* effect : effectChain) {
-			effect->Prepare(scenePtr, ctx);
+			effect->Prepare(scene, ctx);
 		}
 
 		sCaptureRt.setView(savedView);
 		sCaptureRt.clear();
-		sCaptureRt.draw(scene);
+		sCaptureRt.draw(*scene);
 		sCaptureRt.display();
 
 		const sf::Texture* currentTex = &sCaptureRt.getTexture();
@@ -81,11 +83,14 @@ namespace Engine {
 		}
 	}
 
-	void PresentMainWindowScene(sf::RenderWindow& window, Scene& scene) {
+	void PresentMainWindowScene(sf::RenderWindow& window, const std::shared_ptr<Scene>& scene) {
+		if (!scene) {
+			return;
+		}
 		std::vector<IViewportFullscreenEffect*> chain;
 		auto& radialUvWarpPass = RadialUvWarpFullscreenPass::GetInstance();
 
-		if (radialUvWarpPass.ShouldUseEffect(scene)) {
+		if (radialUvWarpPass.ShouldUseEffect(*scene)) {
 			chain.push_back(&radialUvWarpPass);
 		}
 		PresentSceneWithFullscreenEffects(window, scene, chain);

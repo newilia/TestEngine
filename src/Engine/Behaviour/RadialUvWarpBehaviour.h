@@ -27,8 +27,8 @@ private:
 	bool _isRadialUvWarpEnabled = true;
 	/// @property(name="Radial warp strength", dragSpeed=0.01f, tooltip="Positive: magnify around the center. Negative: compress.")
 	float _warpStrength = 0.35f;
-	/// @property(name="Influence radius", dragSpeed=0.001f, tooltip="Aspect-correct radius of the warp in normalized screen space (~0–1).")
-	float _influenceRadius = 0.12f;
+	/// @property(name="Influence radius (world)", dragSpeed=2.f, tooltip="Radius in world units; scales with camera zoom when applied.")
+	float _influenceRadius = 120.f;
 	/// @property(dragSpeed=0.0001f)
 	sf::Vector2f _uvOffset{};
 };

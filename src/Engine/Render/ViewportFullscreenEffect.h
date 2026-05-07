@@ -29,10 +29,10 @@ namespace Engine {
 		                   const ViewportFullscreenPresentContext& ctx) = 0;
 	};
 
-	void PresentSceneWithFullscreenEffects(sf::RenderWindow& window, Scene& scene,
+	void PresentSceneWithFullscreenEffects(sf::RenderWindow& window, const std::shared_ptr<Scene>& scene,
 	                                       const std::vector<IViewportFullscreenEffect*>& effectChain);
 
 	/// Resolves which fullscreen effects apply to the scene and presents it (or draws directly).
-	void PresentMainWindowScene(sf::RenderWindow& window, Scene& scene);
+	void PresentMainWindowScene(sf::RenderWindow& window, const std::shared_ptr<Scene>& scene);
 
 } // namespace Engine

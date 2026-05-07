@@ -9,7 +9,6 @@
 #include "Engine/Core/Transform.h"
 #include "Engine/Core/Utils.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
-#include "Engine/Visual/CircleShapeVisual.h"
 #include "Engine/Visual/RectangleShapeVisual.h"
 #include "Engine/Visual/SpriteVisual.h"
 #include "Engine/Visual/VectorArrowVisual.h"
@@ -30,7 +29,7 @@ namespace BallGame1 {
 		Utils::MaximizeWindow(*mainWindow);
 		mainContext.GetPhysicsProcessor()->SetGravity({0, 1000});
 		mainContext.GetPhysicsProcessor()->SetGravityEnabled(false);
-		mainContext.SetVerticalSyncEnabled(false);
+		mainContext.SetVerticalSyncEnabled(true);
 		mainContext.SetScene(BuildScene());
 	}
 
