@@ -29,147 +29,82 @@ class SceneNode final : public enable_shared_from_this<SceneNode>,
                         public Engine::IPropertiesProvider
 {
 	META_CLASS()
+
 public:
-	virtual ~SceneNode() = default; // TODO try Deinit()?
+	SceneNode() = default;
+	virtual ~SceneNode() = default;
 
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+
 	void Update(const sf::Time& dt) override;
 
-	/// After simulation ticks, once per frame before draw (HUD / frame-synced behaviours).
-	void NotifyPresentRec(const sf::Time& realFrameDt);
-
-	/// Called once per node when this subtree enters the active scene (`NotifyLifecycleInitRecursive`).
-	/// Graph changes (`AddChild`) do not call this; use `NotifyLifecycleInitRecursive` after the subtree is ready.
+	// Runs once when the node/subtree enters the active scene.
 	virtual void OnInit();
 
-	/// Symmetric to `OnInit` when leaving the active scene or before the subtree is torn down.
+	// Runs once when leaving the active scene or before removal.
 	virtual void OnDeinit();
 
-	void RemoveFromParent();
+	// After `Update`, before draw (frame / HUD).
+	void NotifyPresentRec(const sf::Time& wallFrameDt); // TODO is it necessary?
+
+	// Basic properties
 	void SetName(const std::string& name);
 	const std::string& GetName() const;
+	bool IsEnabled() const;
+	void SetEnabled(bool isEnabled);
+	bool IsVisible() const;
+	void SetVisible(bool isVisible);
+
+	// Hierarchy
 	shared_ptr<SceneNode> GetParent() const;
 	const std::vector<shared_ptr<SceneNode>>& GetChildren() const;
-
 	void AddChild(const std::shared_ptr<SceneNode>& child);
 	void AddChildAt(const std::shared_ptr<SceneNode>& child, std::size_t index);
 	void RemoveChild(SceneNode* child);
 	shared_ptr<SceneNode> FindChild(const std::string& id, bool recursively);
 	bool HasChild(const std::shared_ptr<SceneNode>& child);
 	std::vector<shared_ptr<SceneNode>> FindChildren(const std::string& id, bool recursively);
+	void RemoveFromParent();
+
+	// Transform (local component + cached world)
+	shared_ptr<Transform> GetLocalTransform() const;
+	const sf::Transform& GetWorldTransform() const;
+	void MarkWorldTransformSubtreeDirty() const;
+
+	// Visual & draw order
+	shared_ptr<Visual> GetVisual() const;
 	void SetVisual(shared_ptr<Visual>&& visual);
+	template <typename T>
+	shared_ptr<T> RequireVisual();
+	template <typename TVisual>
+	shared_ptr<TVisual> GetVisual() const;
+	shared_ptr<RelativeSortingStrategy> GetSortingStrategy() const;
 	void SetSortingStrategy(const shared_ptr<RelativeSortingStrategy>& sorting);
 
-	shared_ptr<Visual> GetVisual() const;
-	shared_ptr<Transform> GetLocalTransform() const;
-	shared_ptr<RelativeSortingStrategy> GetSortingStrategy() const;
+	// Behaviours
 	const std::vector<shared_ptr<Behaviour>>& GetBehaviours() const;
-
 	void AddBehaviour(shared_ptr<Behaviour> behaviour);
 	void RemoveBehaviour(Behaviour* behaviour);
-
-	template <typename TVisual>
-	shared_ptr<TVisual> GetVisual() const {
-		static_assert(std::is_base_of_v<Visual, TVisual>, "GetVisual<T> is only for Visual types");
-		if (auto v = std::dynamic_pointer_cast<TVisual>(_visual)) {
-			return v;
-		}
-		return nullptr;
-	}
-
 	template <typename T>
-	void RemoveBehaviour() {
-		for (auto it = _behaviours.begin(); it != _behaviours.end();) {
-			if (std::dynamic_pointer_cast<T>(*it)) {
-				DetachBehaviourForRemove(*it);
-				it = _behaviours.erase(it);
-			}
-			else {
-				++it;
-			}
-		}
-	}
-
+	shared_ptr<T> FindBehaviour() const;
 	template <typename T>
-	shared_ptr<T> FindEntity() const {
-		if (auto t = std::dynamic_pointer_cast<T>(GetLocalTransform())) {
-			return t;
-		}
-		if (auto v = std::dynamic_pointer_cast<T>(_visual)) {
-			return v;
-		}
-		if (auto s = std::dynamic_pointer_cast<T>(_sortingStrategy)) {
-			return s;
-		}
-		for (auto& b : _behaviours) {
-			if (auto t = std::dynamic_pointer_cast<T>(b)) {
-				return t;
-			}
-		}
-		return nullptr;
-	}
-
+	shared_ptr<T> FindBehaviourRec() const;
 	template <typename T>
-	shared_ptr<T> FindBehaviour() const {
-		static_assert(std::is_base_of_v<Behaviour, T>, "FindBehaviour is only for Behaviour types");
-		for (auto& b : _behaviours) {
-			if (auto t = std::dynamic_pointer_cast<T>(b)) {
-				return t;
-			}
-		}
-		return nullptr;
-	}
-
+	shared_ptr<T> RequireBehaviour();
 	template <typename T>
-	shared_ptr<T> FindBehaviourRec() const {
-		for (auto& b : _behaviours) {
-			if (auto t = std::dynamic_pointer_cast<T>(b)) {
-				return t;
-			}
-		}
-		for (auto& child : _children) {
-			if (auto found = child->FindBehaviourRec<T>()) {
-				return found;
-			}
-		}
-		return nullptr;
-	}
+	void RemoveBehaviour();
 
+	// Transform, visual, sorting strategy, or behaviour on this node
 	template <typename T>
-	shared_ptr<T> RequireBehaviour() {
-		static_assert(std::is_base_of_v<Behaviour, T>, "RequireBehaviour is only for Behaviour types");
-		if (auto existing = FindBehaviour<T>()) {
-			return existing;
-		}
-		auto created = std::make_shared<T>();
-		AddBehaviour(created);
-		return created;
-	}
+	shared_ptr<T> FindEntity() const; // TODO is it necessary?
 
-	template <typename T>
-	shared_ptr<T> RequireVisual() {
-		static_assert(std::is_base_of_v<Visual, T>, "RequireVisual is only for Visual types");
-		if (auto existing = dynamic_pointer_cast<T>(_visual)) {
-			return existing;
-		}
-		auto created = std::make_shared<T>();
-		SetVisual(created);
-		return created;
-	}
-
+	// Hit-testing (TODO move to Scene)
 	shared_ptr<SceneNode> FindTopMostNodeAtPoint(const sf::Vector2f& worldPoint, bool tapResponsiveOnly = false);
 	void FindNodesAtPoint(const sf::Vector2f& worldPoint, std::vector<shared_ptr<SceneNode>>& result,
 	                      bool tapResponsiveOnly = false);
 	bool DispatchTapAt(const sf::Vector2f& worldPoint);
-	const sf::Transform& GetWorldTransform() const;
-	void MarkWorldTransformSubtreeDirty() const;
 
-	void SetEnabled(bool isEnabled);
-	void SetVisible(bool isVisible);
-
-	bool IsEnabled() const;
-	bool IsVisible() const;
-
+	// Active-scene subtree lifecycle
 	void NotifyLifecycleInitRecursive();
 	void NotifyLifecycleDeinitRecursive();
 
@@ -192,14 +127,104 @@ private:
 private:
 	weak_ptr<SceneNode> _parent;
 	std::vector<shared_ptr<SceneNode>> _children;
-	mutable shared_ptr<Transform> _localTransform;
-	mutable bool _worldTransformDirty = true;
+	mutable shared_ptr<Transform>
+	    _localTransform; // TODO consider making this non-lazy and non-shared, since it's always needed and only one per node
+	mutable bool _worldTransformDirty = true; // TODO consider move to Transform component
 	mutable sf::Transform _cachedWorldTransform{};
 	shared_ptr<Visual> _visual;
 	shared_ptr<RelativeSortingStrategy> _sortingStrategy;
 	std::vector<shared_ptr<Behaviour>> _behaviours;
 	bool _wasNodeLifecycleInited = false;
 };
+
+template <typename TVisual>
+shared_ptr<TVisual> SceneNode::GetVisual() const {
+	static_assert(std::is_base_of_v<Visual, TVisual>, "GetVisual<T> is only for Visual types");
+	if (auto v = std::dynamic_pointer_cast<TVisual>(_visual)) {
+		return v;
+	}
+	return nullptr;
+}
+
+template <typename T>
+void SceneNode::RemoveBehaviour() {
+	for (auto it = _behaviours.begin(); it != _behaviours.end();) {
+		if (std::dynamic_pointer_cast<T>(*it)) {
+			DetachBehaviourForRemove(*it);
+			it = _behaviours.erase(it);
+		}
+		else {
+			++it;
+		}
+	}
+}
+
+template <typename T>
+shared_ptr<T> SceneNode::FindEntity() const {
+	if (auto t = std::dynamic_pointer_cast<T>(GetLocalTransform())) {
+		return t;
+	}
+	if (auto v = std::dynamic_pointer_cast<T>(_visual)) {
+		return v;
+	}
+	if (auto s = std::dynamic_pointer_cast<T>(_sortingStrategy)) {
+		return s;
+	}
+	for (auto& b : _behaviours) {
+		if (auto t = std::dynamic_pointer_cast<T>(b)) {
+			return t;
+		}
+	}
+	return nullptr;
+}
+
+template <typename T>
+shared_ptr<T> SceneNode::FindBehaviour() const {
+	static_assert(std::is_base_of_v<Behaviour, T>, "FindBehaviour is only for Behaviour types");
+	for (auto& b : _behaviours) {
+		if (auto t = std::dynamic_pointer_cast<T>(b)) {
+			return t;
+		}
+	}
+	return nullptr;
+}
+
+template <typename T>
+shared_ptr<T> SceneNode::FindBehaviourRec() const {
+	for (auto& b : _behaviours) {
+		if (auto t = std::dynamic_pointer_cast<T>(b)) {
+			return t;
+		}
+	}
+	for (auto& child : _children) {
+		if (auto found = child->FindBehaviourRec<T>()) {
+			return found;
+		}
+	}
+	return nullptr;
+}
+
+template <typename T>
+shared_ptr<T> SceneNode::RequireBehaviour() {
+	static_assert(std::is_base_of_v<Behaviour, T>, "RequireBehaviour is only for Behaviour types");
+	if (auto existing = FindBehaviour<T>()) {
+		return existing;
+	}
+	auto created = std::make_shared<T>();
+	AddBehaviour(created);
+	return created;
+}
+
+template <typename T>
+shared_ptr<T> SceneNode::RequireVisual() {
+	static_assert(std::is_base_of_v<Visual, T>, "RequireVisual is only for Visual types");
+	if (auto existing = std::dynamic_pointer_cast<T>(_visual)) {
+		return existing;
+	}
+	auto created = std::make_shared<T>();
+	SetVisual(created);
+	return created;
+}
 
 using NodePtr = shared_ptr<SceneNode>;
 using NodeWeakPtr = weak_ptr<SceneNode>;
