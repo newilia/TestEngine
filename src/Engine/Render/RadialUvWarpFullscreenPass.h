@@ -10,17 +10,17 @@
 #include <memory>
 #include <vector>
 
-class GravitationalLensBehaviour;
+class RadialUvWarpBehaviour;
 
 namespace Engine {
 
-	class GravitationalLensFullscreenPass final : public IViewportFullscreenEffect,
-	                                              public Singleton<GravitationalLensFullscreenPass>
+	class RadialUvWarpFullscreenPass final : public IViewportFullscreenEffect,
+	                                         public Singleton<RadialUvWarpFullscreenPass>
 	{
-		friend class Singleton<GravitationalLensFullscreenPass>;
+		friend class Singleton<RadialUvWarpFullscreenPass>;
 
 	public:
-		static constexpr std::size_t kMaxLenses = 32u;
+		static constexpr std::size_t kMaxWarpCenters = 128u;
 
 		bool IsShaderReady() const;
 		bool ShouldUseEffect(const Scene& scene) const;
@@ -29,16 +29,16 @@ namespace Engine {
 		           const ViewportFullscreenPresentContext& ctx) override;
 
 	private:
-		GravitationalLensFullscreenPass();
+		RadialUvWarpFullscreenPass();
 		bool TryLoadShader();
 
 	private:
 		bool _shaderReady = false;
 		sf::Shader _shader{};
-		std::vector<std::shared_ptr<GravitationalLensBehaviour>> _activeLenses{};
-		std::array<sf::Glsl::Vec2, kMaxLenses> _lensUv{};
-		std::array<float, kMaxLenses> _lensAmplitude{};
-		std::array<float, kMaxLenses> _lensFalloff{};
+		std::vector<std::shared_ptr<RadialUvWarpBehaviour>> _activeWarps{};
+		std::array<sf::Glsl::Vec2, kMaxWarpCenters> _warpCenterUv{};
+		std::array<float, kMaxWarpCenters> _warpStrength{};
+		std::array<float, kMaxWarpCenters> _warpInfluenceRadius{};
 	};
 
 } // namespace Engine

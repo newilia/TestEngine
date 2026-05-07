@@ -57,21 +57,22 @@ namespace BallGame1 {
 		rootNode->AddChild(CreateBackgroundNode());
 		rootNode->AddChild(CreateFieldNode());
 
-		if (auto gameController = rootNode->RequireBehaviour<GameControllerBehaviour>()) {
-			auto gunNode = CreateGunNode();
+		auto gameController = rootNode->RequireBehaviour<GameControllerBehaviour>();
+		gameController->SetBallParameters(100.0f, 1.f, 25.0f, sf::Color::Red);
+		auto gunNode = CreateGunNode();
 
-			rootNode->AddChild(gunNode);
-			auto scoreNode = CreateScoreNode();
-			rootNode->AddChild(scoreNode);
+		rootNode->AddChild(gunNode);
+		auto scoreNode = CreateScoreNode();
+		rootNode->AddChild(scoreNode);
 
-			auto tmpNode = make_shared<SceneNode>();
-			rootNode->AddChild(tmpNode);
+		auto tmpNode = make_shared<SceneNode>();
+		rootNode->AddChild(tmpNode);
 
-			gameController->SetFieldNode(tmpNode);
-			gameController->SetGunNode(gunNode);
-			gameController->SetScoreNode(scoreNode);
-			gameController->StartNewGame();
-		}
+		gameController->SetFieldNode(tmpNode);
+		gameController->SetGunNode(gunNode);
+		gameController->SetScoreNode(scoreNode);
+		gameController->StartNewGame();
+
 		return scene;
 	}
 

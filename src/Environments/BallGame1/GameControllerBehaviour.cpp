@@ -1,6 +1,6 @@
 #include "GameControllerBehaviour.h"
 
-#include "Engine/Behaviour/GravitationalLensBehaviour.h"
+#include "Engine/Behaviour/RadialUvWarpBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Transform.h"
 #include "Engine/Core/Utils.h"
@@ -38,6 +38,14 @@ namespace BallGame1 {
 		_scoreNode = scoreNode;
 	}
 
+	void GameControllerBehaviour::SetBallParameters(float mass, float restitution, float radius,
+	                                                const sf::Color& color) {
+		_ballMass = mass;
+		_ballRestitution = restitution;
+		_ballRadius = radius;
+		_ballColor = color;
+	}
+
 	void GameControllerBehaviour::StartNewGame() {
 		auto ballNode = CreateBallNode();
 		AttachBallToGun(ballNode);
@@ -70,7 +78,7 @@ namespace BallGame1 {
 		visual->SetRadius(_ballRadius);
 		visual->SetFillColor(_ballColor);
 
-		ballNode->RequireBehaviour<GravitationalLensBehaviour>();
+		ballNode->RequireBehaviour<RadialUvWarpBehaviour>();
 		return ballNode;
 	}
 
