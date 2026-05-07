@@ -68,10 +68,6 @@ namespace Engine {
 		float GetCurrentFps() const;
 		float GetCurrentTickRate() const;
 
-		/// Editor hierarchy selection propagated for viewport overlay (outline). Cleared each frame via editor.
-		void SetHierarchySelectedForViewport(const shared_ptr<Scene>& node);
-		shared_ptr<Scene> GetHierarchySelectedForViewport() const;
-
 		void MoveCamera(const sf::Vector2i& delta);
 		void ZoomCamera(float zoomFactor, std::optional<sf::Vector2i> focusPixel = std::nullopt);
 
@@ -102,7 +98,6 @@ namespace Engine {
 		std::uint32_t _targetTickRateHz = 500;
 		float _tickRate = 0.f;
 		bool _haveTickRate = false;
-		std::weak_ptr<Scene> _hierarchySelectedForViewport;
 		sf::Vector2u _mainWindowPixelSizeForView{};
 		bool _haveMainWindowPixelSizeForView = false;
 	};

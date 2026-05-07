@@ -202,14 +202,6 @@ namespace Engine {
 		return _haveTickRate ? _tickRate : 0.f;
 	}
 
-	void MainContext::SetHierarchySelectedForViewport(const shared_ptr<Scene>& node) {
-		_hierarchySelectedForViewport = node;
-	}
-
-	shared_ptr<Scene> MainContext::GetHierarchySelectedForViewport() const {
-		return _hierarchySelectedForViewport.lock();
-	}
-
 	void MainContext::MoveCamera(const sf::Vector2i& screenDelta) {
 		if (auto window = GetMainWindow()) {
 			auto view = window->getView();

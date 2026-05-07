@@ -75,4 +75,6 @@ namespace Utils {
 	sf::Vector2f GetWorldPos(const std::shared_ptr<const SceneNode>& node);
 	void SetWorldPos(const std::shared_ptr<SceneNode>& node, sf::Vector2f pos);
 
+	void SortSceneNodesByDrawOrder(std::vector<std::shared_ptr<SceneNode>>& nodes);
+
 } // namespace Utils

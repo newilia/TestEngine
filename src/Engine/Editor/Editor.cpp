@@ -3,17 +3,25 @@
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Core/Utils.h"
 #include "Engine/Editor/Commands/CutEntityCommand.h"
 #include "Engine/Editor/Commands/CutNodeCommand.h"
 #include "Engine/Editor/Commands/DeleteEntityCommand.h"
 #include "Engine/Editor/Commands/DeleteNodeCommand.h"
 #include "Engine/Editor/Commands/PasteEntityCommand.h"
 #include "Engine/Editor/Commands/PasteNodeCommand.h"
+#include "Engine/Editor/EditorVisualTheme.h"
 
+#include <SFML/Graphics/CircleShape.hpp>
+#include <SFML/Graphics/RectangleShape.hpp>
+#include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
 
 #include <imgui.h>
 #include <imgui_internal.h>
+
+#include <optional>
+#include <vector>
 
 namespace {
 
@@ -77,6 +85,69 @@ namespace {
 		}
 		return false;
 	}
+
+	using Engine::EditorVisualTheme::kHierarchySelectionChildOutlineColor;
+	using Engine::EditorVisualTheme::kHierarchySelectionFallbackHalfSize;
+	using Engine::EditorVisualTheme::kHierarchySelectionOutlineColor;
+	using Engine::EditorVisualTheme::kHierarchySelectionOutlinePadPx;
+	using Engine::EditorVisualTheme::kHierarchySelectionOutlineThickness;
+
+	std::optional<sf::FloatRect> TryGetHierarchySelectionBounds(const SceneNode& node) {
+		sf::Transform fullTransform = node.GetWorldTransform();
+		if (auto visual = node.GetVisual()) {
+			const auto bounds = visual->GetLocalBounds();
+			if (const auto transform = visual->GetTransform()) {
+				fullTransform *= *transform;
+			}
+			return Utils::AxisAlignedBoundsAfterTransform(fullTransform, bounds);
+		}
+		return std::nullopt;
+	}
+
+	void DrawAabbOutline(sf::RenderTarget& target, sf::RenderStates states, const sf::FloatRect& bounds,
+	                     const sf::Color& outlineColor) {
+		sf::RectangleShape frame;
+		frame.setPosition(
+		    {bounds.position.x - kHierarchySelectionOutlinePadPx, bounds.position.y - kHierarchySelectionOutlinePadPx});
+		frame.setSize({bounds.size.x + 2.f * kHierarchySelectionOutlinePadPx,
+		               bounds.size.y + 2.f * kHierarchySelectionOutlinePadPx});
+		frame.setFillColor(sf::Color::Transparent);
+		frame.setOutlineColor(outlineColor);
+		frame.setOutlineThickness(kHierarchySelectionOutlineThickness);
+		target.draw(frame, states);
+	}
+
+	void DrawNodeHierarchySelectionBounds(const SceneNode& node, sf::RenderTarget& target, sf::RenderStates worldOnly,
+	                                      const sf::Color& outlineColor) {
+		if (const std::optional<sf::FloatRect> bb = TryGetHierarchySelectionBounds(node)) {
+			const sf::FloatRect& b = *bb;
+			if (b.size.x > 0.f && b.size.y > 0.f) {
+				DrawAabbOutline(target, worldOnly, b, outlineColor);
+				return;
+			}
+		}
+		const sf::Vector2f pos = Utils::GetWorldPos(node.shared_from_this());
+		sf::CircleShape marker(kHierarchySelectionFallbackHalfSize);
+		marker.setOrigin({kHierarchySelectionFallbackHalfSize, kHierarchySelectionFallbackHalfSize});
+		marker.setPosition(pos);
+		marker.setFillColor(sf::Color::Transparent);
+		marker.setOutlineColor(outlineColor);
+		marker.setOutlineThickness(kHierarchySelectionOutlineThickness);
+		target.draw(marker, worldOnly);
+	}
+
+	void DrawDescendantHierarchySelectionOutlines(const SceneNode& parent, sf::RenderTarget& target,
+	                                              sf::RenderStates worldOnly) {
+		std::vector<std::shared_ptr<SceneNode>> sorted = parent.GetChildren();
+		Utils::SortSceneNodesByDrawOrder(sorted);
+		for (const auto& child : sorted) {
+			if (!child || !child->IsEnabled() || !child->IsVisible()) {
+				continue;
+			}
+			DrawNodeHierarchySelectionBounds(*child, target, worldOnly, kHierarchySelectionChildOutlineColor);
+			DrawDescendantHierarchySelectionOutlines(*child, target, worldOnly);
+		}
+	}
 } // namespace
 
 namespace Engine {
@@ -92,10 +163,7 @@ namespace Engine {
 		return _isOpen;
 	}
 
-	void Editor::Update(float /*dt*/) {
-		auto& mainContext = Engine::MainContext::GetInstance();
-		mainContext.SetHierarchySelectedForViewport(_isOpen ? _sceneHierarchyWidget.GetSelectedNode() : nullptr);
-	}
+	void Editor::Update(float /*dt*/) {}
 
 	std::shared_ptr<SceneNode> Editor::GetSelectedNode() const {
 		return _sceneHierarchyWidget.GetSelectedNode();
@@ -225,6 +293,19 @@ namespace Engine {
 
 	const EditorToolManager& Editor::GetEditorToolManager() const {
 		return *_editorToolManager;
+	}
+
+	void Editor::DrawViewportSelectionOverlay(sf::RenderWindow& window) {
+		if (!_isOpen) {
+			return;
+		}
+		const auto selected = GetSelectedNode();
+		if (!selected) {
+			return;
+		}
+		sf::RenderStates worldOnly{};
+		DrawDescendantHierarchySelectionOutlines(*selected, window, worldOnly);
+		DrawNodeHierarchySelectionBounds(*selected, window, worldOnly, kHierarchySelectionOutlineColor);
 	}
 
 	void Editor::Draw() {
