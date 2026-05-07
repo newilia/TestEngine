@@ -20,6 +20,8 @@ namespace Engine {
 
 	class Editor : public Singleton<Editor>
 	{
+		friend class Singleton<Editor>;
+
 	public:
 		void Toggle();
 		void SetIsOpen(bool isOpen);
@@ -56,6 +58,8 @@ namespace Engine {
 		const EditorToolManager& GetEditorToolManager() const;
 
 	private:
+		Editor() = default;
+
 		bool _isOpen = true;
 		std::optional<sf::Vector2i> _cameraMoveMouseOriginPos; // nullopt when not moving
 		SceneHierarchyWidget _sceneHierarchyWidget{};

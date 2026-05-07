@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/Core/Singleton.h"
 #include "Engine/Render/ViewportFullscreenEffect.h"
 
 #include <SFML/Graphics/Shader.hpp>
@@ -13,12 +14,13 @@ class GravitationalLensBehaviour;
 
 namespace Engine {
 
-	class GravitationalLensFullscreenPass final : public IViewportFullscreenEffect
+	class GravitationalLensFullscreenPass final : public IViewportFullscreenEffect,
+	                                              public Singleton<GravitationalLensFullscreenPass>
 	{
+		friend class Singleton<GravitationalLensFullscreenPass>;
+
 	public:
 		static constexpr std::size_t kMaxLenses = 8u;
-
-		static GravitationalLensFullscreenPass& Instance();
 
 		bool IsShaderReady() const;
 		bool ShouldUseEffect(const Scene& scene) const;

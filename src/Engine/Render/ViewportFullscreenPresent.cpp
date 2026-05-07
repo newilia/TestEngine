@@ -83,7 +83,8 @@ namespace Engine {
 
 	void PresentMainWindowScene(sf::RenderWindow& window, Scene& scene) {
 		std::vector<IViewportFullscreenEffect*> chain;
-		auto& lensPass = GravitationalLensFullscreenPass::Instance();
+		auto& lensPass = GravitationalLensFullscreenPass::GetInstance();
+
 		if (lensPass.ShouldUseEffect(scene)) {
 			chain.push_back(&lensPass);
 		}
