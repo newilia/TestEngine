@@ -18,6 +18,8 @@ namespace BallGame1 {
 		void SetGunNode(const std::weak_ptr<SceneNode>& gunNode);
 		void SetScoreNode(const std::weak_ptr<SceneNode>& scoreNode);
 
+		void SetBallParameters(float mass, float restitution, float radius, const sf::Color& color);
+
 		void StartNewGame();
 
 	private:
@@ -27,14 +29,21 @@ namespace BallGame1 {
 		void DetachBallFromGun();
 
 	private:
+		/// @property(dragSpeed=10.f)
+		float _ballSpeed = 1000.0f;
+		/// @property(dragSpeed=1.0f)
+		float _ballMass = 1.0f;
+		/// @property(dragSpeed=0.05f)
+		float _ballRestitution = 0.5f;
+		/// @property(dragSpeed=1.f)
+		float _ballRadius = 10.0f;
+		/// @property
+		sf::Color _ballColor = sf::Color::Red;
+
+	private:
 		std::weak_ptr<SceneNode> _fieldNode;
 		std::weak_ptr<SceneNode> _ballNode;
 		std::weak_ptr<SceneNode> _gunNode;
 		std::weak_ptr<SceneNode> _scoreNode;
-		float _ballSpeed = 1000.0f;
-		float _ballMass = 1.0f;
-		float _ballRestitution = 0.5f;
-		float _ballRadius = 10.0f;
-		sf::Color _ballColor = sf::Color::Red;
 	};
 } // namespace BallGame1

@@ -1,4 +1,4 @@
-#include "Engine/Render/GravitationalLensFullscreenPass.h"
+#include "Engine/Render/RadialUvWarpFullscreenPass.h"
 #include "Engine/Render/ViewportFullscreenEffect.h"
 
 #include <SFML/Graphics/RenderTexture.hpp>
@@ -83,10 +83,10 @@ namespace Engine {
 
 	void PresentMainWindowScene(sf::RenderWindow& window, Scene& scene) {
 		std::vector<IViewportFullscreenEffect*> chain;
-		auto& lensPass = GravitationalLensFullscreenPass::GetInstance();
+		auto& radialUvWarpPass = RadialUvWarpFullscreenPass::GetInstance();
 
-		if (lensPass.ShouldUseEffect(scene)) {
-			chain.push_back(&lensPass);
+		if (radialUvWarpPass.ShouldUseEffect(scene)) {
+			chain.push_back(&radialUvWarpPass);
 		}
 		PresentSceneWithFullscreenEffects(window, scene, chain);
 	}
