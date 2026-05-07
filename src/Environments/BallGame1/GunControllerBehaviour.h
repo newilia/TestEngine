@@ -3,6 +3,8 @@
 #include "Engine/Behaviour/EventHandlerBehaviourBase.h"
 #include "Engine/Core/MetaClass.h"
 
+#include <utility>
+
 namespace BallGame1 {
 	class GunControllerBehaviour : public EventHandlerBehaviourBase
 	{
@@ -19,7 +21,7 @@ namespace BallGame1 {
 	private:
 		/// @property(dragSpeed=0.05f)
 		float _rotationSpeed = 0.0f;
-		// TODO add codegen support @property(dragSpeed=0.01f)
+		/// @property(dragSpeed=0.01f)
 		std::pair<sf::Angle, sf::Angle> _rotationLimits{};
 	};
 } // namespace BallGame1
