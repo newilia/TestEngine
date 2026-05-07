@@ -8,6 +8,7 @@
 #include <SFML/Graphics/Texture.hpp>
 
 #include <algorithm>
+#include <cmath>
 
 namespace Engine {
 
@@ -31,18 +32,82 @@ namespace Engine {
 		}
 
 		void CollectRadialUvWarpsRecursive(const std::shared_ptr<SceneNode>& node,
-		                                   std::vector<std::shared_ptr<RadialUvWarpBehaviour>>& out) {
+		                                   std::vector<std::shared_ptr<RadialUvWarpBehaviour>>& warps) {
 			if (!node || !node->IsEnabled() || !node->IsVisible()) {
 				return;
 			}
 			if (auto warp = node->FindBehaviour<RadialUvWarpBehaviour>()) {
 				if (warp->IsRadialUvWarpEnabled()) {
-					out.push_back(warp);
+					warps.push_back(warp);
 				}
 			}
 			for (const auto& child : node->GetChildren()) {
-				CollectRadialUvWarpsRecursive(child, out);
+				CollectRadialUvWarpsRecursive(child, warps);
 			}
+		}
+
+		sf::Vector2f WarpPixelToUv(const sf::Vector2i& px, sf::Vector2u pixelSize, const sf::Vector2f& uvOffset) {
+			const float u = (static_cast<float>(px.x) + 0.5f) / static_cast<float>(pixelSize.x) + uvOffset.x;
+			const float pyNorm = (static_cast<float>(px.y) + 0.5f) / static_cast<float>(pixelSize.y);
+			const float v = (1.f - pyNorm) + uvOffset.y;
+			return {u, v};
+		}
+
+		float ShaderDistUv(const sf::Vector2f& a, const sf::Vector2f& b, float aspectRatio) {
+			const float dx = (a.x - b.x) * aspectRatio;
+			const float dy = a.y - b.y;
+			return std::hypot(dx, dy);
+		}
+
+		// 1-pixel step: world-space eps + mapCoordsToPixel often share one pixel → zero UV derivative (flicker).
+		float WorldRadiusToShaderDist(const sf::RenderWindow& window, const sf::View& sceneView, sf::Vector2u pixelSize,
+		                              const sf::Vector2f& uvOffset, float aspectRatio, sf::Vector2i pxAnchor) {
+			const int pw = static_cast<int>(pixelSize.x);
+			const int ph = static_cast<int>(pixelSize.y);
+			if (pw <= 1 || ph <= 1) {
+				const float sx = std::max(sceneView.getSize().x, 1e-4f);
+				const float sy = std::max(sceneView.getSize().y, 1e-4f);
+				return std::max(1.f / std::min(sx, sy), 1e-10f);
+			}
+
+			const int x0 = std::clamp(pxAnchor.x, 0, pw - 1);
+			const int y0 = std::clamp(pxAnchor.y, 0, ph - 1);
+			int x1 = x0 + 1;
+			if (x1 >= pw) {
+				x1 = x0 - 1;
+			}
+			int y1 = y0 + 1;
+			if (y1 >= ph) {
+				y1 = y0 - 1;
+			}
+			if (x1 == x0 || y1 == y0) {
+				const float sx = std::max(sceneView.getSize().x, 1e-4f);
+				const float sy = std::max(sceneView.getSize().y, 1e-4f);
+				return std::max(1.f / std::min(sx, sy), 1e-10f);
+			}
+
+			const sf::Vector2f uv0 = WarpPixelToUv({x0, y0}, pixelSize, uvOffset);
+			const sf::Vector2f uvX = WarpPixelToUv({x1, y0}, pixelSize, uvOffset);
+			const sf::Vector2f uvY = WarpPixelToUv({x0, y1}, pixelSize, uvOffset);
+
+			const sf::Vector2f w0 = window.mapPixelToCoords(sf::Vector2i(x0, y0), sceneView);
+			const sf::Vector2f wx = window.mapPixelToCoords(sf::Vector2i(x1, y0), sceneView);
+			const sf::Vector2f wy = window.mapPixelToCoords(sf::Vector2i(x0, y1), sceneView);
+
+			const float dMetricDx = ShaderDistUv(uvX, uv0, aspectRatio);
+			const float dMetricDy = ShaderDistUv(uvY, uv0, aspectRatio);
+			const float dWorldX = std::hypot(wx.x - w0.x, wx.y - w0.y);
+			const float dWorldY = std::hypot(wy.x - w0.x, wy.y - w0.y);
+
+			const float scaleX = dWorldX > 1e-20f ? dMetricDx / dWorldX : 0.f;
+			const float scaleY = dWorldY > 1e-20f ? dMetricDy / dWorldY : 0.f;
+			float scale = 0.5f * (scaleX + scaleY);
+			if (!std::isfinite(scale) || scale < 1e-20f) {
+				const float sx = std::max(sceneView.getSize().x, 1e-4f);
+				const float sy = std::max(sceneView.getSize().y, 1e-4f);
+				scale = 1.f / std::min(sx, sy);
+			}
+			return std::max(scale, 1e-10f);
 		}
 
 	} // namespace
@@ -100,21 +165,25 @@ namespace Engine {
 		const auto& window = ctx.window;
 		std::size_t packedCount = 0;
 
+		const float pxW = std::max(static_cast<float>(ctx.pixelSize.x), 1.f);
+		const float pxH = std::max(static_cast<float>(ctx.pixelSize.y), 1.f);
+		const float aspectRatio = pxW / pxH;
+
 		for (const auto& warp : _activeWarps) {
-			auto node = warp->GetNode();
-			if (!node || packedCount >= kMaxWarpCenters) {
+			const auto anchor = warp->GetNode();
+			if (!anchor || packedCount >= kMaxWarpCenters) {
 				continue;
 			}
 
-			const sf::Vector2f world = Utils::GetWorldPos(node);
+			const sf::Vector2f world = Utils::GetWorldPos(anchor);
 			const sf::Vector2i px = window.mapCoordsToPixel(world, ctx.sceneView);
 			const sf::Vector2f uvOff = warp->GetUvOffset();
-			const float u = (static_cast<float>(px.x) + 0.5f) / static_cast<float>(ctx.pixelSize.x) + uvOff.x;
-			const float pyNorm = (static_cast<float>(px.y) + 0.5f) / static_cast<float>(ctx.pixelSize.y);
-			const float v = (1.f - pyNorm) + uvOff.y;
-			_warpCenterUv[packedCount] = sf::Glsl::Vec2(u, v);
+			const sf::Vector2f uv = WarpPixelToUv(px, ctx.pixelSize, uvOff);
+			_warpCenterUv[packedCount] = sf::Glsl::Vec2(uv.x, uv.y);
 			_warpStrength[packedCount] = warp->GetWarpStrength();
-			_warpInfluenceRadius[packedCount] = warp->GetInfluenceRadius();
+			const float worldToShader =
+			    WorldRadiusToShaderDist(window, ctx.sceneView, ctx.pixelSize, uvOff, aspectRatio, px);
+			_warpInfluenceRadius[packedCount] = warp->GetInfluenceRadius() * worldToShader;
 			++packedCount;
 		}
 
@@ -125,10 +194,7 @@ namespace Engine {
 			return;
 		}
 
-		const float w = std::max(static_cast<float>(ctx.pixelSize.x), 1.f);
-		const float h = std::max(static_cast<float>(ctx.pixelSize.y), 1.f);
-		_shader.setUniform("aspect_ratio", w / h);
-
+		_shader.setUniform("aspect_ratio", aspectRatio);
 		_shader.setUniform("texture", sf::Shader::CurrentTexture);
 		_shader.setUniform("warp_count", static_cast<int>(packedCount));
 		_shader.setUniformArray("warp_center_uv", _warpCenterUv.data(), packedCount);

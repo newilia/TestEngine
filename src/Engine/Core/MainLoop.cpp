@@ -171,7 +171,7 @@ namespace Engine {
 		editor.Update(dt.asSeconds());
 		editor.Draw();
 
-		PresentMainWindowScene(*window, *scene);
+		PresentMainWindowScene(*window, scene);
 		editor.GetEditorToolManager().DrawOverlay(*window);
 		ImGui::SFML::Render(*window);
 		window->display();
