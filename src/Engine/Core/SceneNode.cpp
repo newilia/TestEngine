@@ -20,7 +20,6 @@
 #include <vector>
 
 namespace {
-
 	using Engine::EditorVisualTheme::kHierarchySelectionChildOutlineColor;
 	using Engine::EditorVisualTheme::kHierarchySelectionFallbackHalfSize;
 	using Engine::EditorVisualTheme::kHierarchySelectionOutlineColor;
@@ -28,27 +27,13 @@ namespace {
 	using Engine::EditorVisualTheme::kHierarchySelectionOutlineThickness;
 
 	std::optional<sf::FloatRect> TryGetHierarchySelectionBounds(const SceneNode& node) {
-		const sf::Transform nodeWorld = node.GetWorldTransform();
-		if (auto sv = std::dynamic_pointer_cast<ShapeVisualBase>(node.GetVisual())) {
-			if (const sf::Shape* shape = sv->GetBaseShape()) {
-				sf::Transform full = nodeWorld;
-				full *= shape->getTransform();
-				return Utils::AxisAlignedBoundsAfterTransform(full, shape->getLocalBounds());
+		sf::Transform fullTransform = node.GetWorldTransform();
+		if (auto visual = node.GetVisual()) {
+			const auto bounds = visual->GetLocalBounds();
+			if (const auto transform = visual->GetTransform()) {
+				fullTransform *= *transform;
 			}
-		}
-		if (auto tv = std::dynamic_pointer_cast<TextVisual>(node.GetVisual())) {
-			if (const sf::Text* text = tv->GetText()) {
-				sf::Transform full = nodeWorld;
-				full *= text->getTransform();
-				return Utils::AxisAlignedBoundsAfterTransform(full, text->getLocalBounds());
-			}
-		}
-		if (auto spv = std::dynamic_pointer_cast<SpriteVisual>(node.GetVisual())) {
-			if (const sf::Sprite* sprite = spv->GetSprite()) {
-				sf::Transform full = nodeWorld;
-				full *= sprite->getTransform();
-				return Utils::AxisAlignedBoundsAfterTransform(full, sprite->getLocalBounds());
-			}
+			return Utils::AxisAlignedBoundsAfterTransform(fullTransform, bounds);
 		}
 		return std::nullopt;
 	}

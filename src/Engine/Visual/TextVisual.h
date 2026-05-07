@@ -23,6 +23,7 @@ public:
 	void Draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 	bool HitTest(const sf::Vector2f& worldPoint) const override;
 	sf::FloatRect GetLocalBounds() const override;
+	const sf::Transform* GetTransform() const override;
 
 public:
 	void Init(const sf::Font& font, const std::string& string = "", int characterSize = 0);

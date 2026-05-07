@@ -23,6 +23,10 @@ void ShapeVisualBase::Draw(sf::RenderTarget& target, sf::RenderStates states) co
 	}
 }
 
+const sf::Transform* ShapeVisualBase::GetTransform() const {
+	return &GetBaseShape()->getTransform();
+}
+
 sf::Color ShapeVisualBase::GetFillColor() const {
 	if (auto shape = GetBaseShape()) {
 		return shape->getFillColor();

@@ -22,6 +22,10 @@ bool SpriteVisual::HitTest(const sf::Vector2f& worldPoint) const {
 	return Utils::IsWorldPointInsideOfVisual(worldPoint, this, nw);
 }
 
+const sf::Transform* SpriteVisual::GetTransform() const {
+	return _sprite ? &_sprite->getTransform() : nullptr;
+}
+
 sf::FloatRect SpriteVisual::GetLocalBounds() const {
 	if (_sprite) {
 		return _sprite->getLocalBounds();
