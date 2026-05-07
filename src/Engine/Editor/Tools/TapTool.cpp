@@ -7,5 +7,5 @@ bool TapTool::processEvent(const sf::Event& /*event*/) {
 }
 
 void TapTool::drawToolParametersUi() {
-	ImGui::TextUnformatted("Tap forwards input to the active Scene (DispatchTapAt on Scene).");
+	ImGui::TextUnformatted("Pass tap event to scene");
 }

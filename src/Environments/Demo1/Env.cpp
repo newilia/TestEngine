@@ -32,29 +32,6 @@ namespace Demo1 {
 
 	void Env::OnEvent(const sf::Event& event) {
 		auto& mainContext = Engine::MainContext::GetInstance();
-		auto* window = mainContext.GetMainWindow();
-		if (!window) {
-			return;
-		}
-
-		if (const auto* touch = event.getIf<sf::Event::TouchBegan>()) {
-			const sf::Vector2f worldPos = Utils::MapWindowPixelToWorld(*window, touch->position);
-			if (auto scene = mainContext.GetScene()) {
-				scene->DispatchTapAt(worldPos);
-			}
-			return;
-		}
-
-		if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
-			if (pressed->button != sf::Mouse::Button::Left) {
-				return;
-			}
-			const sf::Vector2f worldPos = Utils::MapWindowPixelToWorld(*window, pressed->position);
-			if (auto scene = mainContext.GetScene()) {
-				scene->DispatchTapAt(worldPos);
-			}
-			return;
-		}
 
 		if (auto e = event.getIf<sf::Event::KeyPressed>()) {
 			if (e->code == sf::Keyboard::Key::R) {
