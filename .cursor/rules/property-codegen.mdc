@@ -77,7 +77,7 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 
 ## `std::vector<T>` (sequences)
 
-- Declare **`std::vector<ElementType> memberName;`** on one line after `/// @property`, where **`ElementType`** is any **Supported field types (v1)** scalar (same list as plain fields).
+- Declare **`std::vector<ElementType> memberName;`** on one line after `/// @property`, where **`ElementType`** is any **container element type** (same `_VEC_ELT` as `std::pair` / map / set in `tools/property_codegen.py`). The header must **`#include <vector>`** for that type.
 - The header must **`#include <vector>`** for that type.
 - Generated UI: `PropertyBuilder::beginSequence` / `endSequence` with **`PropAccessSequence`** (`resize` / `getSize`), one **object child per index** and one scalar editor (`addFloat`, …) per element. Inspector behaviour matches existing **`PropertyKind::Sequence`** support (`PropertyTreeDrawer`).
 - **`@property` meta:** `minCount` / `maxCount` map to `PropertyMeta::minElementCount` / `maxElementCount` (size drag limits). `readonly=true` removes list length editing and makes elements read-only. Per-element `minValue` / `maxValue` / `dragSpeed` apply to each item’s control.
@@ -86,15 +86,15 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 
 ## `std::pair<First, Second>`
 
-- Declare **`std::pair<FirstType, SecondType> memberName;`** on one line after `/// @property` (optional `= …` / `{…}` before `;`). **`FirstType`** and **`SecondType`** must each be a **Supported field types (v1)** scalar (same list as plain `@property` fields, including **`sf::Angle`**). `std::vector` / map / set **elements** still use the narrower vector-element list (no `sf::Angle` there in v1). Include **`<utility>`** in the header where the type appears.
+- Declare **`std::pair<FirstType, SecondType> memberName;`** on one line after `/// @property` (optional `= …` / `{…}` before `;`). **`FirstType`** and **`SecondType`** must each be a **container element type** (same `_VEC_ELT` list as `std::vector` / map / set: scalars including **`sf::Angle`**). Include **`<utility>`** in the header where the type appears.
 - Generated UI: one collapsible **object** with two scalar editors: **`first` / `First`** and **`second` / `Second`** (`pushObject` + `add*`, not a map/set list).
 - **`@property` meta:** `readonly`, `tooltip`, and numeric hints apply to the **group**; per-component editors use default leaf meta (same as map row scalars).
 - **Not supported in v1:** `@getter` / `@setter` for `std::pair`; nested commas inside template arguments beyond the single `First, Second` pair.
 
 ## `std::map` / `std::unordered_map` / `std::set` / `std::unordered_set`
 
-- **`std::map<Key, Value>`** or **`std::unordered_map<Key, Value>`** on one line after `/// @property` (optional `= …` / `{…}` before `;`). **`Key`** and **`Value`** must each be a **Supported field types (v1)** scalar (same list as `std::vector` elements). Include **`<map>`** / **`<unordered_map>`** in the header as appropriate.
-- **`std::set<Element>`** or **`std::unordered_set<Element>`** — same scalar list for **`Element`**; include **`<set>`** / **`<unordered_set>`** in the header.
+- **`std::map<Key, Value>`** or **`std::unordered_map<Key, Value>`** on one line after `/// @property` (optional `= …` / `{…}` before `;`). **`Key`** and **`Value`** must each be a **container element type** (same `_VEC_ELT` as `std::vector` / `std::pair`). Include **`<map>`** / **`<unordered_map>`** in the header as appropriate.
+- **`std::set<Element>`** or **`std::unordered_set<Element>`** — same **`Element`** list; include **`<set>`** / **`<unordered_set>`** in the header.
 - Generated UI: `PropertyBuilder::beginAssociative` / `endAssociative` with **`PropAccessAssociative`** (`Add entry` / per-row `Remove`), matching **`PropertyKind::Associative`** in `PropertyTreeDrawer`.
   - **Map:** one child object per entry with **Key** and **Value** scalar editors. **Add entry** picks a **new key** that is not already in the map (e.g. next free integer, `__new_<n>` strings, stepped floats, grid for `sf::Vector*`, …) then **emplace**s the default value. **Key edits** in a row still use `erase` + `insert_or_assign` so duplicate keys merge sensibly.
   - **Set:** one scalar editor per entry. **Add entry** picks a **value** not already in the set (same strategies as map keys where applicable), then **insert**s. Editing a row still erase+inserts the new value.
@@ -118,7 +118,7 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 ## Extending reflection
 
 1. Prefer extending **meta keys** → `Engine::PropertyMeta` / existing `PropertyBuilder::add*` in the generator. For side-effect actions without editor fields, extend **`@method`** / `PropertyBuilder::registerInspectorMethod` before adding bespoke virtuals on `IPropertiesProvider`.
-2. New C++ types: add to `KNOWN_TYPES`, `FIELD_RE`, `VECTOR_FIELD_RE`, `PAIR_FIELD_RE`, `MAP_FIELD_RE`, `SET_FIELD_RE`, `BITSET_FIELD_RE` / alias tracking / `GETTER_METHOD_RE`, `GETTER_VECTOR_*_RE`, `SETTER_METHOD_RE`, `SETTER_VECTOR_METHOD_RE`, `VOID_METHOD_RE` (for `@method`), scalar emit in `generate_file_content`, `emit_std_vector_property`, `emit_std_pair_property`, `emit_assoc_map_property` / `emit_assoc_set_property`, and `emit_bitset_property` where applicable.
+2. New C++ types: extend **`_VEC_ELT`** (and `FIELD_RE` / getters if the type is also a top-level field), then `KNOWN_TYPES` if needed, `BITSET_FIELD_RE` / alias tracking / `GETTER_METHOD_RE`, …; extend **`_emit_scalar_leaf`** and any container-specific emit (`emit_std_vector_property`, map/set `_map_*` / `_set_*` helpers, `emit_std_pair_property`, …).
 3. If headers outgrow the scanner, plan a **Clang-based** extraction step; keep `_gen.hpp` output format stable.
 
 ## CMake
