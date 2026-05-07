@@ -34,7 +34,7 @@ namespace {
 		}
 		ImGui::PushID(static_cast<const void*>(inspectable));
 		Engine::EditorVisualTheme::PushInspectorSectionHeaderColors(sectionStyle);
-		const bool open = ImGui::CollapsingHeader(title, ImGuiTreeNodeFlags_DefaultOpen);
+		const bool open = ImGui::CollapsingHeader(title);
 		Engine::EditorVisualTheme::PopInspectorSectionHeaderColors();
 		if (!tree.inspectorMethods.empty() || entity) {
 			if (ImGui::BeginPopupContextItem("inspector_reflected_methods", ImGuiPopupFlags_MouseButtonRight)) {
