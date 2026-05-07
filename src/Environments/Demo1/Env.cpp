@@ -64,7 +64,7 @@ namespace Demo1 {
 		{
 			auto background = CreateBackgroundNode();
 			background->SetName("Background");
-			scene->AddChild(background);
+			scene->GetRoot()->AddChild(background);
 		}
 
 		{
@@ -77,14 +77,14 @@ namespace Demo1 {
 			auto pongRoot =
 			    CreatePongGameNode(fieldW, fieldH, platformWidth, platformThickness, wallsThickness, ballRadius);
 			pongRoot->GetLocalTransform()->SetPosition({800, 2000});
-			scene->AddChild(std::move(pongRoot));
+			scene->GetRoot()->AddChild(std::move(pongRoot));
 		}
 
 		{
 			auto ticTacToe = CreateTicTacToeGameNode();
 			ticTacToe->GetLocalTransform()->SetPosition({500, 500});
 			ticTacToe->GetLocalTransform()->SetScale({1.5, 1.5});
-			scene->AddChild(std::move(ticTacToe));
+			scene->GetRoot()->AddChild(std::move(ticTacToe));
 		}
 
 		{
@@ -101,13 +101,13 @@ namespace Demo1 {
 			auto ballpit = CreateBallpitGameNode(AquariumW, AquariumH, WallThickness, BaseRadius, RadiusVar, BaseColor,
 			                                     ColorVar, BallCount, BallRestitution, WallRestitution);
 			ballpit->GetLocalTransform()->SetPosition({2100, 700});
-			scene->AddChild(std::move(ballpit));
+			scene->GetRoot()->AddChild(std::move(ballpit));
 		}
 
 		{
 			auto solar = CreateSolarSystemGameNode();
 			solar->GetLocalTransform()->SetPosition({2700, 5000});
-			scene->AddChild(std::move(solar));
+			scene->GetRoot()->AddChild(std::move(solar));
 		}
 		return scene;
 	}

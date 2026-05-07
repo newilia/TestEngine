@@ -1,11 +1,11 @@
 #include "Scene.h"
 
+#include "Engine/Core/MainContext.h"
 #include "Engine/Core/Utils.h"
 
 #include <vector>
 
 namespace {
-
 	using std::shared_ptr;
 
 	shared_ptr<SceneNode> FindTopMostInSubtree(const shared_ptr<SceneNode>& node, const sf::Vector2f& worldPoint,
@@ -31,6 +31,23 @@ namespace {
 
 Scene::Scene() : _root(std::make_shared<SceneNode>()) {}
 
+std::shared_ptr<SceneNode> Scene::GetRoot() const {
+	return _root;
+}
+
+void Scene::OnEvent(const sf::Event& event) {
+	if (auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
+		if (pressed->button == sf::Mouse::Button::Left) {
+			auto window = Engine::MainContext::GetInstance().GetMainWindow();
+			if (!window) {
+				return;
+			}
+			const sf::Vector2f worldPos = Utils::MapWindowPixelToWorld(*window, pressed->position);
+			DispatchTapAt(worldPos);
+		}
+	}
+}
+
 void Scene::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	if (_root) {
 		_root->draw(target, states);
@@ -43,33 +60,23 @@ void Scene::Update(const sf::Time& dt) {
 	}
 }
 
-void Scene::NotifyPresentRec(const sf::Time& wallFrameDt) {
-	if (_root) {
-		_root->NotifyPresentRec(wallFrameDt);
-	}
-}
-
-void Scene::NotifyLifecycleInitRecursive() {
+void Scene::Init() {
+	EventHandlerBase::SubscribeForEvents();
 	if (_root) {
 		_root->NotifyLifecycleInitRecursive();
 	}
 }
 
-void Scene::NotifyLifecycleDeinitRecursive() {
+void Scene::Deinit() {
+	EventHandlerBase::UnsubscribeFromEvents();
 	if (_root) {
 		_root->NotifyLifecycleDeinitRecursive();
 	}
 }
 
-void Scene::AddChild(const std::shared_ptr<SceneNode>& child) {
+void Scene::NotifyPresentRec(const sf::Time& wallFrameDt) {
 	if (_root) {
-		_root->AddChild(child);
-	}
-}
-
-void Scene::AddChildAt(const std::shared_ptr<SceneNode>& child, std::size_t index) {
-	if (_root) {
-		_root->AddChildAt(child, index);
+		_root->NotifyPresentRec(wallFrameDt);
 	}
 }
 

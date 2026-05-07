@@ -6,13 +6,10 @@
 
 namespace Engine {
 	void EventsDispatcher::DispatchEvent(const sf::Event& event) {
-		const auto handlersCount = _handlers.size();
-		for (int i = 0; i < _handlers.size();) {
+		/* TODO fix potential handler skip when the handler before unregisters while handling */
+		for (int i = 0; i < _handlers.size(); ++i) {
 			if (auto handler = _handlers[i].lock()) {
 				handler->OnEvent(event);
-			}
-			if (_handlers.size() == handlersCount) {
-				++i;
 			}
 		}
 	}

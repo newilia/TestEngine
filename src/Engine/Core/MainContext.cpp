@@ -102,11 +102,11 @@ namespace Engine {
 
 	void MainContext::SetScene(const shared_ptr<Scene>& scene) {
 		if (_scene) {
-			_scene->NotifyLifecycleDeinitRecursive();
+			_scene->Deinit();
 		}
 		_scene = scene;
 		if (_scene) {
-			_scene->NotifyLifecycleInitRecursive();
+			_scene->Init();
 		}
 	}
 

@@ -21,13 +21,14 @@ class SceneNode;
 class PhysicsBodyBehaviour : public Behaviour, public std::enable_shared_from_this<PhysicsBodyBehaviour>
 {
 	META_CLASS()
+
 public:
 	static constexpr int kGroupsCount = 8;
 	using GroupSet = std::bitset<PhysicsBodyBehaviour::kGroupsCount>;
 
-	PhysicsBodyBehaviour();
-	~PhysicsBodyBehaviour() override;
+	PhysicsBodyBehaviour() = default;
 
+public:
 	void OnInit() override;
 	void OnDeinit() override;
 	void OnEnabled(bool isEnabled) override;

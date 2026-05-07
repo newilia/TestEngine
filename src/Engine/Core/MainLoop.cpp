@@ -16,28 +16,6 @@
 
 // #include <stdlib.h>
 
-namespace {
-
-	void TryDispatchActiveSceneTap(Engine::MainContext& mainContext, const sf::Event& event) {
-		auto* window = mainContext.GetMainWindow();
-		if (!window) {
-			return;
-		}
-		auto scene = mainContext.GetScene();
-		if (!scene) {
-			return;
-		}
-		if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
-			if (pressed->button != sf::Mouse::Button::Left) {
-				return;
-			}
-			const sf::Vector2f worldPos = Utils::MapWindowPixelToWorld(*window, pressed->position);
-			scene->DispatchTapAt(worldPos);
-		}
-	}
-
-} // namespace
-
 namespace Engine {
 
 	void MainLoop::Run() {
@@ -151,7 +129,6 @@ namespace Engine {
 
 		bool consumed = editor.GetEditorToolManager().ProcessEvent(event);
 		if (!consumed) {
-			TryDispatchActiveSceneTap(mainContext, event);
 			mainContext.GetEventsDispatcher()->DispatchEvent(event);
 		}
 		return true;

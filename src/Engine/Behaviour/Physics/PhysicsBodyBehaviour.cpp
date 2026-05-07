@@ -11,21 +11,17 @@
 #include <memory>
 #include <variant>
 
-PhysicsBodyBehaviour::PhysicsBodyBehaviour() {}
-
-PhysicsBodyBehaviour::~PhysicsBodyBehaviour() {
-	if (auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
-		ph->UnregisterBody(this);
-	}
-}
-
 void PhysicsBodyBehaviour::OnInit() {
+	Behaviour::OnInit();
+
 	if (auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
 		ph->RegisterBody(shared_from_this());
 	}
 }
 
 void PhysicsBodyBehaviour::OnDeinit() {
+	Behaviour::OnDeinit();
+
 	if (auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
 		ph->UnregisterBody(this);
 	}

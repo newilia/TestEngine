@@ -8,6 +8,8 @@
 #include "Engine/Simulation/PhysicsProcessor.h"
 
 void AttractiveBehaviour::OnInit() {
+	Behaviour::OnInit();
+
 	const auto node = GetNode();
 	if (!node) {
 		return;
@@ -24,6 +26,8 @@ void AttractiveBehaviour::OnInit() {
 }
 
 void AttractiveBehaviour::OnDeinit() {
+	Behaviour::OnDeinit();
+
 	if (const auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
 		if (auto field = ph->GetAttractionField()) {
 			field->Unregister(shared_from_this());
