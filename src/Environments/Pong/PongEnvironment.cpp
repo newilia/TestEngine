@@ -114,7 +114,7 @@ void PongEnvironment::AddBall(Scene* scene, float radius) {
 	rigidBody->GetInteractionGroups().set(0, true);
 	rigidBody->GetInteractionGroups().set(1, true);
 	rigidBody->GetOverlappingGroups().set(0, true);
-	scene->AddChild(ball->GetNode());
+	scene->GetRoot()->AddChild(ball->GetNode());
 
 	sBall = ball;
 }
@@ -199,7 +199,7 @@ void PongEnvironment::AddWalls(Scene* scene) {
 			rectShape->setFillColor(sf::Color(200, 200, 200, 255));
 			bodyBeh->GetInteractionGroups().set(0, true);
 		}
-		scene->AddChild(std::move(wallNode));
+		scene->GetRoot()->AddChild(std::move(wallNode));
 	}
 }
 
@@ -219,7 +219,7 @@ void PongEnvironment::AddUserPlatform(Scene* scene) {
 	userBehaviour->_velLimit = maxSpeed;
 	userBehaviour->_speedFactor = velFactor;
 
-	scene->AddChild(platformNode);
+	scene->GetRoot()->AddChild(platformNode);
 
 	sUserPlatform = platformNode;
 }
@@ -244,7 +244,7 @@ void PongEnvironment::AddAiPlatform(Scene* scene) {
 	aiBehaviour->SetObservePeriod(sf::milliseconds(10));
 	aiBehaviour->SetReactionDelay(sf::milliseconds(100));
 
-	scene->AddChild(platformNode);
+	scene->GetRoot()->AddChild(platformNode);
 
 	sAiPlatform = platformNode;
 }
@@ -275,7 +275,7 @@ void PongEnvironment::AddScoreboard(Scene* scene) {
 	node->SetVisual(std::shared_ptr<TextVisual>(_scoreText));
 	Utils::SetWorldPos(node, center);
 	_scoreboardNode = node;
-	scene->AddChild(std::move(node));
+	scene->GetRoot()->AddChild(std::move(node));
 }
 
 void PongEnvironment::UpdateScoreText() {

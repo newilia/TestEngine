@@ -35,14 +35,7 @@ public:
 	virtual ~SceneNode() = default;
 
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
-
 	void Update(const sf::Time& dt) override;
-
-	// Runs once when the node/subtree enters the active scene.
-	virtual void OnInit();
-
-	// Runs once when leaving the active scene or before removal.
-	virtual void OnDeinit();
 
 	// After `Update`, before draw (frame / HUD).
 	void NotifyPresentRec(const sf::Time& wallFrameDt); // TODO is it necessary?

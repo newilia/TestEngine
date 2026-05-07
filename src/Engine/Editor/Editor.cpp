@@ -376,6 +376,7 @@ namespace Engine {
 	}
 
 	void Editor::OnEvent(const sf::Event& event) {
+		/* TODO event.visit() ? */
 		if (const auto* e = event.getIf<sf::Event::Resized>()) {
 			OnResize(*e);
 			return;
@@ -390,15 +391,19 @@ namespace Engine {
 		}
 		if (const auto* e = event.getIf<sf::Event::MouseMoved>()) {
 			OnMouseMove(*e);
+			return;
 		}
 		if (const auto* e = event.getIf<sf::Event::MouseButtonPressed>()) {
 			OnMouseButtonPressed(*e);
+			return;
 		}
 		if (const auto* e = event.getIf<sf::Event::MouseButtonReleased>()) {
 			OnMouseButtonReleased(*e);
+			return;
 		}
 		if (const auto* e = event.getIf<sf::Event::MouseWheelScrolled>()) {
 			OnMouseWheelScrolled(*e);
+			return;
 		}
 	}
 

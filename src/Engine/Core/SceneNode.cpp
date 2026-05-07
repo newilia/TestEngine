@@ -13,10 +13,6 @@
 #include <memory>
 #include <vector>
 
-void SceneNode::OnInit() {}
-
-void SceneNode::OnDeinit() {}
-
 void SceneNode::SetName(const std::string& name) {
 	_name = name;
 }
@@ -282,6 +278,7 @@ shared_ptr<SceneNode> SceneNode::GetSubtreeRoot() const {
 }
 
 void SceneNode::IterateBehavioursSafely(const std::function<void(shared_ptr<Behaviour>)>& func) {
+	/* TODO validate */
 	for (size_t i = 0; i < _behaviours.size(); ++i) {
 		func(_behaviours[i]);
 	}
@@ -301,9 +298,13 @@ bool SceneNode::IsInActiveScene() const {
 }
 
 void SceneNode::NotifyLifecycleInitRecursive() {
-	if (!_wasNodeLifecycleInited) {
-		OnInit();
-		_wasNodeLifecycleInited = true;
+	if (_wasNodeLifecycleInited) {
+		return;
+	}
+	_wasNodeLifecycleInited = true;
+
+	for (auto& c : _children) {
+		c->NotifyLifecycleInitRecursive();
 	}
 
 	IterateBehavioursSafely([&](shared_ptr<Behaviour> b) {
@@ -312,16 +313,13 @@ void SceneNode::NotifyLifecycleInitRecursive() {
 			b->_wasInited = true;
 		}
 	});
-
-	for (auto& c : _children) {
-		c->NotifyLifecycleInitRecursive();
-	}
 }
 
 void SceneNode::NotifyLifecycleDeinitRecursive() {
-	for (auto& c : _children) {
-		c->NotifyLifecycleDeinitRecursive();
+	if (!_wasNodeLifecycleInited) {
+		return;
 	}
+	_wasNodeLifecycleInited = false;
 
 	IterateBehavioursSafely([&](shared_ptr<Behaviour> b) {
 		if (b->_wasInited) {
@@ -330,9 +328,8 @@ void SceneNode::NotifyLifecycleDeinitRecursive() {
 		}
 	});
 
-	if (_wasNodeLifecycleInited) {
-		OnDeinit();
-		_wasNodeLifecycleInited = false;
+	for (auto& c : _children) {
+		c->NotifyLifecycleDeinitRecursive();
 	}
 }
 

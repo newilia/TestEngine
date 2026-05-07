@@ -106,7 +106,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		fieldBeh->SetAttraction(10000 * (isAttractive ? -1 : 1));
 		node->AddBehaviour(std::move(fieldBeh));
 
-		scene->AddChild(std::move(node));
+		scene->GetRoot()->AddChild(std::move(node));
 	}
 
 	/* circles */
@@ -156,7 +156,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		fieldBeh->SetAttraction(commonAttraction * (isAttractive ? -1 : 1));
 		node->AddBehaviour(std::move(fieldBeh));
 
-		scene->AddChild(std::move(node));
+		scene->GetRoot()->AddChild(std::move(node));
 	}
 	return scene;
 }

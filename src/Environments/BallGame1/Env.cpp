@@ -51,7 +51,7 @@ namespace BallGame1 {
 		auto rootNode = make_shared<SceneNode>();
 		rootNode->SetName("Game");
 		rootNode->GetLocalTransform()->SetPosition({1700, 700});
-		scene->AddChild(rootNode);
+		scene->GetRoot()->AddChild(rootNode);
 
 		rootNode->AddChild(CreateBackgroundNode());
 		rootNode->AddChild(CreateFieldNode());
