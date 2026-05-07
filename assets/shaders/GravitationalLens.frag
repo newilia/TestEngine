@@ -9,7 +9,7 @@ void main()
 {
     vec2 uv = gl_TexCoord[0].xy;
     vec2 disp = vec2(0.0);
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < 32; i++)
     {
         if (i >= lens_count)
             break;
