@@ -4,6 +4,7 @@
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/PeriodicTaskExecutor.h"
 #include "Engine/Editor/Editor.h"
+#include "Engine/Render/ViewportFullscreenEffect.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 
 #include <SFML/Graphics.hpp>
@@ -170,7 +171,7 @@ namespace Engine {
 		editor.Update(dt.asSeconds());
 		editor.Draw();
 
-		window->draw(*scene);
+		PresentMainWindowScene(*window, *scene);
 		editor.GetEditorToolManager().DrawOverlay(*window);
 		ImGui::SFML::Render(*window);
 		window->display();

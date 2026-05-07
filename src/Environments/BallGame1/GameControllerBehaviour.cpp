@@ -1,5 +1,6 @@
 #include "GameControllerBehaviour.h"
 
+#include "Engine/Behaviour/GravitationalLensBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Transform.h"
 #include "Engine/Core/Utils.h"
@@ -68,6 +69,8 @@ namespace BallGame1 {
 		auto visual = ballNode->RequireVisual<CircleShapeVisual>();
 		visual->SetRadius(_ballRadius);
 		visual->SetFillColor(_ballColor);
+
+		ballNode->RequireBehaviour<GravitationalLensBehaviour>();
 		return ballNode;
 	}
 
