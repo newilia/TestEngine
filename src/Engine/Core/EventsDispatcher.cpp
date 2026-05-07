@@ -6,13 +6,13 @@
 
 namespace Engine {
 	void EventsDispatcher::DispatchEvent(const sf::Event& event) {
-		for (auto it = _handlers.begin(); it != _handlers.end();) {
-			if (auto handler = it->lock()) {
+		const auto handlersCount = _handlers.size();
+		for (int i = 0; i < _handlers.size();) {
+			if (auto handler = _handlers[i].lock()) {
 				handler->OnEvent(event);
-				++it;
 			}
-			else {
-				it = _handlers.erase(it);
+			if (_handlers.size() == handlersCount) {
+				++i;
 			}
 		}
 	}
@@ -35,11 +35,13 @@ namespace Engine {
 		if (!handler) {
 			return;
 		}
-		std::erase_if(_handlers, [handler](const std::weak_ptr<EventHandlerBase>& p) {
-			if (auto sp = p.lock()) {
-				return sp.get() == handler;
+		for (size_t i = 0; i < _handlers.size(); ++i) {
+			if (auto sp = _handlers[i].lock()) {
+				if (sp.get() == handler) {
+					_handlers.erase(_handlers.begin() + i);
+					break;
+				}
 			}
-			return false;
-		});
+		}
 	}
 } // namespace Engine
