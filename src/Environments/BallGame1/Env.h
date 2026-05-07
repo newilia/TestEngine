@@ -20,7 +20,6 @@ namespace BallGame1 {
 		std::shared_ptr<Scene> BuildScene();
 		std::shared_ptr<SceneNode> CreateBackgroundNode();
 		std::shared_ptr<SceneNode> CreateFieldNode();
-		std::shared_ptr<SceneNode> CreateBallNode();
 		std::shared_ptr<SceneNode> CreateGunNode();
 		std::shared_ptr<SceneNode> CreateScoreNode();
 

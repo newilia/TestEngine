@@ -145,7 +145,7 @@ shared_ptr<SceneNode> PongEnvironment::CreateDefaultPlatform(sf::Vector2f size, 
 
 	auto physicsBody = node->RequireBehaviour<PhysicsBodyBehaviour>();
 	physicsBody->GetInteractionGroups().set(1, true);
-	physicsBody->SetImmovable(true);
+	physicsBody->SetFixed(true);
 	physicsBody->SetRestitution(bodiesRestitution);
 
 	return node;
@@ -177,7 +177,7 @@ void PongEnvironment::AddWalls(Scene* scene) {
 		Utils::SetWorldPos(wallNode, wallPositions[i]);
 
 		auto bodyBeh = wallNode->RequireBehaviour<PhysicsBodyBehaviour>();
-		bodyBeh->SetImmovable(true);
+		bodyBeh->SetFixed(true);
 		bodyBeh->SetRestitution(bodiesRestitution);
 
 		if (i < 2) {

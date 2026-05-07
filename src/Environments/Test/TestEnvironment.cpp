@@ -120,7 +120,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		rect->SetOutlineThickness(1.f);
 
 		auto rb = node->RequireBehaviour<PhysicsBodyBehaviour>();
-		rb->SetImmovable(true);
+		rb->SetFixed(true);
 		rb->SetRestitution(commonRestitution);
 		rb->SetFriction(commonFriction);
 

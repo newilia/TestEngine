@@ -113,7 +113,7 @@ void SolarSystemBehaviour::Restart() {
 		shape->setOrigin(Utils::FindCenterOfMass(shape));
 
 		auto sunRb = sunNode->RequireBehaviour<PhysicsBodyBehaviour>();
-		sunRb->SetImmovable(true);
+		sunRb->SetFixed(true);
 		sunRb->SetMass(333000.f * _massScale);
 		sunRb->SetGravityScale(0.f);
 		sunRb->SetRestitution(0.1f);
