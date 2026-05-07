@@ -30,6 +30,7 @@ public:
 
 	void OnInit() override;
 	void OnDeinit() override;
+	void OnEnabled(bool isEnabled) override;
 
 	// TODO remove?
 	sf::Shape* GetShape();
