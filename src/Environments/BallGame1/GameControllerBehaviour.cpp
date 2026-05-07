@@ -61,16 +61,17 @@ namespace BallGame1 {
 	}
 
 	std::shared_ptr<SceneNode> GameControllerBehaviour::CreateBallNode() const {
-		auto newBallNode = make_shared<SceneNode>();
+		auto ballNode = make_shared<SceneNode>();
+		ballNode->SetName("Ball");
 
-		auto body = newBallNode->RequireBehaviour<PhysicsBodyBehaviour>();
+		auto body = ballNode->RequireBehaviour<PhysicsBodyBehaviour>();
 		body->SetMass(_ballMass);
 		body->SetRestitution(_ballRestitution);
 
-		auto visual = newBallNode->RequireVisual<CircleShapeVisual>();
+		auto visual = ballNode->RequireVisual<CircleShapeVisual>();
 		visual->SetRadius(_ballRadius);
 		visual->SetFillColor(_ballColor);
-		return newBallNode;
+		return ballNode;
 	}
 
 	void GameControllerBehaviour::AttachBallToGun(const std::shared_ptr<SceneNode>& ballNode) {
@@ -81,6 +82,9 @@ namespace BallGame1 {
 		_ballNode = ballNode;
 		ballNode->RemoveFromParent();
 		gunNode->AddChild(ballNode);
+		if (auto body = ballNode->FindBehaviour<PhysicsBodyBehaviour>()) {
+			body->SetFixed(true);
+		}
 	}
 
 	void GameControllerBehaviour::DetachBallFromGun() {
@@ -92,5 +96,8 @@ namespace BallGame1 {
 
 		ballNode->RemoveFromParent();
 		rootNode->AddChild(ballNode);
+		if (auto body = ballNode->FindBehaviour<PhysicsBodyBehaviour>()) {
+			body->SetFixed(false);
+		}
 	}
 } // namespace BallGame1

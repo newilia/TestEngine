@@ -60,7 +60,7 @@ namespace BallGame1 {
 		if (auto gameController = gameNode->RequireBehaviour<GameControllerBehaviour>()) {
 			auto gunNode = CreateGunNode();
 			if (auto gunController = gunNode->RequireBehaviour<GunControllerBehaviour>()) {
-				constexpr auto halfAngle = sf::degrees(70);
+				constexpr auto halfAngle = sf::degrees(65);
 				gunController->SetRotationLimits(-halfAngle, halfAngle);
 			}
 			gameNode->AddChild(gunNode);
@@ -74,6 +74,8 @@ namespace BallGame1 {
 		}
 		return scene;
 	}
+
+	/* stuff for game scene */
 
 	std::shared_ptr<SceneNode> Env::CreateBackgroundNode() {
 		auto& mainContext = Engine::MainContext::GetInstance();
@@ -125,22 +127,10 @@ namespace BallGame1 {
 			wallNode->GetLocalTransform()->SetPosition(wallCentersLocal[i]);
 
 			auto bodyBeh = wallNode->RequireBehaviour<PhysicsBodyBehaviour>();
-			bodyBeh->SetImmovable(true);
+			bodyBeh->SetFixed(true);
 			bodyBeh->SetRestitution(wallRestitution);
 		}
 		return fieldNode;
-	}
-
-	std::shared_ptr<SceneNode> Env::CreateBallNode() {
-		auto node = make_shared<SceneNode>();
-		node->SetName("Ball");
-		node->RequireBehaviour<PhysicsBodyBehaviour>();
-		auto visual = node->RequireVisual<CircleShapeVisual>();
-		visual->SetRadius(10);
-		visual->SetFillColor(sf::Color::Red);
-		visual->SetOutlineColor(sf::Color::White);
-		visual->SetOutlineThickness(1);
-		return node;
 	}
 
 	std::shared_ptr<SceneNode> Env::CreateGunNode() {

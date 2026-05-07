@@ -2,11 +2,8 @@
 
 #include "Engine/Behaviour/Physics/IntersectionDetails.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
-#include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Utils.h"
-#include "Engine/Visual/VectorArrowVisual.h"
-#include "fmt/format.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
 
@@ -34,23 +31,27 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 			it = _bodies.erase(it);
 			continue;
 		}
-		auto rigidBody = body->RequireBehaviour<PhysicsBodyBehaviour>();
-		auto pos = Utils::GetWorldPos(body);
+		auto node = body->GetNode();
+		if (!node) {
+			continue;
+		}
+		auto pos = Utils::GetWorldPos(node);
 
-		if (_isGravityEnabled && !rigidBody->IsImmovable()) {
-			rigidBody->AddVelocity(_gravity * rigidBody->GetGravityScale() * dt.asSeconds());
+		if (_isGravityEnabled && !body->IsFixed()) {
+			auto gravity = _gravity * body->GetGravityScale();
+			body->AddVelocity(gravity * dt.asSeconds());
 		}
 
-		pos += rigidBody->GetVelocity() * dt.asSeconds();
-		Utils::SetWorldPos(body, pos);
+		pos += body->GetVelocity() * dt.asSeconds();
+		Utils::SetWorldPos(node, pos);
 		++it;
 	}
 
 	// handle intersections — sweep-and-prune broad phase, then masks + narrow phase
 	struct BodySweepEntry
 	{
-		std::shared_ptr<SceneNode> node;
-		PhysicsBodyBehaviour* collider = nullptr;
+		SceneNode* node = nullptr;
+		PhysicsBodyBehaviour* body = nullptr;
 		float minX = 0.f;
 		float maxX = 0.f;
 		/// Same ordering as iteration over `_bodies` in the old all-pairs loop (outer = first).
@@ -77,18 +78,18 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 	sweepEntries.reserve(_bodies.size());
 	size_t bodyListIndex = 0;
 	for (auto& wBody : _bodies) {
-		auto node = wBody.lock();
+		auto body = wBody.lock();
+		if (!body) {
+			++bodyListIndex;
+			continue;
+		}
+		auto node = body->GetNode();
 		if (!node) {
 			++bodyListIndex;
 			continue;
 		}
-		auto bodyBeh = node->FindBehaviour<PhysicsBodyBehaviour>().get();
-		if (!bodyBeh) {
-			++bodyListIndex;
-			continue;
-		}
-		auto [minX, maxX] = bboxXExtents(bodyBeh->GetBbox());
-		sweepEntries.push_back({std::move(node), bodyBeh, minX, maxX, bodyListIndex});
+		auto [minX, maxX] = bboxXExtents(body->GetBbox());
+		sweepEntries.push_back({node.get(), body.get(), minX, maxX, bodyListIndex});
 		++bodyListIndex;
 	}
 
@@ -104,31 +105,32 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 		for (size_t aj : active) {
 			auto& eA = sweepEntries[aj];
 			auto& eB = sweepEntries[i];
-			if (!CheckBboxIntersection(eA.collider, eB.collider)) {
+			if (!CheckBboxIntersection(eA.body, eB.body)) {
 				continue;
 			}
 			if (!pairNeedsNarrowPhase(*eA.node, *eB.node)) {
 				continue;
 			}
 			const bool aIsFirstInBodyList = eA.listOrder < eB.listOrder;
-			auto& nFirst = aIsFirstInBodyList ? eA.node : eB.node;
-			auto& nSecond = aIsFirstInBodyList ? eB.node : eA.node;
-			auto* cFirst = aIsFirstInBodyList ? eA.collider : eB.collider;
-			auto* cSecond = aIsFirstInBodyList ? eB.collider : eA.collider;
-			if (auto intersection = DetectIntersection(nFirst, nSecond, cFirst, cSecond, true)) {
-				auto b1Pb = nFirst->FindBehaviour<PhysicsBodyBehaviour>();
-				auto b2Pb = nSecond->FindBehaviour<PhysicsBodyBehaviour>();
-				if (b1Pb && b2Pb && (b1Pb->GetInteractionGroups() & b2Pb->GetInteractionGroups()).any()) {
-					if (!b1Pb->IsImmovable() || !b2Pb->IsImmovable()) {
+			auto* node1 = aIsFirstInBodyList ? eA.node : eB.node;
+			auto* node2 = aIsFirstInBodyList ? eB.node : eA.node;
+			auto* body1 = aIsFirstInBodyList ? eA.body : eB.body;
+			auto* body2 = aIsFirstInBodyList ? eB.body : eA.body;
+			if (!body1 || !body2) {
+				continue;
+			}
+			if (auto intersection = DetectIntersection(node1, node2, body1, body2, true)) {
+				if ((body1->GetInteractionGroups() & body2->GetInteractionGroups()).any()) {
+					if (!body1->IsFixed() || !body2->IsFixed()) {
 						ResolveCollision(*intersection);
-						b1Pb->GetOnCollideSignal().Emit(*intersection);
-						b2Pb->GetOnCollideSignal().Emit(*intersection);
+						body1->GetOnCollideSignal().Emit(*intersection);
+						body2->GetOnCollideSignal().Emit(*intersection);
 					}
 				}
 
-				if (b1Pb && b2Pb && (b1Pb->GetOverlappingGroups() & b2Pb->GetOverlappingGroups()).any()) {
-					b1Pb->GetOnOverlapSignal().Emit(*intersection);
-					b2Pb->GetOnOverlapSignal().Emit(*intersection);
+				if ((body1->GetOverlappingGroups() & body2->GetOverlappingGroups()).any()) {
+					body1->GetOnOverlapSignal().Emit(*intersection);
+					body2->GetOnOverlapSignal().Emit(*intersection);
 				}
 			}
 		}
@@ -136,15 +138,17 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 	}
 }
 
-void PhysicsProcessor::RegisterBody(shared_ptr<SceneNode> body) {
+void PhysicsProcessor::RegisterBody(shared_ptr<PhysicsBodyBehaviour> body) {
 	_bodies.emplace_back(body);
 }
 
-void PhysicsProcessor::UnregisterBody(SceneNode* body) {
-	_bodies.remove_if([body](const std::weak_ptr<SceneNode>& w) {
-		auto locked = w.lock();
-		return !locked || locked.get() == body;
+void PhysicsProcessor::UnregisterBody(PhysicsBodyBehaviour* body) {
+	auto it = std::find_if(_bodies.begin(), _bodies.end(), [body](const std::weak_ptr<PhysicsBodyBehaviour>& w) {
+		return w.lock().get() == body;
 	});
+	if (it != _bodies.end()) {
+		_bodies.erase(it);
+	}
 }
 
 bool PhysicsProcessor::CheckBboxIntersection(const PhysicsBodyBehaviour* body1, const PhysicsBodyBehaviour* body2) {
@@ -153,45 +157,45 @@ bool PhysicsProcessor::CheckBboxIntersection(const PhysicsBodyBehaviour* body1, 
 	return bb1.findIntersection(bb2).has_value();
 }
 
-std::optional<IntersectionDetails>
-PhysicsProcessor::DetectIntersection(const shared_ptr<SceneNode>& n1, const shared_ptr<SceneNode>& n2,
-                                     PhysicsBodyBehaviour* c1, PhysicsBodyBehaviour* c2, bool bboxAlreadyVerified) {
-	if (!n1 || !n2) {
-		assert(false);
+std::optional<IntersectionDetails> PhysicsProcessor::DetectIntersection(SceneNode* node1, SceneNode* node2,
+                                                                        PhysicsBodyBehaviour* body1,
+                                                                        PhysicsBodyBehaviour* body2,
+                                                                        bool bboxAlreadyVerified) {
+	if (VerifyFalse(!node1 || !node2)) {
 		return std::nullopt;
 	}
-	if (!c1 || !c2) {
-		return std::nullopt;
-	}
-
-	if (!bboxAlreadyVerified && !CheckBboxIntersection(c1, c2)) {
+	if (VerifyFalse(!body1 || !body2)) {
 		return std::nullopt;
 	}
 
-	auto assignNodes = [&](IntersectionDetails& r) {
-		r.wNode1 = n1;
-		r.wNode2 = n2;
+	if (!bboxAlreadyVerified && !CheckBboxIntersection(body1, body2)) {
+		return std::nullopt;
+	}
+
+	auto assignNodes = [&](IntersectionDetails& intersection) {
+		intersection.wNode1 = node1->weak_from_this();
+		intersection.wNode2 = node2->weak_from_this();
 	};
 
-	auto* col1 = c1;
-	auto* col2 = c2;
+	auto* col1 = body1;
+	auto* col2 = body2;
 
 	if (auto* circ1 = dynamic_cast<sf::CircleShape*>(col1->GetShape())) {
 		if (auto* circ2 = dynamic_cast<sf::CircleShape*>(col2->GetShape())) {
-			if (auto r = DetectCircleCircleIntersection(*n1, circ1, *n2, circ2)) {
+			if (auto r = DetectCircleCircleIntersection(*node1, circ1, *node2, circ2)) {
 				assignNodes(*r);
 				return r;
 			}
 			return std::nullopt;
 		}
-		if (auto r = DetectCirclePolygonIntersection(*n1, circ1, col2)) {
+		if (auto r = DetectCirclePolygonIntersection(*node1, circ1, col2)) {
 			assignNodes(*r);
 			return r;
 		}
 		return std::nullopt;
 	}
 	if (auto* circ2 = dynamic_cast<sf::CircleShape*>(col2->GetShape())) {
-		if (auto r = DetectCirclePolygonIntersection(*n2, circ2, col1)) {
+		if (auto r = DetectCirclePolygonIntersection(*node2, circ2, col1)) {
 			assignNodes(*r);
 			return r;
 		}
@@ -207,6 +211,9 @@ PhysicsProcessor::DetectIntersection(const shared_ptr<SceneNode>& n1, const shar
 std::optional<IntersectionDetails>
 PhysicsProcessor::DetectPolygonPolygonIntersection(const PhysicsBodyBehaviour* body1,
                                                    const PhysicsBodyBehaviour* body2) {
+	auto shape1 = body1->GetShape();
+	auto shape2 = body2->GetShape();
+
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
 
@@ -474,14 +481,14 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 		return;
 	}
 
-	auto pb1 = body1->RequireBehaviour<PhysicsBodyBehaviour>();
-	auto pb2 = body2->RequireBehaviour<PhysicsBodyBehaviour>();
+	auto pb1 = body1->FindBehaviour<PhysicsBodyBehaviour>();
+	auto pb2 = body2->FindBehaviour<PhysicsBodyBehaviour>();
 	if (!pb1 || !pb2) {
 		assert(false);
 		return;
 	}
 
-	if (pb1->IsImmovable()) { // fixed body must be second
+	if (pb1->IsFixed()) { // fixed body must be second
 		std::swap(body1, body2);
 		std::swap(pb1, pb2);
 	}
@@ -514,7 +521,7 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 	float penetrationDepthSum =
 	    getPenetrationDepth(body1.get(), b1_normal) + getPenetrationDepth(body2.get(), -b1_normal);
 
-	if (pb2->IsImmovable()) {
+	if (pb2->IsFixed()) {
 		auto b1_pos = Utils::GetWorldPos(body1) - b1_normal * penetrationDepthSum;
 		Utils::SetWorldPos(body1, b1_pos);
 	}
@@ -536,7 +543,7 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 		float norm_dv1 = 0.f;
 		float norm_dv2 = 0.f;
 
-		if (pb2->IsImmovable()) {
+		if (pb2->IsFixed()) {
 			norm_dv1 = -(1.f + r) * norm_v_diff;
 		}
 		else {
@@ -554,7 +561,7 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 	}
 }
 
-const std::list<std::weak_ptr<SceneNode>>& PhysicsProcessor::GetAllBodies() const {
+const std::list<std::weak_ptr<PhysicsBodyBehaviour>>& PhysicsProcessor::GetAllBodies() const {
 	return _bodies;
 }
 

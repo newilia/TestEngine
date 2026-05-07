@@ -58,18 +58,18 @@ std::shared_ptr<SceneNode> PullTool::OnTap(const sf::Vector2f& screenPixelPos) {
 		if (!body) {
 			continue;
 		}
-		auto rigidBody = body->FindBehaviour<PhysicsBodyBehaviour>();
-		if (!rigidBody) {
+		auto node = body->GetNode();
+		if (!node) {
 			continue;
 		}
-		if (!Utils::IsWorldPointInsideOfBody(worldMousePos, rigidBody.get())) {
+		if (!Utils::IsWorldPointInsideOfBody(worldMousePos, body.get())) {
 			continue;
 		}
-		if (rigidBody->IsImmovable()) {
+		if (body->IsFixed()) {
 			continue;
 		}
-		_pullingBody = body;
-		return body;
+		_pullingBody = body->GetNode();
+		return body->GetNode();
 	}
 	return nullptr;
 }

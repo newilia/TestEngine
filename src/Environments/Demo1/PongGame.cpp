@@ -151,7 +151,7 @@ namespace Demo1 {
 
 			auto physicsBody = node->RequireBehaviour<PhysicsBodyBehaviour>();
 			physicsBody->GetInteractionGroups().set(1, true);
-			physicsBody->SetImmovable(true);
+			physicsBody->SetFixed(true);
 			physicsBody->SetRestitution(bodiesRestitution);
 
 			return node;
@@ -269,7 +269,7 @@ namespace Demo1 {
 				wallNode->GetLocalTransform()->SetPosition(wallCentersLocal[i]);
 
 				auto bodyBeh = wallNode->RequireBehaviour<PhysicsBodyBehaviour>();
-				bodyBeh->SetImmovable(true);
+				bodyBeh->SetFixed(true);
 				bodyBeh->SetRestitution(bodiesRestitution);
 
 				if (i < 2) {

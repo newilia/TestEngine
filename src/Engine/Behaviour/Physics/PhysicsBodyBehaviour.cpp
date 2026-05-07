@@ -14,26 +14,20 @@
 PhysicsBodyBehaviour::PhysicsBodyBehaviour() {}
 
 PhysicsBodyBehaviour::~PhysicsBodyBehaviour() {
-	if (auto n = GetNode()) {
-		if (auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
-			ph->UnregisterBody(n.get());
-		}
+	if (auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
+		ph->UnregisterBody(this);
 	}
 }
 
 void PhysicsBodyBehaviour::OnInit() {
-	if (auto n = GetNode()) {
-		if (auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
-			ph->RegisterBody(n);
-		}
+	if (auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
+		ph->RegisterBody(shared_from_this());
 	}
 }
 
 void PhysicsBodyBehaviour::OnDeinit() {
-	if (auto n = GetNode()) {
-		if (auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
-			ph->UnregisterBody(n.get());
-		}
+	if (auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
+		ph->UnregisterBody(this);
 	}
 }
 
@@ -85,17 +79,12 @@ sf::Vector2f PhysicsBodyBehaviour::GetPointWorldPos(std::size_t index) const {
 	return full.transformPoint(s->getPoint(index));
 }
 
-void PhysicsBodyBehaviour::SetImmovable(bool isImmovable) {
-	if (isImmovable) {
-		SetMass(std::numeric_limits<float>::infinity());
-	}
-	else {
-		assert(false); // TODO not supported yet
-	}
+void PhysicsBodyBehaviour::SetFixed(bool isFixed) {
+	_isFixed = isFixed;
 }
 
-bool PhysicsBodyBehaviour::IsImmovable() const {
-	return _mass == std::numeric_limits<float>::infinity();
+bool PhysicsBodyBehaviour::IsFixed() const {
+	return _isFixed;
 }
 
 float PhysicsBodyBehaviour::GetMass() const {
@@ -120,14 +109,6 @@ void PhysicsBodyBehaviour::AddVelocity(sf::Vector2f delta) {
 
 void PhysicsBodyBehaviour::ScaleVelocity(float factor) {
 	_velocity *= factor;
-}
-
-float PhysicsBodyBehaviour::GetAngle() const {
-	return _angle;
-}
-
-void PhysicsBodyBehaviour::SetAngle(float a) {
-	_angle = a;
 }
 
 float PhysicsBodyBehaviour::GetAngularSpeed() const {

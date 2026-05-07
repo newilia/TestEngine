@@ -28,7 +28,7 @@ void AttractionField::Unregister(const shared_ptr<AttractiveBehaviour>& s) {
 }
 
 static float EffectiveSourceMass(const PhysicsBodyBehaviour& rb) {
-	if (rb.IsImmovable() || !std::isfinite(rb.GetMass()) || rb.GetMass() <= 0.f) {
+	if (rb.IsFixed() || !std::isfinite(rb.GetMass()) || rb.GetMass() <= 0.f) {
 		return 1.f;
 	}
 	return rb.GetMass();

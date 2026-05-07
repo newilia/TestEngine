@@ -37,7 +37,7 @@ void AttractiveBehaviour::OnUpdate(const sf::Time& dt) {
 		return;
 	}
 	const auto rb = _rigidBody.lock();
-	if (!rb || rb->IsImmovable() || !std::isfinite(rb->GetMass()) || rb->GetMass() <= 0.f) {
+	if (!rb || rb->IsFixed() || !std::isfinite(rb->GetMass()) || rb->GetMass() <= 0.f) {
 		return;
 	}
 	if (const auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {

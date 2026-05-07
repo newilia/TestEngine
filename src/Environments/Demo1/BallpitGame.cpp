@@ -66,7 +66,7 @@ namespace Demo1 {
 				wallNode->GetLocalTransform()->SetPosition(wallCentersLocal[i]);
 
 				auto bodyBeh = wallNode->RequireBehaviour<PhysicsBodyBehaviour>();
-				bodyBeh->SetImmovable(true);
+				bodyBeh->SetFixed(true);
 				bodyBeh->SetRestitution(wallRestitution);
 				bodyBeh->GetInteractionGroups().set(kAquariumPhysicsGroup, true);
 			}

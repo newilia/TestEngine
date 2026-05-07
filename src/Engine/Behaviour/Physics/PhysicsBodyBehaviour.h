@@ -18,7 +18,7 @@
 struct IntersectionDetails;
 class SceneNode;
 
-class PhysicsBodyBehaviour : public Behaviour
+class PhysicsBodyBehaviour : public Behaviour, public std::enable_shared_from_this<PhysicsBodyBehaviour>
 {
 	META_CLASS()
 public:
@@ -31,6 +31,7 @@ public:
 	void OnInit() override;
 	void OnDeinit() override;
 
+	// TODO remove?
 	sf::Shape* GetShape();
 	const sf::Shape* GetShape() const;
 
@@ -39,8 +40,8 @@ public:
 	size_t GetPointCount() const;
 	sf::Vector2f GetPointWorldPos(std::size_t pointIndex) const;
 
-	bool IsImmovable() const;
-	void SetImmovable(bool isImmovable);
+	bool IsFixed() const;
+	void SetFixed(bool isFixed);
 
 	float GetMass() const;
 	void SetMass(float m);
@@ -49,9 +50,6 @@ public:
 	void SetVelocity(sf::Vector2f v);
 	void AddVelocity(sf::Vector2f delta);
 	void ScaleVelocity(float factor);
-
-	float GetAngle() const;
-	void SetAngle(float a);
 
 	float GetAngularSpeed() const;
 	void SetAngularSpeed(float w);
@@ -78,9 +76,9 @@ private:
 	/// @property
 	float _mass = 1.f;
 	/// @property
+	bool _isFixed = false;
+	/// @property
 	sf::Vector2f _velocity{};
-	/// @property(tooltip="Radians")
-	float _angle = 0.f;
 	/// @property
 	float _angularSpeed = 0.f;
 	/// @property(minValue=0.f, maxValue=1.f)
@@ -89,9 +87,9 @@ private:
 	float _friction = 0.5f;
 	/// @property(minValue=-1.f, maxValue=1.f, dragSpeed=0.05f, tooltip="Scales world gravity on this body")
 	float _gravityScale = 1.f;
-	/// @property(tooltip="Groups with common groups will interact in a physical way (collisions, forces, etc.)")
+	/// @property(tooltip="Bodies with common groups will interact in a physical way (collisions, forces, etc.)")
 	GroupSet _interactionGroups = {{true}};
-	/// @property(tooltip="Groups with common groups will trigger overlap signal, but won't interact in a physical way")
+	/// @property(tooltip="Bodies with common groups will trigger overlap signal, but won't interact in a physical way")
 	GroupSet _overlappingGroups;
 
 	mutable Signal<const IntersectionDetails&> _onCollideSignal;
