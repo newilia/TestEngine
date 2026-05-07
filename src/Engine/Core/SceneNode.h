@@ -109,6 +109,9 @@ public:
 	void NotifyLifecycleDeinitRecursive();
 
 private:
+	void NotifyEnabledRecursive(bool isEnabled);
+	void NotifyVisibleRecursive(bool isVisible);
+
 	void SetParent(const shared_ptr<SceneNode>& parent);
 	void DetachBehaviourForRemove(const shared_ptr<Behaviour>& b);
 	bool IsInActiveScene() const;
