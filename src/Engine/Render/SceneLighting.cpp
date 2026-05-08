@@ -43,6 +43,14 @@ namespace Engine {
 		_distanceRangeScale = std::max(scale, 0.01f);
 	}
 
+	float SceneLighting::GetGlobalIntensityScale() const {
+		return _globalIntensityScale;
+	}
+
+	void SceneLighting::SetGlobalIntensityScale(float scale) {
+		_globalIntensityScale = std::max(scale, 0.f);
+	}
+
 	LightingBlendMode SceneLighting::GetBlendMode() const {
 		return _blendMode;
 	}
@@ -100,7 +108,7 @@ namespace Engine {
 			}
 
 			const sf::Color c = pl->GetLightColor();
-			const float i = pl->GetIntensity();
+			const float i = pl->GetIntensity() * _globalIntensityScale;
 			GpuPointLight L{};
 			L.position = Utils::GetWorldPos(node);
 			L.color = sf::Glsl::Vec3(static_cast<float>(c.r) / 255.f * i, static_cast<float>(c.g) / 255.f * i,

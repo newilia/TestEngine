@@ -37,6 +37,8 @@ namespace Engine {
 		void SetEnabled(bool enabled);
 		float GetDistanceRangeScale() const;
 		void SetDistanceRangeScale(float scale);
+		float GetGlobalIntensityScale() const;
+		void SetGlobalIntensityScale(float scale);
 		LightingBlendMode GetBlendMode() const;
 		void SetBlendMode(LightingBlendMode mode);
 
@@ -55,6 +57,7 @@ namespace Engine {
 
 		bool _enabled = true;
 		float _distanceRangeScale = 1.f;
+		float _globalIntensityScale = 1.f;
 		LightingBlendMode _blendMode = LightingBlendMode::Screen;
 		std::list<std::weak_ptr<PointLightBehaviour>> _lightSources;
 		std::vector<GpuPointLight> _lights;
