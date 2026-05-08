@@ -84,7 +84,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		recv->SetBevelEmbossMode(bevelEmboss);
 		recv->SetBevelWidth(bevelWidth);
 		recv->SetDiffusion(diffusion);
-		recv->SetEaseOutCirc(false);
+		recv->SetEaseInCirc(true);
 	};
 
 	/* walls */
