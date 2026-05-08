@@ -33,8 +33,8 @@ private:
 	bool _lightEnabled = true;
 	/// @property
 	sf::Color _lightColor = sf::Color::White;
-	/// @property(minValue=0.f)
+	/// @property(minValue=0.f, dragSpeed=0.05f)
 	float _intensity = 1.f;
-	/// @property(minValue=1.f)
+	/// @property(minValue=1.f, dragSpeed=0.05f)
 	float _radius = 400.f;
 };
