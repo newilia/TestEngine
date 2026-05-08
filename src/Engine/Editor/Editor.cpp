@@ -16,6 +16,7 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/VertexArray.hpp>
 #include <SFML/Window/Event.hpp>
+#include <SFML/Window/Mouse.hpp>
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -73,6 +74,43 @@ namespace {
 
 		ImGui::DockBuilderFinish(dockspace_id);
 		layout_finished = true;
+	}
+
+	void DrawCursorWorldCoordsOverlay() {
+		auto mainWindow = Engine::MainContext::GetInstance().GetMainWindow();
+		if (!mainWindow) {
+			return;
+		}
+
+		const sf::Vector2i pixel = sf::Mouse::getPosition(*mainWindow);
+		const auto windowSize = mainWindow->getSize();
+		if (pixel.x < 0 || pixel.y < 0 || static_cast<unsigned>(pixel.x) >= windowSize.x ||
+		    static_cast<unsigned>(pixel.y) >= windowSize.y) {
+			return;
+		}
+
+		const sf::Vector2f world = Utils::MapWindowPixelToWorld(*mainWindow, pixel);
+		const ImVec2 anchor(static_cast<float>(pixel.x), static_cast<float>(pixel.y));
+		ImGui::SetNextWindowBgAlpha(0.16f);
+		ImGui::SetNextWindowPos(ImVec2(anchor.x + 15.f, anchor.y + 12.f), ImGuiCond_Always);
+
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(3.f, 1.f));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 2.f);
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.9f, 0.92f, 0.38f));
+
+		constexpr ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize |
+		                                   ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoSavedSettings |
+		                                   ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoDocking |
+		                                   ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus;
+
+		if (ImGui::Begin("##CursorWorldXY", nullptr, flags)) {
+			ImGui::Text("%.1f  %.1f", world.x, world.y);
+		}
+		ImGui::End();
+
+		ImGui::PopStyleColor(1);
+		ImGui::PopStyleVar(3);
 	}
 
 	bool IsNodeInSubtree(const std::shared_ptr<SceneNode>& candidate, const std::shared_ptr<SceneNode>& treeRoot) {
@@ -465,6 +503,8 @@ namespace Engine {
 			}
 		}
 		ImGui::End();
+
+		DrawCursorWorldCoordsOverlay();
 	}
 
 	void Editor::OnEvent(const sf::Event& event) {
