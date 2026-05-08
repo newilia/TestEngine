@@ -27,8 +27,8 @@ void TestEnvironment::Setup() {
 	Utils::MaximizeWindow(*mainWindow);
 
 	mainContext.GetPhysicsProcessor()->SetGravity({0, 1000});
-	mainContext.GetPhysicsProcessor()->SetGravityEnabled(true);
-	mainContext.GetPhysicsProcessor()->SetMotionSubsteps(4);
+	mainContext.GetPhysicsProcessor()->SetGravityEnabled(false);
+	mainContext.GetPhysicsProcessor()->SetMotionSubsteps(2);
 	mainContext.SetScene(BuildScene());
 
 	EventHandlerBase::SubscribeForEvents();
@@ -59,45 +59,10 @@ void TestEnvironment::OnEvent(const sf::Event& event) {
 
 std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	auto scene = make_shared<Scene>();
-	auto boxSize = sf::Vector2f(1000, 800);
+	auto boxSize = sf::Vector2f(600, 600);
 	constexpr float commonRestitution = 0.65f;
 	constexpr float commonAttraction = 100.f;
 	constexpr bool isAttractionPositive = false;
-
-	/* walls */
-
-	constexpr float wallActualWidth = 200;
-	constexpr float wallVisibleWidth = 30;
-	constexpr float wallOffset = wallActualWidth / 2 - wallVisibleWidth;
-
-	std::string wallNames[] = {"bottom", "top", "left", "right"};
-	sf::Vector2f wallSizes[] = {{boxSize.x, wallActualWidth}, {boxSize.x, wallActualWidth},
-	    {wallActualWidth, boxSize.y}, {wallActualWidth, boxSize.y}};
-	sf::Vector2f wallPositions[] = {{boxSize.x / 2, boxSize.y + wallOffset}, {boxSize.x / 2, -wallOffset},
-	    {-wallOffset, boxSize.y / 2}, {boxSize.x + wallOffset, boxSize.y / 2}};
-
-	for (int i = 0; i < 4; ++i) {
-		auto node = make_shared<SceneNode>();
-		node->SetName(wallNames[i]);
-		scene->GetRoot()->AddChild(std::move(node));
-
-		auto rect = node->RequireVisual<RectangleShapeVisual>();
-		rect->SetSize(wallSizes[i]);
-		rect->SetOrigin(Utils::FindCenterOfMass(rect->GetShape()));
-		Utils::SetLocalPosToWorld(node, wallPositions[i]);
-		rect->SetFillColor(sf::Color(30, 255, 30, 50));
-		rect->SetOutlineColor(sf::Color(30, 255, 30, 120));
-		rect->SetOutlineThickness(-0.0f);
-
-		auto bodyBeh = node->RequireBehaviour<PhysicsBodyBehaviour>();
-		bodyBeh->GetInteractionGroups().set(0, true);
-		bodyBeh->SetFixed(true);
-		bodyBeh->SetRestitution(commonRestitution);
-
-		auto fieldBeh = std::make_shared<AttractiveBehaviour>();
-		fieldBeh->SetAttraction(commonAttraction * (isAttractionPositive ? -1 : 1));
-		node->AddBehaviour(std::move(fieldBeh));
-	}
 
 	/* light stuff */
 
@@ -115,6 +80,45 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		recv->SetDiffusion(diffusion);
 		recv->SetEaseOutCirc(false);
 	};
+
+	/* walls */
+
+	constexpr float wallActualWidth = 200;
+	constexpr float wallVisibleWidth = 30;
+	constexpr float wallOffset = wallActualWidth / 2 - wallVisibleWidth;
+	constexpr sf::Color wallFillColor{30, 102, 30, 255};
+	constexpr sf::Color wallOutlineColor{30, 150, 30, 255};
+
+	std::string wallNames[] = {"bottom", "top", "left", "right"};
+	sf::Vector2f wallSizes[] = {{boxSize.x, wallActualWidth}, {boxSize.x, wallActualWidth},
+	    {wallActualWidth, boxSize.y}, {wallActualWidth, boxSize.y}};
+	sf::Vector2f wallPositions[] = {{boxSize.x / 2, boxSize.y + wallOffset}, {boxSize.x / 2, -wallOffset},
+	    {-wallOffset, boxSize.y / 2}, {boxSize.x + wallOffset, boxSize.y / 2}};
+
+	for (int i = 0; i < 4; ++i) {
+		auto node = make_shared<SceneNode>();
+		node->SetName(wallNames[i]);
+		scene->GetRoot()->AddChild(std::move(node));
+
+		auto rect = node->RequireVisual<RectangleShapeVisual>();
+		rect->SetSize(wallSizes[i]);
+		rect->SetOrigin(Utils::FindCenterOfMass(rect->GetShape()));
+		Utils::SetLocalPosToWorld(node, wallPositions[i]);
+		rect->SetFillColor(wallFillColor);
+		rect->SetOutlineColor(wallOutlineColor);
+		rect->SetOutlineThickness(0.0f);
+
+		auto bodyBeh = node->RequireBehaviour<PhysicsBodyBehaviour>();
+		bodyBeh->GetInteractionGroups().set(0, true);
+		bodyBeh->SetFixed(true);
+		bodyBeh->SetRestitution(commonRestitution);
+
+		auto fieldBeh = std::make_shared<AttractiveBehaviour>();
+		fieldBeh->SetAttraction(commonAttraction * (isAttractionPositive ? -1 : 1));
+		node->AddBehaviour(std::move(fieldBeh));
+
+		AddLightReceiver(node.get(), 0.0f, false);
+	}
 
 	/* circles */
 
@@ -142,7 +146,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		circle->SetRadius(radius);
 		circle->SetFillColor(color);
 		circle->SetOutlineColor(outlineColor);
-		circle->SetOutlineThickness(-0.0f);
+		circle->SetOutlineThickness(0.0f);
 		circle->SetOrigin(circle->GetLocalBounds().getCenter());
 
 		// position in grid

@@ -55,7 +55,7 @@ namespace Engine {
 
 		bool _enabled = true;
 		float _distanceRangeScale = 1.f;
-		LightingBlendMode _blendMode = LightingBlendMode::Additive;
+		LightingBlendMode _blendMode = LightingBlendMode::Screen;
 		std::list<std::weak_ptr<PointLightBehaviour>> _lightSources;
 		std::vector<GpuPointLight> _lights;
 	};
