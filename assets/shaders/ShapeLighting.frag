@@ -26,6 +26,7 @@ uniform int u_mode_bevel;
 uniform float u_bevel_width;
 uniform int u_ease_circ;
 uniform float u_diffusion;
+uniform int u_blend_mode;
 
 float ease_curve(float t)
 {
@@ -93,7 +94,7 @@ float edge_distance_field(vec2 localPos)
 
 vec2 edge_distance_grad(vec2 localPos)
 {
-    float e = max(0.4, 1.2 * (1.05 - u_diffusion));
+    float e = 0.6;
     float dpx = edge_distance_field(localPos + vec2(e, 0.0)) - edge_distance_field(localPos - vec2(e, 0.0));
     float dpy = edge_distance_field(localPos + vec2(0.0, e)) - edge_distance_field(localPos - vec2(0.0, e));
     return vec2(-dpx, -dpy);
@@ -126,13 +127,17 @@ void main()
             float h = edge_distance_field(localPos);
             float traw = clamp(1.0 - h / bw, 0.0, 1.0);
             float profile = ease_curve(traw);
-            float spread = mix(2.6, 0.25, u_diffusion);
+            float spread = mix(2.4, 0.35, u_diffusion);
             profile = pow(profile, spread);
 
             vec2 N = normalize(edge_distance_grad(localPos) + vec2(1e-5, 1e-5));
             vec2 Ldir = normalize(toLight + vec2(1e-5, 1e-5));
             float nd = max(dot(N, Ldir), 0.0);
-            lit += lc * (nd * profile * distanceAttenuation);
+            float specPow = mix(14.0, 2.0, u_diffusion);
+            float glossySpec = pow(nd, specPow);
+            float matteDiffuse = nd;
+            float surfaceResponse = mix(glossySpec, matteDiffuse, u_diffusion);
+            lit += lc * (surfaceResponse * profile * distanceAttenuation);
         }
         else
         {
@@ -143,5 +148,10 @@ void main()
     vec3 base = u_fill_color.rgb;
     float a = u_fill_color.a;
     vec3 rgb = clamp(base + lit, 0.0, 1.0);
-    gl_FragColor = vec4(rgb, a);
+    if (u_blend_mode == 1)
+    {
+        vec3 clampedLit = clamp(lit, 0.0, 1.0);
+        rgb = 1.0 - (1.0 - base) * (1.0 - clampedLit);
+    }
+    gl_FragColor = vec4(clamp(rgb, 0.0, 1.0), a);
 }

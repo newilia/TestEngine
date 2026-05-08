@@ -116,6 +116,13 @@ namespace Engine {
 			if (ImGui::SliderFloat("Light distance scale", &distanceScale, 0.1f, 20.f, "%.2f")) {
 				sceneLighting.SetDistanceRangeScale(distanceScale);
 			}
+
+			constexpr const char* blendModeLabels[] = {"Additive", "Screen"};
+			int blendMode = static_cast<int>(sceneLighting.GetBlendMode());
+			if (ImGui::Combo("Lighting blend mode", &blendMode, blendModeLabels, IM_ARRAYSIZE(blendModeLabels))) {
+				blendMode = std::clamp(blendMode, 0, static_cast<int>(IM_ARRAYSIZE(blendModeLabels)) - 1);
+				sceneLighting.SetBlendMode(static_cast<LightingBlendMode>(blendMode));
+			}
 		}
 	}
 

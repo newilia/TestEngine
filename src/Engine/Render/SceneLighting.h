@@ -6,6 +6,7 @@
 #include <SFML/Graphics/Rect.hpp>
 #include <SFML/System/Vector2.hpp>
 
+#include <cstdint>
 #include <list>
 #include <memory>
 #include <vector>
@@ -13,6 +14,12 @@
 class PointLightBehaviour;
 
 namespace Engine {
+
+	enum class LightingBlendMode : std::uint8_t
+	{
+		Additive = 0,
+		Screen = 1
+	};
 
 	struct GpuPointLight
 	{
@@ -30,6 +37,8 @@ namespace Engine {
 		void SetEnabled(bool enabled);
 		float GetDistanceRangeScale() const;
 		void SetDistanceRangeScale(float scale);
+		LightingBlendMode GetBlendMode() const;
+		void SetBlendMode(LightingBlendMode mode);
 
 		void RegisterPointLight(std::shared_ptr<PointLightBehaviour> light);
 		void UnregisterPointLight(PointLightBehaviour* light);
@@ -46,6 +55,7 @@ namespace Engine {
 
 		bool _enabled = true;
 		float _distanceRangeScale = 1.f;
+		LightingBlendMode _blendMode = LightingBlendMode::Additive;
 		std::list<std::weak_ptr<PointLightBehaviour>> _lightSources;
 		std::vector<GpuPointLight> _lights;
 	};
