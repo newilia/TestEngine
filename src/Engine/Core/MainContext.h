@@ -69,6 +69,8 @@ namespace Engine {
 
 		void MoveCamera(const sf::Vector2i& delta);
 		void ZoomCamera(float zoomFactor, std::optional<sf::Vector2i> focusPixel = std::nullopt);
+		void FocusCameraOnNode(const std::shared_ptr<SceneNode>& node);
+		void FocusCameraOnWorldPoint(const sf::Vector2f& worldPoint);
 
 		void OnMainWindowResized(const sf::Vector2u& newPixelSize);
 

@@ -1,6 +1,7 @@
 #include "Engine/Editor/SceneHierarchyWidget.h"
 
 #include "Engine/Core/MainContext.h"
+#include "Engine/Core/Utils.h"
 #include "Engine/Editor/Editor.h"
 
 #include <imgui.h>
@@ -247,6 +248,9 @@ namespace Engine {
 		if (ImGui::BeginPopupContextItem("hierarchy_node_ctx", ImGuiPopupFlags_MouseButtonRight)) {
 			auto nodePtr = node.shared_from_this();
 			Editor& editor = Editor::GetInstance();
+			if (ImGui::MenuItem("Focus")) {
+				MainContext::GetInstance().FocusCameraOnNode(nodePtr);
+			}
 			if (ImGui::MenuItem("Copy")) {
 				(void)editor.CopyNode(nodePtr);
 			}
@@ -307,10 +311,10 @@ namespace Engine {
 			ImGui::TextUnformatted("No active scene");
 			return;
 		}
-		ImGui::TextUnformatted("Hierarchy");
+		ImGui::TextUnformatted("Scene hierarchy");
 		ImGui::Separator();
 		ImGui::BeginChild("##scene_hierarchy_widget_tree", ImVec2(0, 0.0f), true);
-		DrawNode(*root, "Scene", 0);
+		DrawNode(*root, "Root", 0);
 		ImGui::EndChild();
 	}
 } // namespace Engine

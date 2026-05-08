@@ -3,6 +3,7 @@
 #include "Engine/Core/EventsDispatcher.h"
 #include "Engine/Core/FontManager.h"
 #include "Engine/Core/TextureManager.h"
+#include "Engine/Core/Utils.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 
 #include <imgui-SFML.h>
@@ -227,6 +228,18 @@ namespace Engine {
 			else {
 				view.zoom(zoomFactor);
 			}
+			window->setView(view);
+		}
+	}
+
+	void MainContext::FocusCameraOnNode(const std::shared_ptr<SceneNode>& node) {
+		FocusCameraOnWorldPoint(Utils::GetNodeCameraFocusWorldPoint(node));
+	}
+
+	void MainContext::FocusCameraOnWorldPoint(const sf::Vector2f& worldPoint) {
+		if (auto window = GetMainWindow()) {
+			auto view = window->getView();
+			view.setCenter(worldPoint);
 			window->setView(view);
 		}
 	}

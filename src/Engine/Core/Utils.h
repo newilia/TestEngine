@@ -73,6 +73,13 @@ namespace Utils {
 	std::vector<sf::Vector2f> ConvexHull2D(std::vector<sf::Vector2f> points);
 
 	sf::Vector2f GetWorldPos(const std::shared_ptr<const SceneNode>& node);
+
+	/// World-space AABB of the node's `Visual::GetLocalBounds()` after full transform, if a visual exists.
+	std::optional<sf::FloatRect> TryGetNodeVisualWorldBounds(const std::shared_ptr<const SceneNode>& node);
+
+	/// Prefer center of `TryGetNodeVisualWorldBounds`; otherwise `GetWorldPos` (node origin in world space).
+	sf::Vector2f GetNodeCameraFocusWorldPoint(const std::shared_ptr<const SceneNode>& node);
+
 	void SetLocalPosToWorld(const std::shared_ptr<SceneNode>& node, sf::Vector2f pos);
 
 	void SortSceneNodesByDrawOrder(std::vector<std::shared_ptr<SceneNode>>& nodes);
