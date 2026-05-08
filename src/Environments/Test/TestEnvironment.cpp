@@ -2,6 +2,8 @@
 
 #include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
+#include "Engine/Behaviour/PointLightBehaviour.h"
+#include "Engine/Behaviour/ShapeLightReceiverBehaviour.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/Utils.h"
@@ -109,6 +111,30 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		scene->GetRoot()->AddChild(std::move(node));
 	}
 
+	/* demo point lights for ShapeLighting */
+	{
+		auto warmLight = make_shared<SceneNode>();
+		warmLight->SetName("point_light_warm");
+		Utils::SetWorldPos(warmLight, {viewSize.x * 0.28f, viewSize.y * 0.32f});
+		auto pl = make_shared<PointLightBehaviour>();
+		pl->SetLightColor(sf::Color(255, 210, 160, 255));
+		pl->SetIntensity(0.85f);
+		pl->SetRadius(520.f);
+		warmLight->AddBehaviour(std::move(pl));
+		scene->GetRoot()->AddChild(std::move(warmLight));
+	}
+	{
+		auto coolLight = make_shared<SceneNode>();
+		coolLight->SetName("point_light_cool");
+		Utils::SetWorldPos(coolLight, {viewSize.x * 0.72f, viewSize.y * 0.55f});
+		auto pl = make_shared<PointLightBehaviour>();
+		pl->SetLightColor(sf::Color(160, 210, 255, 255));
+		pl->SetIntensity(0.75f);
+		pl->SetRadius(480.f);
+		coolLight->AddBehaviour(std::move(pl));
+		scene->GetRoot()->AddChild(std::move(coolLight));
+	}
+
 	/* circles */
 	constexpr int circlesCount = 200;
 	for (int i = 0; i < circlesCount; ++i) {
@@ -155,6 +181,27 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		auto fieldBeh = std::make_shared<AttractiveBehaviour>();
 		fieldBeh->SetAttraction(commonAttraction * (isAttractive ? -1 : 1));
 		node->AddBehaviour(std::move(fieldBeh));
+
+		/* lighting demo: first circles use radial / bevel receivers (no outline: shader is fill-only) */
+		if (i < 3) {
+			circle->SetOutlineThickness(0.f);
+			auto recv = node->RequireBehaviour<ShapeLightReceiverBehaviour>();
+			if (i == 0) {
+				recv->SetBevelEmbossMode(false);
+				recv->SetDiffusion(0.35f);
+			}
+			else if (i == 1) {
+				recv->SetBevelEmbossMode(true);
+				recv->SetBevelWidth(18.f);
+				recv->SetDiffusion(0.5f);
+			}
+			else {
+				recv->SetBevelEmbossMode(true);
+				recv->SetEaseOutCirc(false);
+				recv->SetBevelWidth(10.f);
+				recv->SetDiffusion(0.75f);
+			}
+		}
 
 		scene->GetRoot()->AddChild(std::move(node));
 	}

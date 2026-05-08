@@ -1,4 +1,5 @@
 #include "Engine/Render/RadialUvWarpFullscreenPass.h"
+#include "Engine/Render/SceneLighting.h"
 #include "Engine/Render/ViewportFullscreenEffect.h"
 
 #include <SFML/Graphics/RenderTexture.hpp>
@@ -37,6 +38,7 @@ namespace Engine {
 		if (!scene) {
 			return;
 		}
+		Engine::SceneLighting::CollectLights(*scene);
 		if (effectChain.empty()) {
 			window.draw(*scene);
 			return;

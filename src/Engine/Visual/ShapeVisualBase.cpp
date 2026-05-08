@@ -2,6 +2,7 @@
 
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Utils.h"
+#include "Engine/Visual/ShapeLightingDraw.h"
 #include "ShapeVisualBase.generated.hpp"
 
 #include <SFML/Graphics/RenderTarget.hpp>
@@ -19,6 +20,9 @@ bool ShapeVisualBase::HitTest(const sf::Vector2f& worldPoint) const {
 
 void ShapeVisualBase::Draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	if (auto shape = GetBaseShape()) {
+		if (Engine::TryDrawShapeWithLighting(*this, target, states)) {
+			return;
+		}
 		target.draw(*shape, states);
 	}
 }
