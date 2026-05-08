@@ -26,7 +26,7 @@ namespace Engine {
 		bool ShouldUseEffect(const Scene& scene) const;
 		void Prepare(const std::shared_ptr<Scene>& scene, const ViewportFullscreenPresentContext& ctx) override;
 		void Apply(const sf::Texture& inputTexture, sf::RenderTarget& outputTarget,
-		           const ViewportFullscreenPresentContext& ctx) override;
+		    const ViewportFullscreenPresentContext& ctx) override;
 
 	private:
 		RadialUvWarpFullscreenPass();

@@ -11,8 +11,8 @@
 
 namespace Engine::EditorCommands {
 
-	PasteEntityCommand::PasteEntityCommand(std::shared_ptr<SceneNode> node, std::shared_ptr<EntityOnNode> entity,
-	                                       Engine::EntitySlot slot)
+	PasteEntityCommand::PasteEntityCommand(
+	    std::shared_ptr<SceneNode> node, std::shared_ptr<EntityOnNode> entity, Engine::EntitySlot slot)
 	    : _node(std::move(node)), _entity(std::move(entity)), _slot(slot) {}
 
 	bool PasteEntityCommand::Execute() {

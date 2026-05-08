@@ -8,8 +8,8 @@
 
 namespace Engine::EditorCommands {
 
-	CutEntityCommand::CutEntityCommand(std::shared_ptr<SceneNode> node, std::shared_ptr<EntityOnNode> entity,
-	                                   Engine::EntitySlot slot)
+	CutEntityCommand::CutEntityCommand(
+	    std::shared_ptr<SceneNode> node, std::shared_ptr<EntityOnNode> entity, Engine::EntitySlot slot)
 	    : _node(std::move(node)), _entity(std::move(entity)), _slot(slot) {}
 
 	bool CutEntityCommand::Execute() {

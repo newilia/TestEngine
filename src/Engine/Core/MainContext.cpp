@@ -173,8 +173,8 @@ namespace Engine {
 		_mainWindow->setVerticalSyncEnabled(_verticalSyncEnabled);
 	}
 
-	std::shared_ptr<sf::RenderWindow> MainContext::CreateMainWindow(sf::VideoMode mode, const sf::String& title,
-	                                                                std::uint32_t style, sf::State state) {
+	std::shared_ptr<sf::RenderWindow> MainContext::CreateMainWindow(
+	    sf::VideoMode mode, const sf::String& title, std::uint32_t style, sf::State state) {
 		_mainWindow = std::make_shared<sf::RenderWindow>(mode, title, style, state);
 		ApplyWindowFrameSettings();
 		_mainWindowPixelSizeForView = _mainWindow->getSize();

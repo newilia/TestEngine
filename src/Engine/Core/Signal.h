@@ -162,10 +162,10 @@ private:
 
 	void RemoveExpiredSlots() {
 		_slots.erase(std::remove_if(_slots.begin(), _slots.end(),
-		                            [](const Slot& s) {
-			                            return s.delegate->expired();
-		                            }),
-		             _slots.end());
+		                 [](const Slot& s) {
+			                 return s.delegate->expired();
+		                 }),
+		    _slots.end());
 	}
 
 	struct Slot

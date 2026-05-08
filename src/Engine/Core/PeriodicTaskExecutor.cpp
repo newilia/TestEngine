@@ -2,8 +2,8 @@
 
 #include <SFML/System/Time.hpp>
 
-PeriodicTaskExecutor::PeriodicTaskExecutor(std::function<sf::Time()> getPeriod,
-                                           std::function<void(const sf::Time& dt)> task) {
+PeriodicTaskExecutor::PeriodicTaskExecutor(
+    std::function<sf::Time()> getPeriod, std::function<void(const sf::Time& dt)> task) {
 	_getPeriod = std::move(getPeriod);
 	_task = std::move(task);
 }

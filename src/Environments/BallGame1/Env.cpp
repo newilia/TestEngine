@@ -106,10 +106,8 @@ namespace BallGame1 {
 
 		const char* wallNames[] = {"Bottom", "Top", "Left", "Right"};
 		const sf::Vector2f wallSizes[] = {horizSize, horizSize, vertSize, vertSize};
-		const sf::Vector2f wallCentersLocal[] = {{0.f, hy + wallThickness * 0.5f},
-		                                         {0.f, -hy - wallThickness * 0.5f},
-		                                         {-hx - wallThickness * 0.5f, 0.f},
-		                                         {hx + wallThickness * 0.5f, 0.f}};
+		const sf::Vector2f wallCentersLocal[] = {{0.f, hy + wallThickness * 0.5f}, {0.f, -hy - wallThickness * 0.5f},
+		    {-hx - wallThickness * 0.5f, 0.f}, {hx + wallThickness * 0.5f, 0.f}};
 
 		const sf::Color wallColor{120, 180, 220, 90};
 

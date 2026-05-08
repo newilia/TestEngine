@@ -104,21 +104,21 @@ namespace {
 		return std::nullopt;
 	}
 
-	void DrawAabbOutline(sf::RenderTarget& target, sf::RenderStates states, const sf::FloatRect& bounds,
-	                     const sf::Color& outlineColor) {
+	void DrawAabbOutline(
+	    sf::RenderTarget& target, sf::RenderStates states, const sf::FloatRect& bounds, const sf::Color& outlineColor) {
 		sf::RectangleShape frame;
 		frame.setPosition(
 		    {bounds.position.x - kHierarchySelectionOutlinePadPx, bounds.position.y - kHierarchySelectionOutlinePadPx});
 		frame.setSize({bounds.size.x + 2.f * kHierarchySelectionOutlinePadPx,
-		               bounds.size.y + 2.f * kHierarchySelectionOutlinePadPx});
+		    bounds.size.y + 2.f * kHierarchySelectionOutlinePadPx});
 		frame.setFillColor(sf::Color::Transparent);
 		frame.setOutlineColor(outlineColor);
 		frame.setOutlineThickness(kHierarchySelectionOutlineThickness);
 		target.draw(frame, states);
 	}
 
-	void DrawNodeHierarchySelectionBounds(const SceneNode& node, sf::RenderTarget& target, sf::RenderStates worldOnly,
-	                                      const sf::Color& outlineColor) {
+	void DrawNodeHierarchySelectionBounds(
+	    const SceneNode& node, sf::RenderTarget& target, sf::RenderStates worldOnly, const sf::Color& outlineColor) {
 		if (const std::optional<sf::FloatRect> bb = TryGetHierarchySelectionBounds(node)) {
 			const sf::FloatRect& b = *bb;
 			if (b.size.x > 0.f && b.size.y > 0.f) {
@@ -136,8 +136,8 @@ namespace {
 		target.draw(marker, worldOnly);
 	}
 
-	void DrawDescendantHierarchySelectionOutlines(const SceneNode& parent, sf::RenderTarget& target,
-	                                              sf::RenderStates worldOnly) {
+	void DrawDescendantHierarchySelectionOutlines(
+	    const SceneNode& parent, sf::RenderTarget& target, sf::RenderStates worldOnly) {
 		std::vector<std::shared_ptr<SceneNode>> sorted = parent.GetChildren();
 		Utils::SortSceneNodesByDrawOrder(sorted);
 		for (const auto& child : sorted) {

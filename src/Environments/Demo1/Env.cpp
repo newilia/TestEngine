@@ -99,7 +99,7 @@ namespace Demo1 {
 			const float BallRestitution = 0.95f;
 			const float WallRestitution = 1.f;
 			auto ballpit = CreateBallpitGameNode(AquariumW, AquariumH, WallThickness, BaseRadius, RadiusVar, BaseColor,
-			                                     ColorVar, BallCount, BallRestitution, WallRestitution);
+			    ColorVar, BallCount, BallRestitution, WallRestitution);
 			ballpit->GetLocalTransform()->SetPosition({2100, 700});
 			scene->GetRoot()->AddChild(std::move(ballpit));
 		}

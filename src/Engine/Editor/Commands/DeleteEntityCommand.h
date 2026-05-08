@@ -16,8 +16,8 @@ namespace Engine::EditorCommands {
 	class DeleteEntityCommand final : public Engine::IEditorCommand
 	{
 	public:
-		DeleteEntityCommand(std::shared_ptr<SceneNode> node, std::shared_ptr<EntityOnNode> entity,
-		                    Engine::EntitySlot slot);
+		DeleteEntityCommand(
+		    std::shared_ptr<SceneNode> node, std::shared_ptr<EntityOnNode> entity, Engine::EntitySlot slot);
 
 		bool Execute() override;
 		void Undo() override;

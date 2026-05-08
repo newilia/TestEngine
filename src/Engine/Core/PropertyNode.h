@@ -105,10 +105,9 @@ namespace Engine {
 		std::function<void(std::size_t pairIndex)> removePair;
 	};
 
-	using PropertyAccess =
-	    std::variant<PropAccessNone, PropAccessBool, PropAccessInt32, PropAccessInt64, PropAccessFloat,
-	                 PropAccessDouble, PropAccessString, PropAccessEnum, PropAccessVec2f, PropAccessVec2i,
-	                 PropAccessVec2u, PropAccessVec3f, PropAccessColor, PropAccessSequence, PropAccessAssociative>;
+	using PropertyAccess = std::variant<PropAccessNone, PropAccessBool, PropAccessInt32, PropAccessInt64,
+	    PropAccessFloat, PropAccessDouble, PropAccessString, PropAccessEnum, PropAccessVec2f, PropAccessVec2i,
+	    PropAccessVec2u, PropAccessVec3f, PropAccessColor, PropAccessSequence, PropAccessAssociative>;
 
 	struct PropertyNode
 	{

@@ -17,8 +17,8 @@ namespace Engine::EditorCommands {
 	class PasteEntityCommand final : public Engine::IEditorCommand
 	{
 	public:
-		PasteEntityCommand(std::shared_ptr<SceneNode> node, std::shared_ptr<EntityOnNode> entity,
-		                   Engine::EntitySlot slot);
+		PasteEntityCommand(
+		    std::shared_ptr<SceneNode> node, std::shared_ptr<EntityOnNode> entity, Engine::EntitySlot slot);
 
 		bool Execute() override;
 		void Undo() override;

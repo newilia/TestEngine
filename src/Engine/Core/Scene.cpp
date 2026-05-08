@@ -8,8 +8,8 @@
 namespace {
 	using std::shared_ptr;
 
-	shared_ptr<SceneNode> FindTopMostInSubtree(const shared_ptr<SceneNode>& node, const sf::Vector2f& worldPoint,
-	                                           bool tapResponsiveOnly) {
+	shared_ptr<SceneNode> FindTopMostInSubtree(
+	    const shared_ptr<SceneNode>& node, const sf::Vector2f& worldPoint, bool tapResponsiveOnly) {
 		if (!node) {
 			return nullptr;
 		}

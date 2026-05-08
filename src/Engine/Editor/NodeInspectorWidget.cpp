@@ -20,9 +20,8 @@
 
 namespace {
 	void DrawIPropertiesProviderBlock(Engine::EditorVisualTheme::InspectorSectionHeaderStyle sectionStyle,
-	                                  const char* title, Engine::IPropertiesProvider* inspectable,
-	                                  const std::shared_ptr<EntityOnNode>& entity, Engine::EntitySlot slot,
-	                                  const Engine::PropertyTreeDrawer& drawer) {
+	    const char* title, Engine::IPropertiesProvider* inspectable, const std::shared_ptr<EntityOnNode>& entity,
+	    Engine::EntitySlot slot, const Engine::PropertyTreeDrawer& drawer) {
 		if (!inspectable) {
 			return;
 		}
@@ -97,22 +96,19 @@ namespace Engine {
 			return;
 		}
 		DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::SceneNode, "SceneNode",
-		                             dynamic_cast<IPropertiesProvider*>(node.get()), nullptr, EntitySlot::Behaviour,
-		                             _propertyDrawer);
+		    dynamic_cast<IPropertiesProvider*>(node.get()), nullptr, EntitySlot::Behaviour, _propertyDrawer);
 
 		DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::Transform, "Transform",
-		                             node->GetLocalTransform().get(), node->GetLocalTransform(), EntitySlot::Transform,
-		                             _propertyDrawer);
+		    node->GetLocalTransform().get(), node->GetLocalTransform(), EntitySlot::Transform, _propertyDrawer);
 
 		if (const auto sorting = node->GetSortingStrategy()) {
 			DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::SortingStrategy,
-			                             "Sorting strategy", dynamic_cast<IPropertiesProvider*>(sorting.get()), sorting,
-			                             EntitySlot::SortingStrategy, _propertyDrawer);
+			    "Sorting strategy", dynamic_cast<IPropertiesProvider*>(sorting.get()), sorting,
+			    EntitySlot::SortingStrategy, _propertyDrawer);
 		}
 		if (const auto visual = node->GetVisual()) {
 			DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::Visual, "Visual",
-			                             dynamic_cast<IPropertiesProvider*>(visual.get()), visual, EntitySlot::Visual,
-			                             _propertyDrawer);
+			    dynamic_cast<IPropertiesProvider*>(visual.get()), visual, EntitySlot::Visual, _propertyDrawer);
 		}
 		for (const auto& behaviour : node->GetBehaviours()) {
 			if (!behaviour) {
@@ -120,8 +116,7 @@ namespace Engine {
 			}
 			const std::string behTitle = fmt::format("Behaviour ({})", typeid(*behaviour).name());
 			DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::Behaviour, behTitle.c_str(),
-			                             dynamic_cast<IPropertiesProvider*>(behaviour.get()), behaviour,
-			                             EntitySlot::Behaviour, _propertyDrawer);
+			    dynamic_cast<IPropertiesProvider*>(behaviour.get()), behaviour, EntitySlot::Behaviour, _propertyDrawer);
 		}
 	}
 } // namespace Engine
