@@ -4,6 +4,7 @@
 #include "Engine/Editor/PropertyTreeDrawer.h"
 
 #include <memory>
+#include <vector>
 
 namespace Engine {
 
@@ -11,8 +12,8 @@ namespace Engine {
 	class NodeInspectorWidget
 	{
 	public:
-		/// Renders the inspector. Pass null when nothing is selected.
-		void Draw(const std::shared_ptr<SceneNode>& node) const;
+		/// Renders the inspector for current multi-selection.
+		void Draw(const std::vector<std::shared_ptr<SceneNode>>& nodes) const;
 
 	private:
 		PropertyTreeDrawer _propertyDrawer{};

@@ -10,7 +10,9 @@ namespace Engine {
 	{
 		std::string displayName;
 		std::string tooltip;
+		std::string mixedValueMarker = "mixed";
 		bool readOnly = false;
+		bool hasMixedValues = false;
 
 		std::optional<double> numericMin;
 		std::optional<double> numericMax;

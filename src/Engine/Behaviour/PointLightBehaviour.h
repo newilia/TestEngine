@@ -30,11 +30,11 @@ public:
 
 private:
 	/// @property
-	sf::Color _lightColor = sf::Color::White;
-	/// @property(dragSpeed=0.02f, minValue=0.f)
-	float _intensity = 1.f;
-	/// @property(dragSpeed=2.f, minValue=1.f)
-	float _radius = 400.f;
-	/// @property(name="Enabled")
 	bool _lightEnabled = true;
+	/// @property
+	sf::Color _lightColor = sf::Color::White;
+	/// @property(minValue=0.f)
+	float _intensity = 1.f;
+	/// @property(minValue=1.f)
+	float _radius = 400.f;
 };
