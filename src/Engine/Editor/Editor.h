@@ -15,6 +15,7 @@
 #include <SFML/Window/Keyboard.hpp>
 
 #include <memory>
+#include <vector>
 
 namespace sf {
 	class RenderWindow;
@@ -43,8 +44,13 @@ namespace Engine {
 		void OnMouseWheelScrolled(const sf::Event::MouseWheelScrolled& e);
 
 		std::shared_ptr<SceneNode> GetSelectedNode() const;
+		std::vector<std::shared_ptr<SceneNode>> GetSelectedNodes() const;
+		bool IsNodeSelected(const SceneNode& node) const;
 		void ClearNodeSelection();
 		void SetSelectedNode(std::shared_ptr<SceneNode> node);
+		void ToggleSelectedNode(std::shared_ptr<SceneNode> node);
+		void AddSelectedNodes(const std::vector<std::shared_ptr<SceneNode>>& nodes);
+		void SetSelectedNodes(std::vector<std::shared_ptr<SceneNode>> nodes);
 		bool CopySelectedNode();
 		bool CutSelectedNode();
 		bool PasteClipboard();
