@@ -169,12 +169,34 @@ namespace Engine {
 		return _sceneHierarchyWidget.GetSelectedNode();
 	}
 
+	std::vector<std::shared_ptr<SceneNode>> Editor::GetSelectedNodes() const {
+		return _sceneHierarchyWidget.GetSelectedNodes();
+	}
+
+	bool Editor::IsNodeSelected(const SceneNode& node) const {
+		return _sceneHierarchyWidget.IsNodeSelected(node);
+	}
+
 	void Editor::ClearNodeSelection() {
 		_sceneHierarchyWidget.ClearSelection();
 	}
 
 	void Editor::SetSelectedNode(std::shared_ptr<SceneNode> node) {
 		_sceneHierarchyWidget.Select(std::move(node));
+	}
+
+	void Editor::ToggleSelectedNode(std::shared_ptr<SceneNode> node) {
+		_sceneHierarchyWidget.ToggleSelection(std::move(node));
+	}
+
+	void Editor::AddSelectedNodes(const std::vector<std::shared_ptr<SceneNode>>& nodes) {
+		for (const auto& node : nodes) {
+			_sceneHierarchyWidget.AddToSelection(node);
+		}
+	}
+
+	void Editor::SetSelectedNodes(std::vector<std::shared_ptr<SceneNode>> nodes) {
+		_sceneHierarchyWidget.SetSelection(std::move(nodes));
 	}
 
 	bool Editor::CopySelectedNode() {
@@ -299,13 +321,18 @@ namespace Engine {
 		if (!_isOpen) {
 			return;
 		}
-		const auto selected = GetSelectedNode();
-		if (!selected) {
+		const auto selectedNodes = GetSelectedNodes();
+		if (selectedNodes.empty()) {
 			return;
 		}
 		sf::RenderStates worldOnly{};
-		DrawDescendantHierarchySelectionOutlines(*selected, window, worldOnly);
-		DrawNodeHierarchySelectionBounds(*selected, window, worldOnly, kHierarchySelectionOutlineColor);
+		for (const auto& selected : selectedNodes) {
+			if (!selected || !selected->IsEnabled() || !selected->IsVisible()) {
+				continue;
+			}
+			DrawDescendantHierarchySelectionOutlines(*selected, window, worldOnly);
+			DrawNodeHierarchySelectionBounds(*selected, window, worldOnly, kHierarchySelectionOutlineColor);
+		}
 	}
 
 	void Editor::Draw() {

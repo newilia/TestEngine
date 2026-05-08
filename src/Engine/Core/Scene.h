@@ -7,11 +7,18 @@
 #include <SFML/Graphics.hpp>
 
 #include <memory>
+#include <vector>
 
 /// Owns the scene graph root; hit picking and tap dispatch are scene-level concerns.
 class Scene final : public sf::Drawable, public Updatable, public Engine::EventHandlerBase
 {
 public:
+	enum class RectSelectionMode
+	{
+		kIntersects,
+		kContains
+	};
+
 	Scene();
 	~Scene() override = default;
 	void Update(const sf::Time& dt) override;
@@ -25,6 +32,8 @@ public:
 	bool DispatchTapAt(const sf::Vector2f& worldPoint);
 	[[nodiscard]] std::shared_ptr<SceneNode> FindTopMostNodeAtPoint(
 	    const sf::Vector2f& worldPoint, bool tapResponsiveOnly = false);
+	[[nodiscard]] std::vector<std::shared_ptr<SceneNode>> FindNodesInRect(
+	    const sf::FloatRect& worldRect, RectSelectionMode mode) const;
 
 private:
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
