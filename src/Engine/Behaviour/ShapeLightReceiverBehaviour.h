@@ -33,5 +33,5 @@ private:
 	/// @property(name="Ease out circ", tooltip="Off = linear falloff curve")
 	bool _easeOutCirc = true;
 	/// @property(minValue=0.f, maxValue=1.f, dragSpeed=0.01f)
-	float _diffusion = 0.45f;
+	float _diffusion = 1.f;
 };

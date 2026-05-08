@@ -6,6 +6,8 @@
 #include "Engine/Behaviour/ShapeLightReceiverBehaviour.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/Scene.h"
+#include "Engine/Core/SceneNode.h"
+#include "Engine/Core/Transform.h"
 #include "Engine/Core/Utils.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "Engine/Visual/CircleShapeVisual.h"
@@ -26,8 +28,7 @@ void TestEnvironment::Setup() {
 	}
 	Utils::MaximizeWindow(*mainWindow);
 
-	mainContext.GetPhysicsProcessor()->SetGravity({0, 1000});
-	mainContext.GetPhysicsProcessor()->SetGravityEnabled(false);
+	mainContext.GetPhysicsProcessor()->SetGravityEnabled(true);
 	mainContext.GetPhysicsProcessor()->SetMotionSubsteps(2);
 	mainContext.SetScene(BuildScene());
 
@@ -59,9 +60,14 @@ void TestEnvironment::OnEvent(const sf::Event& event) {
 
 std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	auto scene = make_shared<Scene>();
-	auto boxSize = sf::Vector2f(600, 600);
+	auto container = make_shared<SceneNode>();
+	container->SetName("container");
+	Engine::MainContext::GetInstance().FocusCameraOnNode(container);
+	scene->GetRoot()->AddChild(container);
+
+	constexpr sf::Vector2f boxSize{600, 600};
 	constexpr float commonRestitution = 0.65f;
-	constexpr float commonAttraction = 100.f;
+	constexpr float commonAttraction = 0.f;
 	constexpr bool isAttractionPositive = false;
 
 	/* light stuff */
@@ -83,22 +89,30 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 
 	/* walls */
 
-	constexpr float wallActualWidth = 200;
-	constexpr float wallVisibleWidth = 30;
-	constexpr float wallOffset = wallActualWidth / 2 - wallVisibleWidth;
+	constexpr float wallsThickness = 200;
 	constexpr sf::Color wallFillColor{30, 102, 30, 255};
 	constexpr sf::Color wallOutlineColor{30, 150, 30, 255};
 
 	std::string wallNames[] = {"bottom", "top", "left", "right"};
-	sf::Vector2f wallSizes[] = {{boxSize.x, wallActualWidth}, {boxSize.x, wallActualWidth},
-	    {wallActualWidth, boxSize.y}, {wallActualWidth, boxSize.y}};
-	sf::Vector2f wallPositions[] = {{boxSize.x / 2, boxSize.y + wallOffset}, {boxSize.x / 2, -wallOffset},
-	    {-wallOffset, boxSize.y / 2}, {boxSize.x + wallOffset, boxSize.y / 2}};
+	// Wall arrangement: bottom (y+), top (y-), left (x-), right (x+)
+	sf::Vector2f wallSizes[] = {
+	    {boxSize.x + 2 * wallsThickness, wallsThickness}, // bottom
+	    {boxSize.x + 2 * wallsThickness, wallsThickness}, // top
+	    {wallsThickness, boxSize.y},                      // left
+	    {wallsThickness, boxSize.y}                       // right
+	};
+	// Positions are calculated so inner box is boxSize, walls wrap outside
+	sf::Vector2f wallPositions[] = {
+	    {0.0f, boxSize.y / 2.0f + wallsThickness / 2.0f},  // bottom
+	    {0.0f, -boxSize.y / 2.0f - wallsThickness / 2.0f}, // top
+	    {-boxSize.x / 2.0f - wallsThickness / 2.0f, 0.0f}, // left
+	    {boxSize.x / 2.0f + wallsThickness / 2.0f, 0.0f}   // right
+	};
 
 	for (int i = 0; i < 4; ++i) {
 		auto node = make_shared<SceneNode>();
 		node->SetName(wallNames[i]);
-		scene->GetRoot()->AddChild(std::move(node));
+		container->AddChild(std::move(node));
 
 		auto rect = node->RequireVisual<RectangleShapeVisual>();
 		rect->SetSize(wallSizes[i]);
@@ -113,36 +127,38 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		bodyBeh->SetFixed(true);
 		bodyBeh->SetRestitution(commonRestitution);
 
-		auto fieldBeh = std::make_shared<AttractiveBehaviour>();
-		fieldBeh->SetAttraction(commonAttraction * (isAttractionPositive ? -1 : 1));
-		node->AddBehaviour(std::move(fieldBeh));
+		if (commonAttraction != 0.f) {
+			auto fieldBeh = std::make_shared<AttractiveBehaviour>();
+			fieldBeh->SetAttraction(commonAttraction * (isAttractionPositive ? -1 : 1));
+			node->AddBehaviour(std::move(fieldBeh));
+		}
 
-		AddLightReceiver(node.get(), 0.0f, false);
+		AddLightReceiver(node.get(), 1.0f, false);
 	}
 
 	/* circles */
 
 	constexpr int rowsCount = 15;
-	constexpr int colsCount = 10;
+	constexpr int colsCount = 12;
 	constexpr int circlesCount = rowsCount * colsCount;
 
 	for (int i = 0; i < circlesCount; ++i) {
 		const auto gridRow = i / colsCount;
 		const auto gridCol = i % colsCount;
-		int kind = std::round(gridCol * 3.f / colsCount);
+		int kind = 3.f * gridCol / colsCount;
 
-		auto node = make_shared<SceneNode>();
-		auto circle = node->RequireVisual<CircleShapeVisual>();
-		node->SetName(fmt::format("circle_{}", i));
-		node->RequireBehaviour<PhysicsBodyBehaviour>()->GetInteractionGroups().set(0, true);
+		auto circleNode = make_shared<SceneNode>();
+		circleNode->SetName(fmt::format("circle_{}", i));
+		circleNode->RequireBehaviour<PhysicsBodyBehaviour>()->GetInteractionGroups().set(0, true);
 
-		constexpr float radius = 20.f;
+		constexpr float radius = 15.f;
 		constexpr auto kColor1 = sf::Color{200, 40, 40, 255};
 		constexpr auto kColor2 = sf::Color{40, 200, 40, 255};
 		constexpr auto kColor3 = sf::Color{40, 40, 200, 255};
 
 		const auto color = (kind == 0) ? kColor1 : ((kind == 1) ? kColor2 : kColor3);
 		const auto outlineColor = sf::Color(color.r / 2, color.g / 2, color.b / 2, 255);
+		auto circle = circleNode->RequireVisual<CircleShapeVisual>();
 		circle->SetRadius(radius);
 		circle->SetFillColor(color);
 		circle->SetOutlineColor(outlineColor);
@@ -151,26 +167,28 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 
 		// position in grid
 		{
-			const auto minX = wallVisibleWidth + radius;
-			const auto maxX = boxSize.x - wallVisibleWidth - radius;
-			const auto minY = wallVisibleWidth + radius;
-			const auto maxY = boxSize.y - wallVisibleWidth - radius;
-			const auto x = minX + gridCol * (maxX - minX) / colsCount;
-			const auto y = minY + gridRow * (maxY - minY) / rowsCount;
-			Utils::SetLocalPosToWorld(node, sf::Vector2f{x, y});
+			const auto minX = -boxSize.x / 2;
+			const auto maxX = boxSize.x / 2;
+			const auto minY = -boxSize.y / 2;
+			const auto maxY = boxSize.y / 2;
+			const auto x = minX + (1 + gridCol) * (maxX - minX) / (colsCount + 1);
+			const auto y = minY + (1 + gridRow) * (maxY - minY) / (rowsCount + 1);
+			circleNode->GetLocalTransform()->SetPosition(sf::Vector2f{x, y});
 		}
 
-		auto bodyBeh = node->RequireBehaviour<PhysicsBodyBehaviour>();
+		auto bodyBeh = circleNode->RequireBehaviour<PhysicsBodyBehaviour>();
 		bodyBeh->SetMass(3.14f * radius * radius);
 		bodyBeh->SetRestitution(commonRestitution);
 
-		auto fieldBeh = node->RequireBehaviour<AttractiveBehaviour>();
-		fieldBeh->SetAttraction(commonAttraction * (isAttractionPositive ? -1 : 1));
+		if (commonAttraction != 0.f) {
+			auto fieldBeh = circleNode->RequireBehaviour<AttractiveBehaviour>();
+			fieldBeh->SetAttraction(commonAttraction * (isAttractionPositive ? -1 : 1));
+		}
 
-		AddLightSource(node.get(), 20, 3, color);
-		AddLightReceiver(node.get(), 0.7f, true, 25);
+		AddLightSource(circleNode.get(), 12, 5, color);
+		AddLightReceiver(circleNode.get(), 1.f, true, radius);
 
-		scene->GetRoot()->AddChild(std::move(node));
+		container->AddChild(std::move(circleNode));
 	}
 
 	return scene;
