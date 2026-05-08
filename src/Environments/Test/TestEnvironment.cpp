@@ -59,7 +59,7 @@ void TestEnvironment::OnEvent(const sf::Event& event) {
 
 std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	auto scene = make_shared<Scene>();
-	auto viewSize = Engine::MainContext::GetInstance().GetMainWindow()->getView().getSize();
+	auto boxSize = sf::Vector2f(1000, 800);
 	constexpr float commonRestitution = 0.65f;
 	constexpr float commonAttraction = 100.f;
 	constexpr bool isAttractionPositive = false;
@@ -71,10 +71,10 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	constexpr float wallOffset = wallActualWidth / 2 - wallVisibleWidth;
 
 	std::string wallNames[] = {"bottom", "top", "left", "right"};
-	sf::Vector2f wallSizes[] = {{viewSize.x, wallActualWidth}, {viewSize.x, wallActualWidth},
-	    {wallActualWidth, viewSize.y}, {wallActualWidth, viewSize.y}};
-	sf::Vector2f wallPositions[] = {{viewSize.x / 2, viewSize.y + wallOffset}, {viewSize.x / 2, -wallOffset},
-	    {-wallOffset, viewSize.y / 2}, {viewSize.x + wallOffset, viewSize.y / 2}};
+	sf::Vector2f wallSizes[] = {{boxSize.x, wallActualWidth}, {boxSize.x, wallActualWidth},
+	    {wallActualWidth, boxSize.y}, {wallActualWidth, boxSize.y}};
+	sf::Vector2f wallPositions[] = {{boxSize.x / 2, boxSize.y + wallOffset}, {boxSize.x / 2, -wallOffset},
+	    {-wallOffset, boxSize.y / 2}, {boxSize.x + wallOffset, boxSize.y / 2}};
 
 	for (int i = 0; i < 4; ++i) {
 		auto node = make_shared<SceneNode>();
@@ -101,7 +101,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 
 	/* light stuff */
 
-	const auto AddLightSource = [&viewSize](SceneNode* node) {
+	const auto AddLightSource = [](SceneNode* node) {
 		auto pl = node->RequireBehaviour<PointLightBehaviour>();
 		pl->SetLightColor(sf::Color(160, 210, 255, 255));
 		pl->SetIntensity(0.1);
@@ -155,13 +155,12 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 
 		// position in grid
 		{
-			const auto minX = static_cast<int>(wallVisibleWidth + radius);
-			const auto maxX = static_cast<int>(viewSize.x - wallVisibleWidth - radius);
-			const auto minY = static_cast<int>(wallVisibleWidth + radius);
-			const auto maxY = static_cast<int>(viewSize.y - wallVisibleWidth - radius);
-
-			const auto x = static_cast<float>(minX + gridCol * (maxX - minX) / colsCount);
-			const auto y = static_cast<float>(minY + gridRow * (maxY - minY) / rowsCount);
+			const auto minX = wallVisibleWidth + radius;
+			const auto maxX = boxSize.x - wallVisibleWidth - radius;
+			const auto minY = wallVisibleWidth + radius;
+			const auto maxY = boxSize.y - wallVisibleWidth - radius;
+			const auto x = minX + gridCol * (maxX - minX) / colsCount;
+			const auto y = minY + gridRow * (maxY - minY) / rowsCount;
 			Utils::SetLocalPosToWorld(node, sf::Vector2f{x, y});
 		}
 
