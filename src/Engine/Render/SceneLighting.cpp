@@ -43,6 +43,14 @@ namespace Engine {
 		_distanceRangeScale = std::max(scale, 0.01f);
 	}
 
+	LightingBlendMode SceneLighting::GetBlendMode() const {
+		return _blendMode;
+	}
+
+	void SceneLighting::SetBlendMode(LightingBlendMode mode) {
+		_blendMode = mode;
+	}
+
 	const std::vector<GpuPointLight>& SceneLighting::GetLights() const {
 		return _lights;
 	}

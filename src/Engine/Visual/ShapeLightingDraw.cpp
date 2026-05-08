@@ -151,6 +151,7 @@ namespace Engine {
 		shader->setUniform("u_bevel_width", recv->GetBevelWidth());
 		shader->setUniform("u_ease_circ", recv->IsEaseOutCirc() ? 1 : 0);
 		shader->setUniform("u_diffusion", recv->GetDiffusion());
+		shader->setUniform("u_blend_mode", static_cast<int>(SceneLighting::GetInstance().GetBlendMode()));
 
 		states.shader = shader;
 		target.draw(*shape, states);

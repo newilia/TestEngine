@@ -12,7 +12,6 @@
 #include "Engine/Visual/RectangleShapeVisual.h"
 #include "fmt/format.h"
 
-#include <limits>
 #include <memory>
 #include <utility>
 
@@ -29,6 +28,7 @@ void TestEnvironment::Setup() {
 
 	mainContext.GetPhysicsProcessor()->SetGravity({0, 1000});
 	mainContext.GetPhysicsProcessor()->SetGravityEnabled(true);
+	mainContext.GetPhysicsProcessor()->SetMotionSubsteps(4);
 	mainContext.SetScene(BuildScene());
 
 	EventHandlerBase::SubscribeForEvents();
@@ -87,7 +87,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		Utils::SetLocalPosToWorld(node, wallPositions[i]);
 		rect->SetFillColor(sf::Color(30, 255, 30, 50));
 		rect->SetOutlineColor(sf::Color(30, 255, 30, 120));
-		rect->SetOutlineThickness(1.f);
+		rect->SetOutlineThickness(-0.0f);
 
 		auto bodyBeh = node->RequireBehaviour<PhysicsBodyBehaviour>();
 		bodyBeh->GetInteractionGroups().set(0, true);
@@ -101,9 +101,9 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 
 	/* light stuff */
 
-	const auto AddLightSource = [](SceneNode* node, float intensity, float radius) {
+	const auto AddLightSource = [](SceneNode* node, float intensity, float radius, sf::Color color) {
 		auto pl = node->RequireBehaviour<PointLightBehaviour>();
-		pl->SetLightColor(sf::Color(160, 210, 255, 255));
+		pl->SetLightColor(color);
 		pl->SetIntensity(intensity);
 		pl->SetRadius(radius);
 	};
@@ -133,16 +133,16 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		node->RequireBehaviour<PhysicsBodyBehaviour>()->GetInteractionGroups().set(0, true);
 
 		constexpr float radius = 20.f;
-		constexpr auto kColor1 = sf::Color{200, 40, 40, 200};
-		constexpr auto kColor2 = sf::Color{40, 200, 40, 200};
-		constexpr auto kColor3 = sf::Color{40, 40, 200, 200};
+		constexpr auto kColor1 = sf::Color{200, 40, 40, 255};
+		constexpr auto kColor2 = sf::Color{40, 200, 40, 255};
+		constexpr auto kColor3 = sf::Color{40, 40, 200, 255};
 
 		const auto color = (kind == 0) ? kColor1 : ((kind == 1) ? kColor2 : kColor3);
-		const auto outlineColor = sf::Color(color.r, color.g, color.b, 255);
+		const auto outlineColor = sf::Color(color.r / 2, color.g / 2, color.b / 2, 255);
 		circle->SetRadius(radius);
 		circle->SetFillColor(color);
 		circle->SetOutlineColor(outlineColor);
-		circle->SetOutlineThickness(1);
+		circle->SetOutlineThickness(-0.0f);
 		circle->SetOrigin(circle->GetLocalBounds().getCenter());
 
 		// position in grid
@@ -163,8 +163,8 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		auto fieldBeh = node->RequireBehaviour<AttractiveBehaviour>();
 		fieldBeh->SetAttraction(commonAttraction * (isAttractionPositive ? -1 : 1));
 
-		AddLightSource(node.get(), 5, 5);
-		AddLightReceiver(node.get(), 0.3f, true, 25);
+		AddLightSource(node.get(), 20, 3, color);
+		AddLightReceiver(node.get(), 0.7f, true, 25);
 
 		scene->GetRoot()->AddChild(std::move(node));
 	}
