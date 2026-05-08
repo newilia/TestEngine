@@ -26,14 +26,15 @@ uniform int u_mode_bevel;
 uniform float u_bevel_width;
 uniform int u_ease_circ;
 uniform float u_diffusion;
+uniform float u_lighting_strength;
 uniform int u_blend_mode;
 
 float ease_curve(float t)
 {
     if (u_ease_circ != 0)
     {
-        float s = 1.0 - clamp(t, 0.0, 1.0);
-        return sqrt(max(1.0 - s * s, 0.0));
+        float u = clamp(t, 0.0, 1.0);
+        return 1.0 - sqrt(max(1.0 - u * u, 0.0));
     }
     return clamp(t, 0.0, 1.0);
 }
@@ -144,6 +145,8 @@ void main()
             lit += lc * distanceAttenuation;
         }
     }
+
+    lit *= clamp(u_lighting_strength, 0.0, 1.0);
 
     vec3 base = u_fill_color.rgb;
     float a = u_fill_color.a;

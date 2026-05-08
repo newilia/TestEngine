@@ -149,8 +149,9 @@ namespace Engine {
 
 		shader->setUniform("u_mode_bevel", recv->IsBevelEmbossMode() ? 1 : 0);
 		shader->setUniform("u_bevel_width", recv->GetBevelWidth());
-		shader->setUniform("u_ease_circ", recv->IsEaseOutCirc() ? 1 : 0);
+		shader->setUniform("u_ease_circ", recv->IsEaseInCirc() ? 1 : 0);
 		shader->setUniform("u_diffusion", recv->GetDiffusion());
+		shader->setUniform("u_lighting_strength", recv->GetLightingStrength());
 		shader->setUniform("u_blend_mode", static_cast<int>(SceneLighting::GetInstance().GetBlendMode()));
 
 		states.shader = shader;

@@ -26,12 +26,12 @@ void ShapeLightReceiverBehaviour::SetBevelWidth(float value) {
 	_bevelWidth = value;
 }
 
-bool ShapeLightReceiverBehaviour::IsEaseOutCirc() const {
-	return _easeOutCirc;
+bool ShapeLightReceiverBehaviour::IsEaseInCirc() const {
+	return _easeInCirc;
 }
 
-void ShapeLightReceiverBehaviour::SetEaseOutCirc(bool value) {
-	_easeOutCirc = value;
+void ShapeLightReceiverBehaviour::SetEaseInCirc(bool value) {
+	_easeInCirc = value;
 }
 
 float ShapeLightReceiverBehaviour::GetDiffusion() const {
@@ -40,4 +40,12 @@ float ShapeLightReceiverBehaviour::GetDiffusion() const {
 
 void ShapeLightReceiverBehaviour::SetDiffusion(float value) {
 	_diffusion = value;
+}
+
+float ShapeLightReceiverBehaviour::GetLightingStrength() const {
+	return _lightingStrength;
+}
+
+void ShapeLightReceiverBehaviour::SetLightingStrength(float value) {
+	_lightingStrength = value;
 }

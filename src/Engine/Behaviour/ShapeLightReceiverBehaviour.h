@@ -17,11 +17,14 @@ public:
 	float GetBevelWidth() const;
 	void SetBevelWidth(float value);
 
-	bool IsEaseOutCirc() const;
-	void SetEaseOutCirc(bool value);
+	bool IsEaseInCirc() const;
+	void SetEaseInCirc(bool value);
 
 	float GetDiffusion() const;
 	void SetDiffusion(float value);
+
+	float GetLightingStrength() const;
+	void SetLightingStrength(float value);
 
 private:
 	/// @property(name="Lighting enabled")
@@ -30,8 +33,10 @@ private:
 	bool _bevelEmboss = false;
 	/// @property(dragSpeed=0.5f, minValue=0.01f)
 	float _bevelWidth = 14.f;
-	/// @property(name="Ease out circ", tooltip="Off = linear falloff curve")
-	bool _easeOutCirc = true;
+	/// @property(name="Ease in circ", tooltip="Off = linear falloff curve")
+	bool _easeInCirc = true;
 	/// @property(minValue=0.f, maxValue=1.f, dragSpeed=0.01f)
 	float _diffusion = 1.f;
+	/// @property(name="Lighting strength", tooltip="How strongly all point lights add to this shape (0 = none, 1 = full)", minValue=0.f, maxValue=1.f, dragSpeed=0.01f)
+	float _lightingStrength = 1.f;
 };
