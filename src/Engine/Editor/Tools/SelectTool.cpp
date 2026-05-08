@@ -48,6 +48,7 @@ bool SelectTool::processEvent(const sf::Event& event) {
 			_dragCurrentWorld = _dragStartWorld;
 			_marqueeMode =
 			    (pressed->position.x >= _dragStartPixel.x) ? MarqueeMode::kIntersects : MarqueeMode::kContains;
+			_marqueeBaseSelection = Engine::Editor::GetInstance().GetSelectedNodes();
 			return true;
 		}
 	}
@@ -62,6 +63,19 @@ bool SelectTool::processEvent(const sf::Event& event) {
 			}
 			_dragCurrentWorld = toWorld(moved->position);
 			_marqueeMode = (moved->position.x >= _dragStartPixel.x) ? MarqueeMode::kIntersects : MarqueeMode::kContains;
+			if (_isMarqueeSelecting) {
+				auto scene = Engine::MainContext::GetInstance().GetScene();
+				if (scene) {
+					const Scene::RectSelectionMode mode = (_marqueeMode == MarqueeMode::kContains)
+					                                          ? Scene::RectSelectionMode::kContains
+					                                          : Scene::RectSelectionMode::kIntersects;
+					const bool isCtrlPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LControl) ||
+					                           sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RControl);
+					auto marqueeNodes = scene->FindNodesInRect(CurrentMarqueeRect(), mode);
+					Engine::Editor::GetInstance().SetSelectedNodes(
+					    BuildLiveMarqueeSelection(marqueeNodes, isCtrlPressed));
+				}
+			}
 			return true;
 		}
 	}
@@ -76,12 +90,8 @@ bool SelectTool::processEvent(const sf::Event& event) {
 					                                          ? Scene::RectSelectionMode::kContains
 					                                          : Scene::RectSelectionMode::kIntersects;
 					auto selectedNodes = scene->FindNodesInRect(CurrentMarqueeRect(), mode);
-					if (isCtrlPressed) {
-						Engine::Editor::GetInstance().AddSelectedNodes(selectedNodes);
-					}
-					else {
-						Engine::Editor::GetInstance().SetSelectedNodes(std::move(selectedNodes));
-					}
+					Engine::Editor::GetInstance().SetSelectedNodes(
+					    BuildLiveMarqueeSelection(selectedNodes, isCtrlPressed));
 				}
 			}
 			else {
@@ -90,6 +100,7 @@ bool SelectTool::processEvent(const sf::Event& event) {
 
 			_mousePressed = false;
 			_isMarqueeSelecting = false;
+			_marqueeBaseSelection.clear();
 			return true;
 		}
 	}
@@ -107,6 +118,28 @@ sf::FloatRect SelectTool::CurrentMarqueeRect() const {
 	const sf::Vector2f maxPoint{
 	    std::max(_dragStartWorld.x, _dragCurrentWorld.x), std::max(_dragStartWorld.y, _dragCurrentWorld.y)};
 	return {minPoint, maxPoint - minPoint};
+}
+
+std::vector<std::shared_ptr<SceneNode>> SelectTool::BuildLiveMarqueeSelection(
+    const std::vector<std::shared_ptr<SceneNode>>& marqueeNodes, const bool isCtrlPressed) const {
+	if (!isCtrlPressed) {
+		return marqueeNodes;
+	}
+
+	std::vector<std::shared_ptr<SceneNode>> result = _marqueeBaseSelection;
+	for (const auto& node : marqueeNodes) {
+		if (!node) {
+			continue;
+		}
+		const bool alreadyAdded =
+		    std::any_of(result.begin(), result.end(), [&node](const std::shared_ptr<SceneNode>& selected) {
+			    return selected == node;
+		    });
+		if (!alreadyAdded) {
+			result.push_back(node);
+		}
+	}
+	return result;
 }
 
 void SelectTool::drawOverlay(sf::RenderWindow& window) {
