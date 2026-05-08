@@ -20,7 +20,7 @@ void UserPlatformControllerBehaviour::ResyncSpawnFromNode() {
 		_targetPos = _defaultPos = Utils::GetWorldPos(p);
 		ClampPongPlatformDesiredCenter(_targetPos, true, p, _movementBounds);
 		ClampPongPlatformDesiredCenter(_defaultPos, true, p, _movementBounds);
-		Utils::SetWorldPos(p, _defaultPos);
+		Utils::SetLocalPosToWorld(p, _defaultPos);
 	}
 }
 

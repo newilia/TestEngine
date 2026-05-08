@@ -38,8 +38,8 @@ namespace BallGame1 {
 		_scoreNode = scoreNode;
 	}
 
-	void GameControllerBehaviour::SetBallParameters(float mass, float restitution, float radius,
-	                                                const sf::Color& color) {
+	void GameControllerBehaviour::SetBallParameters(
+	    float mass, float restitution, float radius, const sf::Color& color) {
 		_ballMass = mass;
 		_ballRestitution = restitution;
 		_ballRadius = radius;
@@ -104,7 +104,7 @@ namespace BallGame1 {
 		auto worldPos = Utils::GetWorldPos(ballNode);
 		ballNode->RemoveFromParent();
 		rootNode->AddChild(ballNode);
-		Utils::SetWorldPos(ballNode, worldPos);
+		Utils::SetLocalPosToWorld(ballNode, worldPos);
 		if (auto body = ballNode->FindBehaviour<PhysicsBodyBehaviour>()) {
 			body->SetFixed(false);
 		}

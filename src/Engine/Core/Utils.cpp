@@ -47,8 +47,8 @@ namespace {
 		return it->second;
 	}
 
-	bool IsWorldPointInsideSpriteConsideringAlpha(const sf::Vector2f& worldPoint, const sf::Sprite& sprite,
-	                                              const sf::Transform& nodeWorld) {
+	bool IsWorldPointInsideSpriteConsideringAlpha(
+	    const sf::Vector2f& worldPoint, const sf::Sprite& sprite, const sf::Transform& nodeWorld) {
 		sf::Transform full = nodeWorld;
 		full *= sprite.getTransform();
 		const sf::Vector2f local = full.getInverse().transformPoint(worldPoint);
@@ -181,8 +181,8 @@ namespace Utils {
 		return {{minX, minY}, {maxX - minX, maxY - minY}};
 	}
 
-	bool IsWorldPointInsideOfShapeByFan(const sf::Vector2f& worldPoint, const sf::Shape* shape,
-	                                    const sf::Transform& nodeWorld) {
+	bool IsWorldPointInsideOfShapeByFan(
+	    const sf::Vector2f& worldPoint, const sf::Shape* shape, const sf::Transform& nodeWorld) {
 		if (!shape) {
 			return false;
 		}
@@ -197,8 +197,8 @@ namespace Utils {
 		return IsWorldPointInsideOfShapeByFan(worldPoint, shape, sf::Transform{});
 	}
 
-	bool IsWorldPointInsideOfShape(const sf::Vector2f& worldPoint, const sf::Shape* shape,
-	                               const sf::Transform& nodeWorld) {
+	bool IsWorldPointInsideOfShape(
+	    const sf::Vector2f& worldPoint, const sf::Shape* shape, const sf::Transform& nodeWorld) {
 		if (!shape) {
 			return false;
 		}
@@ -225,8 +225,8 @@ namespace Utils {
 		return IsWorldPointInsideOfShape(worldPoint, shape, sf::Transform{});
 	}
 
-	bool IsWorldPointInsideOfVisual(const sf::Vector2f& worldPoint, const Visual* visual,
-	                                const sf::Transform& nodeWorld) {
+	bool IsWorldPointInsideOfVisual(
+	    const sf::Vector2f& worldPoint, const Visual* visual, const sf::Transform& nodeWorld) {
 		if (!visual) {
 			return false;
 		}
@@ -269,8 +269,8 @@ namespace Utils {
 		});
 	}
 
-	bool IsPointInsideOfTriangle(const sf::Vector2f& p, const sf::Vector2f& t1, const sf::Vector2f& t2,
-	                             const sf::Vector2f& t3) {
+	bool IsPointInsideOfTriangle(
+	    const sf::Vector2f& p, const sf::Vector2f& t1, const sf::Vector2f& t2, const sf::Vector2f& t3) {
 		auto a = (t1.x - p.x) * (t2.y - t1.y) - (t2.x - t1.x) * (t1.y - p.y);
 		auto b = (t2.x - p.x) * (t3.y - t2.y) - (t3.x - t2.x) * (t2.y - p.y);
 		auto c = (t3.x - p.x) * (t1.y - t3.y) - (t1.x - t3.x) * (t3.y - p.y);
@@ -423,34 +423,36 @@ namespace Utils {
 	}
 
 	sf::Vector2f GetWorldPos(const std::shared_ptr<const SceneNode>& node) {
-		const auto n = Verify(node);
-		return n->GetWorldTransform().transformPoint(sf::Vector2f{});
+		if (node) {
+			return node->GetWorldTransform().transformPoint(sf::Vector2f{});
+		}
+		return {};
 	}
 
-	void SetWorldPos(const std::shared_ptr<SceneNode>& node, sf::Vector2f pos) {
+	void SetLocalPosToWorld(const std::shared_ptr<SceneNode>& node, sf::Vector2f worldPos) {
 		const auto n = Verify(node);
 		if (auto parent = n->GetParent()) {
-			const sf::Vector2f local = parent->GetWorldTransform().getInverse().transformPoint(pos);
+			const sf::Vector2f local = parent->GetWorldTransform().getInverse().transformPoint(worldPos);
 			n->GetLocalTransform()->SetPosition(local);
 		}
 		else {
-			n->GetLocalTransform()->SetPosition(pos);
+			n->GetLocalTransform()->SetPosition(worldPos);
 		}
 	}
 
 	void SortSceneNodesByDrawOrder(std::vector<std::shared_ptr<SceneNode>>& nodes) {
 		std::stable_sort(nodes.begin(), nodes.end(),
-		                 [](const std::shared_ptr<SceneNode>& a, const std::shared_ptr<SceneNode>& b) {
-			                 int la = 0;
-			                 int lb = 0;
-			                 if (auto sa = a->FindEntity<RelativeSortingStrategy>()) {
-				                 la = sa->GetPriority();
-			                 }
-			                 if (auto sb = b->FindEntity<RelativeSortingStrategy>()) {
-				                 lb = sb->GetPriority();
-			                 }
-			                 return la < lb;
-		                 });
+		    [](const std::shared_ptr<SceneNode>& a, const std::shared_ptr<SceneNode>& b) -> bool {
+			    int la = 0;
+			    int lb = 0;
+			    if (auto sa = a->GetSortingStrategy()) {
+				    la = sa->GetPriority();
+			    }
+			    if (auto sb = b->GetSortingStrategy()) {
+				    lb = sb->GetPriority();
+			    }
+			    return la < lb;
+		    });
 	}
 
 } // namespace Utils

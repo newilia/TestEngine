@@ -43,7 +43,7 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 		}
 
 		pos += body->GetVelocity() * dt.asSeconds();
-		Utils::SetWorldPos(node, pos);
+		Utils::SetLocalPosToWorld(node, pos);
 		++it;
 	}
 
@@ -158,9 +158,7 @@ bool PhysicsProcessor::CheckBboxIntersection(const PhysicsBodyBehaviour* body1, 
 }
 
 std::optional<IntersectionDetails> PhysicsProcessor::DetectIntersection(SceneNode* node1, SceneNode* node2,
-                                                                        PhysicsBodyBehaviour* body1,
-                                                                        PhysicsBodyBehaviour* body2,
-                                                                        bool bboxAlreadyVerified) {
+    PhysicsBodyBehaviour* body1, PhysicsBodyBehaviour* body2, bool bboxAlreadyVerified) {
 	if (VerifyFalse(!node1 || !node2)) {
 		return std::nullopt;
 	}
@@ -208,9 +206,8 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectIntersection(SceneNod
 	return std::nullopt;
 }
 
-std::optional<IntersectionDetails>
-PhysicsProcessor::DetectPolygonPolygonIntersection(const PhysicsBodyBehaviour* body1,
-                                                   const PhysicsBodyBehaviour* body2) {
+std::optional<IntersectionDetails> PhysicsProcessor::DetectPolygonPolygonIntersection(
+    const PhysicsBodyBehaviour* body1, const PhysicsBodyBehaviour* body2) {
 	auto shape1 = body1->GetShape();
 	auto shape2 = body2->GetShape();
 
@@ -252,9 +249,8 @@ PhysicsProcessor::DetectPolygonPolygonIntersection(const PhysicsBodyBehaviour* b
 	return result;
 }
 
-std::optional<IntersectionDetails> PhysicsProcessor::DetectCirclePolygonIntersection(const SceneNode& circleNode,
-                                                                                     const sf::CircleShape* circle,
-                                                                                     const PhysicsBodyBehaviour* body) {
+std::optional<IntersectionDetails> PhysicsProcessor::DetectCirclePolygonIntersection(
+    const SceneNode& circleNode, const sf::CircleShape* circle, const PhysicsBodyBehaviour* body) {
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
 
@@ -290,10 +286,8 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectCirclePolygonIntersec
 	return result;
 }
 
-std::optional<IntersectionDetails> PhysicsProcessor::DetectCircleCircleIntersection(const SceneNode& node1,
-                                                                                    const sf::CircleShape* circle1,
-                                                                                    const SceneNode& node2,
-                                                                                    const sf::CircleShape* circle2) {
+std::optional<IntersectionDetails> PhysicsProcessor::DetectCircleCircleIntersection(
+    const SceneNode& node1, const sf::CircleShape* circle1, const SceneNode& node2, const sf::CircleShape* circle2) {
 	using namespace Utils;
 	auto r1 = circle1->getRadius();
 	auto r2 = circle2->getRadius();
@@ -325,8 +319,8 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectCircleCircleIntersect
 	return result;
 }
 
-std::optional<SegmentIntersectionPoints> PhysicsProcessor::FindSegmentsIntersectionPoint(const Segment& segA,
-                                                                                         const Segment& segB) {
+std::optional<SegmentIntersectionPoints> PhysicsProcessor::FindSegmentsIntersectionPoint(
+    const Segment& segA, const Segment& segB) {
 	assert(segA.start != segA.end);
 	assert(segB.start != segB.end);
 
@@ -404,9 +398,8 @@ std::optional<SegmentIntersectionPoints> PhysicsProcessor::FindSegmentsIntersect
 	return SegmentIntersectionPoints{linesIntersection};
 }
 
-std::optional<SegmentIntersectionPoints>
-PhysicsProcessor::FindSegmentCircleIntersectionPoint(const Segment& seg, const sf::Vector2f& circleCenter,
-                                                     float radius) {
+std::optional<SegmentIntersectionPoints> PhysicsProcessor::FindSegmentCircleIntersectionPoint(
+    const Segment& seg, const sf::Vector2f& circleCenter, float radius) {
 	using namespace Utils;
 	SegmentIntersectionPoints result;
 	auto s = seg;
@@ -504,8 +497,8 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 	}
 
 	/* overlapping fixing */
-	auto getPenetrationDepth = [collisionPoint = collision.intersection.start](SceneNode* node,
-	                                                                           const sf::Vector2f& bodyNormal) {
+	auto getPenetrationDepth = [collisionPoint = collision.intersection.start](
+	                               SceneNode* node, const sf::Vector2f& bodyNormal) {
 		float result = 0.f;
 		auto* bodyBeh = node->FindBehaviour<PhysicsBodyBehaviour>().get();
 		if (!bodyBeh) {
@@ -523,13 +516,13 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 
 	if (pb2->IsFixed()) {
 		auto b1_pos = Utils::GetWorldPos(body1) - b1_normal * penetrationDepthSum;
-		Utils::SetWorldPos(body1, b1_pos);
+		Utils::SetLocalPosToWorld(body1, b1_pos);
 	}
 	else {
 		auto b1_pos = Utils::GetWorldPos(body1) - b1_normal * penetrationDepthSum * (m1 / (m1 + m2));
-		Utils::SetWorldPos(body1, b1_pos);
+		Utils::SetLocalPosToWorld(body1, b1_pos);
 		auto b2_pos = Utils::GetWorldPos(body2) + b1_normal * penetrationDepthSum * (m2 / (m1 + m2));
-		Utils::SetWorldPos(body2, b2_pos);
+		Utils::SetLocalPosToWorld(body2, b2_pos);
 	}
 
 	/* velocities handling */

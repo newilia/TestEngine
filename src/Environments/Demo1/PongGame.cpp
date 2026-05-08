@@ -394,7 +394,7 @@ namespace Demo1 {
 	} // namespace
 
 	std::shared_ptr<SceneNode> CreatePongGameNode(float fieldWidth, float fieldHeight, float platformWidth,
-	                                              float platformHeight, float wallThickness, float ballRadius) {
+	    float platformHeight, float wallThickness, float ballRadius) {
 		if (fieldWidth <= 0.f || fieldHeight <= 0.f || platformWidth <= 0.f || platformHeight <= 0.f ||
 		    wallThickness <= 0.f) {
 			return nullptr;
@@ -411,7 +411,7 @@ namespace Demo1 {
 
 		auto root = make_shared<SceneNode>();
 		root->SetName("Pong");
-		Utils::SetWorldPos(root, GetPongPlayfieldRect().getCenter());
+		Utils::SetLocalPosToWorld(root, GetPongPlayfieldRect().getCenter());
 		RegisterPongGameRoot(root);
 
 		const sf::Vector2f platformSize{platformWidth, platformHeight};

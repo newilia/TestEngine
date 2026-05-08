@@ -10,8 +10,7 @@
 namespace {
 
 	void ComputePlatformCenterBounds(const sf::Vector2f& shapePos, const sf::FloatRect& bb, bool isBottomPlayer,
-	                                 const sf::FloatRect& field, float screenHeight, float& minX, float& maxX,
-	                                 float& minY, float& maxY) {
+	    const sf::FloatRect& field, float screenHeight, float& minX, float& maxX, float& minY, float& maxY) {
 		const float oxl = field.position.x;
 		const float oxr = field.position.x + field.size.x;
 		const float oyt = field.position.y;
@@ -59,8 +58,7 @@ namespace {
 	}
 
 	void ComputeClampFromAxisAlignedRegion(const sf::Vector2f& shapePos, const sf::FloatRect& bb,
-	                                       const sf::FloatRect& region, float& minX, float& maxX, float& minY,
-	                                       float& maxY) {
+	    const sf::FloatRect& region, float& minX, float& maxX, float& minY, float& maxY) {
 		const float oxl = region.position.x;
 		const float oxr = region.position.x + region.size.x;
 		const float oyt = region.position.y;
@@ -89,8 +87,7 @@ namespace {
 } // namespace
 
 void ApplyPongPlatformVelocityTowardsTarget(const std::shared_ptr<SceneNode>& platformNode,
-                                            const sf::Vector2f& targetPos, float speedFactor,
-                                            const sf::Vector2f& velLimit) {
+    const sf::Vector2f& targetPos, float speedFactor, const sf::Vector2f& velLimit) {
 	if (!platformNode) {
 		return;
 	}
@@ -101,8 +98,7 @@ void ApplyPongPlatformVelocityTowardsTarget(const std::shared_ptr<SceneNode>& pl
 }
 
 void ClampPongPlatformDesiredCenter(sf::Vector2f& center, bool isBottomPlayer,
-                                    const std::shared_ptr<SceneNode>& platformNode,
-                                    const std::weak_ptr<SceneNode>& movementBounds) {
+    const std::shared_ptr<SceneNode>& platformNode, const std::weak_ptr<SceneNode>& movementBounds) {
 	if (!platformNode) {
 		return;
 	}
@@ -127,19 +123,19 @@ void ClampPongPlatformDesiredCenter(sf::Vector2f& center, bool isBottomPlayer,
 	const float screenH = GetPongWindowSize().y;
 
 	float minX, maxX, minY, maxY;
-	ComputePlatformCenterBounds(Utils::GetWorldPos(platformNode), bb, isBottomPlayer, field, screenH, minX, maxX, minY,
-	                            maxY);
+	ComputePlatformCenterBounds(
+	    Utils::GetWorldPos(platformNode), bb, isBottomPlayer, field, screenH, minX, maxX, minY, maxY);
 
 	center.x = std::clamp(center.x, minX, maxX);
 	center.y = std::clamp(center.y, minY, maxY);
 }
 
 void ClampPongPlatformToPlayfield(const std::shared_ptr<SceneNode>& platformNode, bool isBottomPlayer,
-                                  const std::weak_ptr<SceneNode>& movementBounds) {
+    const std::weak_ptr<SceneNode>& movementBounds) {
 	if (!platformNode) {
 		return;
 	}
 	sf::Vector2f pos = Utils::GetWorldPos(platformNode);
 	ClampPongPlatformDesiredCenter(pos, isBottomPlayer, platformNode, movementBounds);
-	Utils::SetWorldPos(platformNode, pos);
+	Utils::SetLocalPosToWorld(platformNode, pos);
 }

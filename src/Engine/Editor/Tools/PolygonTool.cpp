@@ -43,8 +43,8 @@ void PolygonTool::tryAppendSample(const sf::Vector2i& pixel, const sf::Vector2f&
 	if (!_lastSamplePixel) {
 		return;
 	}
-	const sf::Vector2f delta(static_cast<float>(pixel.x - _lastSamplePixel->x),
-	                         static_cast<float>(pixel.y - _lastSamplePixel->y));
+	const sf::Vector2f delta(
+	    static_cast<float>(pixel.x - _lastSamplePixel->x), static_cast<float>(pixel.y - _lastSamplePixel->y));
 	if (Utils::Length(delta) >= kMinSampleSpacingPx) {
 		_worldSamples.push_back(world);
 		_lastSamplePixel = pixel;
@@ -94,7 +94,7 @@ void PolygonTool::finalizeStroke() {
 	visual->SetPoints(localPts);
 	node->SetVisual(std::move(visual));
 	parent->AddChild(node);
-	Utils::SetWorldPos(node, centerWorld);
+	Utils::SetLocalPosToWorld(node, centerWorld);
 	if (_isAttachPhysicsBody) {
 		auto body = node->RequireBehaviour<PhysicsBodyBehaviour>();
 	}
@@ -185,7 +185,7 @@ void PolygonTool::drawOverlay(sf::RenderWindow& window) {
 	}
 
 	ImGui::GetForegroundDrawList()->AddPolyline(pts.data(), static_cast<int>(pts.size()), IM_COL32(255, 255, 255, 255),
-	                                            ImDrawFlags_None, kOverlayLineThickness);
+	    ImDrawFlags_None, kOverlayLineThickness);
 }
 
 void PolygonTool::drawToolParametersUi() {

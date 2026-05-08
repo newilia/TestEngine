@@ -62,7 +62,7 @@ namespace Engine {
 		const sf::FloatRect worldBounds = Utils::AxisAlignedBoundsAfterTransform(full, shape->getLocalBounds());
 
 		std::vector<Engine::GpuPointLight> lights;
-		SceneLighting::SelectLightsForBounds(worldBounds, lights, kMaxLights);
+		SceneLighting::GetInstance().SelectLightsForBounds(worldBounds, lights, kMaxLights);
 
 		const sf::Transform invWorldFromLocal = full.getInverse();
 		const sf::Glsl::Mat3 localFromWorld = invWorldFromLocal;
@@ -85,7 +85,7 @@ namespace Engine {
 
 		const sf::Color fill = visual.GetFillColor();
 		const sf::Glsl::Vec4 fillV(static_cast<float>(fill.r) / 255.f, static_cast<float>(fill.g) / 255.f,
-		                           static_cast<float>(fill.b) / 255.f, static_cast<float>(fill.a) / 255.f);
+		    static_cast<float>(fill.b) / 255.f, static_cast<float>(fill.a) / 255.f);
 
 		int shapeKind = 2;
 		int vertCount = 0;

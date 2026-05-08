@@ -25,22 +25,22 @@ namespace Utils {
 
 	sf::Vector2f Rotate(const sf::Vector2f& v, float angle);
 
-	bool IsPointInsideOfTriangle(const sf::Vector2f& p, const sf::Vector2f& t1, const sf::Vector2f& t2,
-	                             const sf::Vector2f& t3);
+	bool IsPointInsideOfTriangle(
+	    const sf::Vector2f& p, const sf::Vector2f& t1, const sf::Vector2f& t2, const sf::Vector2f& t3);
 
 	/// AABB in world space after mapping `localRect` by `m` (four corners).
 	sf::FloatRect AxisAlignedBoundsAfterTransform(const sf::Transform& m, const sf::FloatRect& localRect);
 
 	/// Веерная триангуляция от первой вершины; Не для круга — см. `IsWorldPointInsideOfShape`.
 	bool IsWorldPointInsideOfShapeByFan(const sf::Vector2f& worldPoint, const sf::Shape* shape);
-	bool IsWorldPointInsideOfShapeByFan(const sf::Vector2f& worldPoint, const sf::Shape* shape,
-	                                    const sf::Transform& nodeWorld);
+	bool IsWorldPointInsideOfShapeByFan(
+	    const sf::Vector2f& worldPoint, const sf::Shape* shape, const sf::Transform& nodeWorld);
 	bool IsWorldPointInsideOfShape(const sf::Vector2f& worldPoint, const sf::Shape* shape);
-	bool IsWorldPointInsideOfShape(const sf::Vector2f& worldPoint, const sf::Shape* shape,
-	                               const sf::Transform& nodeWorld);
+	bool IsWorldPointInsideOfShape(
+	    const sf::Vector2f& worldPoint, const sf::Shape* shape, const sf::Transform& nodeWorld);
 	bool IsWorldPointInsideOfVisual(const sf::Vector2f& worldPoint, const Visual* visual);
-	bool IsWorldPointInsideOfVisual(const sf::Vector2f& worldPoint, const Visual* visual,
-	                                const sf::Transform& nodeWorld);
+	bool IsWorldPointInsideOfVisual(
+	    const sf::Vector2f& worldPoint, const Visual* visual, const sf::Transform& nodeWorld);
 	bool IsWorldPointInsideOfBody(const sf::Vector2f& worldPoint, const PhysicsBodyBehaviour* body);
 
 	bool IsNan(const sf::Vector2f& v);
@@ -73,7 +73,7 @@ namespace Utils {
 	std::vector<sf::Vector2f> ConvexHull2D(std::vector<sf::Vector2f> points);
 
 	sf::Vector2f GetWorldPos(const std::shared_ptr<const SceneNode>& node);
-	void SetWorldPos(const std::shared_ptr<SceneNode>& node, sf::Vector2f pos);
+	void SetLocalPosToWorld(const std::shared_ptr<SceneNode>& node, sf::Vector2f pos);
 
 	void SortSceneNodesByDrawOrder(std::vector<std::shared_ptr<SceneNode>>& nodes);
 

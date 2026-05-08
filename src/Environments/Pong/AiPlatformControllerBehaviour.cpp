@@ -26,7 +26,7 @@ void AiPlatformControllerBehaviour::ResyncSpawnFromNode() {
 		_targetPos = _defaultPos = Utils::GetWorldPos(p);
 		ClampPongPlatformDesiredCenter(_targetPos, false, p, _movementBounds);
 		ClampPongPlatformDesiredCenter(_defaultPos, false, p, _movementBounds);
-		Utils::SetWorldPos(p, _defaultPos);
+		Utils::SetLocalPosToWorld(p, _defaultPos);
 	}
 }
 
@@ -56,8 +56,8 @@ void AiPlatformControllerBehaviour::SetAggressivenessParams(float aggression, sf
 	_aggressionChangePeriodSeconds = changePeriod.asSeconds();
 }
 
-void AiPlatformControllerBehaviour::BeginObserve(const std::weak_ptr<SceneNode>& opponentPlatformNode,
-                                                 const std::weak_ptr<PongBall>& ball) {
+void AiPlatformControllerBehaviour::BeginObserve(
+    const std::weak_ptr<SceneNode>& opponentPlatformNode, const std::weak_ptr<PongBall>& ball) {
 	_opponentPlatform = opponentPlatformNode;
 	_ball = ball;
 }

@@ -1,6 +1,26 @@
 #include "PointLightBehaviour.h"
 
+#include "Engine/Render/SceneLighting.h"
 #include "PointLightBehaviour.generated.hpp"
+
+void PointLightBehaviour::OnInit() {
+	Behaviour::OnInit();
+	Engine::SceneLighting::GetInstance().RegisterPointLight(shared_from_this());
+}
+
+void PointLightBehaviour::OnDeinit() {
+	Behaviour::OnDeinit();
+	Engine::SceneLighting::GetInstance().UnregisterPointLight(this);
+}
+
+void PointLightBehaviour::OnEnabled(bool isEnabled) {
+	if (isEnabled) {
+		Engine::SceneLighting::GetInstance().RegisterPointLight(shared_from_this());
+	}
+	else {
+		Engine::SceneLighting::GetInstance().UnregisterPointLight(this);
+	}
+}
 
 sf::Color PointLightBehaviour::GetLightColor() const {
 	return _lightColor;

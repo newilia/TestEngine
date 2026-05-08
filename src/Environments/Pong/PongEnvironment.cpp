@@ -105,7 +105,7 @@ void PongEnvironment::AddBall(Scene* scene, float radius) {
 	circleVisual->SetOutlineColor(outlineColor);
 	circleVisual->SetOutlineThickness(1);
 	circleVisual->SetOrigin(circleVisual->GetLocalBounds().getCenter());
-	Utils::SetWorldPos(ballNode, pos);
+	Utils::SetLocalPosToWorld(ballNode, pos);
 
 	auto rigidBody = ball->GetNode()->RequireBehaviour<PhysicsBodyBehaviour>();
 	rigidBody->SetMass(3.14f * radius * radius);
@@ -119,8 +119,8 @@ void PongEnvironment::AddBall(Scene* scene, float radius) {
 	sBall = ball;
 }
 
-shared_ptr<SceneNode> PongEnvironment::CreateDefaultPlatform(sf::Vector2f size, sf::Vector2f pos, float rotationDeg,
-                                                             sf::Color color) const {
+shared_ptr<SceneNode> PongEnvironment::CreateDefaultPlatform(
+    sf::Vector2f size, sf::Vector2f pos, float rotationDeg, sf::Color color) const {
 	auto node = make_shared<SceneNode>();
 	node->SetName("Platform");
 	auto convexShape = std::make_shared<ConvexShapeVisual>();
@@ -140,7 +140,7 @@ shared_ptr<SceneNode> PongEnvironment::CreateDefaultPlatform(sf::Vector2f size, 
 	}
 	shape->setRotation(sf::degrees(rotationDeg));
 	shape->setOrigin(Utils::FindCenterOfMass(shape));
-	Utils::SetWorldPos(node, pos);
+	Utils::SetLocalPosToWorld(node, pos);
 	shape->setFillColor(color);
 
 	auto physicsBody = node->RequireBehaviour<PhysicsBodyBehaviour>();
@@ -161,10 +161,8 @@ void PongEnvironment::AddWalls(Scene* scene) {
 	    {sz.x, wallActualWidth}, {sz.x, wallActualWidth}, {wallActualWidth, sz.y}, {wallActualWidth, sz.y}};
 
 	constexpr float wallOffset = wallActualWidth / 2 - wallVisibleWidth;
-	sf::Vector2f wallPositions[] = {{o.x + sz.x / 2, o.y + sz.y + wallOffset},
-	                                {o.x + sz.x / 2, o.y - wallOffset},
-	                                {o.x - wallOffset, o.y + sz.y / 2},
-	                                {o.x + sz.x + wallOffset, o.y + sz.y / 2}};
+	sf::Vector2f wallPositions[] = {{o.x + sz.x / 2, o.y + sz.y + wallOffset}, {o.x + sz.x / 2, o.y - wallOffset},
+	    {o.x - wallOffset, o.y + sz.y / 2}, {o.x + sz.x + wallOffset, o.y + sz.y / 2}};
 	for (int i = 0; i < 4; ++i) {
 		auto wallNode = make_shared<SceneNode>();
 		wallNode->SetName(wallNames[i]);
@@ -174,7 +172,7 @@ void PongEnvironment::AddWalls(Scene* scene) {
 		auto rectShape = rectVisual->GetShape();
 		rectShape->setSize(wallSizes[i]);
 		rectShape->setOrigin(Utils::FindCenterOfMass(rectShape));
-		Utils::SetWorldPos(wallNode, wallPositions[i]);
+		Utils::SetLocalPosToWorld(wallNode, wallPositions[i]);
 
 		auto bodyBeh = wallNode->RequireBehaviour<PhysicsBodyBehaviour>();
 		bodyBeh->SetFixed(true);
@@ -273,7 +271,7 @@ void PongEnvironment::AddScoreboard(Scene* scene) {
 	_scoreText->SetOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
 
 	node->SetVisual(std::shared_ptr<TextVisual>(_scoreText));
-	Utils::SetWorldPos(node, center);
+	Utils::SetLocalPosToWorld(node, center);
 	_scoreboardNode = node;
 	scene->GetRoot()->AddChild(std::move(node));
 }
@@ -286,7 +284,7 @@ void PongEnvironment::UpdateScoreText() {
 	_scoreText->SetString(text);
 	const auto lb = _scoreText->GetLocalBounds();
 	_scoreText->SetOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
-	Utils::SetWorldPos(_scoreboardNode, GetPongPlayfieldRect().getCenter());
+	Utils::SetLocalPosToWorld(_scoreboardNode, GetPongPlayfieldRect().getCenter());
 }
 
 std::shared_ptr<Scene> PongEnvironment::BuildScene() {
@@ -318,17 +316,17 @@ void PongEnvironment::ResetRound() {
 		return;
 	}
 
-	Utils::SetWorldPos(sBall->GetNode(), InitialBallPosition());
+	Utils::SetLocalPosToWorld(sBall->GetNode(), InitialBallPosition());
 	auto ballRb = sBall->GetNode()->RequireBehaviour<PhysicsBodyBehaviour>();
 	ballRb->SetVelocity(InitialBallVelocity());
 	ballRb->SetAngularSpeed(0.f);
 
-	Utils::SetWorldPos(sUserPlatform, InitialUserPlatformPosition());
+	Utils::SetLocalPosToWorld(sUserPlatform, InitialUserPlatformPosition());
 	if (auto u = sUserPlatform->FindBehaviour<UserPlatformControllerBehaviour>()) {
 		u->ResyncSpawnFromNode();
 	}
 
-	Utils::SetWorldPos(sAiPlatform, InitialAiPlatformPosition());
+	Utils::SetLocalPosToWorld(sAiPlatform, InitialAiPlatformPosition());
 	if (auto ai = sAiPlatform->FindBehaviour<AiPlatformControllerBehaviour>()) {
 		ai->ResyncSpawnFromNode();
 		ai->ClearPendingObservations();

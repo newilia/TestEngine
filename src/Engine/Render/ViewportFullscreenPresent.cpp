@@ -34,11 +34,11 @@ namespace Engine {
 	} // namespace
 
 	void PresentSceneWithFullscreenEffects(sf::RenderWindow& window, const std::shared_ptr<Scene>& scene,
-	                                       const std::vector<IViewportFullscreenEffect*>& effectChain) {
+	    const std::vector<IViewportFullscreenEffect*>& effectChain) {
 		if (!scene) {
 			return;
 		}
-		Engine::SceneLighting::CollectLights(*scene);
+		Engine::SceneLighting::GetInstance().PrepareLights();
 		if (effectChain.empty()) {
 			window.draw(*scene);
 			return;

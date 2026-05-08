@@ -57,7 +57,7 @@ bool MoveTool::processEvent(const sf::Event& event) {
 		if (!node) {
 			return;
 		}
-		Utils::SetWorldPos(node, pos + _grabOffset);
+		Utils::SetLocalPosToWorld(node, pos + _grabOffset);
 		if (auto rb = node->FindBehaviour<PhysicsBodyBehaviour>()) {
 			ZeroMotion(rb.get());
 		}

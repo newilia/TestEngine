@@ -50,4 +50,6 @@ isEnabledLocal, isVisibleLocal
 
 эффект радиационного излучения
 
-эффект подсветки
+propery animator
+
+убрать Behaviour::OnAttached(), OnDeattached(), проверить инициализацию при аттаче
