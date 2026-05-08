@@ -5,11 +5,11 @@ alwaysApply: true
 
 # Agent defaults (TestEngine)
 
-## Debug build
+## Build
 
 Use the **`build`** directory only for configure and compile (`cmake -S . -B build …`, `cmake --build build …`). Do not use other build trees (`out/vs18`, ad-hoc folders) unless the user explicitly asks.
 
-After non-trivial edits to `src/`, `CMakeLists.txt`, or build-related files, run a **Debug** build (e.g. `cmake --build build --config Debug`) and fix failures. See [`BUILD.md`](BUILD.md). Skip for docs-only changes that cannot affect compilation.
+After non-trivial edits to `src/`, `CMakeLists.txt`, or build-related files, run a **Release** build (e.g. `cmake --build build --config Release`) and fix failures. See [`BUILD.md`](BUILD.md). Skip for docs-only changes that cannot affect compilation.
 
 ## Commit messages
 

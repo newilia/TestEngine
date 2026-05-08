@@ -117,6 +117,11 @@ namespace Engine {
 				sceneLighting.SetDistanceRangeScale(distanceScale);
 			}
 
+			float intensityScale = sceneLighting.GetGlobalIntensityScale();
+			if (ImGui::SliderFloat("Light intensity scale", &intensityScale, 0.f, 10.f, "%.2f")) {
+				sceneLighting.SetGlobalIntensityScale(intensityScale);
+			}
+
 			constexpr const char* blendModeLabels[] = {"Additive", "Screen"};
 			int blendMode = static_cast<int>(sceneLighting.GetBlendMode());
 			if (ImGui::Combo("Lighting blend mode", &blendMode, blendModeLabels, IM_ARRAYSIZE(blendModeLabels))) {
