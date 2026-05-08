@@ -82,10 +82,111 @@ namespace {
 		return true;
 	}
 
+	template <typename T>
+	std::string BuildIntegerRangeMarker(const std::vector<T>& values) {
+		if (values.empty()) {
+			return "mixed";
+		}
+		const auto [minIt, maxIt] = std::minmax_element(values.begin(), values.end());
+		return fmt::format("{} .. {}", *minIt, *maxIt);
+	}
+
+	std::string BuildFloatRangeMarker(const std::vector<float>& values) {
+		if (values.empty()) {
+			return "mixed";
+		}
+		const auto [minIt, maxIt] = std::minmax_element(values.begin(), values.end());
+		return fmt::format("{:.3f} .. {:.3f}", static_cast<double>(*minIt), static_cast<double>(*maxIt));
+	}
+
+	std::string BuildDoubleRangeMarker(const std::vector<double>& values) {
+		if (values.empty()) {
+			return "mixed";
+		}
+		const auto [minIt, maxIt] = std::minmax_element(values.begin(), values.end());
+		return fmt::format("{:.3f} .. {:.3f}", *minIt, *maxIt);
+	}
+
+	std::string BuildVec2fRangeMarker(const std::vector<sf::Vector2f>& values) {
+		if (values.empty()) {
+			return "mixed";
+		}
+		float minX = values.front().x;
+		float maxX = values.front().x;
+		float minY = values.front().y;
+		float maxY = values.front().y;
+		for (const auto& value : values) {
+			minX = std::min(minX, value.x);
+			maxX = std::max(maxX, value.x);
+			minY = std::min(minY, value.y);
+			maxY = std::max(maxY, value.y);
+		}
+		return fmt::format("x:{:.3f} .. {:.3f}, y:{:.3f} .. {:.3f}", static_cast<double>(minX),
+		    static_cast<double>(maxX), static_cast<double>(minY), static_cast<double>(maxY));
+	}
+
+	std::string BuildVec2iRangeMarker(const std::vector<sf::Vector2i>& values) {
+		if (values.empty()) {
+			return "mixed";
+		}
+		int minX = values.front().x;
+		int maxX = values.front().x;
+		int minY = values.front().y;
+		int maxY = values.front().y;
+		for (const auto& value : values) {
+			minX = std::min(minX, value.x);
+			maxX = std::max(maxX, value.x);
+			minY = std::min(minY, value.y);
+			maxY = std::max(maxY, value.y);
+		}
+		return fmt::format("x:{} .. {}, y:{} .. {}", minX, maxX, minY, maxY);
+	}
+
+	std::string BuildVec2uRangeMarker(const std::vector<sf::Vector2u>& values) {
+		if (values.empty()) {
+			return "mixed";
+		}
+		unsigned minX = values.front().x;
+		unsigned maxX = values.front().x;
+		unsigned minY = values.front().y;
+		unsigned maxY = values.front().y;
+		for (const auto& value : values) {
+			minX = std::min(minX, value.x);
+			maxX = std::max(maxX, value.x);
+			minY = std::min(minY, value.y);
+			maxY = std::max(maxY, value.y);
+		}
+		return fmt::format("x:{} .. {}, y:{} .. {}", minX, maxX, minY, maxY);
+	}
+
+	std::string BuildVec3fRangeMarker(const std::vector<sf::Vector3f>& values) {
+		if (values.empty()) {
+			return "mixed";
+		}
+		float minX = values.front().x;
+		float maxX = values.front().x;
+		float minY = values.front().y;
+		float maxY = values.front().y;
+		float minZ = values.front().z;
+		float maxZ = values.front().z;
+		for (const auto& value : values) {
+			minX = std::min(minX, value.x);
+			maxX = std::max(maxX, value.x);
+			minY = std::min(minY, value.y);
+			maxY = std::max(maxY, value.y);
+			minZ = std::min(minZ, value.z);
+			maxZ = std::max(maxZ, value.z);
+		}
+		return fmt::format("x:{:.3f} .. {:.3f}, y:{:.3f} .. {:.3f}, z:{:.3f} .. {:.3f}", static_cast<double>(minX),
+		    static_cast<double>(maxX), static_cast<double>(minY), static_cast<double>(maxY), static_cast<double>(minZ),
+		    static_cast<double>(maxZ));
+	}
+
 	template <typename TAccess, typename TValue>
 	Engine::PropertyAccess BuildMergedScalarAccess(const std::vector<const Engine::PropertyNode*>& nodes,
 	    Engine::PropertyMeta& meta,
-	    const std::function<bool(const std::vector<TValue>&)>& equalPredicate = AreAllEqual<TValue>) {
+	    const std::function<bool(const std::vector<TValue>&)>& equalPredicate = AreAllEqual<TValue>,
+	    const std::function<std::string(const std::vector<TValue>&)>& mixedMarkerBuilder = nullptr) {
 		std::vector<TAccess> accesses;
 		accesses.reserve(nodes.size());
 		std::vector<TValue> values;
@@ -103,6 +204,10 @@ namespace {
 			}
 		}
 		meta.hasMixedValues = !equalPredicate(values);
+		meta.mixedValueMarker = "mixed";
+		if (meta.hasMixedValues && mixedMarkerBuilder) {
+			meta.mixedValueMarker = mixedMarkerBuilder(values);
+		}
 		meta.readOnly = meta.readOnly || accesses.empty();
 		TAccess merged{};
 		merged.get = accesses.front().get;
@@ -213,18 +318,20 @@ namespace {
 			merged.access = BuildMergedScalarAccess<Engine::PropAccessBool, bool>(nodes, merged.meta);
 			break;
 		case Engine::PropertyKind::Int32:
-			merged.access = BuildMergedScalarAccess<Engine::PropAccessInt32, std::int32_t>(nodes, merged.meta);
+			merged.access = BuildMergedScalarAccess<Engine::PropAccessInt32, std::int32_t>(
+			    nodes, merged.meta, AreAllEqual<std::int32_t>, BuildIntegerRangeMarker<std::int32_t>);
 			break;
 		case Engine::PropertyKind::Int64:
-			merged.access = BuildMergedScalarAccess<Engine::PropAccessInt64, std::int64_t>(nodes, merged.meta);
+			merged.access = BuildMergedScalarAccess<Engine::PropAccessInt64, std::int64_t>(
+			    nodes, merged.meta, AreAllEqual<std::int64_t>, BuildIntegerRangeMarker<std::int64_t>);
 			break;
 		case Engine::PropertyKind::Float:
-			merged.access =
-			    BuildMergedScalarAccess<Engine::PropAccessFloat, float>(nodes, merged.meta, AreAllFloatEqual);
+			merged.access = BuildMergedScalarAccess<Engine::PropAccessFloat, float>(
+			    nodes, merged.meta, AreAllFloatEqual, BuildFloatRangeMarker);
 			break;
 		case Engine::PropertyKind::Double:
-			merged.access =
-			    BuildMergedScalarAccess<Engine::PropAccessDouble, double>(nodes, merged.meta, AreAllDoubleEqual);
+			merged.access = BuildMergedScalarAccess<Engine::PropAccessDouble, double>(
+			    nodes, merged.meta, AreAllDoubleEqual, BuildDoubleRangeMarker);
 			break;
 		case Engine::PropertyKind::String:
 			merged.access = BuildMergedScalarAccess<Engine::PropAccessString, std::string>(nodes, merged.meta);
@@ -233,16 +340,20 @@ namespace {
 			merged.access = BuildMergedEnumAccess(nodes, merged.meta);
 			break;
 		case Engine::PropertyKind::Vec2f:
-			merged.access = BuildMergedScalarAccess<Engine::PropAccessVec2f, sf::Vector2f>(nodes, merged.meta);
+			merged.access = BuildMergedScalarAccess<Engine::PropAccessVec2f, sf::Vector2f>(
+			    nodes, merged.meta, AreAllEqual<sf::Vector2f>, BuildVec2fRangeMarker);
 			break;
 		case Engine::PropertyKind::Vec2i:
-			merged.access = BuildMergedScalarAccess<Engine::PropAccessVec2i, sf::Vector2i>(nodes, merged.meta);
+			merged.access = BuildMergedScalarAccess<Engine::PropAccessVec2i, sf::Vector2i>(
+			    nodes, merged.meta, AreAllEqual<sf::Vector2i>, BuildVec2iRangeMarker);
 			break;
 		case Engine::PropertyKind::Vec2u:
-			merged.access = BuildMergedScalarAccess<Engine::PropAccessVec2u, sf::Vector2u>(nodes, merged.meta);
+			merged.access = BuildMergedScalarAccess<Engine::PropAccessVec2u, sf::Vector2u>(
+			    nodes, merged.meta, AreAllEqual<sf::Vector2u>, BuildVec2uRangeMarker);
 			break;
 		case Engine::PropertyKind::Vec3f:
-			merged.access = BuildMergedScalarAccess<Engine::PropAccessVec3f, sf::Vector3f>(nodes, merged.meta);
+			merged.access = BuildMergedScalarAccess<Engine::PropAccessVec3f, sf::Vector3f>(
+			    nodes, merged.meta, AreAllEqual<sf::Vector3f>, BuildVec3fRangeMarker);
 			break;
 		case Engine::PropertyKind::Color:
 			merged.access = BuildMergedScalarAccess<Engine::PropAccessColor, sf::Color>(nodes, merged.meta);

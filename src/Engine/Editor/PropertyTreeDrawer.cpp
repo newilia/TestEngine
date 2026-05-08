@@ -11,7 +11,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
-#include <limits>
+#include <sstream>
 #include <variant>
 
 namespace Engine {
@@ -39,6 +39,48 @@ namespace Engine {
 			if (meta.hasMixedValues) {
 				ImGui::PopItemFlag();
 			}
+		}
+
+		std::string Trim(std::string value) {
+			const auto isSpace = [](unsigned char c) {
+				return std::isspace(c) != 0;
+			};
+			value.erase(value.begin(), std::find_if(value.begin(), value.end(), [&](unsigned char c) {
+				return !isSpace(c);
+			}));
+			value.erase(std::find_if(value.rbegin(), value.rend(),
+			                [&](unsigned char c) {
+				                return !isSpace(c);
+			                })
+			                .base(),
+			    value.end());
+			return value;
+		}
+
+		std::vector<std::string> SplitComponentMarkers(const std::string& marker, int expectedCount) {
+			std::vector<std::string> result;
+			if (marker.empty() || expectedCount <= 0) {
+				return result;
+			}
+
+			const char separator = marker.find('|') != std::string::npos ? '|' : ',';
+			std::stringstream stream(marker);
+			std::string token;
+			while (std::getline(stream, token, separator)) {
+				token = Trim(token);
+				const auto colonPos = token.find(':');
+				if (colonPos != std::string::npos) {
+					token = Trim(token.substr(colonPos + 1));
+				}
+				if (!token.empty()) {
+					result.push_back(token);
+				}
+			}
+
+			if (static_cast<int>(result.size()) != expectedCount) {
+				result.clear();
+			}
+			return result;
 		}
 
 		void DrawLabelLeft(const PropertyNode& n) {
@@ -198,7 +240,8 @@ namespace Engine {
 				}
 				else {
 					PushMixedFlagIfNeeded(n.meta);
-					if (ImGui::DragInt("##v", &v)) {
+					const char* format = n.meta.hasMixedValues ? MixedMarker(n.meta) : "%d";
+					if (ImGui::DragInt("##v", &v, 1.0f, 0, 0, format)) {
 						a->set(static_cast<std::int32_t>(v));
 					}
 					PopMixedFlagIfNeeded(n.meta);
@@ -221,7 +264,8 @@ namespace Engine {
 				}
 				else {
 					PushMixedFlagIfNeeded(n.meta);
-					if (ImGui::DragScalar("##v", ImGuiDataType_S64, &v)) {
+					const char* format = n.meta.hasMixedValues ? MixedMarker(n.meta) : "%lld";
+					if (ImGui::DragScalar("##v", ImGuiDataType_S64, &v, 1.0f, nullptr, nullptr, format)) {
 						a->set(static_cast<std::int64_t>(v));
 					}
 					PopMixedFlagIfNeeded(n.meta);
@@ -233,10 +277,10 @@ namespace Engine {
 		case PropertyKind::Float: {
 			if (const auto* a = std::get_if<PropAccessFloat>(&n.access)) {
 				DrawLabelLeft(n);
-				float v = n.meta.hasMixedValues ? std::numeric_limits<float>::quiet_NaN() : a->get();
+				float v = a->get();
 				if (readOnly) {
 					if (n.meta.hasMixedValues) {
-						ImGui::TextUnformatted("nan");
+						ImGui::TextUnformatted(MixedMarker(n.meta));
 					}
 					else {
 						ImGui::Text("%.4f", static_cast<double>(v));
@@ -245,7 +289,8 @@ namespace Engine {
 				else {
 					const float speed = n.meta.dragSpeed.has_value() ? static_cast<float>(*n.meta.dragSpeed) : 1.f;
 					PushMixedFlagIfNeeded(n.meta);
-					if (ImGui::DragFloat("##v", &v, speed)) {
+					const char* format = n.meta.hasMixedValues ? MixedMarker(n.meta) : "%.3f";
+					if (ImGui::DragFloat("##v", &v, speed, 0.0f, 0.0f, format)) {
 						if (n.meta.numericMin) {
 							v = std::max(v, static_cast<float>(*n.meta.numericMin));
 						}
@@ -263,10 +308,10 @@ namespace Engine {
 		case PropertyKind::Double: {
 			if (const auto* a = std::get_if<PropAccessDouble>(&n.access)) {
 				DrawLabelLeft(n);
-				double v = n.meta.hasMixedValues ? std::numeric_limits<double>::quiet_NaN() : a->get();
+				double v = a->get();
 				if (readOnly) {
 					if (n.meta.hasMixedValues) {
-						ImGui::TextUnformatted("nan");
+						ImGui::TextUnformatted(MixedMarker(n.meta));
 					}
 					else {
 						ImGui::Text("%.6f", v);
@@ -275,7 +320,8 @@ namespace Engine {
 				else {
 					const float speed = n.meta.dragSpeed.has_value() ? static_cast<float>(*n.meta.dragSpeed) : 0.05f;
 					PushMixedFlagIfNeeded(n.meta);
-					if (ImGui::DragScalar("##v", ImGuiDataType_Double, &v, speed)) {
+					const char* format = n.meta.hasMixedValues ? MixedMarker(n.meta) : "%.6f";
+					if (ImGui::DragScalar("##v", ImGuiDataType_Double, &v, speed, nullptr, nullptr, format)) {
 						if (n.meta.numericMin) {
 							v = std::max(v, *n.meta.numericMin);
 						}
@@ -355,24 +401,36 @@ namespace Engine {
 			if (const auto* a = std::get_if<PropAccessVec2f>(&n.access)) {
 				DrawLabelLeft(n);
 				sf::Vector2f v = a->get();
-				if (n.meta.hasMixedValues) {
-					v = sf::Vector2f{std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::quiet_NaN()};
-				}
 				float arr[2] = {v.x, v.y};
 				if (readOnly) {
 					if (n.meta.hasMixedValues) {
-						ImGui::TextUnformatted("nan");
+						ImGui::TextUnformatted(MixedMarker(n.meta));
 					}
 					else {
 						ImGui::Text("(%.2f, %.2f)", static_cast<double>(v.x), static_cast<double>(v.y));
 					}
 				}
 				else {
-					PushMixedFlagIfNeeded(n.meta);
-					if (ImGui::DragFloat2("##v", arr, n.meta.dragSpeed.value_or(1.f))) {
+					bool changed = false;
+					const auto componentMarkers = n.meta.hasMixedValues ? SplitComponentMarkers(MixedMarker(n.meta), 2)
+					                                                    : std::vector<std::string>{};
+					ImGui::PushMultiItemsWidths(2, ImGui::CalcItemWidth());
+					for (int i = 0; i < 2; ++i) {
+						ImGui::PushID(i);
+						if (i > 0) {
+							ImGui::SameLine(0.f, ImGui::GetStyle().ItemInnerSpacing.x);
+						}
+						PushMixedFlagIfNeeded(n.meta);
+						const char* format =
+						    componentMarkers.empty() ? "%.3f" : componentMarkers[static_cast<std::size_t>(i)].c_str();
+						changed |= ImGui::DragFloat("##v", &arr[i], n.meta.dragSpeed.value_or(1.f), 0.0f, 0.0f, format);
+						PopMixedFlagIfNeeded(n.meta);
+						ImGui::PopID();
+						ImGui::PopItemWidth();
+					}
+					if (changed) {
 						a->set(sf::Vector2f{arr[0], arr[1]});
 					}
-					PopMixedFlagIfNeeded(n.meta);
 				}
 				ItemTooltipAfter(n.meta);
 			}
@@ -392,9 +450,25 @@ namespace Engine {
 					}
 				}
 				else {
+					bool changed = false;
 					const float speed = n.meta.dragSpeed.value_or(1.f);
-					PushMixedFlagIfNeeded(n.meta);
-					if (ImGui::DragInt2("##v", arr, speed)) {
+					const auto componentMarkers = n.meta.hasMixedValues ? SplitComponentMarkers(MixedMarker(n.meta), 2)
+					                                                    : std::vector<std::string>{};
+					ImGui::PushMultiItemsWidths(2, ImGui::CalcItemWidth());
+					for (int i = 0; i < 2; ++i) {
+						ImGui::PushID(i);
+						if (i > 0) {
+							ImGui::SameLine(0.f, ImGui::GetStyle().ItemInnerSpacing.x);
+						}
+						PushMixedFlagIfNeeded(n.meta);
+						const char* format =
+						    componentMarkers.empty() ? "%d" : componentMarkers[static_cast<std::size_t>(i)].c_str();
+						changed |= ImGui::DragInt("##v", &arr[i], speed, 0, 0, format);
+						PopMixedFlagIfNeeded(n.meta);
+						ImGui::PopID();
+						ImGui::PopItemWidth();
+					}
+					if (changed) {
 						int x = arr[0];
 						int y = arr[1];
 						if (n.meta.numericMin) {
@@ -409,7 +483,6 @@ namespace Engine {
 						}
 						a->set(sf::Vector2i{x, y});
 					}
-					PopMixedFlagIfNeeded(n.meta);
 				}
 				ItemTooltipAfter(n.meta);
 			}
@@ -442,11 +515,26 @@ namespace Engine {
 						vmax = static_cast<std::uint32_t>(*n.meta.numericMax);
 						pMax = &vmax;
 					}
-					PushMixedFlagIfNeeded(n.meta);
-					if (ImGui::DragScalarN("##v", ImGuiDataType_U32, arr, 2, speed, pMin, pMax, "%u", 0)) {
+					bool changed = false;
+					const auto componentMarkers = n.meta.hasMixedValues ? SplitComponentMarkers(MixedMarker(n.meta), 2)
+					                                                    : std::vector<std::string>{};
+					ImGui::PushMultiItemsWidths(2, ImGui::CalcItemWidth());
+					for (int i = 0; i < 2; ++i) {
+						ImGui::PushID(i);
+						if (i > 0) {
+							ImGui::SameLine(0.f, ImGui::GetStyle().ItemInnerSpacing.x);
+						}
+						PushMixedFlagIfNeeded(n.meta);
+						const char* format =
+						    componentMarkers.empty() ? "%u" : componentMarkers[static_cast<std::size_t>(i)].c_str();
+						changed |= ImGui::DragScalar("##v", ImGuiDataType_U32, &arr[i], speed, pMin, pMax, format, 0);
+						PopMixedFlagIfNeeded(n.meta);
+						ImGui::PopID();
+						ImGui::PopItemWidth();
+					}
+					if (changed) {
 						a->set(sf::Vector2u{static_cast<unsigned int>(arr[0]), static_cast<unsigned int>(arr[1])});
 					}
-					PopMixedFlagIfNeeded(n.meta);
 				}
 				ItemTooltipAfter(n.meta);
 			}
@@ -456,14 +544,10 @@ namespace Engine {
 			if (const auto* a = std::get_if<PropAccessVec3f>(&n.access)) {
 				DrawLabelLeft(n);
 				sf::Vector3f v = a->get();
-				if (n.meta.hasMixedValues) {
-					v = sf::Vector3f{std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::quiet_NaN(),
-					    std::numeric_limits<float>::quiet_NaN()};
-				}
 				float arr[3] = {v.x, v.y, v.z};
 				if (readOnly) {
 					if (n.meta.hasMixedValues) {
-						ImGui::TextUnformatted("nan");
+						ImGui::TextUnformatted(MixedMarker(n.meta));
 					}
 					else {
 						ImGui::Text("(%.2f, %.2f, %.2f)", static_cast<double>(v.x), static_cast<double>(v.y),
@@ -471,11 +555,26 @@ namespace Engine {
 					}
 				}
 				else {
-					PushMixedFlagIfNeeded(n.meta);
-					if (ImGui::DragFloat3("##v", arr, n.meta.dragSpeed.value_or(1.f))) {
+					bool changed = false;
+					const auto componentMarkers = n.meta.hasMixedValues ? SplitComponentMarkers(MixedMarker(n.meta), 3)
+					                                                    : std::vector<std::string>{};
+					ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
+					for (int i = 0; i < 3; ++i) {
+						ImGui::PushID(i);
+						if (i > 0) {
+							ImGui::SameLine(0.f, ImGui::GetStyle().ItemInnerSpacing.x);
+						}
+						PushMixedFlagIfNeeded(n.meta);
+						const char* format =
+						    componentMarkers.empty() ? "%.3f" : componentMarkers[static_cast<std::size_t>(i)].c_str();
+						changed |= ImGui::DragFloat("##v", &arr[i], n.meta.dragSpeed.value_or(1.f), 0.0f, 0.0f, format);
+						PopMixedFlagIfNeeded(n.meta);
+						ImGui::PopID();
+						ImGui::PopItemWidth();
+					}
+					if (changed) {
 						a->set(sf::Vector3f{arr[0], arr[1], arr[2]});
 					}
-					PopMixedFlagIfNeeded(n.meta);
 				}
 				ItemTooltipAfter(n.meta);
 			}
