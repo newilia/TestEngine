@@ -29,6 +29,9 @@ public:
 	void SetGravityEnabled(bool enabled);
 	bool IsGravityEnabled() const;
 
+	int GetMotionSubsteps() const;
+	void SetMotionSubsteps(int substeps);
+
 	std::shared_ptr<AttractionField> GetAttractionField() const;
 
 private:
@@ -48,8 +51,9 @@ private:
 	static void ResolveCollision(const IntersectionDetails& collision);
 	/*****/
 
+	std::shared_ptr<AttractionField> _inverseSquareField = std::make_shared<AttractionField>();
 	std::list<std::weak_ptr<PhysicsBodyBehaviour>> _bodies;
 	sf::Vector2f _gravity = {0, 400};
 	bool _isGravityEnabled = false;
-	std::shared_ptr<AttractionField> _inverseSquareField = std::make_shared<AttractionField>();
+	int _motionSubsteps = 1;
 };

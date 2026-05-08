@@ -101,30 +101,19 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 
 	/* light stuff */
 
-	const auto AddLightSource = [](SceneNode* node) {
+	const auto AddLightSource = [](SceneNode* node, float intensity, float radius) {
 		auto pl = node->RequireBehaviour<PointLightBehaviour>();
 		pl->SetLightColor(sf::Color(160, 210, 255, 255));
-		pl->SetIntensity(0.1);
-		pl->SetRadius(std::numeric_limits<float>::max());
+		pl->SetIntensity(intensity);
+		pl->SetRadius(radius);
 	};
 
-	const auto AddLightReceiver = [](SceneNode* node, int type) {
+	const auto AddLightReceiver = [](SceneNode* node, float diffusion, bool bevelEmboss, float bevelWidth = 0.f) {
 		auto recv = node->RequireBehaviour<ShapeLightReceiverBehaviour>();
-		if (type % 3 == 0) {
-			recv->SetBevelEmbossMode(false);
-			recv->SetDiffusion(0.35f);
-		}
-		else if (type % 3 == 1) {
-			recv->SetBevelEmbossMode(true);
-			recv->SetBevelWidth(18.f);
-			recv->SetDiffusion(0.5f);
-		}
-		else if (type % 3 == 2) {
-			recv->SetBevelEmbossMode(true);
-			recv->SetEaseOutCirc(false);
-			recv->SetBevelWidth(10.f);
-			recv->SetDiffusion(0.75f);
-		}
+		recv->SetBevelEmbossMode(bevelEmboss);
+		recv->SetBevelWidth(bevelWidth);
+		recv->SetDiffusion(diffusion);
+		recv->SetEaseOutCirc(false);
 	};
 
 	/* circles */
@@ -134,24 +123,27 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	constexpr int circlesCount = rowsCount * colsCount;
 
 	for (int i = 0; i < circlesCount; ++i) {
+		const auto gridRow = i / colsCount;
+		const auto gridCol = i % colsCount;
+		int kind = std::round(gridCol * 3.f / colsCount);
+
 		auto node = make_shared<SceneNode>();
 		auto circle = node->RequireVisual<CircleShapeVisual>();
 		node->SetName(fmt::format("circle_{}", i));
 		node->RequireBehaviour<PhysicsBodyBehaviour>()->GetInteractionGroups().set(0, true);
 
 		constexpr float radius = 20.f;
-		static const auto kAttractiveCircleColor = sf::Color{40, 170, 255, 200};
-		static const auto kRepulsiveCircleColor = sf::Color{255, 100, 100, 200};
-		const auto color = isAttractionPositive ? kAttractiveCircleColor : kRepulsiveCircleColor;
+		constexpr auto kColor1 = sf::Color{200, 40, 40, 200};
+		constexpr auto kColor2 = sf::Color{40, 200, 40, 200};
+		constexpr auto kColor3 = sf::Color{40, 40, 200, 200};
+
+		const auto color = (kind == 0) ? kColor1 : ((kind == 1) ? kColor2 : kColor3);
 		const auto outlineColor = sf::Color(color.r, color.g, color.b, 255);
 		circle->SetRadius(radius);
 		circle->SetFillColor(color);
 		circle->SetOutlineColor(outlineColor);
 		circle->SetOutlineThickness(1);
 		circle->SetOrigin(circle->GetLocalBounds().getCenter());
-
-		const auto gridRow = i / colsCount;
-		const auto gridCol = i % colsCount;
 
 		// position in grid
 		{
@@ -171,9 +163,8 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		auto fieldBeh = node->RequireBehaviour<AttractiveBehaviour>();
 		fieldBeh->SetAttraction(commonAttraction * (isAttractionPositive ? -1 : 1));
 
-		AddLightSource(node.get());
-
-		AddLightReceiver(node.get(), gridCol / colsCount);
+		AddLightSource(node.get(), 0.4, radius * 1.25);
+		AddLightReceiver(node.get(), 0.3f, true, 25);
 
 		scene->GetRoot()->AddChild(std::move(node));
 	}

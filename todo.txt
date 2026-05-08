@@ -53,3 +53,5 @@ isEnabledLocal, isVisibleLocal
 propery animator
 
 убрать Behaviour::OnAttached(), OnDeattached(), проверить инициализацию при аттаче
+
+focus selected node
