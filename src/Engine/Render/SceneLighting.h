@@ -26,6 +26,11 @@ namespace Engine {
 		friend class Singleton<SceneLighting>;
 
 	public:
+		bool IsEnabled() const;
+		void SetEnabled(bool enabled);
+		float GetDistanceRangeScale() const;
+		void SetDistanceRangeScale(float scale);
+
 		void RegisterPointLight(std::shared_ptr<PointLightBehaviour> light);
 		void UnregisterPointLight(PointLightBehaviour* light);
 
@@ -39,6 +44,8 @@ namespace Engine {
 	private:
 		SceneLighting() = default;
 
+		bool _enabled = true;
+		float _distanceRangeScale = 1.f;
 		std::list<std::weak_ptr<PointLightBehaviour>> _lightSources;
 		std::vector<GpuPointLight> _lights;
 	};

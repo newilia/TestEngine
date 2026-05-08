@@ -20,7 +20,7 @@ namespace Engine {
 		friend class Singleton<RadialUvWarpFullscreenPass>;
 
 	public:
-		static constexpr std::size_t kMaxWarpCenters = 128u;
+		static constexpr std::size_t kMaxWarpCenters = 64u;
 
 		bool IsShaderReady() const;
 		bool ShouldUseEffect(const Scene& scene) const;

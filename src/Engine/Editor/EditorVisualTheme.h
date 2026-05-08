@@ -28,7 +28,7 @@ namespace Engine::EditorVisualTheme {
 	inline constexpr ImVec4 kInspectorSectionHeaderTransform{0.24f, 0.52f, 0.36f, 1.f};
 	inline constexpr ImVec4 kInspectorSectionHeaderSortingStrategy{0.55f, 0.40f, 0.22f, 1.f};
 	inline constexpr ImVec4 kInspectorSectionHeaderVisual{0.48f, 0.28f, 0.55f, 1.f};
-	inline constexpr ImVec4 kInspectorSectionHeaderBehaviour{0.30f, 0.42f, 0.48f, 1.f};
+	inline constexpr ImVec4 kInspectorSectionHeaderBehaviour{0.5f, 0.5f, 0.05f, 1.f};
 	inline constexpr ImVec4 kInspectorSectionHeaderFallback{0.26f, 0.26f, 0.28f, 1.f};
 
 	void PushInspectorSectionHeaderColors(InspectorSectionHeaderStyle section);

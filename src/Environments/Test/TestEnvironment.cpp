@@ -163,7 +163,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		auto fieldBeh = node->RequireBehaviour<AttractiveBehaviour>();
 		fieldBeh->SetAttraction(commonAttraction * (isAttractionPositive ? -1 : 1));
 
-		AddLightSource(node.get(), 0.4, radius * 1.25);
+		AddLightSource(node.get(), 5, 5);
 		AddLightReceiver(node.get(), 0.3f, true, 25);
 
 		scene->GetRoot()->AddChild(std::move(node));
