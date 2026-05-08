@@ -6,11 +6,11 @@
 #include <imgui.h>
 
 #include <algorithm>
-#include <iterator>
+#include <unordered_set>
 
 namespace Engine {
 	std::shared_ptr<SceneNode> SceneHierarchyWidget::GetSelectedNode() const {
-		for (const auto& weakNode : _selectedNodes) {
+		for (const auto& weakNode : _selectionOrder) {
 			if (auto node = weakNode.lock()) {
 				return node;
 			}
@@ -20,8 +20,8 @@ namespace Engine {
 
 	std::vector<std::shared_ptr<SceneNode>> SceneHierarchyWidget::GetSelectedNodes() const {
 		std::vector<std::shared_ptr<SceneNode>> result;
-		result.reserve(_selectedNodes.size());
-		for (const auto& weakNode : _selectedNodes) {
+		result.reserve(_selectionOrder.size());
+		for (const auto& weakNode : _selectionOrder) {
 			if (auto node = weakNode.lock()) {
 				result.push_back(std::move(node));
 			}
@@ -30,12 +30,12 @@ namespace Engine {
 	}
 
 	bool SceneHierarchyWidget::ContainsNode(const SceneNode& node) const {
-		for (const auto& weakNode : _selectedNodes) {
-			if (auto selected = weakNode.lock()) {
-				if (selected.get() == &node) {
-					return true;
-				}
-			}
+		const auto it = _selectionByRawPtr.find(std::addressof(node));
+		if (it == _selectionByRawPtr.end()) {
+			return false;
+		}
+		if (const auto locked = it->second.lock()) {
+			return locked.get() == &node;
 		}
 		return false;
 	}
@@ -44,19 +44,43 @@ namespace Engine {
 		return ContainsNode(node);
 	}
 
+	void SceneHierarchyWidget::RebuildSelectionMapFromOrder() {
+		_selectionByRawPtr.clear();
+		_selectionByRawPtr.reserve(_selectionOrder.size());
+		for (const auto& weakNode : _selectionOrder) {
+			if (const auto locked = weakNode.lock()) {
+				_selectionByRawPtr[locked.get()] = weakNode;
+			}
+		}
+	}
+
+	void SceneHierarchyWidget::RemoveFromSelectionOrder(const SceneNode& node) {
+		const SceneNode* const target = std::addressof(node);
+		_selectionOrder.erase(std::remove_if(_selectionOrder.begin(), _selectionOrder.end(),
+		                          [target](const std::weak_ptr<SceneNode>& weakNode) {
+			                          if (const auto locked = weakNode.lock()) {
+				                          return locked.get() == target;
+			                          }
+			                          return false;
+		                          }),
+		    _selectionOrder.end());
+	}
+
 	void SceneHierarchyWidget::PruneExpiredSelection() {
-		_selectedNodes.erase(std::remove_if(_selectedNodes.begin(), _selectedNodes.end(),
-		                         [](const auto& weakNode) {
-			                         return weakNode.expired();
-		                         }),
-		    _selectedNodes.end());
+		_selectionOrder.erase(std::remove_if(_selectionOrder.begin(), _selectionOrder.end(),
+		                          [](const std::weak_ptr<SceneNode>& weakNode) {
+			                          return weakNode.expired();
+		                          }),
+		    _selectionOrder.end());
+		RebuildSelectionMapFromOrder();
 		if (_selectionAnchor.expired()) {
 			_selectionAnchor.reset();
 		}
 	}
 
 	void SceneHierarchyWidget::ClearSelection() {
-		_selectedNodes.clear();
+		_selectionOrder.clear();
+		_selectionByRawPtr.clear();
 		_selectionAnchor.reset();
 		_scrollSelectionIntoViewPending = false;
 	}
@@ -68,10 +92,13 @@ namespace Engine {
 		if (prevPtr != nextPtr) {
 			_scrollSelectionIntoViewPending = (nextPtr != nullptr);
 		}
-		_selectedNodes.clear();
+		_selectionOrder.clear();
+		_selectionByRawPtr.clear();
 		if (node) {
 			_selectionAnchor = node;
-			_selectedNodes.push_back(std::move(node));
+			const auto* raw = static_cast<const SceneNode*>(node.get());
+			_selectionByRawPtr.emplace(raw, node);
+			_selectionOrder.push_back(std::move(node));
 		}
 		else {
 			_selectionAnchor.reset();
@@ -84,14 +111,13 @@ namespace Engine {
 			return;
 		}
 		const SceneNode* const target = node.get();
-		auto it = std::find_if(_selectedNodes.begin(), _selectedNodes.end(), [target](const auto& weakNode) {
-			return weakNode.lock().get() == target;
-		});
-		if (it != _selectedNodes.end()) {
-			_selectedNodes.erase(it);
+		if (const auto it = _selectionByRawPtr.find(target); it != _selectionByRawPtr.end()) {
+			_selectionByRawPtr.erase(it);
+			RemoveFromSelectionOrder(*target);
 		}
 		else {
-			_selectedNodes.push_back(node);
+			_selectionByRawPtr.emplace(static_cast<const SceneNode*>(target), node);
+			_selectionOrder.push_back(node);
 			_scrollSelectionIntoViewPending = true;
 		}
 		_selectionAnchor = std::move(node);
@@ -104,23 +130,34 @@ namespace Engine {
 		}
 		_scrollSelectionIntoViewPending = true;
 		_selectionAnchor = node;
-		_selectedNodes.push_back(std::move(node));
+		const auto* raw = static_cast<const SceneNode*>(node.get());
+		_selectionByRawPtr.emplace(raw, node);
+		_selectionOrder.push_back(std::move(node));
 	}
 
 	void SceneHierarchyWidget::SetSelection(std::vector<std::shared_ptr<SceneNode>> nodes) {
-		_selectedNodes.clear();
+		_selectionOrder.clear();
+		_selectionByRawPtr.clear();
+		std::unordered_set<const SceneNode*> seen;
+		seen.reserve(nodes.size());
 		for (auto& node : nodes) {
-			if (!node || ContainsNode(*node)) {
+			if (!node) {
 				continue;
 			}
-			_selectedNodes.push_back(node);
+			const SceneNode* const raw = static_cast<const SceneNode*>(node.get());
+			if (seen.contains(raw)) {
+				continue;
+			}
+			seen.insert(raw);
+			_selectionByRawPtr.emplace(raw, node);
+			_selectionOrder.push_back(std::move(node));
 		}
-		if (nodes.empty()) {
+		if (_selectionOrder.empty()) {
 			_selectionAnchor.reset();
 			_scrollSelectionIntoViewPending = false;
 			return;
 		}
-		_selectionAnchor = nodes.back();
+		_selectionAnchor = _selectionOrder.back().lock();
 		_scrollSelectionIntoViewPending = true;
 	}
 
@@ -142,11 +179,15 @@ namespace Engine {
 			return;
 		}
 		auto [rangeBegin, rangeEnd] = std::minmax(anchorIt, targetIt);
-		_selectedNodes.clear();
+		_selectionOrder.clear();
+		_selectionByRawPtr.clear();
 		for (auto it = rangeBegin; it != std::next(rangeEnd); ++it) {
-			if (*it) {
-				_selectedNodes.push_back(*it);
+			if (!*it) {
+				continue;
 			}
+			const SceneNode* const raw = static_cast<const SceneNode*>(it->get());
+			_selectionByRawPtr.emplace(raw, *it);
+			_selectionOrder.push_back(*it);
 		}
 		_scrollSelectionIntoViewPending = true;
 	}

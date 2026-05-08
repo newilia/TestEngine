@@ -99,6 +99,13 @@ namespace Engine {
 			}
 			return v;
 		}
+
+		void MarkLeafEditedIfMixed(const PropertyNode& node, const PropertyTreeDrawOptions& options) {
+			if (options.anyLeafEdited == nullptr || !node.meta.hasMixedValues) {
+				return;
+			}
+			*options.anyLeafEdited = true;
+		}
 	} // namespace
 
 	void PropertyTreeDrawer::Draw(const PropertyTree& tree, PropertyTreeDrawOptions options) const {
@@ -106,22 +113,22 @@ namespace Engine {
 			const PropertyNode& root = tree.roots.front();
 			if (root.kind == PropertyKind::Object) {
 				if (root.children.empty()) {
-					DrawNode(root);
+					DrawNode(root, options);
 				}
 				else {
 					for (const PropertyNode& child : root.children) {
-						DrawNode(child);
+						DrawNode(child, options);
 					}
 				}
 				return;
 			}
 		}
 		for (const auto& root : tree.roots) {
-			DrawNode(root);
+			DrawNode(root, options);
 		}
 	}
 
-	void PropertyTreeDrawer::DrawNode(const PropertyNode& n) const {
+	void PropertyTreeDrawer::DrawNode(const PropertyNode& n, PropertyTreeDrawOptions drawOptions) const {
 		ImGui::PushID(n.id.c_str());
 
 		const bool readOnly = n.meta.readOnly;
@@ -133,7 +140,7 @@ namespace Engine {
 			}
 			else if (ImGui::TreeNodeEx("##obj", 0, "%s", n.label.c_str())) {
 				for (const auto& c : n.children) {
-					DrawNode(c);
+					DrawNode(c, drawOptions);
 				}
 				ImGui::TreePop();
 			}
@@ -154,6 +161,7 @@ namespace Engine {
 							const int next = ClampIntMeta(sz - 1, n.meta);
 							if (next != sz) {
 								seq->resize(static_cast<std::size_t>(next));
+								MarkLeafEditedIfMixed(n, drawOptions);
 							}
 						}
 						ImGui::SameLine();
@@ -161,6 +169,7 @@ namespace Engine {
 							const int next = ClampIntMeta(sz + 1, n.meta);
 							if (next != sz) {
 								seq->resize(static_cast<std::size_t>(next));
+								MarkLeafEditedIfMixed(n, drawOptions);
 							}
 						}
 						ImGui::PopID();
@@ -168,7 +177,7 @@ namespace Engine {
 					ItemTooltipAfter(n.meta);
 				}
 				for (const auto& c : n.children) {
-					DrawNode(c);
+					DrawNode(c, drawOptions);
 				}
 				ImGui::TreePop();
 			}
@@ -183,6 +192,7 @@ namespace Engine {
 				if (asc && asc->addPair && !readOnly) {
 					if (ImGui::Button("Add entry")) {
 						asc->addPair();
+						MarkLeafEditedIfMixed(n, drawOptions);
 					}
 					ItemTooltipAfter(n.meta);
 				}
@@ -191,6 +201,7 @@ namespace Engine {
 					if (asc && asc->removePair && !readOnly) {
 						if (ImGui::SmallButton("Remove")) {
 							asc->removePair(i);
+							MarkLeafEditedIfMixed(n, drawOptions);
 							ImGui::PopID();
 							ImGui::TreePop();
 							ImGui::PopID();
@@ -198,7 +209,7 @@ namespace Engine {
 						}
 						ImGui::SameLine();
 					}
-					DrawNode(n.children[i]);
+					DrawNode(n.children[i], drawOptions);
 					ImGui::PopID();
 				}
 				ImGui::TreePop();
@@ -219,6 +230,7 @@ namespace Engine {
 					PushMixedFlagIfNeeded(n.meta);
 					if (ImGui::Checkbox("##v", &v)) {
 						a->set(v);
+						MarkLeafEditedIfMixed(n, drawOptions);
 					}
 					PopMixedFlagIfNeeded(n.meta);
 				}
@@ -243,6 +255,7 @@ namespace Engine {
 					const char* format = n.meta.hasMixedValues ? MixedMarker(n.meta) : "%d";
 					if (ImGui::DragInt("##v", &v, 1.0f, 0, 0, format)) {
 						a->set(static_cast<std::int32_t>(v));
+						MarkLeafEditedIfMixed(n, drawOptions);
 					}
 					PopMixedFlagIfNeeded(n.meta);
 				}
@@ -267,6 +280,7 @@ namespace Engine {
 					const char* format = n.meta.hasMixedValues ? MixedMarker(n.meta) : "%lld";
 					if (ImGui::DragScalar("##v", ImGuiDataType_S64, &v, 1.0f, nullptr, nullptr, format)) {
 						a->set(static_cast<std::int64_t>(v));
+						MarkLeafEditedIfMixed(n, drawOptions);
 					}
 					PopMixedFlagIfNeeded(n.meta);
 				}
@@ -298,6 +312,7 @@ namespace Engine {
 							v = std::min(v, static_cast<float>(*n.meta.numericMax));
 						}
 						a->set(v);
+						MarkLeafEditedIfMixed(n, drawOptions);
 					}
 					PopMixedFlagIfNeeded(n.meta);
 				}
@@ -329,6 +344,7 @@ namespace Engine {
 							v = std::min(v, *n.meta.numericMax);
 						}
 						a->set(v);
+						MarkLeafEditedIfMixed(n, drawOptions);
 					}
 					PopMixedFlagIfNeeded(n.meta);
 				}
@@ -355,6 +371,7 @@ namespace Engine {
 				}
 				if (edited && !readOnly) {
 					a->set(std::string(buf.data()));
+					MarkLeafEditedIfMixed(n, drawOptions);
 				}
 				ItemTooltipAfter(n.meta);
 			}
@@ -390,6 +407,7 @@ namespace Engine {
 					PushMixedFlagIfNeeded(n.meta);
 					if (ImGui::Combo("##v", &idx, labels.data(), static_cast<int>(labels.size()))) {
 						a->set(a->options[static_cast<std::size_t>(idx)].first);
+						MarkLeafEditedIfMixed(n, drawOptions);
 					}
 					PopMixedFlagIfNeeded(n.meta);
 				}
@@ -430,6 +448,7 @@ namespace Engine {
 					}
 					if (changed) {
 						a->set(sf::Vector2f{arr[0], arr[1]});
+						MarkLeafEditedIfMixed(n, drawOptions);
 					}
 				}
 				ItemTooltipAfter(n.meta);
@@ -482,6 +501,7 @@ namespace Engine {
 							y = std::min(y, mx);
 						}
 						a->set(sf::Vector2i{x, y});
+						MarkLeafEditedIfMixed(n, drawOptions);
 					}
 				}
 				ItemTooltipAfter(n.meta);
@@ -534,6 +554,7 @@ namespace Engine {
 					}
 					if (changed) {
 						a->set(sf::Vector2u{static_cast<unsigned int>(arr[0]), static_cast<unsigned int>(arr[1])});
+						MarkLeafEditedIfMixed(n, drawOptions);
 					}
 				}
 				ItemTooltipAfter(n.meta);
@@ -574,6 +595,7 @@ namespace Engine {
 					}
 					if (changed) {
 						a->set(sf::Vector3f{arr[0], arr[1], arr[2]});
+						MarkLeafEditedIfMixed(n, drawOptions);
 					}
 				}
 				ItemTooltipAfter(n.meta);
@@ -601,6 +623,7 @@ namespace Engine {
 							return static_cast<std::uint8_t>(std::clamp(std::lround(x * 255.f), 0L, 255L));
 						};
 						a->set(sf::Color{clamp255(rgba[0]), clamp255(rgba[1]), clamp255(rgba[2]), clamp255(rgba[3])});
+						MarkLeafEditedIfMixed(n, drawOptions);
 					}
 					PopMixedFlagIfNeeded(n.meta);
 				}
