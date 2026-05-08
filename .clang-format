@@ -35,7 +35,7 @@ IndentAccessModifiers: false											# If true, indent access keywords one ext
 EmptyLineBeforeAccessModifier: LogicalBlock								# Blank line before access keyword (Never, Leave, LogicalBlock, Always).
 SeparateDefinitionBlocks: Always										# Empty lines between defs (Leave: keep as-is; Always: insert; Never: remove) (Leave, Always, Never).
 
-AlignAfterOpenBracket: true												# If true, align continued args after `(` / `<` / `[` (boolean; CF22+: legacy Align/DontAlign map to true/false).
+AlignAfterOpenBracket: DontAlign											# DontAlign: wrapped call/template lines use ContinuationIndentWidth; Align pulls continuations under `(` / `<` / `[`.
 AlignOperands: Align													# Wrap alignment for binary/ternary (DontAlign, Align, AlignAfterOperator).
 AlignTrailingComments: true												# Align `//` on consecutive lines (boolean or nested Kind: Leave, Always, Never).
 ReflowComments: false													# Comment reflow (Never, IndentOnly, Always; legacy false/true).

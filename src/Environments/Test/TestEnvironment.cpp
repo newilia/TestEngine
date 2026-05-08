@@ -7,13 +7,12 @@
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/Utils.h"
-#include "Engine/Editor/Editor.h"
-#include "Engine/Editor/Tools/PullTool.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "Engine/Visual/CircleShapeVisual.h"
 #include "Engine/Visual/RectangleShapeVisual.h"
 #include "fmt/format.h"
 
+#include <limits>
 #include <memory>
 #include <utility>
 
@@ -27,7 +26,9 @@ void TestEnvironment::Setup() {
 		std::exit(EXIT_FAILURE);
 	}
 	Utils::MaximizeWindow(*mainWindow);
+
 	mainContext.GetPhysicsProcessor()->SetGravity({0, 1000});
+	mainContext.GetPhysicsProcessor()->SetGravityEnabled(true);
 	mainContext.SetScene(BuildScene());
 
 	EventHandlerBase::SubscribeForEvents();
@@ -46,9 +47,6 @@ void TestEnvironment::OnEvent(const sf::Event& event) {
 		else if (key->code == sf::Keyboard::Key::Hyphen) {
 			mainContext->SetSimSpeedMultiplier(mainContext->GetSimSpeedMultiplier() * 0.5f);
 		}
-		else if (key->code == sf::Keyboard::Key::Num0) {
-			mainContext->SetSimPaused(!mainContext->IsSimPaused());
-		}
 		else if (key->code == sf::Keyboard::Key::G) {
 			mainContext->GetPhysicsProcessor()->SetGravityEnabled(
 			    !mainContext->GetPhysicsProcessor()->IsGravityEnabled());
@@ -62,148 +60,124 @@ void TestEnvironment::OnEvent(const sf::Event& event) {
 std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	auto scene = make_shared<Scene>();
 	auto viewSize = Engine::MainContext::GetInstance().GetMainWindow()->getView().getSize();
-	float commonRestitution = 0.99f;
-	float commonFriction = 500.f;
-	float commonAttraction = 100.f;
-	bool isAttractive = true;
+	constexpr float commonRestitution = 0.65f;
+	constexpr float commonAttraction = 100.f;
+	constexpr bool isAttractionPositive = false;
 
 	/* walls */
+
 	constexpr float wallActualWidth = 200;
 	constexpr float wallVisibleWidth = 30;
 	constexpr float wallOffset = wallActualWidth / 2 - wallVisibleWidth;
+
 	std::string wallNames[] = {"bottom", "top", "left", "right"};
-	sf::Vector2f wallSizes[] = {{viewSize.x, wallActualWidth},
-	                            {viewSize.x, wallActualWidth},
-	                            {wallActualWidth, viewSize.y},
-	                            {wallActualWidth, viewSize.y}};
-	sf::Vector2f wallPositions[] = {{viewSize.x / 2, viewSize.y + wallOffset},
-	                                {viewSize.x / 2, -wallOffset},
-	                                {-wallOffset, viewSize.y / 2},
-	                                {viewSize.x + wallOffset, viewSize.y / 2}};
+	sf::Vector2f wallSizes[] = {{viewSize.x, wallActualWidth}, {viewSize.x, wallActualWidth},
+	    {wallActualWidth, viewSize.y}, {wallActualWidth, viewSize.y}};
+	sf::Vector2f wallPositions[] = {{viewSize.x / 2, viewSize.y + wallOffset}, {viewSize.x / 2, -wallOffset},
+	    {-wallOffset, viewSize.y / 2}, {viewSize.x + wallOffset, viewSize.y / 2}};
 
 	for (int i = 0; i < 4; ++i) {
 		auto node = make_shared<SceneNode>();
-		node->SetVisual(std::make_shared<RectangleShapeVisual>());
-		node->RequireBehaviour<PhysicsBodyBehaviour>()->GetInteractionGroups().set(0, true);
-
 		node->SetName(wallNames[i]);
+		scene->GetRoot()->AddChild(std::move(node));
 
-		auto rect = node->GetVisual<RectangleShapeVisual>();
-		if (!rect) {
-			continue;
-		}
+		auto rect = node->RequireVisual<RectangleShapeVisual>();
 		rect->SetSize(wallSizes[i]);
 		rect->SetOrigin(Utils::FindCenterOfMass(rect->GetShape()));
-		Utils::SetWorldPos(node, wallPositions[i]);
+		Utils::SetLocalPosToWorld(node, wallPositions[i]);
 		rect->SetFillColor(sf::Color(30, 255, 30, 50));
 		rect->SetOutlineColor(sf::Color(30, 255, 30, 120));
 		rect->SetOutlineThickness(1.f);
 
-		auto rb = node->RequireBehaviour<PhysicsBodyBehaviour>();
-		rb->SetFixed(true);
-		rb->SetRestitution(commonRestitution);
-		rb->SetFriction(commonFriction);
+		auto bodyBeh = node->RequireBehaviour<PhysicsBodyBehaviour>();
+		bodyBeh->GetInteractionGroups().set(0, true);
+		bodyBeh->SetFixed(true);
+		bodyBeh->SetRestitution(commonRestitution);
 
 		auto fieldBeh = std::make_shared<AttractiveBehaviour>();
-		fieldBeh->SetAttraction(10000 * (isAttractive ? -1 : 1));
+		fieldBeh->SetAttraction(commonAttraction * (isAttractionPositive ? -1 : 1));
 		node->AddBehaviour(std::move(fieldBeh));
-
-		scene->GetRoot()->AddChild(std::move(node));
 	}
 
-	/* demo point lights for ShapeLighting */
-	{
-		auto warmLight = make_shared<SceneNode>();
-		warmLight->SetName("point_light_warm");
-		Utils::SetWorldPos(warmLight, {viewSize.x * 0.28f, viewSize.y * 0.32f});
-		auto pl = make_shared<PointLightBehaviour>();
-		pl->SetLightColor(sf::Color(255, 210, 160, 255));
-		pl->SetIntensity(0.85f);
-		pl->SetRadius(520.f);
-		warmLight->AddBehaviour(std::move(pl));
-		scene->GetRoot()->AddChild(std::move(warmLight));
-	}
-	{
-		auto coolLight = make_shared<SceneNode>();
-		coolLight->SetName("point_light_cool");
-		Utils::SetWorldPos(coolLight, {viewSize.x * 0.72f, viewSize.y * 0.55f});
-		auto pl = make_shared<PointLightBehaviour>();
+	/* light stuff */
+
+	const auto AddLightSource = [&viewSize](SceneNode* node) {
+		auto pl = node->RequireBehaviour<PointLightBehaviour>();
 		pl->SetLightColor(sf::Color(160, 210, 255, 255));
-		pl->SetIntensity(0.75f);
-		pl->SetRadius(480.f);
-		coolLight->AddBehaviour(std::move(pl));
-		scene->GetRoot()->AddChild(std::move(coolLight));
-	}
+		pl->SetIntensity(0.1);
+		pl->SetRadius(std::numeric_limits<float>::max());
+	};
+
+	const auto AddLightReceiver = [](SceneNode* node, int type) {
+		auto recv = node->RequireBehaviour<ShapeLightReceiverBehaviour>();
+		if (type % 3 == 0) {
+			recv->SetBevelEmbossMode(false);
+			recv->SetDiffusion(0.35f);
+		}
+		else if (type % 3 == 1) {
+			recv->SetBevelEmbossMode(true);
+			recv->SetBevelWidth(18.f);
+			recv->SetDiffusion(0.5f);
+		}
+		else if (type % 3 == 2) {
+			recv->SetBevelEmbossMode(true);
+			recv->SetEaseOutCirc(false);
+			recv->SetBevelWidth(10.f);
+			recv->SetDiffusion(0.75f);
+		}
+	};
 
 	/* circles */
-	constexpr int circlesCount = 200;
+
+	constexpr int rowsCount = 15;
+	constexpr int colsCount = 10;
+	constexpr int circlesCount = rowsCount * colsCount;
+
 	for (int i = 0; i < circlesCount; ++i) {
 		auto node = make_shared<SceneNode>();
-		node->SetVisual(std::make_shared<CircleShapeVisual>());
+		auto circle = node->RequireVisual<CircleShapeVisual>();
 		node->SetName(fmt::format("circle_{}", i));
 		node->RequireBehaviour<PhysicsBodyBehaviour>()->GetInteractionGroups().set(0, true);
 
-		bool isAttractive = true;
-
-		auto circle = node->GetVisual<CircleShapeVisual>();
-		if (!circle) {
-			continue;
-		}
-		float radius = 20.f;
+		constexpr float radius = 20.f;
+		static const auto kAttractiveCircleColor = sf::Color{40, 170, 255, 200};
+		static const auto kRepulsiveCircleColor = sf::Color{255, 100, 100, 200};
+		const auto color = isAttractionPositive ? kAttractiveCircleColor : kRepulsiveCircleColor;
+		const auto outlineColor = sf::Color(color.r, color.g, color.b, 255);
 		circle->SetRadius(radius);
-
-		/* render optimization */
-		constexpr float pointsCountConstant = 3.f;
-		auto pointsCount = static_cast<size_t>(pointsCountConstant * (7 + radius / 8));
-		circle->SetPointCount(pointsCount);
-
-		sf::Color color = isAttractive ? sf::Color(40, 170, 255, 200) : sf::Color(255, 100, 100, 200);
-		auto outlineColor = color;
-		outlineColor.a = 255;
-
 		circle->SetFillColor(color);
 		circle->SetOutlineColor(outlineColor);
 		circle->SetOutlineThickness(1);
 		circle->SetOrigin(circle->GetLocalBounds().getCenter());
-		auto minX = static_cast<int>(wallVisibleWidth + radius);
-		auto maxX = static_cast<int>(viewSize.x - wallVisibleWidth - radius);
-		auto minY = static_cast<int>(wallVisibleWidth + radius);
-		auto maxY = static_cast<int>(viewSize.y - wallVisibleWidth - radius);
-		auto x = static_cast<float>(minX + rand() % (maxX - minX));
-		auto y = static_cast<float>(minY + rand() % (maxY - minY));
-		Utils::SetWorldPos(node, sf::Vector2f{x, y});
 
-		auto rb = node->RequireBehaviour<PhysicsBodyBehaviour>();
-		rb->SetMass(3.14f * radius * radius);
-		rb->SetRestitution(commonRestitution);
-		rb->SetFriction(commonFriction);
+		const auto gridRow = i / colsCount;
+		const auto gridCol = i % colsCount;
 
-		auto fieldBeh = std::make_shared<AttractiveBehaviour>();
-		fieldBeh->SetAttraction(commonAttraction * (isAttractive ? -1 : 1));
-		node->AddBehaviour(std::move(fieldBeh));
+		// position in grid
+		{
+			const auto minX = static_cast<int>(wallVisibleWidth + radius);
+			const auto maxX = static_cast<int>(viewSize.x - wallVisibleWidth - radius);
+			const auto minY = static_cast<int>(wallVisibleWidth + radius);
+			const auto maxY = static_cast<int>(viewSize.y - wallVisibleWidth - radius);
 
-		/* lighting demo: first circles use radial / bevel receivers (no outline: shader is fill-only) */
-		if (i < 3) {
-			circle->SetOutlineThickness(0.f);
-			auto recv = node->RequireBehaviour<ShapeLightReceiverBehaviour>();
-			if (i == 0) {
-				recv->SetBevelEmbossMode(false);
-				recv->SetDiffusion(0.35f);
-			}
-			else if (i == 1) {
-				recv->SetBevelEmbossMode(true);
-				recv->SetBevelWidth(18.f);
-				recv->SetDiffusion(0.5f);
-			}
-			else {
-				recv->SetBevelEmbossMode(true);
-				recv->SetEaseOutCirc(false);
-				recv->SetBevelWidth(10.f);
-				recv->SetDiffusion(0.75f);
-			}
+			const auto x = static_cast<float>(minX + gridCol * (maxX - minX) / colsCount);
+			const auto y = static_cast<float>(minY + gridRow * (maxY - minY) / rowsCount);
+			Utils::SetLocalPosToWorld(node, sf::Vector2f{x, y});
 		}
+
+		auto bodyBeh = node->RequireBehaviour<PhysicsBodyBehaviour>();
+		bodyBeh->SetMass(3.14f * radius * radius);
+		bodyBeh->SetRestitution(commonRestitution);
+
+		auto fieldBeh = node->RequireBehaviour<AttractiveBehaviour>();
+		fieldBeh->SetAttraction(commonAttraction * (isAttractionPositive ? -1 : 1));
+
+		AddLightSource(node.get());
+
+		AddLightReceiver(node.get(), gridCol / colsCount);
 
 		scene->GetRoot()->AddChild(std::move(node));
 	}
+
 	return scene;
 }

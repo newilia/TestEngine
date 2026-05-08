@@ -101,6 +101,7 @@ if(MSVC)
 else()
 	target_compile_options(TestEngine PRIVATE "-include" "${TE_GLOBALS_HEADER}")
 endif()
+target_precompile_headers(TestEngine PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${TE_GLOBALS_HEADER}>")
 
 # fmt submodule: third-party/fmt
 add_subdirectory(third-party/fmt EXCLUDE_FROM_ALL)

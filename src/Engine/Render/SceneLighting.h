@@ -1,12 +1,16 @@
 #pragma once
 
+#include "Engine/Core/Singleton.h"
+
 #include <SFML/Graphics/Glsl.hpp>
 #include <SFML/Graphics/Rect.hpp>
 #include <SFML/System/Vector2.hpp>
 
+#include <list>
+#include <memory>
 #include <vector>
 
-class Scene;
+class PointLightBehaviour;
 
 namespace Engine {
 
@@ -17,18 +21,26 @@ namespace Engine {
 		float radius = 1.f;
 	};
 
-	class SceneLighting
+	class SceneLighting : public Singleton<SceneLighting>
 	{
+		friend class Singleton<SceneLighting>;
+
 	public:
-		static void CollectLights(const Scene& scene);
-		static const std::vector<GpuPointLight>& GetLights();
+		void RegisterPointLight(std::shared_ptr<PointLightBehaviour> light);
+		void UnregisterPointLight(PointLightBehaviour* light);
+
+		void PrepareLights();
+		const std::vector<GpuPointLight>& GetLights() const;
 
 		/// Fills `out` with up to `maxLights` lights affecting `receiverBounds` (world space).
-		static void SelectLightsForBounds(const sf::FloatRect& receiverBounds, std::vector<GpuPointLight>& out,
-		                                  std::size_t maxLights);
+		void SelectLightsForBounds(
+		    const sf::FloatRect& receiverBounds, std::vector<GpuPointLight>& out, std::size_t maxLights) const;
 
 	private:
-		static std::vector<GpuPointLight> _lights;
+		SceneLighting() = default;
+
+		std::list<std::weak_ptr<PointLightBehaviour>> _lightSources;
+		std::vector<GpuPointLight> _lights;
 	};
 
 } // namespace Engine

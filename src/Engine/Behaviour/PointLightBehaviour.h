@@ -5,11 +5,17 @@
 
 #include <SFML/Graphics/Color.hpp>
 
-class PointLightBehaviour : public Behaviour
+#include <memory>
+
+class PointLightBehaviour : public Behaviour, public std::enable_shared_from_this<PointLightBehaviour>
 {
 	META_CLASS()
 
 public:
+	void OnInit() override;
+	void OnDeinit() override;
+	void OnEnabled(bool isEnabled) override;
+
 	sf::Color GetLightColor() const;
 	void SetLightColor(const sf::Color& color);
 
