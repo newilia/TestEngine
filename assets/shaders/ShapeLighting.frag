@@ -18,9 +18,9 @@ uniform vec2 u_rect_min;
 uniform vec2 u_rect_max;
 
 uniform int u_light_count;
-uniform vec2 u_light_pos[24];
-uniform vec3 u_light_color[24];
-uniform float u_light_radius[24];
+uniform vec2 u_light_pos[64];
+uniform vec3 u_light_color[64];
+uniform float u_light_radius[64];
 
 uniform int u_mode_bevel;
 uniform float u_bevel_width;
@@ -108,7 +108,7 @@ void main()
     vec3 lit = vec3(0.0);
     float bw = max(u_bevel_width, 1e-3);
 
-    for (int i = 0; i < 24; i++)
+    for (int i = 0; i < 64; i++)
     {
         if (i >= u_light_count)
             break;
@@ -116,6 +116,10 @@ void main()
         vec2 Lp = u_light_pos[i];
         vec3 lc = u_light_color[i];
         float R = max(u_light_radius[i], 1.0);
+        vec2 toLight = Lp - worldPos;
+        float distSq = dot(toLight, toLight);
+        float radiusSq = max(R * R, 1.0);
+        float distanceAttenuation = 1.0 / (1.0 + distSq / radiusSq);
 
         if (u_mode_bevel != 0)
         {
@@ -126,18 +130,13 @@ void main()
             profile = pow(profile, spread);
 
             vec2 N = normalize(edge_distance_grad(localPos) + vec2(1e-5, 1e-5));
-            vec2 Ldir = normalize(Lp - worldPos + vec2(1e-5, 1e-5));
+            vec2 Ldir = normalize(toLight + vec2(1e-5, 1e-5));
             float nd = max(dot(N, Ldir), 0.0);
-            lit += lc * (nd * profile);
+            lit += lc * (nd * profile * distanceAttenuation);
         }
         else
         {
-            float dist = distance(worldPos, Lp);
-            float t = clamp(dist / R, 0.0, 1.0);
-            float att = 1.0 - ease_curve(t);
-            float spread = mix(2.5, 0.3, u_diffusion);
-            att = pow(max(att, 0.0), spread);
-            lit += lc * att;
+            lit += lc * distanceAttenuation;
         }
     }
 

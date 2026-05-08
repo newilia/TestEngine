@@ -33,15 +33,20 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 			}
 			auto node = body->GetNode();
 			if (!node) {
+				++it;
 				continue;
 			}
-			auto pos = Utils::GetWorldPos(node);
+			if (body->IsFixed()) {
+				++it;
+				continue;
+			}
 
-			if (_isGravityEnabled && !body->IsFixed()) {
+			if (_isGravityEnabled) {
 				auto gravity = _gravity * body->GetGravityScale();
 				body->AddVelocity(gravity * (dt.asSeconds() / _motionSubsteps));
 			}
 
+			auto pos = Utils::GetWorldPos(node);
 			pos += body->GetVelocity() * (dt.asSeconds() / _motionSubsteps);
 			Utils::SetLocalPosToWorld(node, pos);
 			++it;

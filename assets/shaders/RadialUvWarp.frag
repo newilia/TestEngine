@@ -1,15 +1,15 @@
 uniform sampler2D texture;
 uniform float aspect_ratio;
 uniform int warp_count;
-uniform vec2 warp_center_uv[128];
-uniform float warp_strength[128];
-uniform float warp_influence_radius[128];
+uniform vec2 warp_center_uv[64];
+uniform float warp_strength[64];
+uniform float warp_influence_radius[64];
 
 void main()
 {
     vec2 uv = gl_TexCoord[0].xy;
     vec2 radial = vec2(0.0);
-    for (int i = 0; i < 128; i++)
+    for (int i = 0; i < 64; i++)
     {
         if (i >= warp_count)
             break;

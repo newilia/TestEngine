@@ -88,6 +88,10 @@ sf::Vector2f PhysicsBodyBehaviour::GetPointWorldPos(std::size_t index) const {
 
 void PhysicsBodyBehaviour::SetFixed(bool isFixed) {
 	_isFixed = isFixed;
+	if (_isFixed) {
+		_velocity = {};
+		_angularSpeed = {};
+	}
 }
 
 bool PhysicsBodyBehaviour::IsFixed() const {
@@ -112,10 +116,6 @@ void PhysicsBodyBehaviour::SetVelocity(sf::Vector2f v) {
 
 void PhysicsBodyBehaviour::AddVelocity(sf::Vector2f delta) {
 	_velocity += delta;
-}
-
-void PhysicsBodyBehaviour::ScaleVelocity(float factor) {
-	_velocity *= factor;
 }
 
 float PhysicsBodyBehaviour::GetAngularSpeed() const {

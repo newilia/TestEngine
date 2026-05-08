@@ -51,7 +51,6 @@ public:
 	sf::Vector2f GetVelocity() const;
 	void SetVelocity(sf::Vector2f v);
 	void AddVelocity(sf::Vector2f delta);
-	void ScaleVelocity(float factor);
 
 	float GetAngularSpeed() const;
 	void SetAngularSpeed(float w);

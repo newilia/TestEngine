@@ -22,7 +22,7 @@ namespace Engine {
 
 	namespace {
 
-		constexpr std::size_t kMaxLights = 24;
+		constexpr std::size_t kMaxLights = 64;
 		constexpr std::size_t kMaxConvexVerts = 64;
 
 		sf::Shader* GetShapeLightingShader() {
@@ -41,6 +41,10 @@ namespace Engine {
 	} // namespace
 
 	bool TryDrawShapeWithLighting(const ShapeVisualBase& visual, sf::RenderTarget& target, sf::RenderStates states) {
+		if (!SceneLighting::GetInstance().IsEnabled()) {
+			return false;
+		}
+
 		const auto node = visual.GetNode();
 		if (!node) {
 			return false;
