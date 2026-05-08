@@ -8,6 +8,7 @@
 
 #include <functional>
 #include <memory>
+#include <vector>
 
 /// Sets hierarchy selection from scene picks (mouse / primary touch).
 class SelectTool final : public IEditorTool
@@ -29,6 +30,8 @@ private:
 	};
 
 	[[nodiscard]] sf::FloatRect CurrentMarqueeRect() const;
+	[[nodiscard]] std::vector<std::shared_ptr<SceneNode>> BuildLiveMarqueeSelection(
+	    const std::vector<std::shared_ptr<SceneNode>>& marqueeNodes, bool isCtrlPressed) const;
 
 	SelectCallback _onSelect;
 	bool _mousePressed = false;
@@ -37,4 +40,5 @@ private:
 	sf::Vector2f _dragStartWorld{};
 	sf::Vector2f _dragCurrentWorld{};
 	MarqueeMode _marqueeMode = MarqueeMode::kIntersects;
+	std::vector<std::shared_ptr<SceneNode>> _marqueeBaseSelection;
 };
