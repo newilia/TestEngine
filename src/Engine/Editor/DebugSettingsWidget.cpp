@@ -18,10 +18,21 @@ namespace Engine {
 		if (ImGui::Checkbox("Simulation enabled", &simEnabled)) {
 			mainContext.SetSimPaused(!simEnabled);
 		}
+
 		float speedMul = mainContext.GetSimSpeedMultiplier();
 		if (ImGui::SliderFloat("dt multiplier", &speedMul, 0.05f, 8.f, "%.3f")) {
 			mainContext.SetSimSpeedMultiplier(std::max(1e-4f, speedMul));
 		}
+		ImGui::SameLine();
+		if (ImGui::Button("1.0")) {
+			mainContext.SetSimSpeedMultiplier(1.0f);
+		}
+
+		int motionSubsteps = mainContext.GetPhysicsProcessor()->GetMotionSubsteps();
+		if (ImGui::SliderInt("Motion substeps", &motionSubsteps, 1, 4)) {
+			mainContext.GetPhysicsProcessor()->SetMotionSubsteps(motionSubsteps);
+		}
+
 		// todo добавить обработку ПКМ по dt multiplier для сброса значения в 1.0
 
 		ImGui::SeparatorText("Timing");

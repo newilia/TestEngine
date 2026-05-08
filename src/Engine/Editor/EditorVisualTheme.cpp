@@ -10,17 +10,17 @@ namespace Engine::EditorVisualTheme {
 		ImVec4 BaseHeaderColor(InspectorSectionHeaderStyle section) {
 			switch (section) {
 			case InspectorSectionHeaderStyle::SceneNode:
-				return ImVec4(0.22f, 0.38f, 0.58f, 1.f);
+				return kInspectorSectionHeaderSceneNode;
 			case InspectorSectionHeaderStyle::Transform:
-				return ImVec4(0.24f, 0.52f, 0.36f, 1.f);
+				return kInspectorSectionHeaderTransform;
 			case InspectorSectionHeaderStyle::SortingStrategy:
-				return ImVec4(0.55f, 0.40f, 0.22f, 1.f);
+				return kInspectorSectionHeaderSortingStrategy;
 			case InspectorSectionHeaderStyle::Visual:
-				return ImVec4(0.48f, 0.28f, 0.55f, 1.f);
+				return kInspectorSectionHeaderVisual;
 			case InspectorSectionHeaderStyle::Behaviour:
-				return ImVec4(0.30f, 0.42f, 0.48f, 1.f);
+				return kInspectorSectionHeaderBehaviour;
 			}
-			return ImVec4(0.26f, 0.26f, 0.28f, 1.f);
+			return kInspectorSectionHeaderFallback;
 		}
 
 		ImVec4 AdjustRgb(const ImVec4& c, float delta) {

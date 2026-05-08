@@ -114,8 +114,8 @@ namespace Engine {
 			if (!behaviour) {
 				continue;
 			}
-			const std::string behTitle = fmt::format("Behaviour ({})", typeid(*behaviour).name());
-			DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::Behaviour, behTitle.c_str(),
+			const std::string className = (typeid(*behaviour).name() + sizeof("class"));
+			DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::Behaviour, className.c_str(),
 			    dynamic_cast<IPropertiesProvider*>(behaviour.get()), behaviour, EntitySlot::Behaviour, _propertyDrawer);
 		}
 	}
