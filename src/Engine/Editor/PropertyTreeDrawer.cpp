@@ -373,7 +373,7 @@ namespace Engine {
 				float arr[3] = {v.x, v.y, v.z};
 				if (readOnly) {
 					ImGui::Text("(%.2f, %.2f, %.2f)", static_cast<double>(v.x), static_cast<double>(v.y),
-					            static_cast<double>(v.z));
+					    static_cast<double>(v.z));
 				}
 				else if (ImGui::DragFloat3("##v", arr, n.meta.dragSpeed.value_or(1.f))) {
 					a->set(sf::Vector3f{arr[0], arr[1], arr[2]});
@@ -389,7 +389,7 @@ namespace Engine {
 				float rgba[4] = {c.r / 255.f, c.g / 255.f, c.b / 255.f, c.a / 255.f};
 				if (readOnly) {
 					ImGui::ColorButton("##ro", ImVec4{rgba[0], rgba[1], rgba[2], rgba[3]},
-					                   ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoPicker);
+					    ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoPicker);
 				}
 				else if (ImGui::ColorEdit4("##v", rgba, ImGuiColorEditFlags_Float)) {
 					const auto clamp255 = [](float x) {

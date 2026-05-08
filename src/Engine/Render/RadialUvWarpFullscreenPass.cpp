@@ -32,8 +32,8 @@ namespace Engine {
 			return false;
 		}
 
-		void CollectRadialUvWarpsRecursive(const std::shared_ptr<SceneNode>& node,
-		                                   std::vector<std::shared_ptr<RadialUvWarpBehaviour>>& warps) {
+		void CollectRadialUvWarpsRecursive(
+		    const std::shared_ptr<SceneNode>& node, std::vector<std::shared_ptr<RadialUvWarpBehaviour>>& warps) {
 			if (!node || !node->IsEnabled() || !node->IsVisible()) {
 				return;
 			}
@@ -62,7 +62,7 @@ namespace Engine {
 
 		// 1-pixel step: world-space eps + mapCoordsToPixel often share one pixel → zero UV derivative (flicker).
 		float WorldRadiusToShaderDist(const sf::RenderWindow& window, const sf::View& sceneView, sf::Vector2u pixelSize,
-		                              const sf::Vector2f& uvOffset, float aspectRatio, sf::Vector2i pxAnchor) {
+		    const sf::Vector2f& uvOffset, float aspectRatio, sf::Vector2i pxAnchor) {
 			const int pw = static_cast<int>(pixelSize.x);
 			const int ph = static_cast<int>(pixelSize.y);
 			if (pw <= 1 || ph <= 1) {
@@ -143,8 +143,8 @@ namespace Engine {
 		return SceneHasEnabledRadialUvWarpRecursive(*root);
 	}
 
-	void RadialUvWarpFullscreenPass::Prepare(const std::shared_ptr<Scene>& scene,
-	                                         const ViewportFullscreenPresentContext& /*ctx*/) {
+	void RadialUvWarpFullscreenPass::Prepare(
+	    const std::shared_ptr<Scene>& scene, const ViewportFullscreenPresentContext& /*ctx*/) {
 		_activeWarps.clear();
 		if (!scene) {
 			return;
@@ -159,8 +159,8 @@ namespace Engine {
 		}
 	}
 
-	void RadialUvWarpFullscreenPass::Apply(const sf::Texture& inputTexture, sf::RenderTarget& outputTarget,
-	                                       const ViewportFullscreenPresentContext& ctx) {
+	void RadialUvWarpFullscreenPass::Apply(
+	    const sf::Texture& inputTexture, sf::RenderTarget& outputTarget, const ViewportFullscreenPresentContext& ctx) {
 		const sf::Vector2f quadSize(sf::Vector2f(ctx.pixelSize));
 		sf::RectangleShape quad(quadSize);
 

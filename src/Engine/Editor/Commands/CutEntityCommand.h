@@ -16,8 +16,8 @@ namespace Engine::EditorCommands {
 	class CutEntityCommand final : public Engine::IEditorCommand
 	{
 	public:
-		CutEntityCommand(std::shared_ptr<SceneNode> node, std::shared_ptr<EntityOnNode> entity,
-		                 Engine::EntitySlot slot);
+		CutEntityCommand(
+		    std::shared_ptr<SceneNode> node, std::shared_ptr<EntityOnNode> entity, Engine::EntitySlot slot);
 
 		bool Execute() override;
 		void Undo() override;

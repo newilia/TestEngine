@@ -53,10 +53,10 @@ namespace Engine {
 		ImGui::TextDisabled("(0 = unlimited: one variable step per frame)");
 
 		ImGui::Text("Frame dt: %.3f s (%.1f fps)", static_cast<double>(mainContext.GetFrameDt().asSeconds()),
-		            mainContext.GetCurrentFps());
+		    mainContext.GetCurrentFps());
 
 		ImGui::Text("Tick dt:  %.3f s (%.1f fps)", static_cast<double>(mainContext.GetSimTickDt().asSeconds()),
-		            mainContext.GetCurrentTickRate());
+		    mainContext.GetCurrentTickRate());
 
 		if (const auto ph = mainContext.GetPhysicsProcessor()) {
 			ImGui::SeparatorText("Physics");

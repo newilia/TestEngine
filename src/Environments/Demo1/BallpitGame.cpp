@@ -36,7 +36,7 @@ namespace Demo1 {
 
 		sf::Color RandomBallColor(sf::Color base, float colorVariability, std::mt19937& gen) {
 			return {PerturbChannel(base.r, colorVariability, gen), PerturbChannel(base.g, colorVariability, gen),
-			        PerturbChannel(base.b, colorVariability, gen), PerturbChannel(base.a, colorVariability, gen)};
+			    PerturbChannel(base.b, colorVariability, gen), PerturbChannel(base.a, colorVariability, gen)};
 		}
 
 		void AddAquariumWalls(SceneNode* root, float innerW, float innerH, float wallT, float wallRestitution) {
@@ -72,8 +72,8 @@ namespace Demo1 {
 			}
 		}
 
-		bool TryNonOverlappingPosition(const std::vector<std::pair<sf::Vector2f, float>>& placed, sf::Vector2f p,
-		                               float r) {
+		bool TryNonOverlappingPosition(
+		    const std::vector<std::pair<sf::Vector2f, float>>& placed, sf::Vector2f p, float r) {
 			for (const auto& [q, rq] : placed) {
 				if (Utils::Length(p - q) < r + rq - 0.25f) {
 					return false;
@@ -83,7 +83,7 @@ namespace Demo1 {
 		}
 
 		void AddBalls(SceneNode* root, float innerW, float innerH, float baseR, float radiusVar, sf::Color baseColor,
-		              float colorVar, int ballCount, float ballRestitution, std::mt19937& gen) {
+		    float colorVar, int ballCount, float ballRestitution, std::mt19937& gen) {
 			const float hx = innerW * 0.5f;
 			const float hy = innerH * 0.5f;
 			std::uniform_real_distribution<float> radiusOff(-radiusVar, radiusVar);
@@ -147,9 +147,8 @@ namespace Demo1 {
 	} // namespace
 
 	shared_ptr<SceneNode> CreateBallpitGameNode(float aquariumWidth, float aquariumHeight, float wallThickness,
-	                                            float baseBallRadius, float ballRadiusVariability,
-	                                            sf::Color baseBallColor, float ballColorVariability, int ballCount,
-	                                            float ballRestitution, float wallRestitution) {
+	    float baseBallRadius, float ballRadiusVariability, sf::Color baseBallColor, float ballColorVariability,
+	    int ballCount, float ballRestitution, float wallRestitution) {
 		if (aquariumWidth <= 0.f || aquariumHeight <= 0.f || wallThickness <= 0.f || baseBallRadius <= 0.f ||
 		    ballRadiusVariability < 0.f || ballColorVariability < 0.f || ballCount <= 0 || ballRestitution < 0.f ||
 		    wallRestitution < 0.f) {
@@ -173,7 +172,7 @@ namespace Demo1 {
 		std::random_device rd;
 		std::mt19937 gen(rd());
 		AddBalls(root.get(), aquariumWidth, aquariumHeight, baseBallRadius, ballRadiusVariability, baseBallColor,
-		         ballColorVariability, ballCount, ballRestitution, gen);
+		    ballColorVariability, ballCount, ballRestitution, gen);
 
 		return root;
 	}

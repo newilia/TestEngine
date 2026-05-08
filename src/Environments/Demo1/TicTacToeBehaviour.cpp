@@ -16,13 +16,20 @@ namespace {
 	constexpr std::uint8_t kO = 2;
 
 	constexpr int kLines[8][3] = {
-	    {0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {0, 3, 6}, {1, 4, 7}, {2, 5, 8}, {0, 4, 8}, {2, 4, 6},
+	    {0, 1, 2},
+	    {3, 4, 5},
+	    {6, 7, 8},
+	    {0, 3, 6},
+	    {1, 4, 7},
+	    {2, 5, 8},
+	    {0, 4, 8},
+	    {2, 4, 6},
 	};
 
 } // namespace
 
-TicTacToeBehaviour::TicTacToeBehaviour(std::shared_ptr<TextVisual> hudText,
-                                       std::array<std::shared_ptr<TextVisual>, 9> cellTexts)
+TicTacToeBehaviour::TicTacToeBehaviour(
+    std::shared_ptr<TextVisual> hudText, std::array<std::shared_ptr<TextVisual>, 9> cellTexts)
     : _hudText(std::move(hudText)), _cellTexts(std::move(cellTexts)) {}
 
 void TicTacToeBehaviour::OnInit() {

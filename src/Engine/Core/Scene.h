@@ -23,8 +23,8 @@ public:
 	std::shared_ptr<SceneNode> GetRoot() const;
 	void NotifyPresentRec(const sf::Time& wallFrameDt); // TODO is it necessary?
 	bool DispatchTapAt(const sf::Vector2f& worldPoint);
-	[[nodiscard]] std::shared_ptr<SceneNode> FindTopMostNodeAtPoint(const sf::Vector2f& worldPoint,
-	                                                                bool tapResponsiveOnly = false);
+	[[nodiscard]] std::shared_ptr<SceneNode> FindTopMostNodeAtPoint(
+	    const sf::Vector2f& worldPoint, bool tapResponsiveOnly = false);
 
 private:
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;

@@ -23,8 +23,8 @@ private:
 	void AddUserPlatform(Scene* scene);
 	void AddAiPlatform(Scene* scene);
 	void AddScoreboard(Scene* scene);
-	std::shared_ptr<SceneNode> CreateDefaultPlatform(sf::Vector2f size, sf::Vector2f pos, float rotationDeg,
-	                                                 sf::Color color) const;
+	std::shared_ptr<SceneNode> CreateDefaultPlatform(
+	    sf::Vector2f size, sf::Vector2f pos, float rotationDeg, sf::Color color) const;
 	void OnLose();
 	void OnWin();
 	void ResetRound();

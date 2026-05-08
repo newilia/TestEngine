@@ -21,8 +21,8 @@ class TicTacToeBehaviour : public Behaviour
 	META_CLASS()
 
 public:
-	explicit TicTacToeBehaviour(std::shared_ptr<TextVisual> hudText,
-	                            std::array<std::shared_ptr<TextVisual>, 9> cellTexts);
+	explicit TicTacToeBehaviour(
+	    std::shared_ptr<TextVisual> hudText, std::array<std::shared_ptr<TextVisual>, 9> cellTexts);
 
 	void OnInit() override;
 	void OnUpdate(const sf::Time& dt) override;

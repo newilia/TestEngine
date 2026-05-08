@@ -25,7 +25,7 @@ namespace Engine::EditorVisualTheme {
 
 		ImVec4 AdjustRgb(const ImVec4& c, float delta) {
 			return ImVec4(std::clamp(c.x + delta, 0.f, 1.f), std::clamp(c.y + delta, 0.f, 1.f),
-			              std::clamp(c.z + delta, 0.f, 1.f), c.w);
+			    std::clamp(c.z + delta, 0.f, 1.f), c.w);
 		}
 
 	} // namespace

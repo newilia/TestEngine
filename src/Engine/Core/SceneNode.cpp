@@ -341,8 +341,8 @@ void SceneNode::DetachBehaviourForRemove(const shared_ptr<Behaviour>& b) {
 	b->OnDetached();
 }
 
-void SceneNode::FindNodesAtPoint(const sf::Vector2f& worldPoint, std::vector<shared_ptr<SceneNode>>& result,
-                                 bool tapResponsiveOnly) {
+void SceneNode::FindNodesAtPoint(
+    const sf::Vector2f& worldPoint, std::vector<shared_ptr<SceneNode>>& result, bool tapResponsiveOnly) {
 	std::vector<shared_ptr<SceneNode>> sorted = _children;
 	Utils::SortSceneNodesByDrawOrder(sorted);
 	for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {

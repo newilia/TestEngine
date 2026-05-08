@@ -30,8 +30,7 @@ namespace Engine {
 		shared_ptr<TextureManager> GetTextureManager() const;
 
 		std::shared_ptr<sf::RenderWindow> CreateMainWindow(sf::VideoMode mode, const sf::String& title,
-		                                                   std::uint32_t style = sf::Style::Default,
-		                                                   sf::State state = sf::State::Windowed);
+		    std::uint32_t style = sf::Style::Default, sf::State state = sf::State::Windowed);
 
 		sf::RenderWindow* GetMainWindow() const;
 
