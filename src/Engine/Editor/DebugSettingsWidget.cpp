@@ -17,17 +17,17 @@ namespace Engine {
 		ImGui::SeparatorText("Simulation");
 		{
 			bool simEnabled = !mainContext.IsSimPaused();
-			if (ImGui::Checkbox("Simulation enabled", &simEnabled)) {
+			if (ImGui::Checkbox("Run", &simEnabled)) {
 				mainContext.SetSimPaused(!simEnabled);
 			}
 
-			float speedMul = mainContext.GetSimSpeedMultiplier();
-			if (ImGui::SliderFloat("dt multiplier", &speedMul, 0.05f, 8.f, "%.3f")) {
-				mainContext.SetSimSpeedMultiplier(std::max(1e-4f, speedMul));
-			}
-			ImGui::SameLine();
 			if (ImGui::Button("1.0")) {
 				mainContext.SetSimSpeedMultiplier(1.0f);
+			}
+			ImGui::SameLine();
+			float speedMul = mainContext.GetSimSpeedMultiplier();
+			if (ImGui::SliderFloat("Engine dt multiplier", &speedMul, 0.05f, 4.f, "%.3f")) {
+				mainContext.SetSimSpeedMultiplier(std::max(1e-4f, speedMul));
 			}
 
 			int motionSubsteps = mainContext.GetPhysicsProcessor()->GetMotionSubsteps();
@@ -112,13 +112,21 @@ namespace Engine {
 				sceneLighting.SetEnabled(lightingEnabled);
 			}
 
+			if (ImGui::Button("1.0##LightDistanceScale")) {
+				sceneLighting.SetDistanceRangeScale(1.0f);
+			}
+			ImGui::SameLine();
 			float distanceScale = sceneLighting.GetDistanceRangeScale();
-			if (ImGui::SliderFloat("Light distance scale", &distanceScale, 0.1f, 20.f, "%.2f")) {
+			if (ImGui::SliderFloat("Light distance scale", &distanceScale, 0.1f, 3.f, "%.2f")) {
 				sceneLighting.SetDistanceRangeScale(distanceScale);
 			}
 
+			if (ImGui::Button("1.0##LightIntensityScale")) {
+				sceneLighting.SetGlobalIntensityScale(1.0f);
+			}
+			ImGui::SameLine();
 			float intensityScale = sceneLighting.GetGlobalIntensityScale();
-			if (ImGui::SliderFloat("Light intensity scale", &intensityScale, 0.f, 10.f, "%.2f")) {
+			if (ImGui::SliderFloat("Light intensity scale", &intensityScale, 0.1f, 3.f, "%.2f")) {
 				sceneLighting.SetGlobalIntensityScale(intensityScale);
 			}
 
