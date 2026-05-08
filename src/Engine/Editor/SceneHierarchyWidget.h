@@ -3,6 +3,7 @@
 #include "Engine/Core/Scene.h"
 
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 namespace Engine {
@@ -29,9 +30,11 @@ namespace Engine {
 		bool ContainsNode(const SceneNode& node) const;
 		void DrawNode(SceneNode& node, const char* emptyNamePlaceholder, int depth);
 		void BuildTreeOrder(SceneNode& node, std::vector<std::shared_ptr<SceneNode>>& treeOrder) const;
+		void RemoveFromSelectionOrder(const SceneNode& node);
+		void RebuildSelectionMapFromOrder();
 
-	private:
-		std::vector<std::weak_ptr<SceneNode>> _selectedNodes;
+		std::vector<std::weak_ptr<SceneNode>> _selectionOrder;
+		std::unordered_map<const SceneNode*, std::weak_ptr<SceneNode>> _selectionByRawPtr;
 		std::weak_ptr<SceneNode> _selectionAnchor;
 		bool _scrollSelectionIntoViewPending = false;
 	};

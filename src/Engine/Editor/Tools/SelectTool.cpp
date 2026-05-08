@@ -49,6 +49,15 @@ bool SelectTool::processEvent(const sf::Event& event) {
 			_marqueeMode =
 			    (pressed->position.x >= _dragStartPixel.x) ? MarqueeMode::kIntersects : MarqueeMode::kContains;
 			_marqueeBaseSelection = Engine::Editor::GetInstance().GetSelectedNodes();
+			_marqueeBaseSelectionPtrSet.clear();
+			for (const auto& node : _marqueeBaseSelection) {
+				if (node) {
+					_marqueeBaseSelectionPtrSet.insert(node.get());
+				}
+			}
+			_lastLiveMarqueeEmitPixel.reset();
+			_lastLiveMarqueeEmitCtrl.reset();
+			_lastLiveMarqueeEmitMode.reset();
 			return true;
 		}
 	}
@@ -64,16 +73,23 @@ bool SelectTool::processEvent(const sf::Event& event) {
 			_dragCurrentWorld = toWorld(moved->position);
 			_marqueeMode = (moved->position.x >= _dragStartPixel.x) ? MarqueeMode::kIntersects : MarqueeMode::kContains;
 			if (_isMarqueeSelecting) {
+				const Scene::RectSelectionMode mode = (_marqueeMode == MarqueeMode::kContains)
+				                                          ? Scene::RectSelectionMode::kContains
+				                                          : Scene::RectSelectionMode::kIntersects;
+				const bool isCtrlPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LControl) ||
+				                           sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RControl);
+				const bool marqueeStateUnchanged =
+				    _lastLiveMarqueeEmitPixel && _lastLiveMarqueeEmitCtrl && _lastLiveMarqueeEmitMode &&
+				    *_lastLiveMarqueeEmitPixel == moved->position && *_lastLiveMarqueeEmitCtrl == isCtrlPressed &&
+				    *_lastLiveMarqueeEmitMode == _marqueeMode;
 				auto scene = Engine::MainContext::GetInstance().GetScene();
-				if (scene) {
-					const Scene::RectSelectionMode mode = (_marqueeMode == MarqueeMode::kContains)
-					                                          ? Scene::RectSelectionMode::kContains
-					                                          : Scene::RectSelectionMode::kIntersects;
-					const bool isCtrlPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LControl) ||
-					                           sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RControl);
+				if (scene && !marqueeStateUnchanged) {
 					auto marqueeNodes = scene->FindNodesInRect(CurrentMarqueeRect(), mode);
 					Engine::Editor::GetInstance().SetSelectedNodes(
 					    BuildLiveMarqueeSelection(marqueeNodes, isCtrlPressed));
+					_lastLiveMarqueeEmitPixel = moved->position;
+					_lastLiveMarqueeEmitCtrl = isCtrlPressed;
+					_lastLiveMarqueeEmitMode = _marqueeMode;
 				}
 			}
 			return true;
@@ -101,6 +117,10 @@ bool SelectTool::processEvent(const sf::Event& event) {
 			_mousePressed = false;
 			_isMarqueeSelecting = false;
 			_marqueeBaseSelection.clear();
+			_marqueeBaseSelectionPtrSet.clear();
+			_lastLiveMarqueeEmitPixel.reset();
+			_lastLiveMarqueeEmitCtrl.reset();
+			_lastLiveMarqueeEmitMode.reset();
 			return true;
 		}
 	}
@@ -131,11 +151,7 @@ std::vector<std::shared_ptr<SceneNode>> SelectTool::BuildLiveMarqueeSelection(
 		if (!node) {
 			continue;
 		}
-		const bool alreadyAdded =
-		    std::any_of(result.begin(), result.end(), [&node](const std::shared_ptr<SceneNode>& selected) {
-			    return selected == node;
-		    });
-		if (!alreadyAdded) {
+		if (!_marqueeBaseSelectionPtrSet.contains(node.get())) {
 			result.push_back(node);
 		}
 	}

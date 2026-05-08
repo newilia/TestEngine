@@ -8,6 +8,8 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
+#include <unordered_set>
 #include <vector>
 
 /// Sets hierarchy selection from scene picks (mouse / primary touch).
@@ -41,4 +43,8 @@ private:
 	sf::Vector2f _dragCurrentWorld{};
 	MarqueeMode _marqueeMode = MarqueeMode::kIntersects;
 	std::vector<std::shared_ptr<SceneNode>> _marqueeBaseSelection;
+	mutable std::unordered_set<const SceneNode*> _marqueeBaseSelectionPtrSet{};
+	std::optional<sf::Vector2i> _lastLiveMarqueeEmitPixel{};
+	std::optional<bool> _lastLiveMarqueeEmitCtrl{};
+	std::optional<MarqueeMode> _lastLiveMarqueeEmitMode{};
 };

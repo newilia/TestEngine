@@ -73,9 +73,11 @@ namespace {
 			return;
 		}
 
-		std::vector<shared_ptr<SceneNode>> sorted = node->GetChildren();
-		Utils::SortSceneNodesByDrawOrder(sorted);
-		for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
+		const auto& children = node->GetChildren();
+		for (auto it = children.rbegin(); it != children.rend(); ++it) {
+			if (!*it) {
+				continue;
+			}
 			FindNodesInRectRec(*it, normalizedRect, mode, outNodes);
 		}
 

@@ -426,25 +426,36 @@ namespace {
 		return common;
 	}
 
-	void DrawMergedProviderBlock(Engine::EditorVisualTheme::InspectorSectionHeaderStyle sectionStyle, const char* title,
-	    const std::vector<Engine::IPropertiesProvider*>& inspectables, const Engine::PropertyTreeDrawer& drawer) {
-		if (inspectables.empty()) {
+	std::vector<const SceneNode*> BuildSortedSelectionFingerprint(
+	    const std::vector<std::shared_ptr<SceneNode>>& nodes) {
+		std::vector<const SceneNode*> fingerprint;
+		fingerprint.reserve(nodes.size());
+		for (const auto& node : nodes) {
+			fingerprint.push_back(static_cast<const SceneNode*>(node.get()));
+		}
+		std::sort(fingerprint.begin(), fingerprint.end());
+		return fingerprint;
+	}
+
+	void RefreshMergeStateForFingerprint(
+	    Engine::NodeInspectorMergeState& mergeState, const std::vector<std::shared_ptr<SceneNode>>& validNodes) {
+		auto nextFingerprint = BuildSortedSelectionFingerprint(validNodes);
+		if (nextFingerprint == mergeState.fingerprint) {
 			return;
 		}
-		std::vector<Engine::PropertyTree> trees;
-		trees.reserve(inspectables.size());
-		for (auto* inspectable : inspectables) {
-			if (!inspectable) {
-				return;
-			}
-			Engine::PropertyTree tree;
-			Engine::PropertyBuilder builder(tree);
-			inspectable->BuildPropertyTree(builder);
-			trees.push_back(std::move(tree));
-		}
+		mergeState.fingerprint = std::move(nextFingerprint);
+		mergeState.sceneNodeMerged.reset();
+		mergeState.transformMerged.reset();
+		mergeState.sortingMerged.reset();
+		mergeState.visualMerged.reset();
+		mergeState.behaviourMerged.clear();
+		mergeState.commonBehaviourTitles = FindCommonBehaviourTypes(validNodes);
+	}
 
-		Engine::PropertyTree mergedTree = BuildMergedTree(trees);
-		if (mergedTree.roots.empty()) {
+	void DrawMergedProviderBlockCached(Engine::EditorVisualTheme::InspectorSectionHeaderStyle sectionStyle,
+	    const char* title, const std::vector<Engine::IPropertiesProvider*>& inspectables,
+	    const Engine::PropertyTreeDrawer& drawer, std::optional<Engine::PropertyTree>& mergedCache) {
+		if (inspectables.empty()) {
 			return;
 		}
 		Engine::EditorVisualTheme::PushInspectorSectionHeaderColors(sectionStyle);
@@ -453,7 +464,28 @@ namespace {
 		if (!open) {
 			return;
 		}
-		drawer.Draw(mergedTree, {.unwrapSingleRootObject = true});
+		if (!mergedCache.has_value()) {
+			std::vector<Engine::PropertyTree> trees;
+			trees.reserve(inspectables.size());
+			for (auto* inspectable : inspectables) {
+				if (!inspectable) {
+					return;
+				}
+				Engine::PropertyTree tree;
+				Engine::PropertyBuilder builder(tree);
+				inspectable->BuildPropertyTree(builder);
+				trees.push_back(std::move(tree));
+			}
+			mergedCache = BuildMergedTree(trees);
+		}
+		if (mergedCache->roots.empty()) {
+			return;
+		}
+		bool editedMixedLeaf = false;
+		drawer.Draw(*mergedCache, {.unwrapSingleRootObject = true, .anyLeafEdited = &editedMixedLeaf});
+		if (editedMixedLeaf) {
+			mergedCache.reset();
+		}
 	}
 
 	void DrawIPropertiesProviderBlock(Engine::EditorVisualTheme::InspectorSectionHeaderStyle sectionStyle,
@@ -527,51 +559,39 @@ namespace {
 } // namespace
 
 namespace Engine {
-	void NodeInspectorWidget::Draw(const std::vector<std::shared_ptr<SceneNode>>& nodes) const {
-		std::vector<std::shared_ptr<SceneNode>> validNodes;
-		validNodes.reserve(nodes.size());
-		for (const auto& node : nodes) {
-			if (node) {
-				validNodes.push_back(node);
-			}
+
+	void NodeInspectorWidget::DrawSingleNode(const std::shared_ptr<SceneNode>& node) const {
+		DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::SceneNode, "SceneNode",
+		    dynamic_cast<IPropertiesProvider*>(node.get()), nullptr, EntitySlot::Behaviour, _propertyDrawer);
+
+		DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::Transform, "Transform",
+		    dynamic_cast<IPropertiesProvider*>(node->GetLocalTransform().get()), node->GetLocalTransform(),
+		    EntitySlot::Transform, _propertyDrawer);
+
+		if (const auto sorting = node->GetSortingStrategy()) {
+			DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::SortingStrategy,
+			    "Sorting strategy", dynamic_cast<IPropertiesProvider*>(sorting.get()), sorting,
+			    EntitySlot::SortingStrategy, _propertyDrawer);
 		}
-		if (validNodes.empty()) {
-			ImGui::TextUnformatted("No node selected");
-			return;
+		if (const auto visual = node->GetVisual()) {
+			DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::Visual, "Visual",
+			    dynamic_cast<IPropertiesProvider*>(visual.get()), visual, EntitySlot::Visual, _propertyDrawer);
 		}
-
-		if (validNodes.size() == 1) {
-			const auto& node = validNodes.front();
-			DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::SceneNode, "SceneNode",
-			    dynamic_cast<IPropertiesProvider*>(node.get()), nullptr, EntitySlot::Behaviour, _propertyDrawer);
-
-			DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::Transform, "Transform",
-			    dynamic_cast<IPropertiesProvider*>(node->GetLocalTransform().get()), node->GetLocalTransform(),
-			    EntitySlot::Transform, _propertyDrawer);
-
-			if (const auto sorting = node->GetSortingStrategy()) {
-				DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::SortingStrategy,
-				    "Sorting strategy", dynamic_cast<IPropertiesProvider*>(sorting.get()), sorting,
-				    EntitySlot::SortingStrategy, _propertyDrawer);
+		for (const auto& behaviour : node->GetBehaviours()) {
+			if (!behaviour) {
+				continue;
 			}
-			if (const auto visual = node->GetVisual()) {
-				DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::Visual, "Visual",
-				    dynamic_cast<IPropertiesProvider*>(visual.get()), visual, EntitySlot::Visual, _propertyDrawer);
-			}
-			for (const auto& behaviour : node->GetBehaviours()) {
-				if (!behaviour) {
-					continue;
-				}
-				const std::string className = BehaviourTitle(*behaviour);
-				DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::Behaviour,
-				    className.c_str(), dynamic_cast<IPropertiesProvider*>(behaviour.get()), behaviour,
-				    EntitySlot::Behaviour, _propertyDrawer);
-			}
-			return;
+			const std::string className = BehaviourTitle(*behaviour);
+			DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::Behaviour, className.c_str(),
+			    dynamic_cast<IPropertiesProvider*>(behaviour.get()), behaviour, EntitySlot::Behaviour, _propertyDrawer);
 		}
+	}
 
+	void NodeInspectorWidget::DrawMultiNode(const std::vector<std::shared_ptr<SceneNode>>& validNodes) const {
 		ImGui::Text("Selected nodes: %d", static_cast<int>(validNodes.size()));
 		ImGui::Separator();
+
+		RefreshMergeStateForFingerprint(_mergeState, validNodes);
 
 		std::vector<IPropertiesProvider*> sceneNodeProviders;
 		std::vector<IPropertiesProvider*> transformProviders;
@@ -581,10 +601,10 @@ namespace Engine {
 			sceneNodeProviders.push_back(dynamic_cast<IPropertiesProvider*>(node.get()));
 			transformProviders.push_back(dynamic_cast<IPropertiesProvider*>(node->GetLocalTransform().get()));
 		}
-		DrawMergedProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::SceneNode, "SceneNode",
-		    sceneNodeProviders, _propertyDrawer);
-		DrawMergedProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::Transform, "Transform",
-		    transformProviders, _propertyDrawer);
+		DrawMergedProviderBlockCached(EditorVisualTheme::InspectorSectionHeaderStyle::SceneNode, "SceneNode",
+		    sceneNodeProviders, _propertyDrawer, _mergeState.sceneNodeMerged);
+		DrawMergedProviderBlockCached(EditorVisualTheme::InspectorSectionHeaderStyle::Transform, "Transform",
+		    transformProviders, _propertyDrawer, _mergeState.transformMerged);
 
 		bool hasCommonSorting = true;
 		std::vector<IPropertiesProvider*> sortingProviders;
@@ -598,8 +618,8 @@ namespace Engine {
 			sortingProviders.push_back(dynamic_cast<IPropertiesProvider*>(sorting.get()));
 		}
 		if (hasCommonSorting) {
-			DrawMergedProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::SortingStrategy, "Sorting strategy",
-			    sortingProviders, _propertyDrawer);
+			DrawMergedProviderBlockCached(EditorVisualTheme::InspectorSectionHeaderStyle::SortingStrategy,
+			    "Sorting strategy", sortingProviders, _propertyDrawer, _mergeState.sortingMerged);
 		}
 
 		bool hasCommonVisual = true;
@@ -614,11 +634,11 @@ namespace Engine {
 			visualProviders.push_back(dynamic_cast<IPropertiesProvider*>(visual.get()));
 		}
 		if (hasCommonVisual) {
-			DrawMergedProviderBlock(
-			    EditorVisualTheme::InspectorSectionHeaderStyle::Visual, "Visual", visualProviders, _propertyDrawer);
+			DrawMergedProviderBlockCached(EditorVisualTheme::InspectorSectionHeaderStyle::Visual, "Visual",
+			    visualProviders, _propertyDrawer, _mergeState.visualMerged);
 		}
 
-		const auto commonBehaviours = FindCommonBehaviourTypes(validNodes);
+		const auto& commonBehaviours = _mergeState.commonBehaviourTitles;
 		if (commonBehaviours.empty()) {
 			ImGui::TextUnformatted("No common behaviour types across selected nodes");
 			return;
@@ -645,8 +665,31 @@ namespace Engine {
 			if (!foundInAll) {
 				continue;
 			}
-			DrawMergedProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::Behaviour, title.c_str(),
-			    behaviourProviders, _propertyDrawer);
+			ImGui::PushID(static_cast<int>(type.hash_code() & static_cast<std::size_t>(0x7fffffffU)));
+			DrawMergedProviderBlockCached(EditorVisualTheme::InspectorSectionHeaderStyle::Behaviour, title.c_str(),
+			    behaviourProviders, _propertyDrawer, _mergeState.behaviourMerged[type]);
+			ImGui::PopID();
 		}
+	}
+
+	void NodeInspectorWidget::Draw(const std::vector<std::shared_ptr<SceneNode>>& nodes) const {
+		std::vector<std::shared_ptr<SceneNode>> validNodes;
+		validNodes.reserve(nodes.size());
+		for (const auto& node : nodes) {
+			if (node) {
+				validNodes.push_back(node);
+			}
+		}
+		if (validNodes.empty()) {
+			ImGui::TextUnformatted("No node selected");
+			return;
+		}
+
+		if (validNodes.size() == 1) {
+			DrawSingleNode(validNodes.front());
+			return;
+		}
+
+		DrawMultiNode(validNodes);
 	}
 } // namespace Engine

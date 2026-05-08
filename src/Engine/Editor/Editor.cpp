@@ -13,14 +13,15 @@
 #include "Engine/Editor/EditorVisualTheme.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
-#include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics/VertexArray.hpp>
 #include <SFML/Window/Event.hpp>
 
 #include <imgui.h>
 #include <imgui_internal.h>
 
 #include <optional>
+#include <unordered_set>
 #include <vector>
 
 namespace {
@@ -104,28 +105,35 @@ namespace {
 		return std::nullopt;
 	}
 
-	void DrawAabbOutline(
-	    sf::RenderTarget& target, sf::RenderStates states, const sf::FloatRect& bounds, const sf::Color& outlineColor) {
-		sf::RectangleShape frame;
-		frame.setPosition(
-		    {bounds.position.x - kHierarchySelectionOutlinePadPx, bounds.position.y - kHierarchySelectionOutlinePadPx});
-		frame.setSize({bounds.size.x + 2.f * kHierarchySelectionOutlinePadPx,
-		    bounds.size.y + 2.f * kHierarchySelectionOutlinePadPx});
-		frame.setFillColor(sf::Color::Transparent);
-		frame.setOutlineColor(outlineColor);
-		frame.setOutlineThickness(kHierarchySelectionOutlineThickness);
-		target.draw(frame, states);
+	void AppendHierarchyAabbOutlineLines(
+	    sf::VertexArray& lines, const sf::FloatRect& bounds, const sf::Color& outlineColor, float padPx) {
+		const float x0 = bounds.position.x - padPx;
+		const float y0 = bounds.position.y - padPx;
+		const float x1 = bounds.position.x + bounds.size.x + padPx;
+		const float y1 = bounds.position.y + bounds.size.y + padPx;
+
+		const std::size_t startIndex = lines.getVertexCount();
+		lines.resize(startIndex + 8);
+		lines[startIndex].position = {x0, y0};
+		lines[startIndex].color = outlineColor;
+		lines[startIndex + 1].position = {x1, y0};
+		lines[startIndex + 1].color = outlineColor;
+		lines[startIndex + 2].position = {x1, y0};
+		lines[startIndex + 2].color = outlineColor;
+		lines[startIndex + 3].position = {x1, y1};
+		lines[startIndex + 3].color = outlineColor;
+		lines[startIndex + 4].position = {x1, y1};
+		lines[startIndex + 4].color = outlineColor;
+		lines[startIndex + 5].position = {x0, y1};
+		lines[startIndex + 5].color = outlineColor;
+		lines[startIndex + 6].position = {x0, y1};
+		lines[startIndex + 6].color = outlineColor;
+		lines[startIndex + 7].position = {x0, y0};
+		lines[startIndex + 7].color = outlineColor;
 	}
 
-	void DrawNodeHierarchySelectionBounds(
-	    const SceneNode& node, sf::RenderTarget& target, sf::RenderStates worldOnly, const sf::Color& outlineColor) {
-		if (const std::optional<sf::FloatRect> bb = TryGetHierarchySelectionBounds(node)) {
-			const sf::FloatRect& b = *bb;
-			if (b.size.x > 0.f && b.size.y > 0.f) {
-				DrawAabbOutline(target, worldOnly, b, outlineColor);
-				return;
-			}
-		}
+	void CollectHierarchyFallbackMarker(
+	    const SceneNode& node, const sf::Color& outlineColor, std::vector<sf::CircleShape>& outCircles) {
 		const sf::Vector2f pos = Utils::GetWorldPos(node.shared_from_this());
 		sf::CircleShape marker(kHierarchySelectionFallbackHalfSize);
 		marker.setOrigin({kHierarchySelectionFallbackHalfSize, kHierarchySelectionFallbackHalfSize});
@@ -133,20 +141,47 @@ namespace {
 		marker.setFillColor(sf::Color::Transparent);
 		marker.setOutlineColor(outlineColor);
 		marker.setOutlineThickness(kHierarchySelectionOutlineThickness);
-		target.draw(marker, worldOnly);
+		outCircles.push_back(std::move(marker));
 	}
 
-	void DrawDescendantHierarchySelectionOutlines(
-	    const SceneNode& parent, sf::RenderTarget& target, sf::RenderStates worldOnly) {
-		std::vector<std::shared_ptr<SceneNode>> sorted = parent.GetChildren();
-		Utils::SortSceneNodesByDrawOrder(sorted);
-		for (const auto& child : sorted) {
+	void GatherDescendantHierarchySelectionOutlines(const SceneNode& parent,
+	    const std::unordered_set<const SceneNode*>& selectedSet, sf::VertexArray& lineOutlines,
+	    std::vector<sf::CircleShape>& fallbackMarkers) {
+		for (const auto& child : parent.GetChildren()) {
 			if (!child || !child->IsEnabled() || !child->IsVisible()) {
 				continue;
 			}
-			DrawNodeHierarchySelectionBounds(*child, target, worldOnly, kHierarchySelectionChildOutlineColor);
-			DrawDescendantHierarchySelectionOutlines(*child, target, worldOnly);
+			const auto* childPtr = static_cast<const SceneNode*>(child.get());
+			if (!selectedSet.contains(childPtr)) {
+				if (const std::optional<sf::FloatRect> bb = TryGetHierarchySelectionBounds(*child)) {
+					const sf::FloatRect& b = *bb;
+					if (b.size.x > 0.f && b.size.y > 0.f) {
+						AppendHierarchyAabbOutlineLines(
+						    lineOutlines, b, kHierarchySelectionChildOutlineColor, kHierarchySelectionOutlinePadPx);
+					}
+					else {
+						CollectHierarchyFallbackMarker(*child, kHierarchySelectionChildOutlineColor, fallbackMarkers);
+					}
+				}
+				else {
+					CollectHierarchyFallbackMarker(*child, kHierarchySelectionChildOutlineColor, fallbackMarkers);
+				}
+			}
+			GatherDescendantHierarchySelectionOutlines(*child, selectedSet, lineOutlines, fallbackMarkers);
 		}
+	}
+
+	void GatherPrimaryHierarchySelectionOutline(
+	    const SceneNode& node, sf::VertexArray& lineOutlines, std::vector<sf::CircleShape>& fallbackMarkers) {
+		if (const std::optional<sf::FloatRect> bb = TryGetHierarchySelectionBounds(node)) {
+			const sf::FloatRect& b = *bb;
+			if (b.size.x > 0.f && b.size.y > 0.f) {
+				AppendHierarchyAabbOutlineLines(
+				    lineOutlines, b, kHierarchySelectionOutlineColor, kHierarchySelectionOutlinePadPx);
+				return;
+			}
+		}
+		CollectHierarchyFallbackMarker(node, kHierarchySelectionOutlineColor, fallbackMarkers);
 	}
 } // namespace
 
@@ -325,13 +360,43 @@ namespace Engine {
 		if (selectedNodes.empty()) {
 			return;
 		}
-		sf::RenderStates worldOnly{};
+
+		std::unordered_set<const SceneNode*> selectionSet;
+		selectionSet.reserve(selectedNodes.size());
 		for (const auto& selected : selectedNodes) {
 			if (!selected || !selected->IsEnabled() || !selected->IsVisible()) {
 				continue;
 			}
-			DrawDescendantHierarchySelectionOutlines(*selected, window, worldOnly);
-			DrawNodeHierarchySelectionBounds(*selected, window, worldOnly, kHierarchySelectionOutlineColor);
+			selectionSet.insert(static_cast<const SceneNode*>(selected.get()));
+		}
+
+		sf::VertexArray descendantLines(sf::PrimitiveType::Lines);
+		sf::VertexArray primaryLines(sf::PrimitiveType::Lines);
+		std::vector<sf::CircleShape> descendantFallbackMarkers;
+		std::vector<sf::CircleShape> primaryFallbackMarkers;
+
+		for (const auto& selected : selectedNodes) {
+			if (!selected || !selected->IsEnabled() || !selected->IsVisible()) {
+				continue;
+			}
+			GatherDescendantHierarchySelectionOutlines(
+			    *selected, selectionSet, descendantLines, descendantFallbackMarkers);
+			GatherPrimaryHierarchySelectionOutline(*selected, primaryLines, primaryFallbackMarkers);
+		}
+
+		sf::RenderStates worldOnly{};
+		if (descendantLines.getVertexCount() > 0) {
+			window.draw(descendantLines, worldOnly);
+		}
+		for (const auto& marker : descendantFallbackMarkers) {
+			window.draw(marker, worldOnly);
+		}
+
+		if (primaryLines.getVertexCount() > 0) {
+			window.draw(primaryLines, worldOnly);
+		}
+		for (const auto& marker : primaryFallbackMarkers) {
+			window.draw(marker, worldOnly);
 		}
 	}
 
