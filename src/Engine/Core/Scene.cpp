@@ -37,21 +37,6 @@ namespace {
 		return {{minX, minY}, {maxX - minX, maxY - minY}};
 	}
 
-	std::optional<sf::FloatRect> TryGetNodeVisualBounds(const shared_ptr<SceneNode>& node) {
-		if (!node) {
-			return std::nullopt;
-		}
-		auto visual = node->GetVisual();
-		if (!visual) {
-			return std::nullopt;
-		}
-		sf::Transform fullTransform = node->GetWorldTransform();
-		if (const auto visualTransform = visual->GetTransform()) {
-			fullTransform *= *visualTransform;
-		}
-		return Utils::AxisAlignedBoundsAfterTransform(fullTransform, visual->GetLocalBounds());
-	}
-
 	bool RectContainsRect(const sf::FloatRect& outer, const sf::FloatRect& inner) {
 		return inner.position.x >= outer.position.x && inner.position.y >= outer.position.y &&
 		       inner.position.x + inner.size.x <= outer.position.x + outer.size.x &&
@@ -81,7 +66,7 @@ namespace {
 			FindNodesInRectRec(*it, normalizedRect, mode, outNodes);
 		}
 
-		const auto bounds = TryGetNodeVisualBounds(node);
+		const auto bounds = Utils::TryGetNodeVisualWorldBounds(node);
 		if (!bounds) {
 			return;
 		}

@@ -11,7 +11,7 @@
 #include "Engine/Visual/ShapeVisualBase.h"
 #include "Engine/Visual/SpriteVisual.h"
 #include "Engine/Visual/TextVisual.h"
-#include "SFML/Graphics.hpp"
+#include "Engine/Visual/Visual.h"
 #include "fmt/format.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
@@ -427,6 +427,28 @@ namespace Utils {
 			return node->GetWorldTransform().transformPoint(sf::Vector2f{});
 		}
 		return {};
+	}
+
+	std::optional<sf::FloatRect> TryGetNodeVisualWorldBounds(const std::shared_ptr<const SceneNode>& node) {
+		if (!node) {
+			return std::nullopt;
+		}
+		const auto visual = node->GetVisual();
+		if (!visual) {
+			return std::nullopt;
+		}
+		sf::Transform fullTransform = node->GetWorldTransform();
+		if (const auto* visualTransform = visual->GetTransform()) {
+			fullTransform *= *visualTransform;
+		}
+		return AxisAlignedBoundsAfterTransform(fullTransform, visual->GetLocalBounds());
+	}
+
+	sf::Vector2f GetNodeCameraFocusWorldPoint(const std::shared_ptr<const SceneNode>& node) {
+		if (const auto bounds = TryGetNodeVisualWorldBounds(node)) {
+			return bounds->position + bounds->size * 0.5f;
+		}
+		return GetWorldPos(node);
 	}
 
 	void SetLocalPosToWorld(const std::shared_ptr<SceneNode>& node, sf::Vector2f worldPos) {
