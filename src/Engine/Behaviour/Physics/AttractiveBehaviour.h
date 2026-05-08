@@ -25,7 +25,7 @@ public:
 private:
 	/// @property
 	bool _isEnabled = true;
-	/// @property(minValue=-100.0, maxValue=100.0, dragSpeed=0.1, tooltip="Negative: attraction; positive: repulsion; magnitude is nonlinear in |value|")
+	/// @property
 	float _attraction = 0.f;
 
 private:

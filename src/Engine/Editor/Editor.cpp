@@ -382,7 +382,7 @@ namespace Engine {
 		ImGui::End();
 
 		if (ImGui::Begin(kInspectorWindowTitle, nullptr, ImGuiWindowFlags_None)) {
-			_nodeInspectorWidget.Draw(GetSelectedNode());
+			_nodeInspectorWidget.Draw(GetSelectedNodes());
 		}
 		ImGui::End();
 

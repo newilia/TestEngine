@@ -82,9 +82,9 @@ private:
 	sf::Vector2f _velocity{};
 	/// @property
 	float _angularSpeed = 0.f;
-	/// @property(minValue=0.f, maxValue=1.f)
+	/// @property(minValue=0.f, maxValue=1.f, dragSpeed=0.05f)
 	float _restitution = 0.5f;
-	/// @property
+	/// @property(minValue=0.f, maxValue=1.f, dragSpeed=0.05f)
 	float _friction = 0.5f;
 	/// @property(minValue=-1.f, maxValue=1.f, dragSpeed=0.05f, tooltip="Scales world gravity on this body")
 	float _gravityScale = 1.f;

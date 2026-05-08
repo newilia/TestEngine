@@ -34,6 +34,7 @@ Roots: **`src/`**, **`src/Codegen/`**. Paths relative to those roots, e.g. `#inc
 
 - **`Scene` / `SceneNode`**, **`EntityOnNode`**, **`Behaviour`**, **`IPropertiesProvider`** + codegen for inspector fields.
 - **Signals:** for subscriptions tied to an owner’s lifetime, prefer **`SubscriptionsHolderBase`** + **`Subscribe(signal, handler)`**; otherwise keep an explicit **`ScopedSubscription`** member. Avoid bare **`signal.Subscribe(...)`** with no stored handle.
+- **Global access pattern:** prefer project **`Singleton<>`** over classes with mutable `static` data fields.
 
 ## Other rules
 
