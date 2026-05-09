@@ -33,6 +33,13 @@ sf::FloatRect SpriteVisual::GetLocalBounds() const {
 	return {};
 }
 
+sf::FloatRect SpriteVisual::GetGlobalBounds() const {
+	if (_sprite) {
+		return _sprite->getGlobalBounds();
+	}
+	return {};
+}
+
 void SpriteVisual::SetTexture(const sf::Texture& texture) {
 	_sprite = std::make_shared<sf::Sprite>(texture);
 }

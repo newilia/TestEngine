@@ -37,7 +37,7 @@ public:
 	sf::Shape* GetShape();
 	const sf::Shape* GetShape() const;
 
-	sf::FloatRect GetBbox() const;
+	sf::FloatRect EvaluateGlobalBounds() const;
 
 	size_t GetPointCount() const;
 	sf::Vector2f GetPointWorldPos(std::size_t pointIndex) const;

@@ -17,10 +17,6 @@ const sf::Shape* VectorArrowVisual::GetBaseShape() const {
 	return &_arrowShape;
 }
 
-sf::FloatRect VectorArrowVisual::GetLocalBounds() const {
-	return _arrowShape.GetLocalBounds();
-}
-
 sf::Vector2f VectorArrowVisual::GetStartPos() const {
 	return _arrowShape.GetStartPos();
 }

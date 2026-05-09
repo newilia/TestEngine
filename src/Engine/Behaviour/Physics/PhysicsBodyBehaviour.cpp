@@ -60,7 +60,7 @@ const sf::Shape* PhysicsBodyBehaviour::GetShape() const {
 	return nullptr;
 }
 
-sf::FloatRect PhysicsBodyBehaviour::GetBbox() const {
+sf::FloatRect PhysicsBodyBehaviour::EvaluateGlobalBounds() const {
 	const sf::Shape* s = GetShape();
 	auto n = GetNode();
 	if (!s || !n) {
@@ -68,7 +68,7 @@ sf::FloatRect PhysicsBodyBehaviour::GetBbox() const {
 	}
 	sf::Transform full = n->GetWorldTransform();
 	full *= s->getTransform();
-	return Utils::AxisAlignedBoundsAfterTransform(full, s->getLocalBounds());
+	return full.transformRect(s->getLocalBounds());
 }
 
 size_t PhysicsBodyBehaviour::GetPointCount() const {

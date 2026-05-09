@@ -17,7 +17,6 @@ public:
 	void Draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 	bool HitTest(const sf::Vector2f& worldPoint) const override;
 	const sf::Shape* GetBaseShape() const override;
-	sf::FloatRect GetLocalBounds() const override;
 
 public:
 	/// @getter

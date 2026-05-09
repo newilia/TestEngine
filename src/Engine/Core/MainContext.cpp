@@ -143,8 +143,9 @@ namespace Engine {
 			return sf::Time();
 		}
 
-		const auto maxDt = sf::seconds(1.f / GetTargetTickRate());
-		return std::min(_tickTime * _simSpeedMultiplier, maxDt);
+		/* const auto maxDt = sf::seconds(1.f / GetTargetTickRate());
+		return std::min(_tickTime * _simSpeedMultiplier, maxDt); */
+		return _tickTime * _simSpeedMultiplier;
 	}
 
 	sf::Time MainContext::GetWallTickDt() const {

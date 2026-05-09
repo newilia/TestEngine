@@ -152,7 +152,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 			const auto maxX = boxSize.x / 2;
 			const auto minY = -boxSize.y / 2;
 			const auto maxY = boxSize.y / 2;
-			const auto x = minX + (1 + gridCol) * (maxX - minX) / (colsCount + 1);
+			const auto x = minX + (1 + gridCol) * (maxX - minX) / (colsCount + 1) + rand() % 2;
 			const auto y = minY + (1 + gridRow) * (maxY - minY) / (rowsCount + 1);
 			circleNode->GetLocalTransform()->SetPosition(sf::Vector2f{x, y});
 		}
