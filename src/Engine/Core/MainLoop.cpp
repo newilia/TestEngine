@@ -28,7 +28,7 @@ namespace Engine {
 		    });
 
 		*/
-		PeriodicTaskExecutor presentExecutor(
+		/*PeriodicTaskExecutor presentExecutor(
 		    []() {
 			    MainContext& mainContext = Engine::MainContext::GetInstance();
 			    if (!mainContext.IsFramerateLimitEnabled()) {
@@ -38,7 +38,7 @@ namespace Engine {
 		    },
 		    [this](const sf::Time& dt) {
 			    PresentFrame();
-		    });
+		    });*/
 
 		sf::Clock mainLoopClock;
 		MainContext& mainContext = Engine::MainContext::GetInstance();
@@ -56,9 +56,9 @@ namespace Engine {
 					break;
 				}
 
-				//PresentFrame();
-				auto dt = mainLoopClock.restart();
-				presentExecutor.Update(dt);
+				PresentFrame();
+				//auto dt = mainLoopClock.restart();
+				//presentExecutor.Update(dt);
 				//tickExecutor.Update(dt);
 				UpdateTick();
 			}

@@ -54,7 +54,7 @@ namespace {
 		const sf::RectangleShape* sh = rv->GetShape();
 		sf::Transform t = n.GetWorldTransform();
 		t *= sh->getTransform();
-		return Utils::AxisAlignedBoundsAfterTransform(t, sh->getLocalBounds());
+		return t.transformRect(sh->getLocalBounds());
 	}
 
 	void ComputeClampFromAxisAlignedRegion(const sf::Vector2f& shapePos, const sf::FloatRect& bb,
@@ -106,7 +106,7 @@ void ClampPongPlatformDesiredCenter(sf::Vector2f& center, bool isBottomPlayer,
 	if (!body) {
 		return;
 	}
-	const sf::FloatRect bb = body->GetBbox();
+	const sf::FloatRect bb = body->EvaluateGlobalBounds();
 
 	if (auto boundsNode = movementBounds.lock()) {
 		const sf::FloatRect region = GetRectangleNodeWorldAabb(*boundsNode);

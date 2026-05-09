@@ -88,7 +88,7 @@ void AiPlatformControllerBehaviour::MovePlatformTowardsBall() {
 	float distanceToBall = 0.f;
 	if (auto ball = _ball.lock()) {
 		if (auto ballVisual = ball->GetNode()->GetVisual<CircleShapeVisual>()) {
-			const sf::FloatRect selfBbox = bodyBeh->GetBbox();
+			const sf::FloatRect selfBbox = bodyBeh->EvaluateGlobalBounds();
 			distanceToBall = std::abs(_curExState.ballPos.y - selfPos.y) - ballVisual->GetRadius() - selfBbox.size.y;
 		}
 	}

@@ -141,3 +141,10 @@ sf::FloatRect ShapeVisualBase::GetLocalBounds() const {
 	}
 	return {};
 }
+
+sf::FloatRect ShapeVisualBase::GetGlobalBounds() const {
+	if (const auto* shape = GetBaseShape()) {
+		return shape->getGlobalBounds();
+	}
+	return {};
+}

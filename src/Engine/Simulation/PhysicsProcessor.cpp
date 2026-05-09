@@ -26,9 +26,8 @@ namespace {
 
 void PhysicsProcessor::Update(const sf::Time& dt) {
 	const float subDt = dt.asSeconds() / _motionSubsteps;
-	// Frame-rate independent linear drag: v *= exp(-k * dt). Computed once per substep
-	// (same for all bodies). 1.f when _airFriction == 0.
-	const float dampingFactor = _airFriction > 0.f ? std::exp(-_airFriction * subDt) : 1.f;
+	const float dampingFactor =
+	    _airFriction > 0.f ? std::exp(-_airFriction * subDt) : 1.f; // TODO fix: damping must correlate to body velocity
 
 	for (int i = 0; i < _motionSubsteps; ++i) {
 		for (auto it = _bodies.begin(); it != _bodies.end();) {
@@ -67,26 +66,14 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 		{
 			SceneNode* node = nullptr;
 			PhysicsBodyBehaviour* body = nullptr;
-			float minX = 0.f;
-			float maxX = 0.f;
+			sf::FloatRect bb;
 			/// Same ordering as iteration over `_bodies` in the old all-pairs loop (outer = first).
 			size_t listOrder = 0;
 		};
 
-		auto bboxXExtents = [](const sf::FloatRect& bb) {
-			float x0 = bb.position.x;
-			float x1 = bb.position.x + bb.size.x;
-			if (x0 > x1) {
-				std::swap(x0, x1);
-			}
-			return std::pair{x0, x1};
-		};
-		auto pairNeedsNarrowPhase = [](const SceneNode& n1, const SceneNode& n2) {
-			auto pb1 = n1.FindBehaviour<PhysicsBodyBehaviour>();
-			auto pb2 = n2.FindBehaviour<PhysicsBodyBehaviour>();
-			const bool interactionPair =
-			    pb1 && pb2 && (pb1->GetInteractionGroups() & pb2->GetInteractionGroups()).any();
-			const bool overlapPair = pb1 && pb2 && (pb1->GetOverlappingGroups() & pb2->GetOverlappingGroups()).any();
+		auto pairNeedsNarrowPhase = [](const PhysicsBodyBehaviour* pb1, const PhysicsBodyBehaviour* pb2) {
+			const bool interactionPair = (pb1->GetInteractionGroups() & pb2->GetInteractionGroups()).any();
+			const bool overlapPair = (pb1->GetOverlappingGroups() & pb2->GetOverlappingGroups()).any();
 			return interactionPair || overlapPair;
 		};
 
@@ -104,27 +91,30 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 				++bodyListIndex;
 				continue;
 			}
-			auto [minX, maxX] = bboxXExtents(body->GetBbox());
-			sweepEntries.push_back({node.get(), body.get(), minX, maxX, bodyListIndex});
+			sweepEntries.push_back({node.get(), body.get(), body->EvaluateGlobalBounds(), bodyListIndex});
 			++bodyListIndex;
 		}
 
 		std::sort(sweepEntries.begin(), sweepEntries.end(), [](const BodySweepEntry& a, const BodySweepEntry& b) {
-			return a.minX < b.minX;
+			return a.bb.position.x < b.bb.position.x;
 		});
 
 		std::deque<size_t> active;
 		for (size_t i = 0; i < sweepEntries.size(); ++i) {
-			while (!active.empty() && sweepEntries[active.front()].maxX < sweepEntries[i].minX) {
+			static const auto getBbMaxX = [](const sf::FloatRect& bbox) {
+				return bbox.position.x + bbox.size.x;
+			};
+
+			while (!active.empty() && getBbMaxX(sweepEntries[active.front()].bb) < sweepEntries[i].bb.position.x) {
 				active.pop_front();
 			}
 			for (size_t aj : active) {
 				auto& eA = sweepEntries[aj];
 				auto& eB = sweepEntries[i];
-				if (!CheckBboxIntersection(eA.body, eB.body)) {
+				if (!eA.bb.findIntersection(eB.bb)) {
 					continue;
 				}
-				if (!pairNeedsNarrowPhase(*eA.node, *eB.node)) {
+				if (!pairNeedsNarrowPhase(eA.body, eB.body)) {
 					continue;
 				}
 				const bool aIsFirstInBodyList = eA.listOrder < eB.listOrder;
@@ -135,7 +125,7 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 				if (!body1 || !body2) {
 					continue;
 				}
-				if (auto intersection = DetectIntersection(node1, node2, body1, body2, true)) {
+				if (auto intersection = DetectIntersection(node1, node2, body1, body2)) {
 					if ((body1->GetInteractionGroups() & body2->GetInteractionGroups()).any()) {
 						if (!body1->IsFixed() || !body2->IsFixed()) {
 							ResolveCollision(*intersection);
@@ -168,22 +158,12 @@ void PhysicsProcessor::UnregisterBody(PhysicsBodyBehaviour* body) {
 	}
 }
 
-bool PhysicsProcessor::CheckBboxIntersection(const PhysicsBodyBehaviour* body1, const PhysicsBodyBehaviour* body2) {
-	auto&& bb1 = body1->GetBbox();
-	auto&& bb2 = body2->GetBbox();
-	return bb1.findIntersection(bb2).has_value();
-}
-
-std::optional<IntersectionDetails> PhysicsProcessor::DetectIntersection(SceneNode* node1, SceneNode* node2,
-    PhysicsBodyBehaviour* body1, PhysicsBodyBehaviour* body2, bool bboxAlreadyVerified) {
+std::optional<IntersectionDetails> PhysicsProcessor::DetectIntersection(
+    SceneNode* node1, SceneNode* node2, PhysicsBodyBehaviour* body1, PhysicsBodyBehaviour* body2) {
 	if (VerifyFalse(!node1 || !node2)) {
 		return std::nullopt;
 	}
 	if (VerifyFalse(!body1 || !body2)) {
-		return std::nullopt;
-	}
-
-	if (!bboxAlreadyVerified && !CheckBboxIntersection(body1, body2)) {
 		return std::nullopt;
 	}
 

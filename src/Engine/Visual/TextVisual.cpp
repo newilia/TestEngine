@@ -55,6 +55,13 @@ sf::FloatRect TextVisual::GetLocalBounds() const {
 	return {};
 }
 
+sf::FloatRect TextVisual::GetGlobalBounds() const {
+	if (_text) {
+		return _text->getGlobalBounds();
+	}
+	return {};
+}
+
 std::string TextVisual::GetString() const {
 	if (!_text) {
 		return {};

@@ -167,22 +167,6 @@ namespace Utils {
 		return result;
 	}
 
-	sf::FloatRect AxisAlignedBoundsAfterTransform(const sf::Transform& m, const sf::FloatRect& localRect) {
-		const float l = localRect.position.x;
-		const float t = localRect.position.y;
-		const float r = l + localRect.size.x;
-		const float b = t + localRect.size.y;
-		const sf::Vector2f p0 = m.transformPoint({l, t});
-		const sf::Vector2f p1 = m.transformPoint({r, t});
-		const sf::Vector2f p2 = m.transformPoint({l, b});
-		const sf::Vector2f p3 = m.transformPoint({r, b});
-		const float minX = std::min(std::min(p0.x, p1.x), std::min(p2.x, p3.x));
-		const float maxX = std::max(std::max(p0.x, p1.x), std::max(p2.x, p3.x));
-		const float minY = std::min(std::min(p0.y, p1.y), std::min(p2.y, p3.y));
-		const float maxY = std::max(std::max(p0.y, p1.y), std::max(p2.y, p3.y));
-		return {{minX, minY}, {maxX - minX, maxY - minY}};
-	}
-
 	bool IsWorldPointInsideOfShapeByFan(
 	    const sf::Vector2f& worldPoint, const sf::Shape* shape, const sf::Transform& nodeWorld) {
 		if (!shape) {
@@ -443,7 +427,7 @@ namespace Utils {
 		if (const auto* visualTransform = visual->GetTransform()) {
 			fullTransform *= *visualTransform;
 		}
-		return AxisAlignedBoundsAfterTransform(fullTransform, visual->GetLocalBounds());
+		return fullTransform.transformRect(visual->GetLocalBounds());
 	}
 
 	sf::Vector2f GetNodeCameraFocusWorldPoint(const std::shared_ptr<const SceneNode>& node) {

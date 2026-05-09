@@ -143,7 +143,7 @@ namespace {
 			if (const auto transform = visual->GetTransform()) {
 				fullTransform *= *transform;
 			}
-			return Utils::AxisAlignedBoundsAfterTransform(fullTransform, bounds);
+			return fullTransform.transformRect(bounds);
 		}
 		return std::nullopt;
 	}

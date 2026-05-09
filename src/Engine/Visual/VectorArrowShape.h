@@ -14,7 +14,7 @@ public:
 	sf::Vector2f getPoint(std::size_t index) const override;
 	std::size_t getPointCount() const override;
 
-	sf::FloatRect GetLocalBounds() const;
+	//sf::FloatRect GetLocalBounds() const;
 
 	void SetStartPos(const sf::Vector2f& start);
 	void SetEndPos(const sf::Vector2f& end);

@@ -36,17 +36,6 @@ std::size_t VectorArrowShape::getPointCount() const {
 	return _vertices.size();
 }
 
-sf::FloatRect VectorArrowShape::GetLocalBounds() const {
-	constexpr float padding = 5.f;
-	auto left = std::min(_start.x, _end.x) - padding;
-	auto top = std::min(_start.y, _end.y) - padding;
-	auto right = std::max(_start.x, _end.x) + padding;
-	auto bottom = std::max(_start.y, _end.y) + padding;
-	auto width = right - left;
-	auto height = bottom - top;
-	return {{left, top}, {width, height}};
-}
-
 void VectorArrowShape::SetStartPos(const sf::Vector2f& start) {
 	_start = start;
 	UpdateVertices();

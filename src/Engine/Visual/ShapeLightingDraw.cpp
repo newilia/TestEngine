@@ -63,7 +63,7 @@ namespace Engine {
 		}
 
 		const sf::Transform full = states.transform * shape->getTransform();
-		const sf::FloatRect worldBounds = Utils::AxisAlignedBoundsAfterTransform(full, shape->getLocalBounds());
+		const sf::FloatRect worldBounds = full.transformRect(shape->getLocalBounds());
 
 		std::vector<Engine::GpuPointLight> lights;
 		SceneLighting::GetInstance().SelectLightsForBounds(worldBounds, lights, kMaxLights);
