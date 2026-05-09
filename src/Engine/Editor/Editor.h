@@ -6,6 +6,7 @@
 #include "Engine/Editor/EditorHistory.h"
 #include "Engine/Editor/EditorToolManager.h"
 #include "Engine/Editor/EditorToolsWidget.h"
+#include "Engine/Editor/GameBackgroundWidget.h"
 #include "Engine/Editor/NodeInspectorWidget.h"
 #include "Engine/Editor/SceneClipboard.h"
 #include "Engine/Editor/SceneHierarchyWidget.h"
@@ -77,6 +78,7 @@ namespace Engine {
 		NodeInspectorWidget _nodeInspectorWidget{};
 		EditorToolsWidget _editorToolsWidget{};
 		DebugSettingsWidget _debugSettingsWidget{};
+		GameBackgroundWidget _gameBackgroundWidget{};
 		std::unique_ptr<EditorToolManager> _editorToolManager{std::make_unique<EditorToolManager>()};
 		EditorHistory _history{};
 		SceneClipboard _clipboard{};

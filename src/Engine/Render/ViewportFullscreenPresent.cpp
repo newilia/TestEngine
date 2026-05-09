@@ -1,7 +1,9 @@
+#include "Engine/Core/MainContext.h"
 #include "Engine/Render/RadialUvWarpFullscreenPass.h"
 #include "Engine/Render/SceneLighting.h"
 #include "Engine/Render/ViewportFullscreenEffect.h"
 
+#include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Texture.hpp>
 
@@ -38,14 +40,29 @@ namespace Engine {
 		if (!scene) {
 			return;
 		}
+		MainContext& mainContext = MainContext::GetInstance();
+		if (const auto gbc = mainContext.GetGameBackgroundContext()) {
+			gbc->Update(window, mainContext.GetFrameDt());
+		}
+
 		Engine::SceneLighting::GetInstance().PrepareLights();
 		if (effectChain.empty()) {
+			if (const auto gbc = mainContext.GetGameBackgroundContext()) {
+				if (auto* bg = gbc->GetBackground()) {
+					window.draw(*bg);
+				}
+			}
 			window.draw(*scene);
 			return;
 		}
 
 		const sf::Vector2u pixelSize = window.getSize();
 		if (!EnsureFullscreenRenderTextures(pixelSize)) {
+			if (const auto gbc = mainContext.GetGameBackgroundContext()) {
+				if (auto* bg = gbc->GetBackground()) {
+					window.draw(*bg);
+				}
+			}
 			window.draw(*scene);
 			return;
 		}
@@ -58,7 +75,12 @@ namespace Engine {
 		}
 
 		sCaptureRt.setView(savedView);
-		sCaptureRt.clear();
+		sCaptureRt.clear(sf::Color::Transparent);
+		if (const auto gbc = mainContext.GetGameBackgroundContext()) {
+			if (auto* bg = gbc->GetBackground()) {
+				sCaptureRt.draw(*bg);
+			}
+		}
 		sCaptureRt.draw(*scene);
 		sCaptureRt.display();
 
