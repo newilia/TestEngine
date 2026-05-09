@@ -82,6 +82,9 @@ namespace Utils {
 
 	void SetLocalPosToWorld(const std::shared_ptr<SceneNode>& node, sf::Vector2f pos);
 
+	void AddLightSource(SceneNode* node, float intensity, float radius, sf::Color color);
+	void AddLightReceiver(SceneNode* node, float diffusion, bool isBevelEmboss, float bevelWidth = 0.f);
+
 	void SortSceneNodesByDrawOrder(std::vector<std::shared_ptr<SceneNode>>& nodes);
 
 } // namespace Utils
