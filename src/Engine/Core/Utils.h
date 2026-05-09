@@ -84,4 +84,6 @@ namespace Utils {
 
 	void SortSceneNodesByDrawOrder(std::vector<std::shared_ptr<SceneNode>>& nodes);
 
+	sf::Vector2f GetShapePointWorldPos(sf::Shape const* shape, SceneNode const* node, size_t pointIndex);
+
 } // namespace Utils

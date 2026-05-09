@@ -28,14 +28,14 @@ void UserPlatformControllerBehaviour::OnDeinit() {
 	EventHandlerBehaviourBase::OnDeinit();
 }
 
-void UserPlatformControllerBehaviour::OnUpdate(const sf::Time& /*dt*/) {
+void UserPlatformControllerBehaviour::OnUpdate(const sf::Time& dt) {
 	auto p = GetNode();
 	if (!p) {
 		return;
 	}
 	ClampPongPlatformToPlayfield(p, true, _movementBounds);
 	ClampPongPlatformDesiredCenter(_targetPos, true, p, _movementBounds);
-	ApplyPongPlatformVelocityTowardsTarget(p, _targetPos, _speedFactor, _velLimit);
+	ApplyPongPlatformVelocityTowardsTarget(p, _targetPos, _speedFactor, _velLimit, dt);
 }
 
 void UserPlatformControllerBehaviour::OnEvent(const sf::Event& event) {

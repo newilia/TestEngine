@@ -87,14 +87,20 @@ namespace {
 } // namespace
 
 void ApplyPongPlatformVelocityTowardsTarget(const std::shared_ptr<SceneNode>& platformNode,
-    const sf::Vector2f& targetPos, float speedFactor, const sf::Vector2f& velLimit) {
+    const sf::Vector2f& targetPos, float speedFactor, const sf::Vector2f& velLimit, sf::Time dt) {
 	if (!platformNode) {
 		return;
 	}
 	auto vel = (targetPos - Utils::GetWorldPos(platformNode)) * speedFactor;
 	vel.x = std::clamp(vel.x, -velLimit.x, velLimit.x);
 	vel.y = std::clamp(vel.y, -velLimit.y, velLimit.y);
-	platformNode->RequireBehaviour<PhysicsBodyBehaviour>()->SetVelocity(vel);
+
+	auto bodyBeh = platformNode->RequireBehaviour<PhysicsBodyBehaviour>();
+	auto pos = Utils::GetWorldPos(platformNode);
+	pos += vel * dt.asSeconds();
+	Utils::SetLocalPosToWorld(platformNode, pos);
+
+	bodyBeh->SetVelocity(vel);
 }
 
 void ClampPongPlatformDesiredCenter(sf::Vector2f& center, bool isBottomPlayer,
@@ -106,7 +112,8 @@ void ClampPongPlatformDesiredCenter(sf::Vector2f& center, bool isBottomPlayer,
 	if (!body) {
 		return;
 	}
-	const sf::FloatRect bb = body->EvaluateGlobalBounds();
+	const sf::FloatRect bb =
+	    platformNode->GetWorldTransform().transformRect(body->GetColliderShape()->getGlobalBounds());
 
 	if (auto boundsNode = movementBounds.lock()) {
 		const sf::FloatRect region = GetRectangleNodeWorldAabb(*boundsNode);

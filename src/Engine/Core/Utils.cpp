@@ -245,14 +245,12 @@ namespace Utils {
 		if (!body) {
 			return false;
 		}
-		if (const sf::Shape* shape = body->GetShape()) {
+		if (auto shape = Verify(body->GetColliderShape())) {
 			if (auto n = Verify(body->GetNode())) {
 				return IsWorldPointInsideOfShape(worldPoint, shape, n->GetWorldTransform());
 			}
 		}
-		return pointInsideConvexFan(worldPoint, body->GetPointCount(), [&](std::size_t i) {
-			return body->GetPointWorldPos(i);
-		});
+		return false;
 	}
 
 	bool IsPointInsideOfTriangle(
@@ -476,6 +474,12 @@ namespace Utils {
 			    }
 			    return la < lb;
 		    });
+	}
+
+	sf::Vector2f GetShapePointWorldPos(sf::Shape const* shape, SceneNode const* node, size_t pointIndex) {
+		auto tr = node->GetWorldTransform() * shape->getTransform();
+		auto p = shape->getPoint(pointIndex);
+		return tr.transformPoint(p);
 	}
 
 } // namespace Utils

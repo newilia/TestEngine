@@ -38,18 +38,7 @@ void PhysicsBodyBehaviour::OnEnabled(bool isEnabled) {
 	}
 }
 
-sf::Shape* PhysicsBodyBehaviour::GetShape() {
-	if (auto node = GetNode()) {
-		if (auto visual = node->GetVisual()) {
-			if (auto shapeVisual = std::dynamic_pointer_cast<ShapeVisualBase>(visual)) {
-				return const_cast<sf::Shape*>(shapeVisual->GetBaseShape());
-			}
-		}
-	}
-	return nullptr;
-}
-
-const sf::Shape* PhysicsBodyBehaviour::GetShape() const {
+const sf::Shape* PhysicsBodyBehaviour::GetColliderShape() const {
 	if (auto node = GetNode()) {
 		if (auto visual = node->GetVisual()) {
 			if (auto shapeVisual = std::dynamic_pointer_cast<ShapeVisualBase>(visual)) {
@@ -57,33 +46,6 @@ const sf::Shape* PhysicsBodyBehaviour::GetShape() const {
 			}
 		}
 	}
-	return nullptr;
-}
-
-sf::FloatRect PhysicsBodyBehaviour::EvaluateGlobalBounds() const {
-	const sf::Shape* s = GetShape();
-	auto n = GetNode();
-	if (!s || !n) {
-		return {};
-	}
-	sf::Transform full = n->GetWorldTransform();
-	full *= s->getTransform();
-	return full.transformRect(s->getLocalBounds());
-}
-
-size_t PhysicsBodyBehaviour::GetPointCount() const {
-	return GetShape()->getPointCount();
-}
-
-sf::Vector2f PhysicsBodyBehaviour::GetPointWorldPos(std::size_t index) const {
-	const auto* s = GetShape();
-	auto n = GetNode();
-	if (!s || !n) {
-		return {};
-	}
-	sf::Transform full = n->GetWorldTransform();
-	full *= s->getTransform();
-	return full.transformPoint(s->getPoint(index));
 }
 
 void PhysicsBodyBehaviour::SetFixed(bool isFixed) {

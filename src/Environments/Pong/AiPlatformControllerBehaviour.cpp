@@ -88,7 +88,8 @@ void AiPlatformControllerBehaviour::MovePlatformTowardsBall() {
 	float distanceToBall = 0.f;
 	if (auto ball = _ball.lock()) {
 		if (auto ballVisual = ball->GetNode()->GetVisual<CircleShapeVisual>()) {
-			const sf::FloatRect selfBbox = bodyBeh->EvaluateGlobalBounds();
+			const sf::FloatRect selfBbox =
+			    node->GetWorldTransform().transformRect(bodyBeh->GetColliderShape()->getGlobalBounds());
 			distanceToBall = std::abs(_curExState.ballPos.y - selfPos.y) - ballVisual->GetRadius() - selfBbox.size.y;
 		}
 	}
@@ -104,7 +105,7 @@ void AiPlatformControllerBehaviour::MovePlatformTowardsBall() {
 	_targetPos.x = _curExState.ballPos.x * (1.f - steadyRatio) + _defaultPos.x * steadyRatio;
 }
 
-void AiPlatformControllerBehaviour::OnUpdate(const sf::Time& /*dt*/) {
+void AiPlatformControllerBehaviour::OnUpdate(const sf::Time& dt) {
 	auto node = GetNode();
 	if (!node) {
 		return;
@@ -137,5 +138,5 @@ void AiPlatformControllerBehaviour::OnUpdate(const sf::Time& /*dt*/) {
 
 	ClampPongPlatformDesiredCenter(_targetPos, false, node, _movementBounds);
 
-	ApplyPongPlatformVelocityTowardsTarget(node, _targetPos, _speedFactor, _velLimit);
+	ApplyPongPlatformVelocityTowardsTarget(node, _targetPos, _speedFactor, _velLimit, dt);
 }

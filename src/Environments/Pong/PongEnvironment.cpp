@@ -58,11 +58,12 @@ PongEnvironment::~PongEnvironment() = default;
 
 void PongEnvironment::Setup() {
 	auto& mainContext = Engine::MainContext::GetInstance();
-	auto videoMode = sf::VideoMode::getFullscreenModes()[0];
-	mainContext.CreateMainWindow(videoMode, "Pong", sf::Style::None);
+	auto videoMode = sf::VideoMode::getDesktopMode();
+	mainContext.CreateMainWindow(videoMode, "Pong");
 	mainContext.GetMainWindow()->setMouseCursorVisible(false);
-	mainContext.GetPhysicsProcessor()->SetGravity({0, 1000});
+	mainContext.GetPhysicsProcessor()->SetGravityEnabled(false);
 	mainContext.SetScene(BuildScene());
+	Utils::MaximizeWindow(*mainContext.GetMainWindow());
 	SubscribeForEvents();
 }
 
@@ -144,7 +145,6 @@ shared_ptr<SceneNode> PongEnvironment::CreateDefaultPlatform(
 	shape->setFillColor(color);
 
 	auto physicsBody = node->RequireBehaviour<PhysicsBodyBehaviour>();
-	physicsBody->GetInteractionGroups().set(1, true);
 	physicsBody->SetFixed(true);
 	physicsBody->SetRestitution(bodiesRestitution);
 
