@@ -41,9 +41,8 @@ public:
 
 private:
 	/* TODO move to Physics utils */
-	static bool CheckBboxIntersection(const PhysicsBodyBehaviour* body1, const PhysicsBodyBehaviour* body2);
-	static std::optional<IntersectionDetails> DetectIntersection(SceneNode* node1, SceneNode* node2,
-	    PhysicsBodyBehaviour* body1, PhysicsBodyBehaviour* body2, bool bboxAlreadyVerified);
+	static std::optional<IntersectionDetails> DetectIntersection(
+	    SceneNode* node1, SceneNode* node2, PhysicsBodyBehaviour* body1, PhysicsBodyBehaviour* body2);
 	static std::optional<IntersectionDetails> DetectPolygonPolygonIntersection(
 	    const PhysicsBodyBehaviour* body1, const PhysicsBodyBehaviour* body2);
 	static std::optional<IntersectionDetails> DetectCirclePolygonIntersection(
