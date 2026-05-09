@@ -19,7 +19,7 @@
 namespace Engine {
 
 	void MainLoop::Run() {
-		PeriodicTaskExecutor tickExecutor(
+		/*PeriodicTaskExecutor tickExecutor(
 		    []() {
 			    return sf::seconds(1.f / MainContext::GetInstance().GetTargetTickRate());
 		    },
@@ -27,6 +27,7 @@ namespace Engine {
 			    UpdateTick();
 		    });
 
+		*/
 		PeriodicTaskExecutor presentExecutor(
 		    []() {
 			    MainContext& mainContext = Engine::MainContext::GetInstance();
@@ -55,9 +56,11 @@ namespace Engine {
 					break;
 				}
 
+				//PresentFrame();
 				auto dt = mainLoopClock.restart();
-				tickExecutor.Update(dt);
 				presentExecutor.Update(dt);
+				//tickExecutor.Update(dt);
+				UpdateTick();
 			}
 		}
 	}
@@ -145,6 +148,7 @@ namespace Engine {
 		if (auto scene = mainContext.GetScene()) {
 			scene->Update(simulatedDt);
 		}
+
 		mainContext.GetPhysicsProcessor()->Update(simulatedDt);
 	}
 
