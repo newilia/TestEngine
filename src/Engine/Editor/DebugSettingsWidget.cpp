@@ -51,6 +51,11 @@ namespace Engine {
 					ph->SetGravity({gxy[0], gxy[1]});
 				}
 
+				float airFriction = ph->GetAirFriction();
+				if (ImGui::DragFloat("Air friction (1/s)", &airFriction, 0.01f, 0.f, 100.f, "%.3f")) {
+					ph->SetAirFriction(airFriction);
+				}
+
 				if (auto field = ph->GetAttractionField()) {
 					float strength = field->GetGlobalStrengthScale();
 					if (ImGui::DragFloat("Attraction field strength", &strength, 2.f, -10000.f, 10000, "%.2f")) {
