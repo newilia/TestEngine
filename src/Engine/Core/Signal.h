@@ -124,8 +124,6 @@ public:
 
 	template <class... UArgs>
 	void Emit(UArgs&&... args) {
-		RemoveExpiredSlots();
-
 		std::vector<IDelegate<Args...>*> snapshot;
 		snapshot.reserve(_slots.size());
 		for (auto& slot : _slots) {
@@ -137,8 +135,6 @@ public:
 		for (IDelegate<Args...>* del : snapshot) {
 			(*del)(std::forward<UArgs>(args)...);
 		}
-
-		RemoveExpiredSlots();
 	}
 
 	template <class... UArgs>
