@@ -29,6 +29,11 @@ public:
 	void SetGravityEnabled(bool enabled);
 	bool IsGravityEnabled() const;
 
+	/// Per-second linear damping applied to every non-fixed body's velocity
+	/// (`v *= exp(-airFriction * dt)`). 0 disables it; values are clamped to >= 0.
+	void SetAirFriction(float airFriction);
+	float GetAirFriction() const;
+
 	int GetMotionSubsteps() const;
 	void SetMotionSubsteps(int substeps);
 
@@ -55,5 +60,6 @@ private:
 	std::list<std::weak_ptr<PhysicsBodyBehaviour>> _bodies;
 	sf::Vector2f _gravity = {0, 400};
 	bool _isGravityEnabled = false;
+	float _airFriction = 0.f;
 	int _motionSubsteps = 1;
 };

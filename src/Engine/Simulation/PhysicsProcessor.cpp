@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <deque>
 #include <optional>
 #include <vector>
@@ -24,6 +25,11 @@ namespace {
 } // namespace
 
 void PhysicsProcessor::Update(const sf::Time& dt) {
+	const float subDt = dt.asSeconds() / _motionSubsteps;
+	// Frame-rate independent linear drag: v *= exp(-k * dt). Computed once per substep
+	// (same for all bodies). 1.f when _airFriction == 0.
+	const float dampingFactor = _airFriction > 0.f ? std::exp(-_airFriction * subDt) : 1.f;
+
 	for (int i = 0; i < _motionSubsteps; ++i) {
 		for (auto it = _bodies.begin(); it != _bodies.end();) {
 			auto body = it->lock();
@@ -43,11 +49,15 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 
 			if (_isGravityEnabled) {
 				auto gravity = _gravity * body->GetGravityScale();
-				body->AddVelocity(gravity * (dt.asSeconds() / _motionSubsteps));
+				body->AddVelocity(gravity * subDt);
+			}
+
+			if (dampingFactor != 1.f) {
+				body->SetVelocity(body->GetVelocity() * dampingFactor);
 			}
 
 			auto pos = Utils::GetWorldPos(node);
-			pos += body->GetVelocity() * (dt.asSeconds() / _motionSubsteps);
+			pos += body->GetVelocity() * subDt;
 			Utils::SetLocalPosToWorld(node, pos);
 			++it;
 		}
@@ -579,6 +589,14 @@ void PhysicsProcessor::SetGravityEnabled(bool enabled) {
 
 bool PhysicsProcessor::IsGravityEnabled() const {
 	return _isGravityEnabled;
+}
+
+void PhysicsProcessor::SetAirFriction(float airFriction) {
+	_airFriction = std::max(0.f, airFriction);
+}
+
+float PhysicsProcessor::GetAirFriction() const {
+	return _airFriction;
 }
 
 std::shared_ptr<AttractionField> PhysicsProcessor::GetAttractionField() const {
