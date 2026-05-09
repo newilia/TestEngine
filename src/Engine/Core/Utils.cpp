@@ -5,6 +5,8 @@
 #endif
 
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
+#include "Engine/Behaviour/PointLightBehaviour.h"
+#include "Engine/Behaviour/ShapeLightReceiverBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Transform.h"
 #include "Engine/Sorting/SortingStrategy.h"
@@ -460,6 +462,21 @@ namespace Utils {
 		else {
 			n->GetLocalTransform()->SetPosition(worldPos);
 		}
+	}
+
+	void AddLightSource(SceneNode* node, float intensity, float radius, sf::Color color) {
+		auto pl = node->RequireBehaviour<PointLightBehaviour>();
+		pl->SetLightColor(color);
+		pl->SetIntensity(intensity);
+		pl->SetRadius(radius);
+	}
+
+	void AddLightReceiver(SceneNode* node, float diffusion, bool isBevelEmboss, float bevelWidth) {
+		auto recv = node->RequireBehaviour<ShapeLightReceiverBehaviour>();
+		recv->SetBevelEmbossMode(isBevelEmboss);
+		recv->SetBevelWidth(bevelWidth);
+		recv->SetDiffusion(diffusion);
+		recv->SetEaseInCirc(true);
 	}
 
 	void SortSceneNodesByDrawOrder(std::vector<std::shared_ptr<SceneNode>>& nodes) {

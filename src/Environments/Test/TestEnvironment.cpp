@@ -2,8 +2,6 @@
 
 #include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
-#include "Engine/Behaviour/PointLightBehaviour.h"
-#include "Engine/Behaviour/ShapeLightReceiverBehaviour.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/SceneNode.h"
@@ -70,23 +68,6 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	constexpr float commonAttraction = 0.f;
 	constexpr bool isAttractionPositive = false;
 
-	/* light stuff */
-
-	const auto AddLightSource = [](SceneNode* node, float intensity, float radius, sf::Color color) {
-		auto pl = node->RequireBehaviour<PointLightBehaviour>();
-		pl->SetLightColor(color);
-		pl->SetIntensity(intensity);
-		pl->SetRadius(radius);
-	};
-
-	const auto AddLightReceiver = [](SceneNode* node, float diffusion, bool bevelEmboss, float bevelWidth = 0.f) {
-		auto recv = node->RequireBehaviour<ShapeLightReceiverBehaviour>();
-		recv->SetBevelEmbossMode(bevelEmboss);
-		recv->SetBevelWidth(bevelWidth);
-		recv->SetDiffusion(diffusion);
-		recv->SetEaseInCirc(true);
-	};
-
 	/* walls */
 
 	constexpr float wallsThickness = 200;
@@ -133,7 +114,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 			node->AddBehaviour(std::move(fieldBeh));
 		}
 
-		AddLightReceiver(node.get(), 1.0f, false);
+		Utils::AddLightReceiver(node.get(), 1.0f, false);
 	}
 
 	/* circles */
@@ -185,8 +166,8 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 			fieldBeh->SetAttraction(commonAttraction * (isAttractionPositive ? -1 : 1));
 		}
 
-		AddLightSource(circleNode.get(), 12, 5, color);
-		AddLightReceiver(circleNode.get(), 1.f, true, radius);
+		Utils::AddLightSource(circleNode.get(), 12, 5, color);
+		Utils::AddLightReceiver(circleNode.get(), 1.f, true, radius);
 
 		container->AddChild(std::move(circleNode));
 	}
