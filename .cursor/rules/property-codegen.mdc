@@ -30,6 +30,23 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 - The key `name` (and `label`) sets the **inspector display string** only. The **property id** in the tree is still derived from the C++ field or method name (e.g. `GetPropValue` → `get_prop_value`).
 - If neither `name` nor `label` is set to a **non-empty** string, the display label is **inferred**: from the **field** name (`_thisIsAProperty` → `This is a property`; snake segments → sentence case, e.g. `_angular_speed` → `Angular speed`), or from a **`Get…` / `Set…` method** for `@getter` / `@setter` pairs (`GetSomeProp` → `Some prop` after stripping the `Get`/`Set` prefix and splitting PascalCase). Use `name="..."` when you need exact wording.
 
+### What is derived automatically (do not duplicate in tags)
+
+| Mechanism | Source in code | What tags **do not** change |
+|---|---|---|
+| **Property id** (`field_id`) | Member or accessor method name: leading `_` stripped, PascalCase → `snake_case` (`member_to_field_id` in `tools/property_codegen.py`). | `name` / `label` never affect the id (only the human-readable label). |
+| **Display label** | If `name` and `label` are both absent or blank: infer from the same identifier (field or getter/setter method), including stripping `Get`/`get` / `Set`/`set` when that matches the generator rules. | — |
+| **`name` vs `label`** | The first **non-empty** string among `name`, then `label`, wins (`_explicit_display_name`). | Supplying **both** with the same text is redundant; `label` after a non-empty `name` is ignored. The two keys are aliases for one UI string. |
+| **Read-only on `@getter`** | If there is no `setter=` on the getter and no paired `@setter`, the property is already **read-only**. | `readonly=true` in that situation is redundant (still allowed). |
+| **Writable plain `@property` fields** | Direct member read/write unless `readonly=true`. | Omitting `readonly` means writable; `readonly=false` would be redundant. |
+| **Getter ↔ setter pairing** | Matching `GetXxx` / `SetXxx` (or `getXxx` / `setXxx` with the same suffix) without any `name` / `label` on the tags. | Explicit `name="..."` / `label="..."` for pairing is redundant when this naming pattern already matches. |
+| **`minCount` / `maxCount`** | Only emitted into `PropertyMeta` for **`std::vector`** properties (`p.is_vector` in the generator). | On scalars, `std::pair`, maps/sets, `std::bitset`, etc., these keys are **ignored** for emitted meta — omit them. |
+| **`minValue` / `maxValue` / `dragSpeed`** | Applied to `PropertyMeta` for any property that lists them; the **inspector** uses them for numeric-like controls (float/double/integers, angles, component drags). | On types where the UI does not use numeric hints (`std::string`, `sf::Color`, bool, …), they are **clutter** and have little or no effect — omit unless you know the drawer uses them for that leaf. |
+| **`setter=MethodName` on `@property`** | Only implemented for **`bool`** fields (forwards writes to `this->MethodName(bool)`). | On non-bool fields the attribute is not used for that path — do not add it except on bool. |
+| **Duplicate meta on paired `@setter`** | For keys merged from setter into the property (`dragSpeed`, `minValue`, `maxValue`, `tooltip`, `readonly`), the **getter** wins if both specify the same key. | Repeating the same key on `@setter` as on `@getter` is redundant (and the getter value is kept). |
+
+**Caveat:** Inferred labels are **not** always identical to “what a human would title-case by hand” (edge cases: empty word lists fall back to a title-cased snake id). Use `name="..."` / `label="..."` when the default string is wrong or ambiguous (e.g. disambiguating two `@method` entries).
+
 ## `@method` (inspector context menu)
 
 - One-line `/// @method` or `/// @method(name="...", label="...", tooltip="...")` (display uses **`name` / `label`** like `@property`; `tooltip` is accepted for parity but the v1 menu uses the label text only).
