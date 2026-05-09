@@ -49,6 +49,10 @@ namespace Engine {
 		return _textureManager;
 	}
 
+	shared_ptr<GameBackgroundContext> MainContext::GetGameBackgroundContext() const {
+		return _gameBackgroundContext;
+	}
+
 	float MainContext::GetSimSpeedMultiplier() const {
 		return _simSpeedMultiplier;
 	}
@@ -99,6 +103,7 @@ namespace Engine {
 		_physicsProcessor = make_shared<PhysicsProcessor>();
 		_fontManager = make_shared<FontManager>();
 		_textureManager = make_shared<TextureManager>();
+		_gameBackgroundContext = make_shared<GameBackgroundContext>();
 	}
 
 	void MainContext::SetScene(const shared_ptr<Scene>& scene) {

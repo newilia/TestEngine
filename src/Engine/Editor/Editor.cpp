@@ -33,6 +33,7 @@ namespace {
 	constexpr const char kInspectorWindowTitle[] = "Inspector";
 	constexpr const char kToolsWindowTitle[] = "Tools";
 	constexpr const char kDebugWindowTitle[] = "Debug";
+	constexpr const char kGameBackgroundWindowTitle[] = "Game background";
 
 	// Apply a Left | Center | Right split once when the dock root has no saved split and no docked
 	// windows yet (first launch or cleared dock state). If ini already restored a split or any
@@ -60,16 +61,20 @@ namespace {
 		ImGuiID id_left_bottom = 0;
 		ImGuiID id_right_top = 0;
 		ImGuiID id_right_bottom = 0;
+		ImGuiID id_right_tools = 0;
+		ImGuiID id_right_game_bg = 0;
 		ImGuiID id_main = dockspace_id;
 
 		ImGui::DockBuilderSplitNode(id_main, ImGuiDir_Left, 0.25f, &id_left, &id_main);
 		ImGui::DockBuilderSplitNode(id_main, ImGuiDir_Right, 0.33f, &id_right, &id_center);
 		ImGui::DockBuilderSplitNode(id_left, ImGuiDir_Down, 0.55f, &id_left_bottom, &id_left_top);
 		ImGui::DockBuilderSplitNode(id_right, ImGuiDir_Down, 0.55f, &id_right_bottom, &id_right_top);
+		ImGui::DockBuilderSplitNode(id_right_top, ImGuiDir_Down, 0.5f, &id_right_game_bg, &id_right_tools);
 
 		ImGui::DockBuilderDockWindow(kSceneWindowTitle, id_left_top);
 		ImGui::DockBuilderDockWindow(kInspectorWindowTitle, id_left_bottom);
-		ImGui::DockBuilderDockWindow(kToolsWindowTitle, id_right_top);
+		ImGui::DockBuilderDockWindow(kToolsWindowTitle, id_right_tools);
+		ImGui::DockBuilderDockWindow(kGameBackgroundWindowTitle, id_right_game_bg);
 		ImGui::DockBuilderDockWindow(kDebugWindowTitle, id_right_bottom);
 
 		ImGui::DockBuilderFinish(dockspace_id);
@@ -481,6 +486,11 @@ namespace Engine {
 
 		if (ImGui::Begin(kToolsWindowTitle, nullptr, ImGuiWindowFlags_None)) {
 			_editorToolsWidget.Draw(GetEditorToolManager());
+		}
+		ImGui::End();
+
+		if (ImGui::Begin(kGameBackgroundWindowTitle, nullptr, ImGuiWindowFlags_None)) {
+			_gameBackgroundWidget.Draw();
 		}
 		ImGui::End();
 
