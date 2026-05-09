@@ -45,8 +45,8 @@ private:
 	    SceneNode* node1, SceneNode* node2, PhysicsBodyBehaviour* body1, PhysicsBodyBehaviour* body2);
 	static std::optional<IntersectionDetails> DetectPolygonPolygonIntersection(
 	    const PhysicsBodyBehaviour* body1, const PhysicsBodyBehaviour* body2);
-	static std::optional<IntersectionDetails> DetectCirclePolygonIntersection(
-	    const SceneNode& circleNode, const sf::CircleShape* circle, const PhysicsBodyBehaviour* polygon);
+	static std::optional<IntersectionDetails> DetectCirclePolygonIntersection(const SceneNode& circleNode,
+	    const sf::CircleShape* circle, const SceneNode& polygonNode, const sf::Shape* polygonShape);
 	static std::optional<IntersectionDetails> DetectCircleCircleIntersection(
 	    const SceneNode& node1, const sf::CircleShape* circle1, const SceneNode& node2, const sf::CircleShape* circle2);
 	static std::optional<SegmentIntersectionPoints> FindSegmentsIntersectionPoint(const Segment& e, const Segment& f);

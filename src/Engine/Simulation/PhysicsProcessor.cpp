@@ -91,7 +91,10 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 				++bodyListIndex;
 				continue;
 			}
-			sweepEntries.push_back({node.get(), body.get(), body->EvaluateGlobalBounds(), bodyListIndex});
+			auto shape = body->GetColliderShape();
+			auto bbox = node->GetWorldTransform().transformRect(shape->getGlobalBounds());
+
+			sweepEntries.push_back({node.get(), body.get(), bbox, bodyListIndex});
 			++bodyListIndex;
 		}
 
@@ -172,31 +175,28 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectIntersection(
 		intersection.wNode2 = node2->weak_from_this();
 	};
 
-	auto* col1 = body1;
-	auto* col2 = body2;
-
-	if (auto* circ1 = dynamic_cast<sf::CircleShape*>(col1->GetShape())) {
-		if (auto* circ2 = dynamic_cast<sf::CircleShape*>(col2->GetShape())) {
+	if (auto* circ1 = dynamic_cast<const sf::CircleShape*>(body1->GetColliderShape())) {
+		if (auto* circ2 = dynamic_cast<const sf::CircleShape*>(body2->GetColliderShape())) {
 			if (auto r = DetectCircleCircleIntersection(*node1, circ1, *node2, circ2)) {
 				assignNodes(*r);
 				return r;
 			}
 			return std::nullopt;
 		}
-		if (auto r = DetectCirclePolygonIntersection(*node1, circ1, col2)) {
+		else if (auto r = DetectCirclePolygonIntersection(*node1, circ1, *node2, body2->GetColliderShape())) {
 			assignNodes(*r);
 			return r;
 		}
 		return std::nullopt;
 	}
-	if (auto* circ2 = dynamic_cast<sf::CircleShape*>(col2->GetShape())) {
-		if (auto r = DetectCirclePolygonIntersection(*node2, circ2, col1)) {
+	if (auto* circ2 = dynamic_cast<const sf::CircleShape*>(body2->GetColliderShape())) {
+		if (auto r = DetectCirclePolygonIntersection(*node2, circ2, *node1, body1->GetColliderShape())) {
 			assignNodes(*r);
 			return r;
 		}
 		return std::nullopt;
 	}
-	if (auto r = DetectPolygonPolygonIntersection(col1, col2)) {
+	if (auto r = DetectPolygonPolygonIntersection(body1, body2)) {
 		assignNodes(*r);
 		return r;
 	}
@@ -205,21 +205,25 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectIntersection(
 
 std::optional<IntersectionDetails> PhysicsProcessor::DetectPolygonPolygonIntersection(
     const PhysicsBodyBehaviour* body1, const PhysicsBodyBehaviour* body2) {
-	auto shape1 = body1->GetShape();
-	auto shape2 = body2->GetShape();
+	auto shape1 = body1->GetColliderShape();
+	auto shape2 = body2->GetColliderShape();
+	auto node1 = body1->GetNode().get();
+	auto node2 = body2->GetNode().get();
 
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
 
-	const auto pointsCount1 = body1->GetPointCount();
-	const auto pointsCount2 = body2->GetPointCount();
+	const auto pointsCount1 = shape1->getPointCount();
+	const auto pointsCount2 = shape2->getPointCount();
 	IntersectionDetails result;
 
 	for (size_t i = 0; i < pointsCount1; ++i) {
-		const Segment edge1 = {body1->GetPointWorldPos(i), body1->GetPointWorldPos((i + 1) % pointsCount1)};
+		const Segment edge1 = {Utils::GetShapePointWorldPos(shape1, node1, i),
+		    Utils::GetShapePointWorldPos(shape1, node1, (i + 1) % pointsCount1)};
 
 		for (size_t j = 0; j < pointsCount2; ++j) {
-			const Segment edge2 = {body2->GetPointWorldPos(j), body2->GetPointWorldPos((j + 1) % pointsCount2)};
+			const Segment edge2 = {Utils::GetShapePointWorldPos(shape2, node2, j),
+			    Utils::GetShapePointWorldPos(shape2, node2, (j + 1) % pointsCount2)};
 
 			if (auto i_point = FindSegmentsIntersectionPoint(edge1, edge2)) {
 				edges_i_p.emplace_back(i_point->p1);
@@ -246,18 +250,19 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectPolygonPolygonInterse
 	return result;
 }
 
-std::optional<IntersectionDetails> PhysicsProcessor::DetectCirclePolygonIntersection(
-    const SceneNode& circleNode, const sf::CircleShape* circle, const PhysicsBodyBehaviour* body) {
+std::optional<IntersectionDetails> PhysicsProcessor::DetectCirclePolygonIntersection(const SceneNode& circleNode,
+    const sf::CircleShape* circle, const SceneNode& polygonNode, const sf::Shape* polygonShape) {
 	std::vector<sf::Vector2f> edges_i_p;
 	edges_i_p.reserve(2);
 
-	const auto pointsCount = body->GetPointCount();
+	const auto polygonPointsCount = polygonShape->getPointCount();
 	IntersectionDetails result;
 
 	const sf::Vector2f circleCenterWorld = WorldCircleCenter(circleNode, *circle);
 
-	for (size_t i = 0; i < pointsCount; ++i) {
-		const Segment edge = {body->GetPointWorldPos(i), body->GetPointWorldPos((i + 1) % pointsCount)};
+	for (size_t i = 0; i < polygonPointsCount; ++i) {
+		const Segment edge = {Utils::GetShapePointWorldPos(polygonShape, &polygonNode, i),
+		    Utils::GetShapePointWorldPos(polygonShape, &polygonNode, (i + 1) % polygonPointsCount)};
 
 		if (auto i_point = FindSegmentCircleIntersectionPoint(edge, circleCenterWorld, circle->getRadius())) {
 			edges_i_p.emplace_back(i_point->p1);
@@ -478,9 +483,13 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 		return;
 	}
 
+	auto shape1 = pb1->GetColliderShape();
+	auto shape2 = pb2->GetColliderShape();
+
 	if (pb1->IsFixed()) { // fixed body must be second
 		std::swap(body1, body2);
 		std::swap(pb1, pb2);
+		std::swap(shape1, shape2);
 	}
 
 	const auto m1 = pb1->GetMass();
@@ -495,21 +504,22 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 
 	/* overlapping fixing */
 	auto getPenetrationDepth = [collisionPoint = collision.intersection.start](
-	                               SceneNode* node, const sf::Vector2f& bodyNormal) {
+	                               sf::Shape const* shape, SceneNode const* node, const sf::Vector2f& bodyNormal) {
 		float result = 0.f;
 		auto* bodyBeh = node->FindBehaviour<PhysicsBodyBehaviour>().get();
 		if (!bodyBeh) {
 			return 0.f;
 		}
-		for (size_t i = 0; i < bodyBeh->GetPointCount(); ++i) {
-			auto penetrationVec = bodyBeh->GetPointWorldPos(i) - collisionPoint;
+		for (size_t i = 0; i < shape->getPointCount(); ++i) {
+			auto penetrationVec = Utils::GetShapePointWorldPos(shape, node, i) - collisionPoint;
 			float depth = Utils::Project(penetrationVec, bodyNormal);
 			result = std::max(result, depth);
 		}
 		return result;
 	};
+
 	float penetrationDepthSum =
-	    getPenetrationDepth(body1.get(), b1_normal) + getPenetrationDepth(body2.get(), -b1_normal);
+	    getPenetrationDepth(shape1, body1.get(), b1_normal) + getPenetrationDepth(shape2, body2.get(), -b1_normal);
 
 	if (pb2->IsFixed()) {
 		auto b1_pos = Utils::GetWorldPos(body1) - b1_normal * penetrationDepthSum;

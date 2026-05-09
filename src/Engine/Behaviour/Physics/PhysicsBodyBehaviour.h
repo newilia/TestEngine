@@ -3,6 +3,7 @@
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Core/MetaClass.h"
 #include "Engine/Core/Signal.h"
+#include "Engine/Visual/ShapeVisualBase.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/ConvexShape.hpp>
@@ -33,14 +34,7 @@ public:
 	void OnDeinit() override;
 	void OnEnabled(bool isEnabled) override;
 
-	// TODO remove?
-	sf::Shape* GetShape();
-	const sf::Shape* GetShape() const;
-
-	sf::FloatRect EvaluateGlobalBounds() const;
-
-	size_t GetPointCount() const;
-	sf::Vector2f GetPointWorldPos(std::size_t pointIndex) const;
+	const sf::Shape* GetColliderShape() const;
 
 	bool IsFixed() const;
 	void SetFixed(bool isFixed);
