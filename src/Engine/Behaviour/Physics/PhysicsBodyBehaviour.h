@@ -82,7 +82,7 @@ private:
 	sf::Vector2f _velocity{};
 	/// @property
 	float _angularSpeed = 0.f;
-	/// @property(minValue=0.f, maxValue=1.5f, dragSpeed=0.05f)
+	/// @property(minValue=0.f, maxValue=1.1f, dragSpeed=0.05f, tooltip="Values over 1.0 make body unstable")
 	float _restitution = 0.5f;
 	/// @property(minValue=0.f, maxValue=1.f, dragSpeed=0.05f)
 	float _friction = 0.5f;

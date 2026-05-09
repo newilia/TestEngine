@@ -10,13 +10,9 @@ PeriodicTaskExecutor::PeriodicTaskExecutor(
 
 bool PeriodicTaskExecutor::Update(sf::Time dt) {
 	_accumulated += dt;
-	const auto period = _getPeriod();
-	if (_accumulated >= period) {
-		_accumulated -= period;
-		if (_accumulated >= period) {
-			_accumulated = sf::Time();
-		}
-		_task(period);
+	if (_accumulated >= _getPeriod()) {
+		_task(_accumulated);
+		_accumulated = sf::Time();
 		return true;
 	}
 	return false;

@@ -66,9 +66,9 @@ namespace Engine {
 						field->SetUseMassCoupling(massCoupling);
 					}
 					/*float softEps = field->GetSofteningEps();
-				if (ImGui::DragFloat("Field softening eps", &softEps, 0.25f, 0.1f, 1.0e3f, "%.2f")) {
-					field->SetSofteningEps(softEps);
-				}*/
+					if (ImGui::DragFloat("Field softening eps", &softEps, 0.25f, 0.1f, 1.0e3f, "%.2f")) {
+						field->SetSofteningEps(softEps);
+					}*/
 				}
 			}
 		}
