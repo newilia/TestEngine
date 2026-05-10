@@ -1,5 +1,3 @@
-пофиксить падение фпс при остановке симуляции с Fps limit
-
 персистентность редактора
 
 загрузка/сохранение сцены
@@ -15,17 +13,6 @@
 
 перетаскивание нод в иерархии
 
-
-множественное выделение нод:
-	ctrl, shift в иерархии
-	ctrl во viewport
-	область во viewport
-	ctrl+a (с & фильтром по наличию выбранных Behaviour-ов)
-	
-массовое изменение свойств в инспекторе
-
-пофиксить кейс с долгим кадром в симуляции
-
 физика: выталкивать тело когда оно проникает в геометрию другого тела
 
 добавить LOG_DEBUG(), LOG_INFO() и т.д. и панельку с логом
@@ -38,8 +25,6 @@
 
 inverse attraction
 
-уменьшить dragSpeed на @propery scale в Visual-ах
-
 переделать наследников ShapeVisual на шаблон?
 
 isEnabledLocal, isVisibleLocal
@@ -51,9 +36,3 @@ isEnabledLocal, isVisibleLocal
 эффект радиационного излучения
 
 propery animator
-
-убрать Behaviour::OnAttached(), OnDeattached(), проверить инициализацию при аттаче
-
-focus selected node
-
-tick dt limit
