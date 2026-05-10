@@ -101,13 +101,15 @@ void ParallaxTextureGameBackground::RebuildVertices(const sf::RenderTarget& targ
 	const float moveCam = std::clamp(_moveWithCamera, -2.f, 2.f);
 	const float opacity = std::clamp(_opacity, 0.f, 1.f);
 
-	float worldTile = std::max(kMinTile, _defaultScale * StablePow(zoomRatio, scaleCam));
+	const float worldTileW = std::max(kMinTile, _defaultScale * StablePow(zoomRatio, scaleCam));
+	const float aspect = texH / texW;
+	const float worldTileH = std::max(kMinTile, worldTileW * aspect);
 	const float scrollX = center.x * moveCam;
 	const float scrollY = center.y * moveCam;
 
 	const float halfW = size.x * 0.5f;
 	const float halfH = size.y * 0.5f;
-	const float margin = std::max(worldTile * 2.f, std::max(size.x, size.y) * 0.5f);
+	const float margin = std::max(std::max(worldTileW, worldTileH) * 2.f, std::max(size.x, size.y) * 0.5f);
 
 	const float minX = center.x - halfW - margin;
 	const float maxX = center.x + halfW + margin;
@@ -118,10 +120,10 @@ void ParallaxTextureGameBackground::RebuildVertices(const sf::RenderTarget& targ
 	const sf::Color vertColor(255, 255, 255, alpha);
 
 	auto addQuad = [&](float x0, float y0, float x1, float y1) {
-		const float u0 = ((x0 - scrollX) / worldTile) * texW;
-		const float v0 = ((y0 - scrollY) / worldTile) * texH;
-		const float u1 = ((x1 - scrollX) / worldTile) * texW;
-		const float v1 = ((y1 - scrollY) / worldTile) * texH;
+		const float u0 = ((x0 - scrollX) / worldTileW) * texW;
+		const float v0 = ((y0 - scrollY) / worldTileH) * texH;
+		const float u1 = ((x1 - scrollX) / worldTileW) * texW;
+		const float v1 = ((y1 - scrollY) / worldTileH) * texH;
 
 		sf::Vertex v[6];
 		v[0].position = {x0, y0};
@@ -147,9 +149,9 @@ void ParallaxTextureGameBackground::RebuildVertices(const sf::RenderTarget& targ
 		}
 	};
 
-	for (float x = minX; x < maxX - 0.5f * kMinTile; x += worldTile) {
-		for (float y = minY; y < maxY - 0.5f * kMinTile; y += worldTile) {
-			addQuad(x, y, x + worldTile, y + worldTile);
+	for (float x = minX; x < maxX - 0.5f * kMinTile; x += worldTileW) {
+		for (float y = minY; y < maxY - 0.5f * kMinTile; y += worldTileH) {
+			addQuad(x, y, x + worldTileW, y + worldTileH);
 		}
 	}
 }
