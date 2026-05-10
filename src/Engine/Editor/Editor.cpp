@@ -338,8 +338,11 @@ namespace Engine {
 		return _clipboard.HasNode() || _clipboard.HasEntity();
 	}
 
-	bool Editor::DeleteSelectedNode() {
-		return DeleteNode(GetSelectedNode());
+	bool Editor::DeleteSelectedNodes() {
+		for (const auto& node : GetSelectedNodes()) {
+			DeleteNode(node);
+		}
+		return true;
 	}
 
 	bool Editor::DeleteNode(const std::shared_ptr<SceneNode>& node) {
@@ -579,7 +582,7 @@ namespace Engine {
 				return;
 			}
 			if (e.code == sf::Keyboard::Key::Delete) {
-				(void)DeleteSelectedNode();
+				(void)DeleteSelectedNodes();
 				return;
 			}
 		}

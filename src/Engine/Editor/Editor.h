@@ -61,7 +61,7 @@ namespace Engine {
 		bool CanPasteClipboard() const;
 		bool CopyEntity(const std::shared_ptr<EntityOnNode>& entity, EntitySlot slot);
 		bool CutEntity(const std::shared_ptr<EntityOnNode>& entity, EntitySlot slot);
-		bool DeleteSelectedNode();
+		bool DeleteSelectedNodes();
 		bool DeleteNode(const std::shared_ptr<SceneNode>& node);
 		bool DeleteEntity(const std::shared_ptr<EntityOnNode>& entity, EntitySlot slot);
 		bool CanPasteEntityToSelectedNode() const;
