@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <list>
 #include <memory>
+#include <utility>
 #include <vector>
 
 class PointLightBehaviour;
@@ -61,6 +62,8 @@ namespace Engine {
 		LightingBlendMode _blendMode = LightingBlendMode::Screen;
 		std::list<std::weak_ptr<PointLightBehaviour>> _lightSources;
 		std::vector<GpuPointLight> _lights;
+
+		mutable std::vector<std::pair<float, std::size_t>> _selectScratch;
 	};
 
 } // namespace Engine

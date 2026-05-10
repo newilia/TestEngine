@@ -5,9 +5,12 @@
 #include "Engine/Core/Utils.h"
 
 #include <algorithm>
+#include <cmath>
+#include <cstddef>
 
 namespace Engine {
 	namespace {
+
 		bool IsActiveInSceneHierarchy(const SceneNode& node) {
 			const SceneNode* n = &node;
 			while (n) {
@@ -20,11 +23,14 @@ namespace Engine {
 			return true;
 		}
 
-		struct Candidate
-		{
-			float score{};
-			std::size_t index{};
-		};
+		float DistSqPointToRect(const sf::Vector2f& p, const sf::FloatRect& r) {
+			const float nx = std::clamp(p.x, r.position.x, r.position.x + r.size.x);
+			const float ny = std::clamp(p.y, r.position.y, r.position.y + r.size.y);
+			const float dx = p.x - nx;
+			const float dy = p.y - ny;
+			return dx * dx + dy * dy;
+		}
+
 	} // namespace
 
 	bool SceneLighting::IsEnabled() const {
@@ -108,13 +114,13 @@ namespace Engine {
 			}
 
 			const sf::Color c = pl->GetLightColor();
-			const float i = pl->GetIntensity() * _globalIntensityScale;
-			GpuPointLight L{};
-			L.position = Utils::GetWorldPos(node);
-			L.color = sf::Glsl::Vec3(static_cast<float>(c.r) / 255.f * i, static_cast<float>(c.g) / 255.f * i,
-			    static_cast<float>(c.b) / 255.f * i);
-			L.radius = std::max(pl->GetRadius() * _distanceRangeScale, 1.f);
-			_lights.push_back(L);
+			const float intensity = pl->GetIntensity() * _globalIntensityScale;
+			GpuPointLight light{};
+			light.position = Utils::GetWorldPos(node);
+			light.color = sf::Glsl::Vec3(static_cast<float>(c.r) / 255.f * intensity,
+			    static_cast<float>(c.g) / 255.f * intensity, static_cast<float>(c.b) / 255.f * intensity);
+			light.radius = std::max(pl->GetRadius() * _distanceRangeScale, 1.f);
+			_lights.push_back(light);
 		}
 	}
 
@@ -130,26 +136,41 @@ namespace Engine {
 
 		const sf::Vector2f rectCenter = {receiverBounds.position.x + receiverBounds.size.x * 0.5f,
 		    receiverBounds.position.y + receiverBounds.size.y * 0.5f};
-		std::vector<Candidate> candidates;
-		candidates.reserve(_lights.size());
 
+		// Must match the attenuation tail in ShapeLighting.frag (practical influence radius).
+		constexpr float kCullRadiusMul = 10000.f;
+
+		_selectScratch.clear();
+		_selectScratch.reserve(_lights.size());
 		for (std::size_t i = 0; i < _lights.size(); ++i) {
-			const GpuPointLight& L = _lights[i];
-			const float dx = L.position.x - rectCenter.x;
-			const float dy = L.position.y - rectCenter.y;
-			const float score = dx * dx + dy * dy;
-			candidates.push_back({score, i});
+			const GpuPointLight& light = _lights[i];
+			const float radius = std::max(light.radius, 1.f);
+			const float cutoff = radius * kCullRadiusMul;
+			const float dsq = DistSqPointToRect(light.position, receiverBounds);
+			if (dsq > cutoff * cutoff) {
+				continue;
+			}
+			const float dx = light.position.x - rectCenter.x;
+			const float dy = light.position.y - rectCenter.y;
+			_selectScratch.emplace_back(dx * dx + dy * dy, i);
 		}
 
-		const std::size_t take = std::min(maxLights, candidates.size());
-		std::partial_sort(candidates.begin(), candidates.begin() + static_cast<std::ptrdiff_t>(take), candidates.end(),
-		    [](const Candidate& a, const Candidate& b) {
-			    return a.score < b.score;
-		    });
+		if (_selectScratch.empty()) {
+			return;
+		}
+
+		const std::size_t take = std::min(maxLights, _selectScratch.size());
+		if (take < _selectScratch.size()) {
+			const auto nth = _selectScratch.begin() + static_cast<std::ptrdiff_t>(take);
+			std::nth_element(_selectScratch.begin(), nth, _selectScratch.end(),
+			    [](const std::pair<float, std::size_t>& a, const std::pair<float, std::size_t>& b) {
+				    return a.first < b.first;
+			    });
+		}
 
 		out.reserve(take);
 		for (std::size_t k = 0; k < take; ++k) {
-			out.push_back(_lights[candidates[k].index]);
+			out.push_back(_lights[_selectScratch[k].second]);
 		}
 	}
 
