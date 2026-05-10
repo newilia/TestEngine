@@ -82,26 +82,6 @@ namespace Engine {
 			ImGui::SameLine();
 			ImGui::TextDisabled("(sync to display; pair with Max FPS 0)");
 
-			bool isFpsLimitEnabled = mainContext.IsFramerateLimitEnabled();
-			if (ImGui::Checkbox("FPS limit enabled", &isFpsLimitEnabled)) {
-				mainContext.SetFramerateLimitEnabled(isFpsLimitEnabled);
-			}
-
-			int fpsLimit = static_cast<int>(mainContext.GetFramerateLimit());
-			if (ImGui::SliderInt("FPS limit", &fpsLimit, 30, 200)) {
-				mainContext.SetFramerateLimit(static_cast<std::uint32_t>(fpsLimit));
-			}
-			ImGui::SameLine();
-			ImGui::TextDisabled("(0 = off; meaningful when VSync is off)");
-
-			int tickHz = static_cast<int>(mainContext.GetTargetTickRate());
-			if (ImGui::SliderInt("Logic tick rate (Hz)", &tickHz, 30, 500)) {
-				tickHz = std::max(0, tickHz);
-				mainContext.SetTargetTickRate(static_cast<std::uint32_t>(tickHz));
-			}
-			ImGui::SameLine();
-			ImGui::TextDisabled("(0 = unlimited: one variable step per frame)");
-
 			ImGui::Text("Frame dt: %.3f s (%.1f fps)", static_cast<double>(mainContext.GetFrameDt().asSeconds()),
 			    mainContext.GetCurrentFps());
 

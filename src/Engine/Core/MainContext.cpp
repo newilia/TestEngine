@@ -77,18 +77,6 @@ namespace Engine {
 		return _mainWindow.get();
 	}
 
-	std::uint32_t MainContext::GetFramerateLimit() const {
-		return _framerateLimit;
-	}
-
-	std::uint32_t MainContext::GetTargetTickRate() const {
-		return _targetTickRateHz;
-	}
-
-	void MainContext::SetTargetTickRate(std::uint32_t hz) {
-		_targetTickRateHz = hz;
-	}
-
 	void MainContext::SetVerticalSyncEnabled(bool enabled) {
 		_verticalSyncEnabled = enabled;
 		ApplyWindowFrameSettings();
@@ -117,7 +105,7 @@ namespace Engine {
 	}
 
 	void MainContext::Init() {
-		if (!_isImGuiInitialized && _mainWindow) {
+		if (!_isImGuiInitialized && Verify(_mainWindow)) {
 			if (!ImGui::SFML::Init(*_mainWindow)) {
 				return;
 			}
@@ -127,7 +115,7 @@ namespace Engine {
 	}
 
 	void MainContext::Shutdown() {
-		SetScene(nullptr); // TODO is necessary?
+		SetScene(nullptr);
 
 		if (_isImGuiInitialized) {
 			ImGui::SFML::Shutdown();
@@ -142,10 +130,8 @@ namespace Engine {
 		if (_isSimPaused) {
 			return sf::Time();
 		}
-
-		/* const auto maxDt = sf::seconds(1.f / GetTargetTickRate());
-		return std::min(_tickTime * _simSpeedMultiplier, maxDt); */
-		return _tickTime * _simSpeedMultiplier;
+		auto averageTickTime = sf::seconds(1) / GetCurrentTickRate() * 2.f; // prevent sudden long ticks
+		return std::min(_tickTime * _simSpeedMultiplier, averageTickTime);
 	}
 
 	sf::Time MainContext::GetWallTickDt() const {
@@ -189,18 +175,6 @@ namespace Engine {
 		_mainWindowPixelSizeForView = _mainWindow->getSize();
 		_haveMainWindowPixelSizeForView = _mainWindowPixelSizeForView.x != 0u && _mainWindowPixelSizeForView.y != 0u;
 		return _mainWindow;
-	}
-
-	void MainContext::SetFramerateLimit(std::uint32_t maxFps) {
-		_framerateLimit = maxFps;
-	}
-
-	void MainContext::SetFramerateLimitEnabled(bool enabled) {
-		_isFramerateLimitEnabled = enabled;
-	}
-
-	bool MainContext::IsFramerateLimitEnabled() const {
-		return _isFramerateLimitEnabled;
 	}
 
 	float MainContext::GetCurrentFps() const {
