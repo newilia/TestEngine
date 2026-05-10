@@ -95,6 +95,14 @@ float edge_distance_field(vec2 localPos)
 
 vec2 edge_distance_grad(vec2 localPos)
 {
+    if (u_shape_kind == 1)
+    {
+        vec2 d = localPos - u_circle_center;
+        float len = length(d);
+        if (len < 1e-5)
+            return vec2(0.0);
+        return d / len;
+    }
     float e = 0.6;
     float dpx = edge_distance_field(localPos + vec2(e, 0.0)) - edge_distance_field(localPos - vec2(e, 0.0));
     float dpy = edge_distance_field(localPos + vec2(0.0, e)) - edge_distance_field(localPos - vec2(0.0, e));

@@ -2,7 +2,6 @@
 
 #include "Engine/Behaviour/ShapeLightReceiverBehaviour.h"
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Core/Utils.h"
 #include "Engine/Render/SceneLighting.h"
 #include "Engine/Visual/ShapeVisualBase.h"
 
@@ -16,6 +15,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <string>
 #include <vector>
 
 namespace Engine {
@@ -24,6 +24,43 @@ namespace Engine {
 
 		constexpr std::size_t kMaxLights = 64;
 		constexpr std::size_t kMaxConvexVerts = 64;
+
+		const std::string kUFillColor{"u_fill_color"};
+		const std::string kUWorldOrigin{"u_world_origin"};
+		const std::string kUWorldDx{"u_world_dx"};
+		const std::string kUWorldDy{"u_world_dy"};
+		const std::string kUTargetHeight{"u_target_height"};
+		const std::string kULocalFromWorld{"u_local_from_world"};
+		const std::string kUShapeKind{"u_shape_kind"};
+		const std::string kUVertexCount{"u_vertex_count"};
+		const std::string kUVertices{"u_vertices"};
+		const std::string kUCircleCenter{"u_circle_center"};
+		const std::string kUCircleRadius{"u_circle_radius"};
+		const std::string kURectMin{"u_rect_min"};
+		const std::string kURectMax{"u_rect_max"};
+		const std::string kULightCount{"u_light_count"};
+		const std::string kULightPos{"u_light_pos"};
+		const std::string kULightColor{"u_light_color"};
+		const std::string kULightRadius{"u_light_radius"};
+		const std::string kUModeBevel{"u_mode_bevel"};
+		const std::string kUBevelWidth{"u_bevel_width"};
+		const std::string kUEaseCirc{"u_ease_circ"};
+		const std::string kUDiffusion{"u_diffusion"};
+		const std::string kULightingStrength{"u_lighting_strength"};
+		const std::string kUBlendMode{"u_blend_mode"};
+
+		struct CameraUniformState
+		{
+			const void* renderTarget = nullptr;
+			sf::Vector2u targetSize{};
+			sf::Vector2f w00{};
+			sf::Vector2f wx{};
+			sf::Vector2f wy{};
+			float targetHeight = 0.f;
+		};
+
+		CameraUniformState s_camUniforms{};
+		bool s_haveCamUniforms = false;
 
 		sf::Shader* GetShapeLightingShader() {
 			static sf::Shader shader;
@@ -36,6 +73,49 @@ namespace Engine {
 				}
 			}
 			return ok ? &shader : nullptr;
+		}
+
+		struct ShapeFragUniforms
+		{
+			int shapeKind = 2;
+			int vertCount = 0;
+			std::array<sf::Vector2f, kMaxConvexVerts> convexVerts{};
+			sf::Vector2f circleCenter{};
+			float circleRadius = 1.f;
+			sf::Vector2f rectMin{};
+			sf::Vector2f rectMax{1.f, 1.f};
+		};
+
+		void FillShapeFragUniformsFromSfShape(const sf::Shape* shape, ShapeFragUniforms& out) {
+			if (!shape) {
+				return;
+			}
+			out.shapeKind = 2;
+			out.vertCount = 0;
+			if (const auto* convex = dynamic_cast<const sf::ConvexShape*>(shape)) {
+				out.shapeKind = 0;
+				const unsigned pc = convex->getPointCount();
+				out.vertCount = static_cast<int>(std::min<std::size_t>(pc, kMaxConvexVerts));
+				for (int i = 0; i < out.vertCount; ++i) {
+					out.convexVerts[static_cast<std::size_t>(i)] = convex->getPoint(static_cast<unsigned>(i));
+				}
+			}
+			else if (const auto* circle = dynamic_cast<const sf::CircleShape*>(shape)) {
+				out.shapeKind = 1;
+				out.circleCenter = circle->getOrigin();
+				out.circleRadius = circle->getRadius();
+			}
+			else if (const auto* rect = dynamic_cast<const sf::RectangleShape*>(shape)) {
+				out.shapeKind = 2;
+				const sf::FloatRect lb = rect->getLocalBounds();
+				out.rectMin = lb.position;
+				out.rectMax = {lb.position.x + lb.size.x, lb.position.y + lb.size.y};
+			}
+			else {
+				const sf::FloatRect lb = shape->getLocalBounds();
+				out.rectMin = lb.position;
+				out.rectMax = {lb.position.x + lb.size.x, lb.position.y + lb.size.y};
+			}
 		}
 
 	} // namespace
@@ -65,8 +145,13 @@ namespace Engine {
 		const sf::Transform full = states.transform * shape->getTransform();
 		const sf::FloatRect worldBounds = full.transformRect(shape->getLocalBounds());
 
-		std::vector<Engine::GpuPointLight> lights;
-		SceneLighting::GetInstance().SelectLightsForBounds(worldBounds, lights, kMaxLights);
+		thread_local std::vector<GpuPointLight> tlsLights;
+		tlsLights.clear();
+		const std::size_t lightPool = SceneLighting::GetInstance().GetLights().size();
+		if (tlsLights.capacity() < lightPool) {
+			tlsLights.reserve(lightPool);
+		}
+		SceneLighting::GetInstance().SelectLightsForBounds(worldBounds, tlsLights, kMaxLights);
 
 		const sf::Transform invWorldFromLocal = full.getInverse();
 		const sf::Glsl::Mat3 localFromWorld = invWorldFromLocal;
@@ -80,79 +165,81 @@ namespace Engine {
 		std::array<sf::Glsl::Vec3, kMaxLights> lightCol{};
 		std::array<float, kMaxLights> lightRad{};
 
-		const std::size_t n = lights.size();
+		const std::size_t n = tlsLights.size();
 		for (std::size_t i = 0; i < n; ++i) {
-			lightPos[i] = sf::Glsl::Vec2(lights[i].position.x, lights[i].position.y);
-			lightCol[i] = lights[i].color;
-			lightRad[i] = lights[i].radius;
+			lightPos[i] = sf::Glsl::Vec2(tlsLights[i].position.x, tlsLights[i].position.y);
+			lightCol[i] = tlsLights[i].color;
+			lightRad[i] = tlsLights[i].radius;
 		}
 
 		const sf::Color fill = visual.GetFillColor();
 		const sf::Glsl::Vec4 fillV(static_cast<float>(fill.r) / 255.f, static_cast<float>(fill.g) / 255.f,
 		    static_cast<float>(fill.b) / 255.f, static_cast<float>(fill.a) / 255.f);
 
-		int shapeKind = 2;
-		int vertCount = 0;
+		ShapeFragUniforms gpu{};
+		FillShapeFragUniformsFromSfShape(shape, gpu);
+
 		std::array<sf::Glsl::Vec2, kMaxConvexVerts> verts{};
-		sf::Glsl::Vec2 circleCenter(0.f, 0.f);
-		float circleRadius = 1.f;
-		sf::Glsl::Vec2 rectMin(0.f, 0.f);
-		sf::Glsl::Vec2 rectMax(1.f, 1.f);
-
-		if (const auto* convex = dynamic_cast<const sf::ConvexShape*>(shape)) {
-			shapeKind = 0;
-			const unsigned pc = convex->getPointCount();
-			vertCount = static_cast<int>(std::min<std::size_t>(pc, kMaxConvexVerts));
-			for (int i = 0; i < vertCount; ++i) {
-				const sf::Vector2f p = convex->getPoint(static_cast<unsigned>(i));
-				verts[static_cast<std::size_t>(i)] = sf::Glsl::Vec2(p.x, p.y);
-			}
-		}
-		else if (const auto* circle = dynamic_cast<const sf::CircleShape*>(shape)) {
-			shapeKind = 1;
-			const sf::Vector2f o = circle->getOrigin();
-			circleCenter = sf::Glsl::Vec2(o.x, o.y);
-			circleRadius = circle->getRadius();
-		}
-		else if (const auto* rect = dynamic_cast<const sf::RectangleShape*>(shape)) {
-			shapeKind = 2;
-			const sf::FloatRect lb = rect->getLocalBounds();
-			rectMin = sf::Glsl::Vec2(lb.position.x, lb.position.y);
-			rectMax = sf::Glsl::Vec2(lb.position.x + lb.size.x, lb.position.y + lb.size.y);
-		}
-		else {
-			const sf::FloatRect lb = shape->getLocalBounds();
-			rectMin = sf::Glsl::Vec2(lb.position.x, lb.position.y);
-			rectMax = sf::Glsl::Vec2(lb.position.x + lb.size.x, lb.position.y + lb.size.y);
+		for (int i = 0; i < gpu.vertCount; ++i) {
+			const sf::Vector2f& p = gpu.convexVerts[static_cast<std::size_t>(i)];
+			verts[static_cast<std::size_t>(i)] = sf::Glsl::Vec2(p.x, p.y);
 		}
 
-		shader->setUniform("u_fill_color", fillV);
-		shader->setUniform("u_world_origin", sf::Glsl::Vec2(w00.x, w00.y));
-		shader->setUniform("u_world_dx", sf::Glsl::Vec2(wx.x - w00.x, wx.y - w00.y));
-		shader->setUniform("u_world_dy", sf::Glsl::Vec2(wy.x - w00.x, wy.y - w00.y));
-		shader->setUniform("u_target_height", static_cast<float>(targetSize.y));
-		shader->setUniform("u_local_from_world", localFromWorld);
-		shader->setUniform("u_shape_kind", shapeKind);
-		shader->setUniform("u_vertex_count", vertCount);
-		shader->setUniformArray("u_vertices", verts.data(), kMaxConvexVerts);
-		shader->setUniform("u_circle_center", circleCenter);
-		shader->setUniform("u_circle_radius", circleRadius);
-		shader->setUniform("u_rect_min", rectMin);
-		shader->setUniform("u_rect_max", rectMax);
+		const sf::Glsl::Vec2 circleCenter(gpu.circleCenter.x, gpu.circleCenter.y);
+		const sf::Glsl::Vec2 rectMin(gpu.rectMin.x, gpu.rectMin.y);
+		const sf::Glsl::Vec2 rectMax(gpu.rectMax.x, gpu.rectMax.y);
 
-		shader->setUniform("u_light_count", static_cast<int>(n));
+		shader->setUniform(kUFillColor, fillV);
+
+		const void* const targetKey = static_cast<const void*>(&target);
+		const bool camSame = s_haveCamUniforms && s_camUniforms.renderTarget == targetKey && s_camUniforms.targetSize == targetSize
+		    && s_camUniforms.w00 == w00 && s_camUniforms.wx == wx && s_camUniforms.wy == wy
+		    && s_camUniforms.targetHeight == static_cast<float>(targetSize.y);
+		if (!camSame) {
+			shader->setUniform(kUWorldOrigin, sf::Glsl::Vec2(w00.x, w00.y));
+			shader->setUniform(kUWorldDx, sf::Glsl::Vec2(wx.x - w00.x, wx.y - w00.y));
+			shader->setUniform(kUWorldDy, sf::Glsl::Vec2(wy.x - w00.x, wy.y - w00.y));
+			shader->setUniform(kUTargetHeight, static_cast<float>(targetSize.y));
+			s_camUniforms.renderTarget = targetKey;
+			s_camUniforms.targetSize = targetSize;
+			s_camUniforms.w00 = w00;
+			s_camUniforms.wx = wx;
+			s_camUniforms.wy = wy;
+			s_camUniforms.targetHeight = static_cast<float>(targetSize.y);
+			s_haveCamUniforms = true;
+		}
+
+		shader->setUniform(kULocalFromWorld, localFromWorld);
+		shader->setUniform(kUShapeKind, gpu.shapeKind);
+		shader->setUniform(kUVertexCount, gpu.vertCount);
+		if (gpu.shapeKind == 0 && gpu.vertCount > 0) {
+			shader->setUniformArray(kUVertices, verts.data(), static_cast<std::size_t>(gpu.vertCount));
+		}
+
+		shader->setUniform(kUCircleCenter, circleCenter);
+		shader->setUniform(kUCircleRadius, gpu.circleRadius);
+		shader->setUniform(kURectMin, rectMin);
+		shader->setUniform(kURectMax, rectMax);
+
+		shader->setUniform(kULightCount, static_cast<int>(n));
 		if (n > 0) {
-			shader->setUniformArray("u_light_pos", lightPos.data(), n);
-			shader->setUniformArray("u_light_color", lightCol.data(), n);
-			shader->setUniformArray("u_light_radius", lightRad.data(), n);
+			shader->setUniformArray(kULightPos, lightPos.data(), n);
+			shader->setUniformArray(kULightColor, lightCol.data(), n);
+			shader->setUniformArray(kULightRadius, lightRad.data(), n);
 		}
 
-		shader->setUniform("u_mode_bevel", recv->IsBevelEmbossMode() ? 1 : 0);
-		shader->setUniform("u_bevel_width", recv->GetBevelWidth());
-		shader->setUniform("u_ease_circ", recv->IsEaseInCirc() ? 1 : 0);
-		shader->setUniform("u_diffusion", recv->GetDiffusion());
-		shader->setUniform("u_lighting_strength", recv->GetLightingStrength());
-		shader->setUniform("u_blend_mode", static_cast<int>(SceneLighting::GetInstance().GetBlendMode()));
+		shader->setUniform(kUModeBevel, recv->IsBevelEmbossMode() ? 1 : 0);
+		shader->setUniform(kUBevelWidth, recv->GetBevelWidth());
+		shader->setUniform(kUEaseCirc, recv->IsEaseInCirc() ? 1 : 0);
+		shader->setUniform(kUDiffusion, recv->GetDiffusion());
+		shader->setUniform(kULightingStrength, recv->GetLightingStrength());
+
+		static int s_lastBlendMode = -1;
+		const int blendMode = static_cast<int>(SceneLighting::GetInstance().GetBlendMode());
+		if (blendMode != s_lastBlendMode) {
+			shader->setUniform(kUBlendMode, blendMode);
+			s_lastBlendMode = blendMode;
+		}
 
 		states.shader = shader;
 		target.draw(*shape, states);
