@@ -29,6 +29,7 @@ public:
 	    const std::string& texturePath, float opacity, float scaleWithCamera, float moveWithCamera, float defaultScale);
 
 	/// @getter
+	/// @valuesProvider(GetBackgroundTextures)
 	const std::string& GetTexturePath() const;
 	/// @setter
 	void SetTexturePath(std::string path);
