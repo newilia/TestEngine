@@ -12,7 +12,9 @@
 #include <cstdio>
 #include <cstring>
 #include <sstream>
+#include <string>
 #include <variant>
+#include <vector>
 
 namespace Engine {
 	namespace {
@@ -241,23 +243,62 @@ namespace Engine {
 		case PropertyKind::Int32: {
 			if (const auto* a = std::get_if<PropAccessInt32>(&n.access)) {
 				DrawLabelLeft(n);
-				int v = static_cast<int>(a->get());
-				if (readOnly) {
-					if (n.meta.hasMixedValues) {
-						ImGui::TextUnformatted(MixedMarker(n.meta));
+				if (n.meta.valuesProviderInt32) {
+					std::vector<std::int32_t> storage = n.meta.valuesProviderInt32();
+					const std::int32_t cur = a->get();
+					if (std::find(storage.begin(), storage.end(), cur) == storage.end()) {
+						storage.insert(storage.begin(), cur);
+					}
+					std::vector<std::string> labelStorage;
+					labelStorage.reserve(storage.size());
+					for (const std::int32_t iv : storage) {
+						labelStorage.push_back(std::to_string(iv));
+					}
+					std::vector<const char*> labels;
+					labels.reserve(labelStorage.size());
+					for (const std::string& ls : labelStorage) {
+						labels.push_back(ls.c_str());
+					}
+					int idx = 0;
+					for (std::size_t i = 0; i < storage.size(); ++i) {
+						if (storage[i] == cur) {
+							idx = static_cast<int>(i);
+							break;
+						}
+					}
+					if (readOnly) {
+						const char* text =
+						    n.meta.hasMixedValues ? MixedMarker(n.meta) : labels[static_cast<std::size_t>(idx)];
+						ImGui::TextUnformatted(text);
 					}
 					else {
-						ImGui::Text("%d", v);
+						PushMixedFlagIfNeeded(n.meta);
+						if (ImGui::Combo("##v", &idx, labels.data(), static_cast<int>(labels.size()))) {
+							a->set(storage[static_cast<std::size_t>(idx)]);
+							MarkLeafEditedIfMixed(n, drawOptions);
+						}
+						PopMixedFlagIfNeeded(n.meta);
 					}
 				}
 				else {
-					PushMixedFlagIfNeeded(n.meta);
-					const char* format = n.meta.hasMixedValues ? MixedMarker(n.meta) : "%d";
-					if (ImGui::DragInt("##v", &v, 1.0f, 0, 0, format)) {
-						a->set(static_cast<std::int32_t>(v));
-						MarkLeafEditedIfMixed(n, drawOptions);
+					int v = static_cast<int>(a->get());
+					if (readOnly) {
+						if (n.meta.hasMixedValues) {
+							ImGui::TextUnformatted(MixedMarker(n.meta));
+						}
+						else {
+							ImGui::Text("%d", v);
+						}
 					}
-					PopMixedFlagIfNeeded(n.meta);
+					else {
+						PushMixedFlagIfNeeded(n.meta);
+						const char* format = n.meta.hasMixedValues ? MixedMarker(n.meta) : "%d";
+						if (ImGui::DragInt("##v", &v, 1.0f, 0, 0, format)) {
+							a->set(static_cast<std::int32_t>(v));
+							MarkLeafEditedIfMixed(n, drawOptions);
+						}
+						PopMixedFlagIfNeeded(n.meta);
+					}
 				}
 				ItemTooltipAfter(n.meta);
 			}
@@ -266,23 +307,62 @@ namespace Engine {
 		case PropertyKind::Int64: {
 			if (const auto* a = std::get_if<PropAccessInt64>(&n.access)) {
 				DrawLabelLeft(n);
-				long long v = static_cast<long long>(a->get());
-				if (readOnly) {
-					if (n.meta.hasMixedValues) {
-						ImGui::TextUnformatted(MixedMarker(n.meta));
+				if (n.meta.valuesProviderInt64) {
+					std::vector<std::int64_t> storage = n.meta.valuesProviderInt64();
+					const std::int64_t cur = a->get();
+					if (std::find(storage.begin(), storage.end(), cur) == storage.end()) {
+						storage.insert(storage.begin(), cur);
+					}
+					std::vector<std::string> labelStorage;
+					labelStorage.reserve(storage.size());
+					for (const std::int64_t iv : storage) {
+						labelStorage.push_back(std::to_string(iv));
+					}
+					std::vector<const char*> labels;
+					labels.reserve(labelStorage.size());
+					for (const std::string& ls : labelStorage) {
+						labels.push_back(ls.c_str());
+					}
+					int idx = 0;
+					for (std::size_t i = 0; i < storage.size(); ++i) {
+						if (storage[i] == cur) {
+							idx = static_cast<int>(i);
+							break;
+						}
+					}
+					if (readOnly) {
+						const char* text =
+						    n.meta.hasMixedValues ? MixedMarker(n.meta) : labels[static_cast<std::size_t>(idx)];
+						ImGui::TextUnformatted(text);
 					}
 					else {
-						ImGui::Text("%lld", static_cast<long long>(v));
+						PushMixedFlagIfNeeded(n.meta);
+						if (ImGui::Combo("##v", &idx, labels.data(), static_cast<int>(labels.size()))) {
+							a->set(storage[static_cast<std::size_t>(idx)]);
+							MarkLeafEditedIfMixed(n, drawOptions);
+						}
+						PopMixedFlagIfNeeded(n.meta);
 					}
 				}
 				else {
-					PushMixedFlagIfNeeded(n.meta);
-					const char* format = n.meta.hasMixedValues ? MixedMarker(n.meta) : "%lld";
-					if (ImGui::DragScalar("##v", ImGuiDataType_S64, &v, 1.0f, nullptr, nullptr, format)) {
-						a->set(static_cast<std::int64_t>(v));
-						MarkLeafEditedIfMixed(n, drawOptions);
+					long long v = static_cast<long long>(a->get());
+					if (readOnly) {
+						if (n.meta.hasMixedValues) {
+							ImGui::TextUnformatted(MixedMarker(n.meta));
+						}
+						else {
+							ImGui::Text("%lld", static_cast<long long>(v));
+						}
 					}
-					PopMixedFlagIfNeeded(n.meta);
+					else {
+						PushMixedFlagIfNeeded(n.meta);
+						const char* format = n.meta.hasMixedValues ? MixedMarker(n.meta) : "%lld";
+						if (ImGui::DragScalar("##v", ImGuiDataType_S64, &v, 1.0f, nullptr, nullptr, format)) {
+							a->set(static_cast<std::int64_t>(v));
+							MarkLeafEditedIfMixed(n, drawOptions);
+						}
+						PopMixedFlagIfNeeded(n.meta);
+					}
 				}
 				ItemTooltipAfter(n.meta);
 			}
@@ -291,30 +371,69 @@ namespace Engine {
 		case PropertyKind::Float: {
 			if (const auto* a = std::get_if<PropAccessFloat>(&n.access)) {
 				DrawLabelLeft(n);
-				float v = a->get();
-				if (readOnly) {
-					if (n.meta.hasMixedValues) {
-						ImGui::TextUnformatted(MixedMarker(n.meta));
+				if (n.meta.valuesProviderFloat) {
+					std::vector<float> storage = n.meta.valuesProviderFloat();
+					const float cur = a->get();
+					if (std::find(storage.begin(), storage.end(), cur) == storage.end()) {
+						storage.insert(storage.begin(), cur);
+					}
+					std::vector<std::string> labelStorage;
+					labelStorage.reserve(storage.size());
+					for (const float fv : storage) {
+						labelStorage.push_back(std::to_string(fv));
+					}
+					std::vector<const char*> labels;
+					labels.reserve(labelStorage.size());
+					for (const std::string& ls : labelStorage) {
+						labels.push_back(ls.c_str());
+					}
+					int idx = 0;
+					for (std::size_t i = 0; i < storage.size(); ++i) {
+						if (storage[i] == cur) {
+							idx = static_cast<int>(i);
+							break;
+						}
+					}
+					if (readOnly) {
+						const char* text =
+						    n.meta.hasMixedValues ? MixedMarker(n.meta) : labels[static_cast<std::size_t>(idx)];
+						ImGui::TextUnformatted(text);
 					}
 					else {
-						ImGui::Text("%.4f", static_cast<double>(v));
+						PushMixedFlagIfNeeded(n.meta);
+						if (ImGui::Combo("##v", &idx, labels.data(), static_cast<int>(labels.size()))) {
+							a->set(storage[static_cast<std::size_t>(idx)]);
+							MarkLeafEditedIfMixed(n, drawOptions);
+						}
+						PopMixedFlagIfNeeded(n.meta);
 					}
 				}
 				else {
-					const float speed = n.meta.dragSpeed.has_value() ? static_cast<float>(*n.meta.dragSpeed) : 1.f;
-					PushMixedFlagIfNeeded(n.meta);
-					const char* format = n.meta.hasMixedValues ? MixedMarker(n.meta) : "%.3f";
-					if (ImGui::DragFloat("##v", &v, speed, 0.0f, 0.0f, format)) {
-						if (n.meta.numericMin) {
-							v = std::max(v, static_cast<float>(*n.meta.numericMin));
+					float v = a->get();
+					if (readOnly) {
+						if (n.meta.hasMixedValues) {
+							ImGui::TextUnformatted(MixedMarker(n.meta));
 						}
-						if (n.meta.numericMax) {
-							v = std::min(v, static_cast<float>(*n.meta.numericMax));
+						else {
+							ImGui::Text("%.4f", static_cast<double>(v));
 						}
-						a->set(v);
-						MarkLeafEditedIfMixed(n, drawOptions);
 					}
-					PopMixedFlagIfNeeded(n.meta);
+					else {
+						const float speed = n.meta.dragSpeed.has_value() ? static_cast<float>(*n.meta.dragSpeed) : 1.f;
+						PushMixedFlagIfNeeded(n.meta);
+						const char* format = n.meta.hasMixedValues ? MixedMarker(n.meta) : "%.3f";
+						if (ImGui::DragFloat("##v", &v, speed, 0.0f, 0.0f, format)) {
+							if (n.meta.numericMin) {
+								v = std::max(v, static_cast<float>(*n.meta.numericMin));
+							}
+							if (n.meta.numericMax) {
+								v = std::min(v, static_cast<float>(*n.meta.numericMax));
+							}
+							a->set(v);
+							MarkLeafEditedIfMixed(n, drawOptions);
+						}
+						PopMixedFlagIfNeeded(n.meta);
+					}
 				}
 				ItemTooltipAfter(n.meta);
 			}
@@ -323,30 +442,70 @@ namespace Engine {
 		case PropertyKind::Double: {
 			if (const auto* a = std::get_if<PropAccessDouble>(&n.access)) {
 				DrawLabelLeft(n);
-				double v = a->get();
-				if (readOnly) {
-					if (n.meta.hasMixedValues) {
-						ImGui::TextUnformatted(MixedMarker(n.meta));
+				if (n.meta.valuesProviderDouble) {
+					std::vector<double> storage = n.meta.valuesProviderDouble();
+					const double cur = a->get();
+					if (std::find(storage.begin(), storage.end(), cur) == storage.end()) {
+						storage.insert(storage.begin(), cur);
+					}
+					std::vector<std::string> labelStorage;
+					labelStorage.reserve(storage.size());
+					for (const double dv : storage) {
+						labelStorage.push_back(std::to_string(dv));
+					}
+					std::vector<const char*> labels;
+					labels.reserve(labelStorage.size());
+					for (const std::string& ls : labelStorage) {
+						labels.push_back(ls.c_str());
+					}
+					int idx = 0;
+					for (std::size_t i = 0; i < storage.size(); ++i) {
+						if (storage[i] == cur) {
+							idx = static_cast<int>(i);
+							break;
+						}
+					}
+					if (readOnly) {
+						const char* text =
+						    n.meta.hasMixedValues ? MixedMarker(n.meta) : labels[static_cast<std::size_t>(idx)];
+						ImGui::TextUnformatted(text);
 					}
 					else {
-						ImGui::Text("%.6f", v);
+						PushMixedFlagIfNeeded(n.meta);
+						if (ImGui::Combo("##v", &idx, labels.data(), static_cast<int>(labels.size()))) {
+							a->set(storage[static_cast<std::size_t>(idx)]);
+							MarkLeafEditedIfMixed(n, drawOptions);
+						}
+						PopMixedFlagIfNeeded(n.meta);
 					}
 				}
 				else {
-					const float speed = n.meta.dragSpeed.has_value() ? static_cast<float>(*n.meta.dragSpeed) : 0.05f;
-					PushMixedFlagIfNeeded(n.meta);
-					const char* format = n.meta.hasMixedValues ? MixedMarker(n.meta) : "%.6f";
-					if (ImGui::DragScalar("##v", ImGuiDataType_Double, &v, speed, nullptr, nullptr, format)) {
-						if (n.meta.numericMin) {
-							v = std::max(v, *n.meta.numericMin);
+					double v = a->get();
+					if (readOnly) {
+						if (n.meta.hasMixedValues) {
+							ImGui::TextUnformatted(MixedMarker(n.meta));
 						}
-						if (n.meta.numericMax) {
-							v = std::min(v, *n.meta.numericMax);
+						else {
+							ImGui::Text("%.6f", v);
 						}
-						a->set(v);
-						MarkLeafEditedIfMixed(n, drawOptions);
 					}
-					PopMixedFlagIfNeeded(n.meta);
+					else {
+						const float speed =
+						    n.meta.dragSpeed.has_value() ? static_cast<float>(*n.meta.dragSpeed) : 0.05f;
+						PushMixedFlagIfNeeded(n.meta);
+						const char* format = n.meta.hasMixedValues ? MixedMarker(n.meta) : "%.6f";
+						if (ImGui::DragScalar("##v", ImGuiDataType_Double, &v, speed, nullptr, nullptr, format)) {
+							if (n.meta.numericMin) {
+								v = std::max(v, *n.meta.numericMin);
+							}
+							if (n.meta.numericMax) {
+								v = std::min(v, *n.meta.numericMax);
+							}
+							a->set(v);
+							MarkLeafEditedIfMixed(n, drawOptions);
+						}
+						PopMixedFlagIfNeeded(n.meta);
+					}
 				}
 				ItemTooltipAfter(n.meta);
 			}
@@ -356,22 +515,59 @@ namespace Engine {
 			if (const auto* a = std::get_if<PropAccessString>(&n.access)) {
 				DrawLabelLeft(n);
 				std::string s = a->get();
-				std::array<char, 512> buf{};
-				(void)std::snprintf(buf.data(), buf.size(), "%s", s.c_str());
-				const ImGuiInputTextFlags flags = readOnly ? ImGuiInputTextFlags_ReadOnly : 0;
-				bool edited = false;
-				if (n.meta.stringMultiline) {
-					edited = ImGui::InputTextMultiline("##v", buf.data(), buf.size(), ImVec2(0, 80), flags);
+				bool drewCombo = false;
+				if (n.meta.valuesProviderStdString && !n.meta.stringMultiline) {
+					std::vector<std::string> storage = n.meta.valuesProviderStdString();
+					if (!storage.empty()) {
+						drewCombo = true;
+						if (std::find(storage.begin(), storage.end(), s) == storage.end()) {
+							storage.insert(storage.begin(), s);
+						}
+						std::vector<const char*> labels;
+						labels.reserve(storage.size());
+						for (const std::string& row : storage) {
+							labels.push_back(row.c_str());
+						}
+						int idx = 0;
+						for (std::size_t i = 0; i < storage.size(); ++i) {
+							if (storage[i] == s) {
+								idx = static_cast<int>(i);
+								break;
+							}
+						}
+						if (readOnly) {
+							const char* text =
+							    n.meta.hasMixedValues ? MixedMarker(n.meta) : labels[static_cast<std::size_t>(idx)];
+							ImGui::TextUnformatted(text);
+						}
+						else {
+							PushMixedFlagIfNeeded(n.meta);
+							if (ImGui::Combo("##v", &idx, labels.data(), static_cast<int>(labels.size()))) {
+								a->set(storage[static_cast<std::size_t>(idx)]);
+								MarkLeafEditedIfMixed(n, drawOptions);
+							}
+							PopMixedFlagIfNeeded(n.meta);
+						}
+					}
 				}
-				else if (!readOnly && n.meta.hasMixedValues) {
-					edited = ImGui::InputTextWithHint("##v", MixedMarker(n.meta), buf.data(), buf.size(), flags);
-				}
-				else {
-					edited = ImGui::InputText("##v", buf.data(), buf.size(), flags);
-				}
-				if (edited && !readOnly) {
-					a->set(std::string(buf.data()));
-					MarkLeafEditedIfMixed(n, drawOptions);
+				if (!drewCombo) {
+					std::array<char, 512> buf{};
+					(void)std::snprintf(buf.data(), buf.size(), "%s", s.c_str());
+					const ImGuiInputTextFlags flags = readOnly ? ImGuiInputTextFlags_ReadOnly : 0;
+					bool edited = false;
+					if (n.meta.stringMultiline) {
+						edited = ImGui::InputTextMultiline("##v", buf.data(), buf.size(), ImVec2(0, 80), flags);
+					}
+					else if (!readOnly && n.meta.hasMixedValues) {
+						edited = ImGui::InputTextWithHint("##v", MixedMarker(n.meta), buf.data(), buf.size(), flags);
+					}
+					else {
+						edited = ImGui::InputText("##v", buf.data(), buf.size(), flags);
+					}
+					if (edited && !readOnly) {
+						a->set(std::string(buf.data()));
+						MarkLeafEditedIfMixed(n, drawOptions);
+					}
 				}
 				ItemTooltipAfter(n.meta);
 			}

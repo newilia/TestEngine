@@ -14,12 +14,15 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 10
+CACHE_VERSION = 11
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
 SETTER_TAG_RE = re.compile(r"^\s*///\s*@setter\s*(?:\((.*)\))?\s*$")
 METHOD_TAG_RE = re.compile(r"^\s*///\s*@method\s*(?:\((.*)\))?\s*$")
+VALUES_PROVIDER_TAG_RE = re.compile(
+    r"^\s*///\s*@valuesProvider\s*\(\s*([A-Za-z_]\w*)\s*\)\s*$"
+)
 META_CLASS_RE = re.compile(r"\bMETA_CLASS\s*\(\s*\)")
 META_PROPERTY_BASE_RE = re.compile(
     r"\bMETA_PROPERTY_BASE\s*\(\s*((?:[A-Za-z_]\w*\s*::\s*)*[A-Za-z_]\w*)\s*\)"
@@ -159,6 +162,16 @@ class MethodSpec:
 
 
 PendingKind = Literal["property", "getter", "setter", "method"]
+
+
+@dataclass
+class PendingTag:
+    kind: PendingKind
+    line: int
+    col: int
+    args: str
+    values_provider: str | None = None
+
 
 PENDING_TAG_NAME: dict[PendingKind, str] = {
     "property": "@property",
@@ -592,7 +605,7 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
     pending_class: str | None = None
     pending_ns: str | None = None
     finished: list[ClassSpec] = []
-    pending: tuple[PendingKind, int, int, str] | None = None
+    pending: PendingTag | None = None
 
     def close_class_block(b: dict[str, Any]) -> None:
         if b.get("property_base") and not b.get("meta"):
@@ -629,22 +642,54 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
         line = strip_line_comment_keep_doc(raw_line)
         stripped = line.strip()
 
+        m_values_provider = VALUES_PROVIDER_TAG_RE.match(raw_line)
+        if m_values_provider:
+            if pending is None:
+                raise ParseError(
+                    "@valuesProvider(...) must follow @property or @getter on a preceding line",
+                    path,
+                    line_no,
+                    1,
+                )
+            if pending.kind not in ("property", "getter"):
+                raise ParseError(
+                    "@valuesProvider(...) applies only after @property or @getter",
+                    path,
+                    line_no,
+                    1,
+                )
+            if pending.values_provider is not None:
+                raise ParseError("duplicate @valuesProvider(...) for the same property", path, line_no, 1)
+            pending.values_provider = m_values_provider.group(1)
+            continue
+
         if pending is not None:
-            kind, pline, pcol, pargs = pending
             if not stripped or stripped.startswith("///"):
                 continue
             if re.match(r"^\s*(public|private|protected)\s*:\s*$", line):
                 continue
             inner = find_innermost_class(block_stack)
             if inner is None or not inner.get("meta"):
-                tag = PENDING_TAG_NAME[kind]
+                tag = PENDING_TAG_NAME[pending.kind]
                 raise ParseError(
                     f"{tag} must appear inside a class marked with META_CLASS()",
                     path,
-                    pline,
-                    pcol,
+                    pending.line,
+                    pending.col,
                 )
-            attrs = parse_attr_dict(pargs, path, pline, pcol)
+            attrs = parse_attr_dict(pending.args, path, pending.line, pending.col)
+            if pending.values_provider is not None:
+                if "valuesProvider" in attrs:
+                    raise ParseError(
+                        "valuesProvider is specified both in the tag and in @valuesProvider(...)",
+                        path,
+                        line_no,
+                        1,
+                    )
+                attrs["valuesProvider"] = pending.values_provider
+            kind = pending.kind
+            pline = pending.line
+            pcol = pending.col
             if kind == "property":
                 m_vec = VECTOR_FIELD_RE.match(line)
                 if m_vec:
@@ -915,7 +960,7 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                 col = raw_line.index("@property") + 1
             except ValueError:
                 col = 1
-            pending = ("property", line_no, col, args)
+            pending = PendingTag("property", line_no, col, args)
             continue
 
         m_getter_tag = GETTER_TAG_RE.match(raw_line)
@@ -932,7 +977,7 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                 col = raw_line.index("@getter") + 1
             except ValueError:
                 col = 1
-            pending = ("getter", line_no, col, args)
+            pending = PendingTag("getter", line_no, col, args)
             continue
 
         m_setter_tag = SETTER_TAG_RE.match(raw_line)
@@ -949,7 +994,7 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                 col = raw_line.index("@setter") + 1
             except ValueError:
                 col = 1
-            pending = ("setter", line_no, col, args)
+            pending = PendingTag("setter", line_no, col, args)
             continue
 
         m_method_tag = METHOD_TAG_RE.match(raw_line)
@@ -966,7 +1011,7 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                 col = raw_line.index("@method") + 1
             except ValueError:
                 col = 1
-            pending = ("method", line_no, col, args)
+            pending = PendingTag("method", line_no, col, args)
             continue
 
         if META_CLASS_RE.search(line) and not re.search(r"^\s*#\s*define\s+META_CLASS\b", line):
@@ -1090,9 +1135,8 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
             j += 1
 
     if pending:
-        kind, pline, pcol, _ = pending
-        tag = PENDING_TAG_NAME[kind]
-        raise ParseError(f"unfinished {tag} (no declaration line before EOF)", path, pline, pcol)
+        tag = PENDING_TAG_NAME[pending.kind]
+        raise ParseError(f"unfinished {tag} (no declaration line before EOF)", path, pending.line, pending.col)
 
     for spec in finished:
         extra = f", property_base={spec.property_base}" if spec.property_base else ""
@@ -1109,6 +1153,29 @@ def default_label(p: PropSpec) -> str:
 
 def method_menu_label(m: MethodSpec) -> str:
     return inferred_display_label(m.method, m.attrs, is_getter=False)
+
+
+def validate_values_provider_tag(p: PropSpec, path: Path) -> None:
+    vp = p.attrs.get("valuesProvider")
+    if vp is None:
+        return
+    if not isinstance(vp, str) or not vp.strip():
+        raise ParseError("valuesProvider must be a non-empty identifier", path, p.line, p.col)
+    if p.is_vector or p.is_bitset or p.is_map or p.is_set or p.is_pair:
+        raise ParseError(
+            "@valuesProvider is not supported for container or bitset properties",
+            path,
+            p.line,
+            p.col,
+        )
+    allowed_types = {"std::string", "int", "std::int32_t", "std::int64_t", "float", "double"}
+    if p.cpp_type not in allowed_types:
+        raise ParseError(
+            f"@valuesProvider is not supported for type `{p.cpp_type}`",
+            path,
+            p.line,
+            p.col,
+        )
 
 
 def format_meta_inline(p: PropSpec) -> str:
@@ -1137,6 +1204,39 @@ def format_meta_inline(p: PropSpec) -> str:
             v = a[key]
             if isinstance(v, (int, float)):
                 parts.append(f"_m.{mk} = static_cast<std::size_t>({int(v)});")
+    vp = a.get("valuesProvider")
+    if isinstance(vp, str) and vp.strip():
+        fn = vp.strip()
+        if p.cpp_type == "std::string":
+            parts.append(
+                "_m.valuesProviderStdString = []() -> std::vector<std::string> { "
+                f"return Editor::ValuesProviderDetail::ToVector(Editor::ValuesProviders::{fn}()); "
+                "};"
+            )
+        elif p.cpp_type in ("int", "std::int32_t"):
+            parts.append(
+                "_m.valuesProviderInt32 = []() -> std::vector<std::int32_t> { "
+                f"auto _vpv = Editor::ValuesProviderDetail::ToVector(Editor::ValuesProviders::{fn}()); "
+                "return std::vector<std::int32_t>{_vpv.begin(), _vpv.end()}; };"
+            )
+        elif p.cpp_type == "std::int64_t":
+            parts.append(
+                "_m.valuesProviderInt64 = []() -> std::vector<std::int64_t> { "
+                f"auto _vpv = Editor::ValuesProviderDetail::ToVector(Editor::ValuesProviders::{fn}()); "
+                "return std::vector<std::int64_t>{_vpv.begin(), _vpv.end()}; };"
+            )
+        elif p.cpp_type == "float":
+            parts.append(
+                "_m.valuesProviderFloat = []() -> std::vector<float> { "
+                f"return Editor::ValuesProviderDetail::ToVector(Editor::ValuesProviders::{fn}()); "
+                "};"
+            )
+        elif p.cpp_type == "double":
+            parts.append(
+                "_m.valuesProviderDouble = []() -> std::vector<double> { "
+                f"return Editor::ValuesProviderDetail::ToVector(Editor::ValuesProviders::{fn}()); "
+                "};"
+            )
     inner = " ".join(parts)
     return f"[&]() -> Engine::PropertyMeta {{ {inner} return _m; }}()"
 
@@ -2026,9 +2126,20 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
         "",
         '#include "Engine/Core/PropertyTree.h"',
         "",
-        "#include <functional>",
-        "",
     ]
+    if any(
+        isinstance(p.attrs.get("valuesProvider"), str) and str(p.attrs.get("valuesProvider", "")).strip()
+        for c in classes
+        for p in c.props
+    ):
+        out.append('#include "Engine/Editor/ValuesProviders.h"')
+        out.append("")
+    out.extend(
+        [
+            "#include <functional>",
+            "",
+        ]
+    )
     def uses_sfml(p: PropSpec) -> bool:
         if p.is_map:
             mv = p.map_value_type or ""
@@ -2090,6 +2201,7 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
             out.append(f"\t{c.property_base}::BuildPropertyTree(b);")
         out.append(f'\tb.pushObject("{root_id}", "{root_label}");')
         for p in c.props:
+            validate_values_provider_tag(p, path)
             a = p.attrs
             setter_name = a.get("setter")
             has_setter_method = isinstance(setter_name, str) and bool(setter_name)
@@ -2104,7 +2216,7 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                         p.col,
                     )
                 has_meta = readonly or any(
-                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed")
+                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed", "valuesProvider")
                 )
                 meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
                 emit_bitset_property(out, p, meta_arg, readonly)
@@ -2119,7 +2231,7 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                         p.col,
                     )
                 has_meta = readonly or any(
-                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed")
+                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed", "valuesProvider")
                 )
                 meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
                 if p.is_map:
@@ -2137,7 +2249,7 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                         p.col,
                     )
                 has_meta = readonly or any(
-                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed")
+                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed", "valuesProvider")
                 )
                 meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
                 emit_std_pair_property(out, p, path, meta_arg, readonly)
@@ -2156,6 +2268,7 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                         "dragSpeed",
                         "minCount",
                         "maxCount",
+                        "valuesProvider",
                     )
                 )
                 meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
@@ -2163,7 +2276,7 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                 continue
 
             has_meta = readonly or any(
-                k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed")
+                k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed", "valuesProvider")
             )
             meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
             if p.cpp_type == "sf::Angle":
