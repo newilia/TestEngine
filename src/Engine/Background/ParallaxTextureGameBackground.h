@@ -23,11 +23,10 @@ class ParallaxTextureGameBackground final : public IGameBackground
 
 public:
 	void Update(const sf::RenderWindow& window, sf::Time dt) override;
-
-	/// Programmatic setup (e.g. environments); forces texture reload on next update.
 	void Configure(
 	    const std::string& texturePath, float opacity, float scaleWithCamera, float moveWithCamera, float defaultScale);
 
+public:
 	/// @getter
 	/// @valuesProvider(GetBackgroundTextures)
 	const std::string& GetTexturePath() const;
@@ -36,9 +35,9 @@ public:
 
 private:
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
-
 	void RebuildVertices(const sf::RenderTarget& target) const;
 
+private:
 	std::string _texturePath;
 	/// @property(minValue=0.f, maxValue=1.f, dragSpeed=0.005f)
 	float _opacity = 1.f;
@@ -49,11 +48,10 @@ private:
 	/// @property(minValue=128f, maxValue=1.e6f, dragSpeed=4.f)
 	float _defaultScale = 256.f;
 
+private:
 	std::shared_ptr<sf::Texture> _texture;
-
 	bool _haveReferenceView = false;
 	float _referenceViewWidth = 1.f;
-
 	mutable sf::VertexArray _vertices{sf::PrimitiveType::Triangles};
 	mutable bool _geometryDirty = true;
 };

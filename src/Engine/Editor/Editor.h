@@ -70,7 +70,7 @@ namespace Engine {
 		const EditorToolManager& GetEditorToolManager() const;
 
 	private:
-		Editor() = default;
+		Editor();
 
 		bool _isOpen = true;
 		std::optional<sf::Vector2i> _cameraMoveMouseOriginPos; // nullopt when not moving

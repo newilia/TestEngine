@@ -1,7 +1,7 @@
 #include "Engine/Editor/Editor.h"
 
+#include "Engine/Core/FontManager.h"
 #include "Engine/Core/MainContext.h"
-#include "Engine/Core/Scene.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Utils.h"
 #include "Engine/Editor/Commands/CutEntityCommand.h"
@@ -11,6 +11,7 @@
 #include "Engine/Editor/Commands/PasteEntityCommand.h"
 #include "Engine/Editor/Commands/PasteNodeCommand.h"
 #include "Engine/Editor/EditorVisualTheme.h"
+#include "Engine/Editor/ImGuiThemes/Sixze.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
@@ -229,6 +230,17 @@ namespace {
 } // namespace
 
 namespace Engine {
+
+	Editor::Editor() {
+		::Editor::Themes::Sixze::ApplyStyle();
+		MainContext::GetInstance().GetFontManager()->GetDefaultFont();
+
+		auto font = ImGui::GetIO().Fonts->AddFontFromFileTTF("resources/fonts/NotoSans-Light.ttf", 15);
+		IM_ASSERT(font != nullptr);
+		ImGui::GetIO().Fonts->Build();
+		ImGui::GetIO().FontDefault = font;
+	}
+
 	void Editor::Toggle() {
 		_isOpen = !_isOpen;
 	}
