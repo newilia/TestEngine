@@ -192,9 +192,10 @@ namespace Engine {
 		shader->setUniform(kUFillColor, fillV);
 
 		const void* const targetKey = static_cast<const void*>(&target);
-		const bool camSame = s_haveCamUniforms && s_camUniforms.renderTarget == targetKey && s_camUniforms.targetSize == targetSize
-		    && s_camUniforms.w00 == w00 && s_camUniforms.wx == wx && s_camUniforms.wy == wy
-		    && s_camUniforms.targetHeight == static_cast<float>(targetSize.y);
+		const bool camSame = s_haveCamUniforms && s_camUniforms.renderTarget == targetKey &&
+		                     s_camUniforms.targetSize == targetSize && s_camUniforms.w00 == w00 &&
+		                     s_camUniforms.wx == wx && s_camUniforms.wy == wy &&
+		                     s_camUniforms.targetHeight == static_cast<float>(targetSize.y);
 		if (!camSame) {
 			shader->setUniform(kUWorldOrigin, sf::Glsl::Vec2(w00.x, w00.y));
 			shader->setUniform(kUWorldDx, sf::Glsl::Vec2(wx.x - w00.x, wx.y - w00.y));
