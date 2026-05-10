@@ -31,6 +31,14 @@ namespace Engine {
 			return dx * dx + dy * dy;
 		}
 
+		bool IsPointInRectBounds(const sf::Vector2f& p, const sf::FloatRect& r) {
+			const float x1 = r.position.x;
+			const float y1 = r.position.y;
+			const float x2 = r.position.x + r.size.x;
+			const float y2 = r.position.y + r.size.y;
+			return p.x >= x1 && p.x <= x2 && p.y >= y1 && p.y <= y2;
+		}
+
 	} // namespace
 
 	bool SceneLighting::IsEnabled() const {
@@ -134,9 +142,6 @@ namespace Engine {
 			return;
 		}
 
-		const sf::Vector2f rectCenter = {receiverBounds.position.x + receiverBounds.size.x * 0.5f,
-		    receiverBounds.position.y + receiverBounds.size.y * 0.5f};
-
 		// Must match the attenuation tail in ShapeLighting.frag (practical influence radius).
 		constexpr float kCullRadiusMul = 10000.f;
 
@@ -146,13 +151,13 @@ namespace Engine {
 			const GpuPointLight& light = _lights[i];
 			const float radius = std::max(light.radius, 1.f);
 			const float cutoff = radius * kCullRadiusMul;
-			const float dsq = DistSqPointToRect(light.position, receiverBounds);
-			if (dsq > cutoff * cutoff) {
-				continue;
+			const float dsqToEdges = DistSqPointToRect(light.position, receiverBounds);
+			if (!IsPointInRectBounds(light.position, receiverBounds)) {
+				if (dsqToEdges > cutoff * cutoff) {
+					continue;
+				}
 			}
-			const float dx = light.position.x - rectCenter.x;
-			const float dy = light.position.y - rectCenter.y;
-			_selectScratch.emplace_back(dx * dx + dy * dy, i);
+			_selectScratch.emplace_back(dsqToEdges, i);
 		}
 
 		if (_selectScratch.empty()) {
