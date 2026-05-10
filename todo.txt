@@ -38,3 +38,5 @@ isEnabledLocal, isVisibleLocal
 propery animator
 
 интеграция box2d
+
+PointLightBehaviour, ShapeLightReceiver не клонируются при copy-paste ноды
