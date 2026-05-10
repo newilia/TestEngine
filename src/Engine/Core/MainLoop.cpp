@@ -19,27 +19,6 @@
 namespace Engine {
 
 	void MainLoop::Run() {
-		/*PeriodicTaskExecutor tickExecutor(
-		    []() {
-			    return sf::seconds(1.f / MainContext::GetInstance().GetTargetTickRate());
-		    },
-		    [this](const sf::Time& dt) {
-			    UpdateTick();
-		    });
-
-		*/
-		/*PeriodicTaskExecutor presentExecutor(
-		    []() {
-			    MainContext& mainContext = Engine::MainContext::GetInstance();
-			    if (!mainContext.IsFramerateLimitEnabled()) {
-				    return sf::Time::Zero;
-			    }
-			    return sf::seconds(1.f / mainContext.GetFramerateLimit());
-		    },
-		    [this](const sf::Time& dt) {
-			    PresentFrame();
-		    });*/
-
 		sf::Clock mainLoopClock;
 		MainContext& mainContext = Engine::MainContext::GetInstance();
 		{
@@ -57,9 +36,6 @@ namespace Engine {
 				}
 
 				PresentFrame();
-				//auto dt = mainLoopClock.restart();
-				//presentExecutor.Update(dt);
-				//tickExecutor.Update(dt);
 				UpdateTick();
 			}
 		}

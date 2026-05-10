@@ -53,18 +53,8 @@ namespace Engine {
 		// wall-clock dt for frame presentation
 		sf::Time GetFrameDt() const;
 
-		/// Target logic update rate in Hz
-		std::uint32_t GetTargetTickRate() const;
-		void SetTargetTickRate(std::uint32_t hz);
-
 		void SetVerticalSyncEnabled(bool enabled);
 		bool IsVerticalSyncEnabled() const;
-
-		std::uint32_t GetFramerateLimit() const;
-		void SetFramerateLimit(std::uint32_t maxFps);
-
-		bool IsFramerateLimitEnabled() const;
-		void SetFramerateLimitEnabled(bool enabled);
 
 		float GetCurrentFps() const;
 		float GetCurrentTickRate() const;
@@ -96,10 +86,7 @@ namespace Engine {
 		float _simSpeedMultiplier = 1.f;
 		bool _isSimPaused = false;
 		bool _isImGuiInitialized = false;
-		std::uint32_t _framerateLimit = 100;
-		bool _isFramerateLimitEnabled = false;
 		bool _verticalSyncEnabled = false;
-		std::uint32_t _targetTickRateHz = 500;
 		float _tickRate = 0.f;
 		bool _haveTickRate = false;
 		sf::Vector2u _mainWindowPixelSizeForView{};
