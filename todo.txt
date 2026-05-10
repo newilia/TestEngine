@@ -34,11 +34,9 @@
 
 кривая работа столкновений тел, если их глобальный трансформ не равен identity
 
-кастомные инспекторы для типов и членов
+кастомные инспекторы для типов
 
 inverse attraction
-
-уменьшить dragSpeed на @propery scale в Visual-ах
 
 переделать наследников ShapeVisual на шаблон?
 
@@ -52,8 +50,4 @@ isEnabledLocal, isVisibleLocal
 
 propery animator
 
-убрать Behaviour::OnAttached(), OnDeattached(), проверить инициализацию при аттаче
-
-focus selected node
-
-tick dt limit
+интеграция box2d

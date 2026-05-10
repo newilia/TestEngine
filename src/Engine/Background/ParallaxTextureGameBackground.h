@@ -40,13 +40,13 @@ private:
 	void RebuildVertices(const sf::RenderTarget& target) const;
 
 	std::string _texturePath;
-	/// @property(minValue=0.f, maxValue=1.f, dragSpeed=0.01f)
+	/// @property(minValue=0.f, maxValue=1.f, dragSpeed=0.005f)
 	float _opacity = 1.f;
-	/// @property(minValue=-2.f, maxValue=2.f, dragSpeed=0.02f)
+	/// @property(minValue=-2.f, maxValue=2.f, dragSpeed=0.005f)
 	float _scaleWithCamera = 0.f;
-	/// @property(minValue=-2.f, maxValue=2.f, dragSpeed=0.02f)
+	/// @property(minValue=-2.f, maxValue=2.f, dragSpeed=0.005f)
 	float _moveWithCamera = 0.35f;
-	/// @property(minValue=1e-4f, maxValue=1.e6f, dragSpeed=1.f)
+	/// @property(minValue=128f, maxValue=1.e6f, dragSpeed=4.f)
 	float _defaultScale = 256.f;
 
 	std::shared_ptr<sf::Texture> _texture;
