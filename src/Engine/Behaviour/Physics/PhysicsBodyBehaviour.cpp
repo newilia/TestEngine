@@ -46,6 +46,7 @@ const sf::Shape* PhysicsBodyBehaviour::GetColliderShape() const {
 			}
 		}
 	}
+	return nullptr;
 }
 
 void PhysicsBodyBehaviour::SetFixed(bool isFixed) {

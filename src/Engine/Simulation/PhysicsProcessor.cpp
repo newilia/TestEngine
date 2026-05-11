@@ -92,8 +92,11 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 				continue;
 			}
 			auto shape = body->GetColliderShape();
+			if (!shape) {
+				++bodyListIndex;
+				continue;
+			}
 			auto bbox = node->GetWorldTransform().transformRect(shape->getGlobalBounds());
-
 			sweepEntries.push_back({node.get(), body.get(), bbox, bodyListIndex});
 			++bodyListIndex;
 		}

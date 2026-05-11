@@ -234,6 +234,8 @@ namespace Engine {
 
 	Editor::Editor() {
 		::Editor::Themes::SetupImGuiDraculaStyle();
+		ImGuiStyle& style = ImGui::GetStyle();
+		style.TreeLinesFlags = ImGuiTreeNodeFlags_DrawLinesFull;
 
 		MainContext::GetInstance().GetFontManager()->GetDefaultFont();
 		ImFontAtlas& atlas = *ImGui::GetIO().Fonts;

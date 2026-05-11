@@ -38,7 +38,6 @@ namespace Utils {
 	bool IsWorldPointInsideOfVisual(const sf::Vector2f& worldPoint, const Visual* visual);
 	bool IsWorldPointInsideOfVisual(
 	    const sf::Vector2f& worldPoint, const Visual* visual, const sf::Transform& nodeWorld);
-	bool IsWorldPointInsideOfBody(const sf::Vector2f& worldPoint, const PhysicsBodyBehaviour* body);
 
 	bool IsNan(const sf::Vector2f& v);
 
