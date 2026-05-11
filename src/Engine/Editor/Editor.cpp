@@ -232,13 +232,17 @@ namespace {
 namespace Engine {
 
 	Editor::Editor() {
-		::Editor::Themes::Sixze::ApplyStyle();
-		MainContext::GetInstance().GetFontManager()->GetDefaultFont();
+		// TODO add persistent settings manager
+		{
+			::Editor::Themes::Sixze::ApplyStyle();
+			MainContext::GetInstance().GetFontManager()->GetDefaultFont();
 
-		auto font = ImGui::GetIO().Fonts->AddFontFromFileTTF("resources/fonts/NotoSans-Light.ttf", 15);
-		IM_ASSERT(font != nullptr);
-		ImGui::GetIO().Fonts->Build();
-		ImGui::GetIO().FontDefault = font;
+			auto font = ImGui::GetIO().Fonts->AddFontFromFileTTF("resources/fonts/NotoSans-Light.ttf", 15);
+			if (Verify(font)) {
+				ImGui::GetIO().Fonts->Build();
+				ImGui::GetIO().FontDefault = font;
+			}
+		}
 	}
 
 	void Editor::Toggle() {
