@@ -241,18 +241,6 @@ namespace Utils {
 		return IsWorldPointInsideOfVisual(worldPoint, visual, sf::Transform{});
 	}
 
-	bool IsWorldPointInsideOfBody(const sf::Vector2f& worldPoint, const PhysicsBodyBehaviour* body) {
-		if (!body) {
-			return false;
-		}
-		if (auto shape = Verify(body->GetColliderShape())) {
-			if (auto n = Verify(body->GetNode())) {
-				return IsWorldPointInsideOfShape(worldPoint, shape, n->GetWorldTransform());
-			}
-		}
-		return false;
-	}
-
 	bool IsPointInsideOfTriangle(
 	    const sf::Vector2f& p, const sf::Vector2f& t1, const sf::Vector2f& t2, const sf::Vector2f& t3) {
 		auto a = (t1.x - p.x) * (t2.y - t1.y) - (t2.x - t1.x) * (t1.y - p.y);

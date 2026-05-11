@@ -130,7 +130,7 @@ namespace Engine {
 		if (_isSimPaused) {
 			return sf::Time();
 		}
-		auto averageTickTime = sf::seconds(1) / GetCurrentTickRate() * 2.f; // prevent sudden long ticks
+		auto averageTickTime = sf::seconds(1) / (GetCurrentTickRate() * 2.f + 0.01f); // prevent sudden long ticks
 		return std::min(_tickTime * _simSpeedMultiplier, averageTickTime);
 	}
 

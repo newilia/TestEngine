@@ -52,24 +52,20 @@ std::shared_ptr<SceneNode> PullTool::OnTap(const sf::Vector2f& screenPixelPos) {
 
 	SetPullDestination(worldMousePos);
 
-	/* TODO use universal Visual::HitTest */
 	for (const auto& wBody : physicsProcessor->GetAllBodies()) {
-		auto body = wBody.lock();
-		if (!body) {
-			continue;
+		if (auto body = wBody.lock()) {
+			if (body->IsFixed()) {
+				continue;
+			}
+			if (auto node = body->GetNode()) {
+				if (auto visual = node->GetVisual()) {
+					if (visual->HitTest(worldMousePos)) {
+						_pullingBody = body->GetNode();
+						return body->GetNode();
+					}
+				}
+			}
 		}
-		auto node = body->GetNode();
-		if (!node) {
-			continue;
-		}
-		if (!Utils::IsWorldPointInsideOfBody(worldMousePos, body.get())) {
-			continue;
-		}
-		if (body->IsFixed()) {
-			continue;
-		}
-		_pullingBody = body->GetNode();
-		return body->GetNode();
 	}
 	return nullptr;
 }
