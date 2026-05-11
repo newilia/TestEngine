@@ -11,7 +11,7 @@
 #include "Engine/Editor/Commands/PasteEntityCommand.h"
 #include "Engine/Editor/Commands/PasteNodeCommand.h"
 #include "Engine/Editor/EditorVisualTheme.h"
-#include "Engine/Editor/ImGuiThemes/Sixze.h"
+#include "Engine/Editor/ImGui/Themes.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
@@ -19,6 +19,7 @@
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/Mouse.hpp>
 
+#include <imgui-SFML.h>
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -232,17 +233,18 @@ namespace {
 namespace Engine {
 
 	Editor::Editor() {
-		// TODO add persistent settings manager
-		{
-			::Editor::Themes::Sixze::ApplyStyle();
-			MainContext::GetInstance().GetFontManager()->GetDefaultFont();
+		::Editor::Themes::SetupImGuiDraculaStyle();
 
-			auto font = ImGui::GetIO().Fonts->AddFontFromFileTTF("resources/fonts/NotoSans-Light.ttf", 15);
-			if (Verify(font)) {
-				ImGui::GetIO().Fonts->Build();
-				ImGui::GetIO().FontDefault = font;
-			}
-		}
+		MainContext::GetInstance().GetFontManager()->GetDefaultFont();
+		ImFontAtlas& atlas = *ImGui::GetIO().Fonts;
+		ImFontConfig config;
+		config.OversampleH = 2.0f;
+		config.OversampleV = 2.0f;
+		ImFont* font = atlas.AddFontFromFileTTF("resources/fonts/NotoSans-Medium.ttf", 19.f, &config);
+		IM_ASSERT(font != nullptr);
+		atlas.Build();
+		Verify(ImGui::SFML::UpdateFontTexture());
+		ImGui::GetIO().FontDefault = font;
 	}
 
 	void Editor::Toggle() {
