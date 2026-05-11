@@ -46,7 +46,7 @@ void ParallaxTextureGameBackground::SetTexturePath(std::string path) {
 	_texture = tm->LoadTexture(std::filesystem::path(_texturePath));
 	if (_texture) {
 		_texture->setRepeated(true);
-		_texture->setSmooth(false);
+		_texture->setSmooth(true);
 	}
 	_geometryDirty = true;
 }
