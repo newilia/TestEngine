@@ -34,12 +34,12 @@ static float EffectiveSourceMass(const PhysicsBodyBehaviour& rb) {
 	return rb.GetMass();
 }
 
-sf::Vector2f AttractionField::EvaluateForce(const shared_ptr<AttractiveBehaviour>& receiver) const {
-	_sources.remove_if([](const std::weak_ptr<AttractiveBehaviour>& w) {
-		return w.expired();
-	});
+sf::Vector2f AttractionField::EvaluateForce(
+    sf::Vector2f worldPos, const PhysicsBodyBehaviour::GroupSet& interactionGroups) const {
+	return EvaluateForceImpl(worldPos, interactionGroups, nullptr);
+}
 
-	sf::Vector2f result{};
+sf::Vector2f AttractionField::EvaluateForce(const shared_ptr<AttractiveBehaviour>& receiver) const {
 	if (!receiver) {
 		return {};
 	}
@@ -51,10 +51,26 @@ sf::Vector2f AttractionField::EvaluateForce(const shared_ptr<AttractiveBehaviour
 	if (Utils::IsNan(posI)) {
 		return {};
 	}
+	const auto recvRb = recvNode->FindBehaviour<PhysicsBodyBehaviour>();
+	if (!recvRb) {
+		return {};
+	}
+	return EvaluateForceImpl(posI, recvRb->GetInteractionGroups(), receiver.get());
+}
 
+sf::Vector2f AttractionField::EvaluateForceImpl(sf::Vector2f posI,
+    const PhysicsBodyBehaviour::GroupSet& interactionGroups, const AttractiveBehaviour* excludeSource) const {
+	_sources.remove_if([](const std::weak_ptr<AttractiveBehaviour>& w) {
+		return w.expired();
+	});
+
+	sf::Vector2f result{};
 	for (const auto& w : _sources) {
 		const auto other = w.lock();
-		if (!other || !other->IsEnabled() || other == receiver) {
+		if (!other || !other->IsEnabled()) {
+			continue;
+		}
+		if (excludeSource && other.get() == excludeSource) {
 			continue;
 		}
 		if (other->GetAttraction() == 0.f) {
@@ -64,12 +80,11 @@ sf::Vector2f AttractionField::EvaluateForce(const shared_ptr<AttractiveBehaviour
 		if (!otherNode) {
 			continue;
 		}
-		const auto recvRb = recvNode->FindBehaviour<PhysicsBodyBehaviour>();
 		const auto otherRb = otherNode->FindBehaviour<PhysicsBodyBehaviour>();
-		if (!recvRb || !otherRb) {
+		if (!otherRb) {
 			continue;
 		}
-		if (!(recvRb->GetInteractionGroups() & otherRb->GetInteractionGroups()).any()) {
+		if (!(interactionGroups & otherRb->GetInteractionGroups()).any()) {
 			continue;
 		}
 		auto otherPos = Utils::GetWorldPos(otherNode);
@@ -77,15 +92,15 @@ sf::Vector2f AttractionField::EvaluateForce(const shared_ptr<AttractiveBehaviour
 			continue;
 		}
 
-		sf::Vector2f d = otherPos - posI; // from receiver toward source
+		sf::Vector2f d = otherPos - posI;
 		const float d2 = d.x * d.x + d.y * d.y;
 		const float e2 = _softeningEps * _softeningEps;
 		const float r2 = d2 + e2;
 		if (r2 < 1e-8f) {
 			continue;
 		}
-		const float invR = 1.f / std::sqrt(r2); // TODO ?
-		const float invR3 = invR * invR * invR; // 1 / (d2+e2)^{3/2}
+		const float invR = 1.f / std::sqrt(r2);
+		const float invR3 = invR * invR * invR;
 
 		const float t = std::abs(other->GetAttraction()) / 100.f;
 		const float mag = std::pow(t, 1.2f);
