@@ -1,5 +1,6 @@
 #include "Engine/Editor/DebugSettingsWidget.h"
 
+#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Editor/Editor.h"
 #include "Engine/Render/SceneLighting.h"
@@ -11,6 +12,7 @@
 #include <imgui_internal.h>
 
 #include <algorithm>
+#include <cstdint>
 
 namespace Engine {
 	void DebugSettingsWidget::Draw() const {
@@ -105,18 +107,98 @@ namespace Engine {
 			if (ImGui::Checkbox("Show velocity", &showVel)) {
 				viz.SetVelocityVisible(showVel);
 			}
-			float velScale = viz.GetVelocityScale();
-			if (ImGui::SliderFloat("Velocity scale", &velScale, 1e-3f, 2.f, "%.3f")) {
-				viz.SetVelocityScale(velScale);
+			if (showVel) {
+				float velScale = viz.GetVelocityScale();
+				if (ImGui::SliderFloat("Velocity scale", &velScale, 1e-3f, 2.f, "%.3f")) {
+					viz.SetVelocityScale(velScale);
+				}
 			}
 
 			bool showAccel = viz.IsForceVisible();
 			if (ImGui::Checkbox("Show force", &showAccel)) {
 				viz.SetForceVisible(showAccel);
 			}
-			float accelScale = viz.GetForceScale();
-			if (ImGui::SliderFloat("Force scale", &accelScale, 1e-3f, 2.f, "%.3f")) {
-				viz.SetForceScale(accelScale);
+			if (showAccel) {
+				float accelScale = viz.GetForceScale();
+				if (ImGui::SliderFloat("Force scale", &accelScale, 1e-3f, 2.f, "%.3f")) {
+					viz.SetForceScale(accelScale);
+				}
+			}
+
+			bool showField = viz.IsAttractionFieldVisible();
+			if (ImGui::Checkbox("Show attraction field", &showField)) {
+				viz.SetAttractionFieldVisible(showField);
+			}
+			if (showField) {
+				int gridMode = static_cast<int>(viz.GetAttractionFieldGridLayout());
+				const char* gridLabels[] = {"Square", "Triangular"};
+				if (ImGui::Combo("Field grid", &gridMode, gridLabels, IM_ARRAYSIZE(gridLabels))) {
+					gridMode = std::clamp(gridMode, 0, IM_ARRAYSIZE(gridLabels) - 1);
+					viz.SetAttractionFieldGridLayout(static_cast<FieldGridLayout>(gridMode));
+				}
+				float fSpacing = viz.GetAttractionFieldSpacingPx();
+				if (ImGui::SliderFloat("Field spacing (px)", &fSpacing, 8.f, 256.f, "%.0f")) {
+					viz.SetAttractionFieldSpacingPx(fSpacing);
+				}
+				float fArrow = viz.GetAttractionFieldArrowScale();
+				if (ImGui::SliderFloat("Field arrow scale", &fArrow, 1e-3f, 4.f, "%.3f")) {
+					viz.SetAttractionFieldArrowScale(fArrow);
+				}
+				float softCap = viz.GetAttractionFieldArrowLengthSoftCap();
+				if (ImGui::DragFloat(
+				        "Field arrow soft cap (world)", &softCap, softCap * 0.05f + 2.f, 0.f, 1.0e5f, "%.1f")) {
+					viz.SetAttractionFieldArrowLengthSoftCap(std::max(0.f, softCap));
+				}
+				float compress = viz.GetAttractionFieldArrowLengthCompress();
+				if (ImGui::SliderFloat("Field arrow compress", &compress, 0.f, 1.f, "%.2f")) {
+					viz.SetAttractionFieldArrowLengthCompress(compress);
+				}
+				float paletteSpan = viz.GetAttractionFieldPaletteSpan();
+				if (ImGui::DragFloat(
+				        "Field palette span", &paletteSpan, paletteSpan * 0.02f + 50.f, 0.f, 5.0e6f, "%.0f")) {
+					viz.SetAttractionFieldPaletteSpan(std::max(0.f, paletteSpan));
+				}
+
+				const auto clamp255 = [](float x) {
+					return static_cast<std::uint8_t>(std::clamp(std::lround(x * 255.f), 0L, 255L));
+				};
+				auto colorEdit = [&](const char* label, sf::Color c, void (*apply)(PhysicsVisualizer&, sf::Color)) {
+					float rgba[4] = {c.r / 255.f, c.g / 255.f, c.b / 255.f, c.a / 255.f};
+					if (ImGui::ColorEdit4(label, rgba, ImGuiColorEditFlags_Float)) {
+						apply(
+						    viz, sf::Color{clamp255(rgba[0]), clamp255(rgba[1]), clamp255(rgba[2]), clamp255(rgba[3])});
+					}
+				};
+				colorEdit(
+				    "Field color (weak)", viz.GetAttractionFieldPaletteWeak(), [](PhysicsVisualizer& v, sf::Color col) {
+					    v.SetAttractionFieldPaletteWeak(col);
+				    });
+				colorEdit(
+				    "Field color (mid)", viz.GetAttractionFieldPaletteMid(), [](PhysicsVisualizer& v, sf::Color col) {
+					    v.SetAttractionFieldPaletteMid(col);
+				    });
+				colorEdit("Field color (strong)", viz.GetAttractionFieldPaletteStrong(),
+				    [](PhysicsVisualizer& v, sf::Color col) {
+					    v.SetAttractionFieldPaletteStrong(col);
+				    });
+
+				ImGui::TextUnformatted("Field probe groups");
+				auto groups = viz.GetAttractionFieldProbeGroups();
+				for (int i = 0; i < PhysicsBodyBehaviour::kGroupsCount; ++i) {
+					ImGui::PushID(i);
+					bool on = groups.test(static_cast<std::size_t>(i));
+					if (i > 0) {
+						ImGui::SameLine();
+					}
+					char bitLabel[2];
+					bitLabel[0] = static_cast<char>('0' + i);
+					bitLabel[1] = '\0';
+					if (ImGui::Checkbox(bitLabel, &on)) {
+						groups.set(static_cast<std::size_t>(i), on);
+						viz.SetAttractionFieldProbeGroups(groups);
+					}
+					ImGui::PopID();
+				}
 			}
 		}
 

@@ -12,9 +12,9 @@ Use the **`build`** directory only for configure and compile (`cmake -S . -B bui
 ## Build smoke test
 
 After non-trivial edits to `src/`, `CMakeLists.txt`, or build-related files, run a **Release** build (e.g. `cmake --build build --config Release`) and fix failures. 
-When build is succeded, run resulting exe for User to check its work.
+When the build succeeds, run the resulting executable so the user can verify behavior.
 
-See [`BUILD.md`](BUILD.md). Skip for docs-only changes that cannot affect compilation.
+See [`BUILD.md`](BUILD.md). Skip this step for documentation-only changes that cannot affect compilation. When launching the executable, pass the `--env=…` argument given by `testEngine.launch.envArg` in the workspace `.vscode/settings.json`.
 
 ## Commit messages
 
