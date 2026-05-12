@@ -23,11 +23,6 @@ namespace {
 		return full.transformPoint(c.getGeometricCenter());
 	}
 
-	bool IsRectValid(const sf::FloatRect rect) {
-		using std::isnan;
-		return !isnan(rect.position.x) && !isnan(rect.position.y) && !isnan(rect.size.x) && !isnan(rect.size.y);
-	}
-
 } // namespace
 
 void PhysicsProcessor::RegisterBody(shared_ptr<PhysicsBodyBehaviour> body) {
@@ -45,7 +40,6 @@ void PhysicsProcessor::UnregisterBody(PhysicsBodyBehaviour* body) {
 
 void PhysicsProcessor::Update(const sf::Time& dt) {
 	const float substepDt = dt.asSeconds() / _simulationSubsteps;
-	const float airDampingFactor = _airFriction > 0.f ? std::exp(-_airFriction * substepDt) : 1.f;
 
 	for (int i = 0; i < _simulationSubsteps; ++i) {
 		for (auto it = _bodies.begin(); it != _bodies.end();) {
@@ -54,7 +48,7 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 				it = _bodies.erase(it);
 				continue;
 			}
-			IntergateVelocity(body.get(), substepDt, airDampingFactor);
+			IntergateVelocity(body.get(), substepDt);
 			++it;
 		}
 		for (auto it = _bodies.begin(); it != _bodies.end(); ++it) {
@@ -66,31 +60,38 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 	}
 }
 
-void PhysicsProcessor::IntergateVelocity(PhysicsBodyBehaviour* body, float dtSec, float airDampingFactor) {
-	auto node = Verify(body->GetNode());
-	if (!node) {
-		return;
-	}
+void PhysicsProcessor::IntergateVelocity(PhysicsBodyBehaviour* body, float dtSec) {
 	if (body->IsFixed()) {
 		return;
 	}
+	const auto force = EvaluateExternalForces(body);
+	body->AddVelocity(force * dtSec);
+}
+
+sf::Vector2f PhysicsProcessor::EvaluateExternalForces(PhysicsBodyBehaviour* body) const {
+	sf::Vector2f result;
+	auto node = Verify(body->GetNode());
+	if (!node) {
+		return result;
+	}
+	if (body->IsFixed()) {
+		return result;
+	}
 
 	if (_isGravityEnabled) {
-		auto gravity = _gravity * body->GetGravityScale();
-		body->AddVelocity(gravity * dtSec);
+		result += _gravity * body->GetGravityScale();
 	}
-
 	if (auto attractive = node->FindBehaviour<AttractiveBehaviour>()) {
 		if (attractive->IsEnabled()) {
-			sf::Vector2f a = _attractionField->EvaluateForce(attractive);
-			body->AddVelocity(a * dtSec);
+			result += _attractionField->EvaluateForce(attractive);
 		}
 	}
-
-	if (airDampingFactor != 1.f) {
-		auto dampedVel = body->GetVelocity() * airDampingFactor;
-		body->SetVelocity(dampedVel);
+	if (_airFriction != 0.f) {
+		const auto vel = body->GetVelocity();
+		result -= vel.normalized() * vel.lengthSquared() * _airFriction;
 	}
+	assert(!Utils::IsNan(result));
+	return result;
 }
 
 void PhysicsProcessor::IntegratePosition(PhysicsBodyBehaviour* body, float dtSec) {
@@ -99,6 +100,9 @@ void PhysicsProcessor::IntegratePosition(PhysicsBodyBehaviour* body, float dtSec
 		return;
 	}
 	auto pos = Utils::GetWorldPos(node);
+	if (Utils::IsNan(pos)) {
+		return;
+	}
 	pos += body->GetVelocity() * dtSec;
 	Utils::SetLocalPosToWorld(node, pos);
 }
@@ -140,7 +144,7 @@ void PhysicsProcessor::DetactAndResolveCollisions() {
 			continue;
 		}
 		auto bbox = node->GetWorldTransform().transformRect(shape->getGlobalBounds());
-		if (!IsRectValid(bbox)) {
+		if (Utils::IsNan(bbox)) {
 			++bodyListIndex;
 			continue;
 		}
@@ -519,7 +523,8 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 		return;
 	}
 
-	if (pb1->IsFixed()) { // fixed body must be second
+	if (pb1->IsFixed() && !pb2->IsFixed()) {
+		// fixed body must be second one
 		std::swap(body1, body2);
 		std::swap(pb1, pb2);
 	}
@@ -530,6 +535,12 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 	const auto m1 = pb1->GetMass();
 	const auto m2 = pb2->GetMass();
 	auto v1_to_v2 = pb2->GetVelocity() - pb1->GetVelocity();
+
+	if (v1_to_v2.x == 0 && v1_to_v2.y == 0) {
+		v1_to_v2.x = 1e-5f; // resolve collision somehow
+		return;
+	}
+
 	auto b1_tangent = collision.intersection.getDirVector();
 	auto b1_normal = Utils::Normalize(sf::Vector2f(-b1_tangent.y, b1_tangent.x));
 	if (Utils::Dot(Utils::GetWorldPos(body2) - Utils::GetWorldPos(body1), b1_normal) < 0.f) {
@@ -591,8 +602,7 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 		pb1->AddVelocity(dv1);
 		pb2->AddVelocity(dv2);
 
-		auto isNan = Utils::IsNan(pb1->GetVelocity()) || Utils::IsNan(pb2->GetVelocity());
-		assert(!isNan);
+		assert(!Utils::IsNan(pb1->GetVelocity()) && !Utils::IsNan(pb2->GetVelocity()));
 	}
 }
 

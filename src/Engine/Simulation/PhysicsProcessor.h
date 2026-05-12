@@ -37,8 +37,10 @@ public:
 
 	std::shared_ptr<AttractionField> GetAttractionField() const;
 
+	sf::Vector2f EvaluateExternalForces(PhysicsBodyBehaviour* body) const;
+
 private:
-	void IntergateVelocity(PhysicsBodyBehaviour* body, float dtSec, float dampingFactor);
+	void IntergateVelocity(PhysicsBodyBehaviour* body, float dtSec);
 	void IntegratePosition(PhysicsBodyBehaviour* body, float dtSec);
 	void DetactAndResolveCollisions();
 
@@ -54,7 +56,6 @@ private:
 	static std::optional<SegmentIntersectionPoints> FindSegmentCircleIntersectionPoint(
 	    const Segment& seg, const sf::Vector2f& circleCenter, float radius);
 	static void ResolveCollision(const IntersectionDetails& collision);
-	/*****/
 
 private:
 	std::shared_ptr<AttractionField> _attractionField = std::make_shared<AttractionField>();
