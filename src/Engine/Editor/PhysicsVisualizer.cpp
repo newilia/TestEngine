@@ -21,7 +21,7 @@ namespace {
 	constexpr float kFieldInternalScale = 0.00025f;
 	constexpr float kMinFieldSpacingPx = 8.f;
 	constexpr float kSqrt3Half = 0.8660254037844386f;
-	constexpr std::size_t kMaxFieldSamples = 4096;
+	constexpr std::size_t kMaxFieldSamples = 16384;
 
 	sf::Color LerpRgb(const sf::Color& a, const sf::Color& b, float t) {
 		t = std::clamp(t, 0.f, 1.f);
@@ -261,7 +261,7 @@ namespace Engine {
 	}
 
 	void PhysicsVisualizer::SetAttractionFieldSpacingPx(float spacingPx) {
-		_fieldSpacingPx = std::max(1.f, spacingPx);
+		_fieldSpacingPx = std::max(kMinFieldSpacingPx, spacingPx);
 	}
 
 	float PhysicsVisualizer::GetAttractionFieldArrowScale() const {

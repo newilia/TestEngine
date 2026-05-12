@@ -85,7 +85,7 @@ namespace Engine {
 					ImGui::Text("Attraction:");
 					bool massCoupling = field->GetUseMassCoupling();
 					float strength = field->GetGlobalStrengthScale();
-					if (ImGui::DragFloat("Field strength", &strength, 2.f, -10000.f, 10000, "%.2f")) {
+					if (ImGui::DragFloat("Field strength", &strength, 0.2f, -100, 100, "%.2f")) {
 						field->SetGlobalStrengthScale(strength);
 					}
 
