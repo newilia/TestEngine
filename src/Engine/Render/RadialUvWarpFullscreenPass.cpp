@@ -20,7 +20,7 @@ namespace Engine {
 				return false;
 			}
 			if (auto warp = node.FindBehaviour<RadialUvWarpBehaviour>()) {
-				if (warp->IsRadialUvWarpEnabled()) {
+				if (warp->IsEnabled()) {
 					return true;
 				}
 			}
@@ -38,7 +38,7 @@ namespace Engine {
 				return;
 			}
 			if (auto warp = node->FindBehaviour<RadialUvWarpBehaviour>()) {
-				if (warp->IsRadialUvWarpEnabled()) {
+				if (warp->IsEnabled()) {
 					warps.push_back(warp);
 				}
 			}
@@ -189,7 +189,7 @@ namespace Engine {
 			const sf::Vector2f uvOff = warp->GetUvOffset();
 			const sf::Vector2f uv = WarpPixelToUv(px, ctx.pixelSize, uvOff);
 			_warpCenterUv[packedCount] = sf::Glsl::Vec2(uv.x, uv.y);
-			_warpStrength[packedCount] = warp->GetWarpStrength();
+			_warpStrength[packedCount] = warp->GetIntensity();
 			const float worldToShader =
 			    WorldRadiusToShaderDist(window, ctx.sceneView, ctx.pixelSize, uvOff, aspectRatio, px);
 			_warpInfluenceRadius[packedCount] = warp->GetInfluenceRadius() * worldToShader;

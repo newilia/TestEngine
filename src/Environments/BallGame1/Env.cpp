@@ -1,6 +1,8 @@
 #include "Env.h"
 
+#include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
+#include "Engine/Behaviour/RadialUvWarpBehaviour.h"
 #include "Engine/Core/EventHandlerBase.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/Scene.h"
@@ -9,6 +11,7 @@
 #include "Engine/Core/Transform.h"
 #include "Engine/Core/Utils.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
+#include "Engine/Visual/CircleShapeVisual.h"
 #include "Engine/Visual/RectangleShapeVisual.h"
 #include "Engine/Visual/SpriteVisual.h"
 #include "Engine/Visual/VectorArrowVisual.h"
@@ -21,7 +24,8 @@
 namespace BallGame1 {
 	void Env::Setup() {
 		auto& mainContext = Engine::MainContext::GetInstance();
-		const auto mainWindow = mainContext.CreateMainWindow(sf::VideoMode::getFullscreenModes()[0], "BallGame1");
+		const auto mainWindow =
+		    mainContext.CreateMainWindow(sf::VideoMode::getFullscreenModes()[0], "Ball Game prototype");
 		if (!mainWindow) {
 			std::exit(EXIT_FAILURE);
 		}
@@ -31,6 +35,10 @@ namespace BallGame1 {
 		mainContext.GetPhysicsProcessor()->SetGravityEnabled(false);
 		mainContext.SetVerticalSyncEnabled(true);
 		mainContext.SetScene(BuildScene());
+
+		auto backgroundCtx = mainContext.GetGameBackgroundContext();
+		backgroundCtx->SetParallaxTextureBackground(
+		    "resources/textures/backgrounds/plain_starfield_1.png", 1.f, 0.f, 0.15f, 3440);
 	}
 
 	void Env::OnEvent(const sf::Event& event) {
@@ -53,11 +61,14 @@ namespace BallGame1 {
 		rootNode->GetLocalTransform()->SetPosition({1700, 700});
 		scene->GetRoot()->AddChild(rootNode);
 
-		rootNode->AddChild(CreateBackgroundNode());
 		rootNode->AddChild(CreateFieldNode());
 
 		auto gameController = rootNode->RequireBehaviour<GameControllerBehaviour>();
-		gameController->SetBallParameters(100.0f, 1.f, 25.0f, sf::Color::Red);
+		gameController->SetShootVelocity(1500);
+		gameController->SetCreateBallFunc([this] {
+			return CreateBallNode();
+		});
+
 		auto gunNode = CreateGunNode();
 
 		rootNode->AddChild(gunNode);
@@ -76,23 +87,6 @@ namespace BallGame1 {
 	}
 
 	/* stuff for game scene */
-
-	std::shared_ptr<SceneNode> Env::CreateBackgroundNode() {
-		auto& mainContext = Engine::MainContext::GetInstance();
-		auto node = make_shared<SceneNode>();
-		node->SetName("Background");
-		auto sprite = node->RequireVisual<SpriteVisual>();
-
-		constexpr auto path = "resources/textures/fern_dark_green.jpg";
-		auto texture = mainContext.GetTextureManager()->LoadTexture(path);
-		if (texture) {
-			sprite->SetTexture(*texture);
-			sprite->SetOrigin({texture->getSize().x * 0.5f, texture->getSize().y * 0.5f});
-		}
-		auto sorting = make_shared<RelativeSortingStrategy>();
-		sorting->SetPriority(-10);
-		return node;
-	}
 
 	std::shared_ptr<SceneNode> Env::CreateFieldNode() {
 		const auto wallThickness = 100;
@@ -163,5 +157,35 @@ namespace BallGame1 {
 		auto node = make_shared<SceneNode>();
 		node->SetName("Score");
 		return node;
+	}
+
+	std::shared_ptr<SceneNode> Env::CreateBallNode() {
+		constexpr float mass = 500.0f;
+		constexpr float restitution = 0.8f;
+		constexpr float radius = 20.0f;
+		constexpr auto color = sf::Color(128, 128, 128, 255);
+		constexpr float attraction = 500000;
+		constexpr float warpRadius = 500;
+		constexpr float warpIntensity = 0.05;
+
+		auto ballNode = make_shared<SceneNode>();
+		ballNode->SetName("Ball");
+
+		auto visual = ballNode->RequireVisual<CircleShapeVisual>();
+		visual->SetRadius(radius);
+		visual->SetFillColor(color);
+
+		auto body = ballNode->RequireBehaviour<PhysicsBodyBehaviour>();
+		body->SetMass(mass);
+		body->SetRestitution(restitution);
+
+		auto attractive = ballNode->RequireBehaviour<AttractiveBehaviour>();
+		attractive->SetAttraction(attraction);
+
+		auto warp = ballNode->RequireBehaviour<RadialUvWarpBehaviour>();
+		warp->SetInfluenceRadius(warpRadius);
+		warp->SetIntensity(warpIntensity);
+
+		return ballNode;
 	}
 } // namespace BallGame1

@@ -13,7 +13,7 @@ class SceneNode;
 class MoveTool final : public IEditorTool
 {
 public:
-	explicit MoveTool(SelectTool::SelectCallback onSelect);
+	explicit MoveTool(SelectTool::SelectCallback onSelect = nullptr);
 
 	bool processEvent(const sf::Event& event) override;
 	void onPresent(const sf::Time& dt) override;

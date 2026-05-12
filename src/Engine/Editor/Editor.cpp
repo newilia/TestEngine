@@ -35,6 +35,7 @@ namespace {
 	constexpr const char kInspectorWindowTitle[] = "Inspector";
 	constexpr const char kToolsWindowTitle[] = "Tools";
 	constexpr const char kDebugWindowTitle[] = "Debug";
+	constexpr const char kImGuiStyleTitle[] = "Style";
 	constexpr const char kGameBackgroundWindowTitle[] = "Game background";
 
 	// Apply a Left | Center | Right split once when the dock root has no saved split and no docked
@@ -63,21 +64,19 @@ namespace {
 		ImGuiID id_left_bottom = 0;
 		ImGuiID id_right_top = 0;
 		ImGuiID id_right_bottom = 0;
-		ImGuiID id_right_tools = 0;
-		ImGuiID id_right_game_bg = 0;
 		ImGuiID id_main = dockspace_id;
 
 		ImGui::DockBuilderSplitNode(id_main, ImGuiDir_Left, 0.25f, &id_left, &id_main);
 		ImGui::DockBuilderSplitNode(id_main, ImGuiDir_Right, 0.33f, &id_right, &id_center);
 		ImGui::DockBuilderSplitNode(id_left, ImGuiDir_Down, 0.55f, &id_left_bottom, &id_left_top);
 		ImGui::DockBuilderSplitNode(id_right, ImGuiDir_Down, 0.55f, &id_right_bottom, &id_right_top);
-		ImGui::DockBuilderSplitNode(id_right_top, ImGuiDir_Down, 0.5f, &id_right_game_bg, &id_right_tools);
 
 		ImGui::DockBuilderDockWindow(kSceneWindowTitle, id_left_top);
 		ImGui::DockBuilderDockWindow(kInspectorWindowTitle, id_left_bottom);
-		ImGui::DockBuilderDockWindow(kToolsWindowTitle, id_right_tools);
-		ImGui::DockBuilderDockWindow(kGameBackgroundWindowTitle, id_right_game_bg);
+		ImGui::DockBuilderDockWindow(kToolsWindowTitle, id_right_top);
 		ImGui::DockBuilderDockWindow(kDebugWindowTitle, id_right_bottom);
+		ImGui::DockBuilderDockWindow(kImGuiStyleTitle, id_right_bottom);
+		ImGui::DockBuilderDockWindow(kGameBackgroundWindowTitle, id_right_bottom);
 
 		ImGui::DockBuilderFinish(dockspace_id);
 		layout_finished = true;
@@ -242,11 +241,11 @@ namespace Engine {
 		ImFontConfig config;
 		config.OversampleH = 2.0f;
 		config.OversampleV = 2.0f;
-		ImFont* font = atlas.AddFontFromFileTTF("resources/fonts/NotoSans-Medium.ttf", 19.f, &config);
-		IM_ASSERT(font != nullptr);
-		atlas.Build();
-		Verify(ImGui::SFML::UpdateFontTexture());
-		ImGui::GetIO().FontDefault = font;
+		if (ImFont* font = Verify(atlas.AddFontFromFileTTF("resources/fonts/NotoSans-Medium.ttf", 19.f, &config))) {
+			atlas.Build();
+			Verify(ImGui::SFML::UpdateFontTexture());
+			ImGui::GetIO().FontDefault = font;
+		}
 	}
 
 	void Editor::Toggle() {
@@ -523,17 +522,12 @@ namespace Engine {
 		ImGui::End();
 
 		if (ImGui::Begin(kDebugWindowTitle, nullptr, ImGuiWindowFlags_None)) {
-			if (ImGui::BeginTabBar("DebugTabBar", ImGuiTabBarFlags_None)) {
-				if (ImGui::BeginTabItem("Settings")) {
-					_debugSettingsWidget.Draw();
-					ImGui::EndTabItem();
-				}
-				if (ImGui::BeginTabItem("Style")) {
-					ImGui::ShowStyleEditor();
-					ImGui::EndTabItem();
-				}
-				ImGui::EndTabBar();
-			}
+			_debugSettingsWidget.Draw();
+		}
+		ImGui::End();
+
+		if (ImGui::Begin(kImGuiStyleTitle, nullptr, ImGuiWindowFlags_None)) {
+			ImGui::ShowStyleEditor();
 		}
 		ImGui::End();
 

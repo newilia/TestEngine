@@ -69,9 +69,9 @@ EditorToolManager::EditorToolManager() {
 	};
 	_tools[0] = std::make_unique<TapTool>();
 	_tools[1] = std::make_unique<SelectTool>(setHierarchySelection);
-	_tools[2] = std::make_unique<PullTool>(setHierarchySelection);
-	_tools[3] = std::make_unique<MoveTool>(setHierarchySelection);
-	_tools[4] = std::make_unique<PolygonTool>(setHierarchySelection);
+	_tools[2] = std::make_unique<PullTool>();
+	_tools[3] = std::make_unique<MoveTool>();
+	_tools[4] = std::make_unique<PolygonTool>();
 }
 
 void EditorToolManager::SetActiveToolIndex(int index) {

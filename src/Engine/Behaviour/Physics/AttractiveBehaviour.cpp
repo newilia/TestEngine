@@ -36,27 +36,12 @@ void AttractiveBehaviour::OnDeinit() {
 	_rigidBody.reset();
 }
 
-void AttractiveBehaviour::OnUpdate(const sf::Time& dt) {
-	if (!_isEnabled) {
-		return;
-	}
-	const auto rb = _rigidBody.lock();
-	if (!rb || rb->IsFixed() || !std::isfinite(rb->GetMass()) || rb->GetMass() <= 0.f) {
-		return;
-	}
-	if (const auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
-		if (auto field = ph->GetAttractionField()) {
-			sf::Vector2f a = field->EvaluateAcceleration(shared_from_this());
-			const float sec = dt.asSeconds();
-			if (sec > 0.f) {
-				rb->AddVelocity(a * sec);
-			}
-		}
-	}
-}
-
 bool AttractiveBehaviour::IsEnabled() const {
 	return _isEnabled;
+}
+
+void AttractiveBehaviour::SetEnabled(bool isEnabled) {
+	_isEnabled = isEnabled;
 }
 
 float AttractiveBehaviour::GetAttraction() const {
@@ -65,4 +50,12 @@ float AttractiveBehaviour::GetAttraction() const {
 
 void AttractiveBehaviour::SetAttraction(float value) {
 	_attraction = value;
+}
+
+float AttractiveBehaviour::GetFalloffExponent() const {
+	return _falloffExponent;
+}
+
+void AttractiveBehaviour::SetFalloffExponent(float value) {
+	_falloffExponent = value;
 }

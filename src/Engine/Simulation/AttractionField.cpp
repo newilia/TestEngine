@@ -81,8 +81,7 @@ sf::Vector2f AttractionField::EvaluateAcceleration(const shared_ptr<AttractiveBe
 		}
 		const float t = std::abs(other->GetAttraction()) / 100.f;
 		const float mag = std::pow(t, 1.2f);
-		// Negative _attraction: pull toward the source; positive: push away. d = posSource - posReceiver.
-		const float dir = (other->GetAttraction() < 0.f) ? 1.f : -1.f;
+		const float dir = (other->GetAttraction() > 0.f) ? 1.f : -1.f;
 		const float scalar = _globalStrengthScale * mag * dir * invR3;
 
 		float sourceWeight = 1.f;

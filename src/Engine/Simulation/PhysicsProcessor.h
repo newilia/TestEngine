@@ -41,6 +41,9 @@ public:
 
 private:
 	/* TODO move to Physics utils */
+	void MotionSubstep(PhysicsBodyBehaviour* body, float dtSec, float dampingFactor);
+	void DetactAndResolveCollisions();
+
 	static std::optional<IntersectionDetails> DetectIntersection(
 	    SceneNode* node1, SceneNode* node2, PhysicsBodyBehaviour* body1, PhysicsBodyBehaviour* body2);
 	static std::optional<IntersectionDetails> DetectPolygonPolygonIntersection(
@@ -55,10 +58,11 @@ private:
 	static void ResolveCollision(const IntersectionDetails& collision);
 	/*****/
 
-	std::shared_ptr<AttractionField> _inverseSquareField = std::make_shared<AttractionField>();
+private:
+	std::shared_ptr<AttractionField> _attractionField = std::make_shared<AttractionField>();
 	std::list<std::weak_ptr<PhysicsBodyBehaviour>> _bodies;
 	sf::Vector2f _gravity = {0, 400};
 	bool _isGravityEnabled = false;
 	float _airFriction = 0.f;
-	int _motionSubsteps = 1;
+	int _simulationSubsteps = 1;
 };

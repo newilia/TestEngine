@@ -16,7 +16,7 @@ namespace sf {
 class PolygonTool final : public IEditorTool
 {
 public:
-	explicit PolygonTool(SelectTool::SelectCallback onSelect);
+	explicit PolygonTool(SelectTool::SelectCallback onSelect = nullptr);
 
 	bool processEvent(const sf::Event& event) override;
 	void drawOverlay(sf::RenderWindow& window) override;

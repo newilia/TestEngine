@@ -7,6 +7,7 @@
 #include <SFML/System/Time.hpp>
 
 #include <imgui.h>
+#include <imgui_internal.h>
 
 #include <algorithm>
 
@@ -42,8 +43,16 @@ namespace Engine {
 				ImGui::Text("Bodies: %d", static_cast<int>(ph->GetAllBodies().size()));
 
 				bool gravOn = ph->IsGravityEnabled();
-				if (ImGui::Checkbox("World gravity", &gravOn)) {
+				if (ImGui::Checkbox("##World gravity", &gravOn)) {
 					ph->SetGravityEnabled(gravOn);
+				}
+				ImGui::SameLine();
+
+				{
+					auto& g = *ImGui::GetCurrentContext();
+					auto width = g.CurrentWindow->DC.ItemWidthDefault;
+					width -= g.FontSize + g.Style.FramePadding.y * 2 + g.Style.ItemSpacing.x;
+					ImGui::SetNextItemWidth(width);
 				}
 				sf::Vector2f g = ph->GetGravity();
 				float gxy[2] = {g.x, g.y};
@@ -57,18 +66,20 @@ namespace Engine {
 				}
 
 				if (auto field = ph->GetAttractionField()) {
+					ImGui::Text("Attraction:");
+					bool massCoupling = field->GetUseMassCoupling();
 					float strength = field->GetGlobalStrengthScale();
-					if (ImGui::DragFloat("Attraction field strength", &strength, 2.f, -10000.f, 10000, "%.2f")) {
+					if (ImGui::DragFloat("Field strength", &strength, 2.f, -10000.f, 10000, "%.2f")) {
 						field->SetGlobalStrengthScale(strength);
 					}
-					bool massCoupling = field->GetUseMassCoupling();
-					if (ImGui::Checkbox("Attraction: mass couples sources", &massCoupling)) {
-						field->SetUseMassCoupling(massCoupling);
-					}
-					/*float softEps = field->GetSofteningEps();
+
+					float softEps = field->GetSofteningEps();
 					if (ImGui::DragFloat("Field softening eps", &softEps, 0.25f, 0.1f, 1.0e3f, "%.2f")) {
 						field->SetSofteningEps(softEps);
-					}*/
+					}
+					if (ImGui::Checkbox("Mass couples sources", &massCoupling)) {
+						field->SetUseMassCoupling(massCoupling);
+					}
 				}
 			}
 		}
@@ -79,9 +90,6 @@ namespace Engine {
 			if (ImGui::Checkbox("VSync", &vsync)) {
 				mainContext.SetVerticalSyncEnabled(vsync);
 			}
-			ImGui::SameLine();
-			ImGui::TextDisabled("(sync to display; pair with Max FPS 0)");
-
 			ImGui::Text("Frame dt: %.3f s (%.1f fps)", static_cast<double>(mainContext.GetFrameDt().asSeconds()),
 			    mainContext.GetCurrentFps());
 
