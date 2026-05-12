@@ -10,7 +10,6 @@
 
 class AttractiveBehaviour;
 
-/// Superposition of isotropic central \(1/r^2\)-type (Newtonian / Coulomb) interactions in 2D.
 class AttractionField
 {
 public:
