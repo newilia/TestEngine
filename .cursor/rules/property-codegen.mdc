@@ -1,5 +1,5 @@
 ---
-description: Property reflection codegen (META_CLASS, META_PROPERTY_BASE, @property, @getter, @setter, @method, Python generator)
+description: Property reflection codegen (META_CLASS, META_PROPERTY_BASE, META_ENUM, @property, @getter, @setter, @method, Python generator)
 globs: src/**/*.h, tools/property_codegen.py, CMakeLists.txt, src/Codegen/**/*
 alwaysApply: false
 ---
@@ -21,6 +21,16 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 3. Above each reflected **data member** use `/// @property` or `/// @property(key=value, ...)`. For method-backed properties use `/// @getter` on the getter line and optionally `/// @setter` on the setter line (see below). For **editor-invokable actions** (no arguments), use `/// @method` on the line before a `void Method();` declaration (see **`@method`** below).
 4. In **one** corresponding `.cpp`: `#include "<HeaderStem>.generated.hpp"` after the class header so out-of-line `BuildPropertyTree` sees the full class type.
 5. Build `TestEngine`; CMake target **`Codegen`** runs first. Include generated headers as `#include "Foo_gen.hpp"` (`src/Codegen` is on the include path).
+
+## `META_ENUM` (`enum class` in the inspector)
+
+- On a **single line** in a header (same file as the reflecting class, typically inside the same `namespace` as the class): `META_ENUM(MyEnumType, Value1, Value2, Value3);` — expands to `enum class MyEnumType { Value1, Value2, Value3 }` via `Engine/Core/MetaClass.h`. Enumerators are comma-separated identifiers only (no `= value` in v1).
+- The scanner builds a **fully qualified** registration key: current `namespace` stack + each **nested `class`/`struct`** scope on the block stack + the enum name (e.g. `MyNs::MyEnum`, or `Outer::Inner::NestedEnum` when `META_ENUM` appears inside nested classes).
+- Use a reflected field or `@getter` / `@setter` whose type resolves to that enum:
+  - If the field type is **exactly** the fq name as registered, it matches.
+  - If the field type is a **single** identifier without `::`, the scanner also tries `::`-joining the **class’s** namespace prefix (the tuple stored on the `META_CLASS` block) with that identifier.
+- **`valuesProvider` / `@valuesProvider`** are rejected for enum-backed properties (the combo options come from `META_ENUM` only).
+- **Not in v1:** `META_ENUM` types as `std::vector` / map / set / `std::pair` element types (`_VEC_ELT`); use only scalar fields or method-backed get/set with the enum type.
 
 ## `@property` argument syntax
 
@@ -61,13 +71,13 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 ### Getter line
 
 - The line after a one-line `/// @getter(...)` must be a **non-static** method declaration (with `;`, no body) on a **single line**, with a return type that is either:
-  - a **scalar** from **Supported field types (v1)** (same list as plain `@getter` before), with optional `const` / `&` on the return type (e.g. `const sf::Vector2f&`), or
+  - a **scalar** from **Supported field types (v1)** (same list as plain `@property` before), or a type registered with **`META_ENUM`** in the same header (optional `const` / `&` on the return type, e.g. `const MyEnum&`), or
   - **`std::vector<ElementType>`** (by value), **`const std::vector<ElementType>&`**, or **`std::vector<ElementType> const&`**, where **`ElementType`** is any supported scalar (same list as `std::vector` fields).
 - Optional prefixes/suffixes: `[[...]]`, `virtual`, `const` / `noexcept` / `override` / `final` on the method. **Static** methods are rejected.
 
 ### Setter line (optional, paired by name)
 
-- Use **`/// @setter(name="same_as_getter", ...)`** (or `label="..."`) on its **own** doc line; the next non-empty code line must be **`void MethodName(ValueType param)`** with **one** parameter whose type matches the getter’s value type (same rules as field types: optional `const`, optional `&` on the parameter type is allowed by the scanner). For a vector-backed getter, use **`void MethodName(const std::vector<ElementType>& p)`** or **`void MethodName(std::vector<ElementType> p)`** (parameter name arbitrary).
+- Use **`/// @setter(name="same_as_getter", ...)`** (or `label="..."`) on its **own** doc line; the next non-empty code line must be **`void MethodName(ValueType param)`** with **one** parameter whose type matches the getter’s value type (same rules as field types: supported scalars, **`META_ENUM`** types, optional `const`, optional `&` on the parameter type is allowed by the scanner). For a vector-backed getter, use **`void MethodName(const std::vector<ElementType>& p)`** or **`void MethodName(std::vector<ElementType> p)`** (parameter name arbitrary).
 - **Pairing:** the string keys **`name`** and **`label`** are checked in that order; the first non-empty string on the getter must equal the first non-empty string on the setter so they refer to the same property (e.g. both `name="size"`).
 - **Implicit pairing:** if both getter and setter omit `name` / `label`, a **`GetXxx` / `SetXxx`** pair is matched by the same **`Xxx`** suffix (e.g. `GetPoints` / `SetPoints`). The same rule applies to **`getXxx` / `setXxx`** (lowercase prefix, next character uppercase). Comparison is **case-insensitive** for that key. If the setter cannot be inferred this way, use **`name="..."` / `label="..."`** on the setter (or getter).
 - **Alternative:** on `/// @getter` you can still use **`setter=MethodName`** instead of a separate `@setter` tag (do not use both for the same pair).
@@ -83,7 +93,7 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 
 ## Supported field types (v1)
 
-`float`, `double`, `bool`, `int`, `std::int32_t`, `std::int64_t`, `std::string`, `sf::Vector2f`, `sf::Vector2i`, `sf::Vector2u`, `sf::Vector3f`, `sf::Color`, **`sf::Angle`**. The inspector edits **`sf::Angle` as degrees** (`asDegrees()` / `sf::degrees(float)`); radians are not shown in the UI. **`sf::Vector2i`** uses integer drag controls; **`sf::Vector2u`** uses unsigned 32-bit drag controls (both axes). Other types → codegen error until mapped in `tools/property_codegen.py`.
+`float`, `double`, `bool`, `int`, `std::int32_t`, `std::int64_t`, `std::string`, `sf::Vector2f`, `sf::Vector2i`, `sf::Vector2u`, `sf::Vector3f`, `sf::Color`, **`sf::Angle`**, plus any **`META_ENUM`**-declared `enum class` in the same scanned header (inspector: combo with enumerator names). The inspector edits **`sf::Angle` as degrees** (`asDegrees()` / `sf::degrees(float)`); radians are not shown in the UI. **`sf::Vector2i`** uses integer drag controls; **`sf::Vector2u`** uses unsigned 32-bit drag controls (both axes). Other types → codegen error until mapped in `tools/property_codegen.py`.
 
 ## `std::bitset<N>` (fixed bit masks)
 
@@ -135,7 +145,7 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 ## Extending reflection
 
 1. Prefer extending **meta keys** → `Engine::PropertyMeta` / existing `PropertyBuilder::add*` in the generator. For side-effect actions without editor fields, extend **`@method`** / `PropertyBuilder::registerInspectorMethod` before adding bespoke virtuals on `IPropertiesProvider`.
-2. New C++ types: extend **`_VEC_ELT`** (and `FIELD_RE` / getters if the type is also a top-level field), then `KNOWN_TYPES` if needed, `BITSET_FIELD_RE` / alias tracking / `GETTER_METHOD_RE`, …; extend **`_emit_scalar_leaf`** and any container-specific emit (`emit_std_vector_property`, map/set `_map_*` / `_set_*` helpers, `emit_std_pair_property`, …).
+2. New C++ types: extend **`_VEC_ELT`** (and `FIELD_RE` / getters if the type is also a top-level field), then `KNOWN_TYPES` if needed, `BITSET_FIELD_RE` / alias tracking / `GETTER_METHOD_RE`, …; extend **`_emit_scalar_leaf`** and any container-specific emit (`emit_std_vector_property`, map/set `_map_*` / `_set_*` helpers, `emit_std_pair_property`, …). For **`enum class`**, prefer **`META_ENUM`** in headers plus generator support for `addEnum` rather than ad-hoc `PropertyMeta::valuesProviderInt32` unless you need dynamic option lists.
 3. If headers outgrow the scanner, plan a **Clang-based** extraction step; keep `_gen.hpp` output format stable.
 
 ## CMake
