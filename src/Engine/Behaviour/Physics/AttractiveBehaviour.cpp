@@ -1,7 +1,6 @@
 #include "AttractiveBehaviour.h"
 
 #include "AttractiveBehaviour.generated.hpp"
-#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Simulation/AttractionField.h"
@@ -14,7 +13,6 @@ void AttractiveBehaviour::OnInit() {
 	if (!node) {
 		return;
 	}
-	_rigidBody = node->RequireBehaviour<PhysicsBodyBehaviour>();
 
 	if (const auto self = node->FindBehaviour<AttractiveBehaviour>()) {
 		if (const auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
@@ -33,7 +31,6 @@ void AttractiveBehaviour::OnDeinit() {
 			field->Unregister(shared_from_this());
 		}
 	}
-	_rigidBody.reset();
 }
 
 bool AttractiveBehaviour::IsEnabled() const {

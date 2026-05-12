@@ -100,12 +100,13 @@ sf::Vector2f AttractionField::EvaluateForceImpl(sf::Vector2f posI,
 			continue;
 		}
 		const float invR = 1.f / std::sqrt(r2);
-		const float invR3 = invR * invR * invR;
+		const float n = other->GetFalloffExponent();
+		const float invDistPow = std::pow(invR, n + 1.f);
 
 		const float t = std::abs(other->GetAttraction()) / 100.f;
 		const float mag = std::pow(t, 1.2f);
 		const float dir = (other->GetAttraction() > 0.f) ? 1.f : -1.f;
-		const float scalar = _globalStrengthScale * mag * dir * invR3;
+		const float scalar = _globalStrengthScale * mag * dir * invDistPow;
 
 		float sourceWeight = 1.f;
 		if (_useMassCoupling) {
