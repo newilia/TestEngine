@@ -1,6 +1,7 @@
 #include "Engine/Editor/DebugSettingsWidget.h"
 
 #include "Engine/Core/MainContext.h"
+#include "Engine/Editor/Editor.h"
 #include "Engine/Render/SceneLighting.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 
@@ -94,6 +95,28 @@ namespace Engine {
 						field->SetUseMassCoupling(massCoupling);
 					}
 				}
+			}
+		}
+
+		ImGui::SeparatorText("Physics visualization");
+		{
+			auto& viz = Editor::GetInstance().GetPhysicsVisualizer();
+			bool showVel = viz.IsVelocityVisible();
+			if (ImGui::Checkbox("Show velocity", &showVel)) {
+				viz.SetVelocityVisible(showVel);
+			}
+			float velScale = viz.GetVelocityScale();
+			if (ImGui::SliderFloat("Velocity scale", &velScale, 1e-3f, 2.f, "%.3f")) {
+				viz.SetVelocityScale(velScale);
+			}
+
+			bool showAccel = viz.IsForceVisible();
+			if (ImGui::Checkbox("Show force", &showAccel)) {
+				viz.SetForceVisible(showAccel);
+			}
+			float accelScale = viz.GetForceScale();
+			if (ImGui::SliderFloat("Force scale", &accelScale, 1e-3f, 2.f, "%.3f")) {
+				viz.SetForceScale(accelScale);
 			}
 		}
 

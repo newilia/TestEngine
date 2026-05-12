@@ -8,6 +8,7 @@
 #include "Engine/Editor/EditorToolsWidget.h"
 #include "Engine/Editor/GameBackgroundWidget.h"
 #include "Engine/Editor/NodeInspectorWidget.h"
+#include "Engine/Editor/PhysicsVisualizer.h"
 #include "Engine/Editor/SceneClipboard.h"
 #include "Engine/Editor/SceneHierarchyWidget.h"
 
@@ -68,6 +69,9 @@ namespace Engine {
 		EditorToolManager& GetEditorToolManager();
 		const EditorToolManager& GetEditorToolManager() const;
 
+		PhysicsVisualizer& GetPhysicsVisualizer();
+		const PhysicsVisualizer& GetPhysicsVisualizer() const;
+
 	private:
 		Editor();
 
@@ -85,6 +89,7 @@ namespace Engine {
 		std::unique_ptr<EditorToolManager> _editorToolManager{std::make_unique<EditorToolManager>()};
 		EditorHistory _history{};
 		SceneClipboard _clipboard{};
+		PhysicsVisualizer _physicsVisualizer{};
 	};
 
 } // namespace Engine

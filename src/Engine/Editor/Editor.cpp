@@ -232,7 +232,7 @@ namespace Engine {
 		if (!_isOpen) {
 			return;
 		}
-		GetEditorToolManager().OnUpdate(dt);
+		_editorToolManager->OnUpdate(dt);
 	}
 
 	void Editor::Draw(sf::RenderWindow& window) {
@@ -242,7 +242,8 @@ namespace Engine {
 		DrawLayout();
 		DrawCursorWorldCoordsOverlay(window);
 		DrawViewportSelectionOverlay(window);
-		GetEditorToolManager().DrawOverlay(window);
+		_physicsVisualizer.Draw(window);
+		_editorToolManager->DrawOverlay(window);
 	}
 
 	void Editor::DrawLayout() {
@@ -283,7 +284,7 @@ namespace Engine {
 		ImGui::End();
 
 		if (ImGui::Begin(kToolsWindowTitle, nullptr, ImGuiWindowFlags_None)) {
-			_editorToolsWidget.Draw(GetEditorToolManager());
+			_editorToolsWidget.Draw(*_editorToolManager);
 		}
 		ImGui::End();
 
@@ -495,6 +496,14 @@ namespace Engine {
 		return *_editorToolManager;
 	}
 
+	PhysicsVisualizer& Editor::GetPhysicsVisualizer() {
+		return _physicsVisualizer;
+	}
+
+	const PhysicsVisualizer& Editor::GetPhysicsVisualizer() const {
+		return _physicsVisualizer;
+	}
+
 	void Editor::DrawViewportSelectionOverlay(sf::RenderWindow& window) {
 		if (!_isOpen) {
 			return;
@@ -615,8 +624,7 @@ namespace Engine {
 		if (e.code == sf::Keyboard::Key::Space) {
 			MainContext::GetInstance().ToggleSimPaused();
 		}
-		if (_isOpen && !ImGui::GetIO().WantCaptureKeyboard &&
-		    GetEditorToolManager().TryActivateToolViaDigitKey(e.code)) {
+		if (_isOpen && !ImGui::GetIO().WantCaptureKeyboard && _editorToolManager->TryActivateToolViaDigitKey(e.code)) {
 			return;
 		}
 	}
