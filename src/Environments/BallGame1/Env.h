@@ -18,10 +18,10 @@ namespace BallGame1 {
 
 	private:
 		std::shared_ptr<Scene> BuildScene();
-		std::shared_ptr<SceneNode> CreateBackgroundNode();
 		std::shared_ptr<SceneNode> CreateFieldNode();
 		std::shared_ptr<SceneNode> CreateGunNode();
 		std::shared_ptr<SceneNode> CreateScoreNode();
+		std::shared_ptr<SceneNode> CreateBallNode();
 
 	private:
 		const sf::Vector2f _fieldSize{1000, 1000};

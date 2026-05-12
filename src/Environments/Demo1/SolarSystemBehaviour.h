@@ -28,7 +28,7 @@ private:
 	std::weak_ptr<AttractiveBehaviour> _sunAttractive;
 
 	/// @property(dragSpeed=0.1f, tooltip="Passed to the Sun AttractiveBehaviour (negative = pull)")
-	float _sunAttraction = -260.f;
+	float _sunAttraction = 260.f;
 	/// @property(dragSpeed=0.5f, tooltip="AU to world units (pixels)")
 	float _distanceScale = 100.f;
 	/// @property(dragSpeed=0.1f, tooltip="Multiplier for planet circle radii vs Earth-normalized model")

@@ -14,7 +14,7 @@
 class PullTool final : public IEditorTool
 {
 public:
-	explicit PullTool(SelectTool::SelectCallback onSelect);
+	explicit PullTool(SelectTool::SelectCallback onSelect = nullptr);
 
 	bool processEvent(const sf::Event& event) override;
 	void onPresent(const sf::Time& dt) override;
@@ -27,12 +27,13 @@ public:
 	void SetDebugArrowEnabled(bool v);
 
 private:
-	std::shared_ptr<SceneNode> OnTap(const sf::Vector2f& screenPixelPos);
+	std::shared_ptr<SceneNode> FindBodyAtPoint(const sf::Vector2f& screenPixelPos);
 	void StopPull();
 	void SetPullDestination(const sf::Vector2f& dest);
 
 	SelectTool::SelectCallback _onSelect;
 	float _pullForceScale = 1.f;
+	float _dampening = 0.05f;
 	sf::Vector2f _destination;
 	bool _debugArrowEnabled = true;
 	VectorArrowShape _arrow;

@@ -110,7 +110,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 
 		if (commonAttraction != 0.f) {
 			auto fieldBeh = std::make_shared<AttractiveBehaviour>();
-			fieldBeh->SetAttraction(commonAttraction * (isAttractionPositive ? -1 : 1));
+			fieldBeh->SetAttraction(commonAttraction * (isAttractionPositive ? 1 : -1));
 			node->AddBehaviour(std::move(fieldBeh));
 		}
 

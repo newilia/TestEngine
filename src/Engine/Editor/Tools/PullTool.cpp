@@ -37,20 +37,17 @@ void PullTool::SetDebugArrowEnabled(bool v) {
 	_debugArrowEnabled = v;
 }
 
-std::shared_ptr<SceneNode> PullTool::OnTap(const sf::Vector2f& screenPixelPos) {
+std::shared_ptr<SceneNode> PullTool::FindBodyAtPoint(const sf::Vector2f& screenPixelPos) {
 	auto physicsProcessor = Engine::MainContext::GetInstance().GetPhysicsProcessor();
 	if (!physicsProcessor) {
 		return nullptr;
 	}
-
 	auto window = Engine::MainContext::GetInstance().GetMainWindow();
 	if (!window) {
 		return nullptr;
 	}
 
 	const auto worldMousePos = Utils::MapWindowPixelToWorld(*window, screenPixelPos);
-
-	SetPullDestination(worldMousePos);
 
 	for (const auto& wBody : physicsProcessor->GetAllBodies()) {
 		if (auto body = wBody.lock()) {
@@ -61,6 +58,7 @@ std::shared_ptr<SceneNode> PullTool::OnTap(const sf::Vector2f& screenPixelPos) {
 				if (auto visual = node->GetVisual()) {
 					if (visual->HitTest(worldMousePos)) {
 						_pullingBody = body->GetNode();
+						SetPullDestination(worldMousePos);
 						return body->GetNode();
 					}
 				}
@@ -74,8 +72,8 @@ void PullTool::StopPull() {
 	_pullingBody.reset();
 }
 
-void PullTool::SetPullDestination(const sf::Vector2f& destination) {
-	_destination = destination;
+void PullTool::SetPullDestination(const sf::Vector2f& worldPos) {
+	_destination = worldPos;
 }
 
 bool PullTool::processEvent(const sf::Event& event) {
@@ -87,7 +85,10 @@ bool PullTool::processEvent(const sf::Event& event) {
 		if (pressed->button == sf::Mouse::Button::Left) {
 			const auto pos = toVec2f(pressed->position);
 			_isDragging = true;
-			_onSelect(OnTap(pos));
+			auto body = FindBodyAtPoint(pos);
+			if (_onSelect) {
+				_onSelect(body);
+			}
 			return true;
 		}
 	}
@@ -95,7 +96,10 @@ bool PullTool::processEvent(const sf::Event& event) {
 		if (touch->finger == 0) {
 			const auto pos = sf::Vector2f(static_cast<float>(touch->position.x), static_cast<float>(touch->position.y));
 			_isDragging = true;
-			_onSelect(OnTap(pos));
+			auto body = FindBodyAtPoint(pos);
+			if (_onSelect) {
+				_onSelect(body);
+			}
 			return true;
 		}
 	}
@@ -156,7 +160,8 @@ void PullTool::onPresent(const sf::Time& dt) {
 		}
 
 		auto force = pullVector * kBasePullStrength * _pullForceScale;
-		rigidBody->AddVelocity(force * dt.asSeconds() / rigidBody->GetMass());
+		auto vel = (rigidBody->GetVelocity() + (force * dt.asSeconds() / rigidBody->GetMass())) / (1.f + _dampening);
+		rigidBody->SetVelocity(vel);
 	}
 }
 
@@ -172,12 +177,10 @@ void PullTool::drawOverlay(sf::RenderWindow& window) {
 
 void PullTool::drawToolParametersUi() {
 	float scale = GetPullForceScale();
-	if (ImGui::SliderFloat("Pull force scale", &scale, 0.01f, 100.f, "%.3f")) {
+	if (ImGui::SliderFloat("Pull force scale", &scale, 0.01f, 10.f, "%.3f", ImGuiSliderFlags_Logarithmic)) {
 		SetPullForceScale(scale);
 	}
-	if (ImGui::IsItemHovered()) {
-		ImGui::SetTooltip("Multiplier for pull force (Force mode); base strength is 100000.");
-	}
+	ImGui::SliderFloat("Dampening", &_dampening, 0.0f, 0.1f, "%.3f");
 
 	bool dbg = IsDebugArrowEnabled();
 	if (ImGui::Checkbox("Debug draw arrow", &dbg)) {

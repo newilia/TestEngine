@@ -2,12 +2,20 @@
 
 #include "RadialUvWarpBehaviour.generated.hpp"
 
-float RadialUvWarpBehaviour::GetWarpStrength() const {
-	return _warpStrength;
+bool RadialUvWarpBehaviour::IsEnabled() const {
+	return _isEnabled;
 }
 
-void RadialUvWarpBehaviour::SetWarpStrength(float value) {
-	_warpStrength = value;
+void RadialUvWarpBehaviour::SetEnabled(bool value) {
+	_isEnabled = value;
+}
+
+float RadialUvWarpBehaviour::GetIntensity() const {
+	return intensity;
+}
+
+void RadialUvWarpBehaviour::SetIntensity(float value) {
+	intensity = value;
 }
 
 float RadialUvWarpBehaviour::GetInfluenceRadius() const {
@@ -24,12 +32,4 @@ const sf::Vector2f& RadialUvWarpBehaviour::GetUvOffset() const {
 
 void RadialUvWarpBehaviour::SetUvOffset(const sf::Vector2f& value) {
 	_uvOffset = value;
-}
-
-bool RadialUvWarpBehaviour::IsRadialUvWarpEnabled() const {
-	return _isRadialUvWarpEnabled;
-}
-
-void RadialUvWarpBehaviour::SetRadialUvWarpEnabled(bool value) {
-	_isRadialUvWarpEnabled = value;
 }

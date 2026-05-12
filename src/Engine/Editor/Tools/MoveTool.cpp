@@ -38,10 +38,14 @@ bool MoveTool::processEvent(const sf::Event& event) {
 		if (!picked) {
 			_dragging = false;
 			_grabbed.reset();
-			_onSelect(nullptr);
+			if (_onSelect) {
+				_onSelect(nullptr);
+			}
 			return true;
 		}
-		_onSelect(picked);
+		if (_onSelect) {
+			_onSelect(picked);
+		}
 		const sf::Vector2f nodePos = Utils::GetWorldPos(picked);
 		_grabOffset = nodePos - pos;
 		_grabbed = picked;

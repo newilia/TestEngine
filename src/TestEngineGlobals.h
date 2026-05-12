@@ -2,6 +2,7 @@
 
 #include <cassert>
 
+// TODO #ifdef DEBUG
 #define Verify(...)                                                                                                    \
 	([&] {                                                                                                             \
 		auto _teVerifyV = (__VA_ARGS__);                                                                               \

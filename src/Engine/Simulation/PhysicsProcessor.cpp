@@ -1,5 +1,6 @@
 #include "PhysicsProcessor.h"
 
+#include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
 #include "Engine/Behaviour/Physics/IntersectionDetails.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
@@ -24,133 +25,6 @@ namespace {
 
 } // namespace
 
-void PhysicsProcessor::Update(const sf::Time& dt) {
-	const float subDt = dt.asSeconds() / _motionSubsteps;
-	const float dampingFactor =
-	    _airFriction > 0.f ? std::exp(-_airFriction * subDt) : 1.f; // TODO fix: damping must correlate to body velocity
-
-	for (int i = 0; i < _motionSubsteps; ++i) {
-		for (auto it = _bodies.begin(); it != _bodies.end();) {
-			auto body = it->lock();
-			if (!body) {
-				it = _bodies.erase(it);
-				continue;
-			}
-			auto node = body->GetNode();
-			if (!node) {
-				++it;
-				continue;
-			}
-			if (body->IsFixed()) {
-				++it;
-				continue;
-			}
-
-			if (_isGravityEnabled) {
-				auto gravity = _gravity * body->GetGravityScale();
-				body->AddVelocity(gravity * subDt);
-			}
-
-			if (dampingFactor != 1.f) {
-				body->SetVelocity(body->GetVelocity() * dampingFactor);
-			}
-
-			auto pos = Utils::GetWorldPos(node);
-			pos += body->GetVelocity() * subDt;
-			Utils::SetLocalPosToWorld(node, pos);
-			++it;
-		}
-
-		// handle intersections — sweep-and-prune broad phase, then masks + narrow phase
-		struct BodySweepEntry
-		{
-			SceneNode* node = nullptr;
-			PhysicsBodyBehaviour* body = nullptr;
-			sf::FloatRect bb;
-			/// Same ordering as iteration over `_bodies` in the old all-pairs loop (outer = first).
-			size_t listOrder = 0;
-		};
-
-		auto pairNeedsNarrowPhase = [](const PhysicsBodyBehaviour* pb1, const PhysicsBodyBehaviour* pb2) {
-			const bool interactionPair = (pb1->GetInteractionGroups() & pb2->GetInteractionGroups()).any();
-			const bool overlapPair = (pb1->GetOverlappingGroups() & pb2->GetOverlappingGroups()).any();
-			return interactionPair || overlapPair;
-		};
-
-		std::vector<BodySweepEntry> sweepEntries;
-		sweepEntries.reserve(_bodies.size());
-		size_t bodyListIndex = 0;
-		for (auto& wBody : _bodies) {
-			auto body = wBody.lock();
-			if (!body) {
-				++bodyListIndex;
-				continue;
-			}
-			auto node = body->GetNode();
-			if (!node) {
-				++bodyListIndex;
-				continue;
-			}
-			auto shape = body->GetColliderShape();
-			if (!shape) {
-				++bodyListIndex;
-				continue;
-			}
-			auto bbox = node->GetWorldTransform().transformRect(shape->getGlobalBounds());
-			sweepEntries.push_back({node.get(), body.get(), bbox, bodyListIndex});
-			++bodyListIndex;
-		}
-
-		std::sort(sweepEntries.begin(), sweepEntries.end(), [](const BodySweepEntry& a, const BodySweepEntry& b) {
-			return a.bb.position.x < b.bb.position.x;
-		});
-
-		std::deque<size_t> active;
-		for (size_t i = 0; i < sweepEntries.size(); ++i) {
-			static const auto getBbMaxX = [](const sf::FloatRect& bbox) {
-				return bbox.position.x + bbox.size.x;
-			};
-
-			while (!active.empty() && getBbMaxX(sweepEntries[active.front()].bb) < sweepEntries[i].bb.position.x) {
-				active.pop_front();
-			}
-			for (size_t aj : active) {
-				auto& eA = sweepEntries[aj];
-				auto& eB = sweepEntries[i];
-				if (!eA.bb.findIntersection(eB.bb)) {
-					continue;
-				}
-				if (!pairNeedsNarrowPhase(eA.body, eB.body)) {
-					continue;
-				}
-				const bool aIsFirstInBodyList = eA.listOrder < eB.listOrder;
-				auto* node1 = aIsFirstInBodyList ? eA.node : eB.node;
-				auto* node2 = aIsFirstInBodyList ? eB.node : eA.node;
-				auto* body1 = aIsFirstInBodyList ? eA.body : eB.body;
-				auto* body2 = aIsFirstInBodyList ? eB.body : eA.body;
-				if (!body1 || !body2) {
-					continue;
-				}
-				if (auto intersection = DetectIntersection(node1, node2, body1, body2)) {
-					if ((body1->GetInteractionGroups() & body2->GetInteractionGroups()).any()) {
-						if (!body1->IsFixed() || !body2->IsFixed()) {
-							ResolveCollision(*intersection);
-							body1->GetOnCollideSignal().Emit(*intersection);
-							body2->GetOnCollideSignal().Emit(*intersection);
-						}
-					}
-
-					if ((body1->GetOverlappingGroups() & body2->GetOverlappingGroups()).any()) {
-						body1->GetOnOverlapSignal().Emit(*intersection);
-						body2->GetOnOverlapSignal().Emit(*intersection);
-					}
-				}
-			}
-			active.push_back(i);
-		}
-	}
-}
-
 void PhysicsProcessor::RegisterBody(shared_ptr<PhysicsBodyBehaviour> body) {
 	_bodies.emplace_back(body);
 }
@@ -161,6 +35,146 @@ void PhysicsProcessor::UnregisterBody(PhysicsBodyBehaviour* body) {
 	});
 	if (it != _bodies.end()) {
 		_bodies.erase(it);
+	}
+}
+
+void PhysicsProcessor::Update(const sf::Time& dt) {
+	const float subDt = dt.asSeconds() / _simulationSubsteps;
+	const float dampingFactor = _airFriction > 0.f ? std::exp(-_airFriction * subDt) : 1.f;
+
+	for (int i = 0; i < _simulationSubsteps; ++i) {
+		for (auto it = _bodies.begin(); it != _bodies.end();) {
+			auto body = it->lock();
+			if (!body) {
+				it = _bodies.erase(it);
+				continue;
+			}
+			MotionSubstep(body.get(), subDt, dampingFactor);
+			++it;
+		}
+
+		DetactAndResolveCollisions();
+	}
+}
+
+void PhysicsProcessor::MotionSubstep(PhysicsBodyBehaviour* body, float dtSec, float dampingFactor) {
+	auto node = Verify(body->GetNode());
+	if (!node) {
+		return;
+	}
+	if (body->IsFixed()) {
+		return;
+	}
+
+	if (_isGravityEnabled) {
+		auto gravity = _gravity * body->GetGravityScale();
+		body->AddVelocity(gravity * dtSec);
+	}
+
+	if (auto attractive = node->FindBehaviour<AttractiveBehaviour>()) {
+		if (attractive->IsEnabled()) {
+			sf::Vector2f a = _attractionField->EvaluateAcceleration(attractive);
+			body->AddVelocity(a * dtSec);
+		}
+	}
+
+	if (dampingFactor != 1.f) {
+		auto dampedVel = body->GetVelocity() * dampingFactor;
+		body->SetVelocity(dampedVel);
+	}
+
+	auto pos = Utils::GetWorldPos(node);
+	pos += body->GetVelocity() * dtSec;
+	Utils::SetLocalPosToWorld(node, pos);
+}
+
+void PhysicsProcessor::DetactAndResolveCollisions() {
+	// handle intersections — sweep-and-prune broad phase, then masks + narrow phase
+	struct BodySweepEntry
+	{
+		SceneNode* node = nullptr;
+		PhysicsBodyBehaviour* body = nullptr;
+		sf::FloatRect bb;
+		/// Same ordering as iteration over `_bodies` in the old all-pairs loop (outer = first).
+		size_t listOrder = 0;
+	};
+
+	auto pairNeedsNarrowPhase = [](const PhysicsBodyBehaviour* pb1, const PhysicsBodyBehaviour* pb2) {
+		const bool interactionPair = (pb1->GetInteractionGroups() & pb2->GetInteractionGroups()).any();
+		const bool overlapPair = (pb1->GetOverlappingGroups() & pb2->GetOverlappingGroups()).any();
+		return interactionPair || overlapPair;
+	};
+
+	std::vector<BodySweepEntry> sweepEntries;
+	sweepEntries.reserve(_bodies.size());
+	size_t bodyListIndex = 0;
+	for (auto& wBody : _bodies) {
+		auto body = wBody.lock();
+		if (!body) {
+			++bodyListIndex;
+			continue;
+		}
+		auto node = body->GetNode();
+		if (!node) {
+			++bodyListIndex;
+			continue;
+		}
+		auto shape = body->GetColliderShape();
+		if (!shape) {
+			++bodyListIndex;
+			continue;
+		}
+		auto bbox = node->GetWorldTransform().transformRect(shape->getGlobalBounds());
+		sweepEntries.push_back({node.get(), body.get(), bbox, bodyListIndex});
+		++bodyListIndex;
+	}
+
+	std::sort(sweepEntries.begin(), sweepEntries.end(), [](const BodySweepEntry& a, const BodySweepEntry& b) {
+		return a.bb.position.x < b.bb.position.x;
+	});
+
+	std::deque<size_t> active;
+	for (size_t i = 0; i < sweepEntries.size(); ++i) {
+		static const auto getBbMaxX = [](const sf::FloatRect& bbox) {
+			return bbox.position.x + bbox.size.x;
+		};
+
+		while (!active.empty() && getBbMaxX(sweepEntries[active.front()].bb) < sweepEntries[i].bb.position.x) {
+			active.pop_front();
+		}
+		for (size_t aj : active) {
+			auto& eA = sweepEntries[aj];
+			auto& eB = sweepEntries[i];
+			if (!eA.bb.findIntersection(eB.bb)) {
+				continue;
+			}
+			if (!pairNeedsNarrowPhase(eA.body, eB.body)) {
+				continue;
+			}
+			const bool aIsFirstInBodyList = eA.listOrder < eB.listOrder;
+			auto* node1 = aIsFirstInBodyList ? eA.node : eB.node;
+			auto* node2 = aIsFirstInBodyList ? eB.node : eA.node;
+			auto* body1 = aIsFirstInBodyList ? eA.body : eB.body;
+			auto* body2 = aIsFirstInBodyList ? eB.body : eA.body;
+			if (!body1 || !body2) {
+				continue;
+			}
+			if (auto intersection = DetectIntersection(node1, node2, body1, body2)) {
+				if ((body1->GetInteractionGroups() & body2->GetInteractionGroups()).any()) {
+					if (!body1->IsFixed() || !body2->IsFixed()) {
+						ResolveCollision(*intersection);
+						body1->GetOnCollideSignal().Emit(*intersection);
+						body2->GetOnCollideSignal().Emit(*intersection);
+					}
+				}
+
+				if ((body1->GetOverlappingGroups() & body2->GetOverlappingGroups()).any()) {
+					body1->GetOnOverlapSignal().Emit(*intersection);
+					body2->GetOnOverlapSignal().Emit(*intersection);
+				}
+			}
+		}
+		active.push_back(i);
 	}
 }
 
@@ -593,13 +607,13 @@ float PhysicsProcessor::GetAirFriction() const {
 }
 
 std::shared_ptr<AttractionField> PhysicsProcessor::GetAttractionField() const {
-	return _inverseSquareField;
+	return _attractionField;
 }
 
 void PhysicsProcessor::SetMotionSubsteps(int substeps) {
-	_motionSubsteps = std::clamp(substeps, 1, 10);
+	_simulationSubsteps = std::clamp(substeps, 1, 10);
 }
 
 int PhysicsProcessor::GetMotionSubsteps() const {
-	return _motionSubsteps;
+	return _simulationSubsteps;
 }

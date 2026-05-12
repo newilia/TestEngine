@@ -1,10 +1,9 @@
 #include "GameControllerBehaviour.h"
 
-#include "Engine/Behaviour/RadialUvWarpBehaviour.h"
+#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Transform.h"
 #include "Engine/Core/Utils.h"
-#include "Engine/Visual/CircleShapeVisual.h"
 #include "GameControllerBehaviour.generated.hpp"
 
 #include <cmath>
@@ -12,6 +11,10 @@
 namespace BallGame1 {
 	void GameControllerBehaviour::OnInit() {
 		EventHandlerBehaviourBase::OnInit();
+	}
+
+	void GameControllerBehaviour::OnDeinit() {
+		EventHandlerBehaviourBase::OnDeinit();
 	}
 
 	void GameControllerBehaviour::OnUpdate(const sf::Time& dt) {
@@ -38,17 +41,18 @@ namespace BallGame1 {
 		_scoreNode = scoreNode;
 	}
 
-	void GameControllerBehaviour::SetBallParameters(
-	    float mass, float restitution, float radius, const sf::Color& color) {
-		_ballMass = mass;
-		_ballRestitution = restitution;
-		_ballRadius = radius;
-		_ballColor = color;
+	void GameControllerBehaviour::SetCreateBallFunc(const std::function<std::shared_ptr<SceneNode>(void)>& func) {
+		_createBall = func;
+	}
+
+	void GameControllerBehaviour::SetShootVelocity(float vel) {
+		_shootVelocity = vel;
 	}
 
 	void GameControllerBehaviour::StartNewGame() {
-		auto ballNode = CreateBallNode();
-		AttachBallToGun(ballNode);
+		if (auto ballNode = CreateBallNode()) {
+			AttachBallToGun(ballNode);
+		}
 	}
 
 	void GameControllerBehaviour::Shoot() {
@@ -61,25 +65,19 @@ namespace BallGame1 {
 		auto gunRotation = gunNode->GetLocalTransform()->GetRotation().asRadians();
 		auto ballBody = ballNode->RequireBehaviour<PhysicsBodyBehaviour>();
 		auto moveDirection = sf::Vector2f(std::sin(gunRotation), -std::cos(gunRotation));
-		ballBody->SetVelocity(moveDirection * _ballSpeed);
+		ballBody->SetVelocity(moveDirection * _shootVelocity);
 		DetachBallFromGun();
-		AttachBallToGun(CreateBallNode());
+
+		if (auto ballNode = CreateBallNode()) {
+			AttachBallToGun(ballNode);
+		}
 	}
 
 	std::shared_ptr<SceneNode> GameControllerBehaviour::CreateBallNode() const {
-		auto ballNode = make_shared<SceneNode>();
-		ballNode->SetName("Ball");
-
-		auto body = ballNode->RequireBehaviour<PhysicsBodyBehaviour>();
-		body->SetMass(_ballMass);
-		body->SetRestitution(_ballRestitution);
-
-		auto visual = ballNode->RequireVisual<CircleShapeVisual>();
-		visual->SetRadius(_ballRadius);
-		visual->SetFillColor(_ballColor);
-
-		ballNode->RequireBehaviour<RadialUvWarpBehaviour>();
-		return ballNode;
+		if (Verify(_createBall)) {
+			return _createBall();
+		}
+		return nullptr;
 	}
 
 	void GameControllerBehaviour::AttachBallToGun(const std::shared_ptr<SceneNode>& ballNode) {
