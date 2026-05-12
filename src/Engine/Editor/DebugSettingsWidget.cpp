@@ -14,12 +14,25 @@
 namespace Engine {
 	void DebugSettingsWidget::Draw() const {
 		auto& mainContext = Engine::MainContext::GetInstance();
+		auto physicsProc = mainContext.GetPhysicsProcessor();
 
 		ImGui::SeparatorText("Simulation");
 		{
 			bool simEnabled = !mainContext.IsSimPaused();
 			if (ImGui::Checkbox("Run", &simEnabled)) {
 				mainContext.SetSimPaused(!simEnabled);
+			}
+			if (!simEnabled) {
+				ImGui::SameLine();
+				static float dt = 0.05;
+				ImGui::SliderFloat("dt", &dt, 0.001, 0.1);
+				ImGui::SameLine();
+				if (ImGui::Button("Step")) {
+					auto substeps = physicsProc->GetSimulationSubsteps();
+					physicsProc->SetSimulationSubsteps(1);
+					physicsProc->Update(sf::seconds(dt));
+					physicsProc->SetSimulationSubsteps(substeps);
+				}
 			}
 
 			if (ImGui::Button("1.0")) {
@@ -31,13 +44,13 @@ namespace Engine {
 				mainContext.SetSimSpeedMultiplier(std::max(1e-4f, speedMul));
 			}
 
-			int motionSubsteps = mainContext.GetPhysicsProcessor()->GetMotionSubsteps();
+			int motionSubsteps = physicsProc->GetSimulationSubsteps();
 			if (ImGui::SliderInt("Motion substeps", &motionSubsteps, 1, 4)) {
-				mainContext.GetPhysicsProcessor()->SetMotionSubsteps(motionSubsteps);
+				physicsProc->SetSimulationSubsteps(motionSubsteps);
 			}
 		}
 
-		if (const auto ph = mainContext.GetPhysicsProcessor()) {
+		if (const auto ph = physicsProc) {
 			ImGui::SeparatorText("Physics");
 			{
 				ImGui::Text("Bodies: %d", static_cast<int>(ph->GetAllBodies().size()));

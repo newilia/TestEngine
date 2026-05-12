@@ -27,7 +27,7 @@ void TestEnvironment::Setup() {
 	Utils::MaximizeWindow(*mainWindow);
 
 	mainContext.GetPhysicsProcessor()->SetGravityEnabled(true);
-	mainContext.GetPhysicsProcessor()->SetMotionSubsteps(2);
+	mainContext.GetPhysicsProcessor()->SetSimulationSubsteps(2);
 	mainContext.SetScene(BuildScene());
 
 	EventHandlerBase::SubscribeForEvents();

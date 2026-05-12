@@ -34,14 +34,14 @@ public:
 	void SetAirFriction(float airFriction);
 	float GetAirFriction() const;
 
-	int GetMotionSubsteps() const;
-	void SetMotionSubsteps(int substeps);
+	int GetSimulationSubsteps() const;
+	void SetSimulationSubsteps(int substeps);
 
 	std::shared_ptr<AttractionField> GetAttractionField() const;
 
 private:
 	/* TODO move to Physics utils */
-	void MotionSubstep(PhysicsBodyBehaviour* body, float dtSec, float dampingFactor);
+	void UpdateBodyVelocity(PhysicsBodyBehaviour* body, float dtSec, float dampingFactor);
 	void DetactAndResolveCollisions();
 
 	static std::optional<IntersectionDetails> DetectIntersection(
