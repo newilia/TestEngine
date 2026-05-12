@@ -256,6 +256,10 @@ namespace Utils {
 		return std::isnan(v.x) || std::isnan(v.y);
 	}
 
+	bool IsNan(const sf::FloatRect& rect) {
+		return IsNan(rect.position) || IsNan(rect.size);
+	}
+
 	std::string ToString(const sf::Vector2f& v) {
 		return fmt::format("({:.1f}, {:.1f})", v.x, v.y);
 	}
@@ -427,6 +431,7 @@ namespace Utils {
 		const auto n = Verify(node);
 		if (auto parent = n->GetParent()) {
 			const sf::Vector2f local = parent->GetWorldTransform().getInverse().transformPoint(worldPos);
+			assert(!IsNan(local));
 			n->GetLocalTransform()->SetPosition(local);
 		}
 		else {

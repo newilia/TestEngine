@@ -40,6 +40,7 @@ namespace Utils {
 	    const sf::Vector2f& worldPoint, const Visual* visual, const sf::Transform& nodeWorld);
 
 	bool IsNan(const sf::Vector2f& v);
+	bool IsNan(const sf::FloatRect& rect);
 
 	std::string ToString(const sf::Vector2f& v);
 

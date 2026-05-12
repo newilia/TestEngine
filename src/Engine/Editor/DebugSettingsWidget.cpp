@@ -74,7 +74,7 @@ namespace Engine {
 				}
 
 				float airFriction = ph->GetAirFriction();
-				if (ImGui::DragFloat("Air friction (1/s)", &airFriction, 0.01f, 0.f, 100.f, "%.3f")) {
+				if (ImGui::SliderFloat("Air friction (1/s)", &airFriction, 0.f, 0.1f, "%.4f")) {
 					ph->SetAirFriction(airFriction);
 				}
 

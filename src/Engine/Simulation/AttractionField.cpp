@@ -39,6 +39,7 @@ sf::Vector2f AttractionField::EvaluateForce(const shared_ptr<AttractiveBehaviour
 		return w.expired();
 	});
 
+	sf::Vector2f result{};
 	if (!receiver) {
 		return {};
 	}
@@ -47,8 +48,10 @@ sf::Vector2f AttractionField::EvaluateForce(const shared_ptr<AttractiveBehaviour
 		return {};
 	}
 	const sf::Vector2f posI = Utils::GetWorldPos(recvNode);
+	if (Utils::IsNan(posI)) {
+		return {};
+	}
 
-	sf::Vector2f acc{};
 	for (const auto& w : _sources) {
 		const auto other = w.lock();
 		if (!other || !other->IsEnabled() || other == receiver) {
@@ -69,7 +72,12 @@ sf::Vector2f AttractionField::EvaluateForce(const shared_ptr<AttractiveBehaviour
 		if (!(recvRb->GetInteractionGroups() & otherRb->GetInteractionGroups()).any()) {
 			continue;
 		}
-		sf::Vector2f d = Utils::GetWorldPos(otherNode) - posI; // from receiver toward source
+		auto otherPos = Utils::GetWorldPos(otherNode);
+		if (Utils::IsNan(otherPos)) {
+			continue;
+		}
+
+		sf::Vector2f d = otherPos - posI; // from receiver toward source
 		const float d2 = d.x * d.x + d.y * d.y;
 		const float e2 = _softeningEps * _softeningEps;
 		const float r2 = d2 + e2;
@@ -91,9 +99,11 @@ sf::Vector2f AttractionField::EvaluateForce(const shared_ptr<AttractiveBehaviour
 			}
 		}
 
-		acc += scalar * sourceWeight * d;
+		auto force = scalar * sourceWeight * d;
+		assert(!Utils::IsNan(force));
+		result += force;
 	}
-	return acc;
+	return result;
 }
 
 float AttractionField::GetGlobalStrengthScale() const {
