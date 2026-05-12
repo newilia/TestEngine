@@ -75,10 +75,15 @@ namespace {
 		ImGui::DockBuilderDockWindow(kInspectorWindowTitle, id_left_bottom);
 		ImGui::DockBuilderDockWindow(kToolsWindowTitle, id_right_top);
 		ImGui::DockBuilderDockWindow(kDebugWindowTitle, id_right_bottom);
-		ImGui::DockBuilderDockWindow(kImGuiStyleTitle, id_right_bottom);
 		ImGui::DockBuilderDockWindow(kGameBackgroundWindowTitle, id_right_bottom);
+		ImGui::DockBuilderDockWindow(kImGuiStyleTitle, id_right_bottom);
 
 		ImGui::DockBuilderFinish(dockspace_id);
+
+		/*ImGuiID window_id = ImHashStr(kDebugWindowTitle);
+		if (ImGuiWindow* window = ImGui::FindWindowByID(window_id)) {
+			ImGui::FocusWindow(window);
+		}*/
 		layout_finished = true;
 	}
 

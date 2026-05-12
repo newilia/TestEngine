@@ -49,15 +49,25 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 				it = _bodies.erase(it);
 				continue;
 			}
-			MotionSubstep(body.get(), subDt, dampingFactor);
+			UpdateBodyVelocity(body.get(), subDt, dampingFactor);
 			++it;
+		}
+		for (auto it = _bodies.begin(); it != _bodies.end(); ++it) {
+			auto body = it->lock();
+			auto node = body->GetNode();
+			if (!node) {
+				continue;
+			}
+			auto pos = Utils::GetWorldPos(node);
+			pos += body->GetVelocity() * subDt;
+			Utils::SetLocalPosToWorld(node, pos);
 		}
 
 		DetactAndResolveCollisions();
 	}
 }
 
-void PhysicsProcessor::MotionSubstep(PhysicsBodyBehaviour* body, float dtSec, float dampingFactor) {
+void PhysicsProcessor::UpdateBodyVelocity(PhysicsBodyBehaviour* body, float dtSec, float dampingFactor) {
 	auto node = Verify(body->GetNode());
 	if (!node) {
 		return;
@@ -82,10 +92,6 @@ void PhysicsProcessor::MotionSubstep(PhysicsBodyBehaviour* body, float dtSec, fl
 		auto dampedVel = body->GetVelocity() * dampingFactor;
 		body->SetVelocity(dampedVel);
 	}
-
-	auto pos = Utils::GetWorldPos(node);
-	pos += body->GetVelocity() * dtSec;
-	Utils::SetLocalPosToWorld(node, pos);
 }
 
 void PhysicsProcessor::DetactAndResolveCollisions() {
@@ -500,14 +506,13 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 		return;
 	}
 
-	auto shape1 = pb1->GetColliderShape();
-	auto shape2 = pb2->GetColliderShape();
-
 	if (pb1->IsFixed()) { // fixed body must be second
 		std::swap(body1, body2);
 		std::swap(pb1, pb2);
-		std::swap(shape1, shape2);
 	}
+
+	auto shape1 = pb1->GetColliderShape();
+	auto shape2 = pb2->GetColliderShape();
 
 	const auto m1 = pb1->GetMass();
 	const auto m2 = pb2->GetMass();
@@ -610,10 +615,10 @@ std::shared_ptr<AttractionField> PhysicsProcessor::GetAttractionField() const {
 	return _attractionField;
 }
 
-void PhysicsProcessor::SetMotionSubsteps(int substeps) {
-	_simulationSubsteps = std::clamp(substeps, 1, 10);
+void PhysicsProcessor::SetSimulationSubsteps(int substeps) {
+	_simulationSubsteps;
 }
 
-int PhysicsProcessor::GetMotionSubsteps() const {
+int PhysicsProcessor::GetSimulationSubsteps() const {
 	return _simulationSubsteps;
 }
