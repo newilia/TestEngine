@@ -20,9 +20,9 @@ public:
 
 	explicit SelectTool(SelectCallback onSelect);
 
-	[[nodiscard]] bool processEvent(const sf::Event& event) override;
-	void drawOverlay(sf::RenderWindow& window) override;
-	void drawToolParametersUi() override;
+	[[nodiscard]] bool ProcessEvent(const sf::Event& event) override;
+	void DrawOverlay(sf::RenderWindow& window) override;
+	void DrawToolParametersUi() override;
 
 private:
 	enum class MarqueeMode

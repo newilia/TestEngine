@@ -29,8 +29,6 @@ public:
 	void SetGravityEnabled(bool enabled);
 	bool IsGravityEnabled() const;
 
-	/// Per-second linear damping applied to every non-fixed body's velocity
-	/// (`v *= exp(-airFriction * dt)`). 0 disables it; values are clamped to >= 0.
 	void SetAirFriction(float airFriction);
 	float GetAirFriction() const;
 
@@ -40,8 +38,8 @@ public:
 	std::shared_ptr<AttractionField> GetAttractionField() const;
 
 private:
-	/* TODO move to Physics utils */
-	void UpdateBodyVelocity(PhysicsBodyBehaviour* body, float dtSec, float dampingFactor);
+	void IntergateVelocity(PhysicsBodyBehaviour* body, float dtSec, float dampingFactor);
+	void IntegratePosition(PhysicsBodyBehaviour* body, float dtSec);
 	void DetactAndResolveCollisions();
 
 	static std::optional<IntersectionDetails> DetectIntersection(

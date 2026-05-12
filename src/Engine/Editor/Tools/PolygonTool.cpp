@@ -122,7 +122,7 @@ void PolygonTool::endStroke() {
 	_lastSamplePixel.reset();
 }
 
-bool PolygonTool::processEvent(const sf::Event& event) {
+bool PolygonTool::ProcessEvent(const sf::Event& event) {
 	if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
 		if (pressed->button == sf::Mouse::Button::Left) {
 			beginStroke(ToWorldPixel(pressed->position), pressed->position);
@@ -166,7 +166,7 @@ bool PolygonTool::processEvent(const sf::Event& event) {
 	return false;
 }
 
-void PolygonTool::drawOverlay(sf::RenderWindow& window) {
+void PolygonTool::DrawOverlay(sf::RenderWindow& window) {
 	if (!_isDrawing || _worldSamples.empty()) {
 		return;
 	}
@@ -188,7 +188,7 @@ void PolygonTool::drawOverlay(sf::RenderWindow& window) {
 	    ImDrawFlags_None, kOverlayLineThickness);
 }
 
-void PolygonTool::drawToolParametersUi() {
+void PolygonTool::DrawToolParametersUi() {
 	ImGui::TextUnformatted("Draw a convex shape");
 	ImGui::Checkbox("Attach physical body behaviour", &_isAttachPhysicsBody);
 }

@@ -35,8 +35,8 @@ namespace Engine {
 					break;
 				}
 
-				PresentFrame();
 				UpdateTick();
+				PresentFrame();
 			}
 		}
 	}
@@ -116,16 +116,15 @@ namespace Engine {
 	void MainLoop::UpdateTick() {
 		auto& mainContext = Engine::MainContext::GetInstance();
 		mainContext.OnStartUpdateTick();
-
-		if (mainContext.IsSimPaused()) {
-			return;
-		}
 		auto simulatedDt = mainContext.GetSimTickDt();
-		if (auto scene = mainContext.GetScene()) {
-			scene->Update(simulatedDt);
-		}
+		Editor::GetInstance().OnUpdate(simulatedDt);
 
-		mainContext.GetPhysicsProcessor()->Update(simulatedDt);
+		if (!mainContext.IsSimPaused()) {
+			mainContext.GetPhysicsProcessor()->Update(simulatedDt);
+			if (auto scene = mainContext.GetScene()) {
+				scene->Update(simulatedDt);
+			}
+		}
 	}
 
 	bool MainLoop::PresentFrame() {
@@ -147,15 +146,9 @@ namespace Engine {
 		ImGui::SFML::Update(*window, dt);
 		scene->NotifyPresentRec(dt);
 
-		auto& editor = Engine::Editor::GetInstance();
-		editor.GetEditorToolManager().OnPresent(dt); // TODO combine with Update?
-		editor.Update(dt.asSeconds());
-		editor.Draw();
-
 		PresentMainWindowScene(*window, scene);
 
-		editor.DrawViewportSelectionOverlay(*window);
-		editor.GetEditorToolManager().DrawOverlay(*window);
+		Engine::Editor::GetInstance().Draw(*window);
 
 		ImGui::SFML::Render(*window);
 		window->display();

@@ -32,9 +32,8 @@ namespace Engine {
 		void Toggle();
 		void SetIsOpen(bool isOpen);
 		bool IsOpen() const;
-		void Update(float dt);
-		void Draw();
-		void DrawViewportSelectionOverlay(sf::RenderWindow& window);
+		void OnUpdate(const sf::Time dt);
+		void Draw(sf::RenderWindow& window);
 		void OnEvent(const sf::Event& event);
 		void OnResize(const sf::Event::Resized& e);
 		void OnKeyPress(const sf::Event::KeyPressed& e);
@@ -71,6 +70,10 @@ namespace Engine {
 
 	private:
 		Editor();
+
+		void DrawLayout();
+		void DrawCursorWorldCoordsOverlay(sf::RenderWindow& window);
+		void DrawViewportSelectionOverlay(sf::RenderWindow& window);
 
 		bool _isOpen = true;
 		std::optional<sf::Vector2i> _cameraMoveMouseOriginPos; // nullopt when not moving

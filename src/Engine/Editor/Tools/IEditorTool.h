@@ -14,14 +14,14 @@ public:
 	virtual ~IEditorTool() = default;
 
 	/// Return true if the tool handled the event and it must not propagate to `EventsDispatcher` / scene handlers.
-	virtual bool processEvent(const sf::Event& event) = 0;
+	virtual bool ProcessEvent(const sf::Event& event) = 0;
 
 	/// Optional per-frame hook (e.g. Pull force arrow sync); called during present after scene `NotifyPresentRec`.
-	virtual void onPresent(const sf::Time& /*dt*/) {}
+	virtual void Update(const sf::Time& /*dt*/) {}
 
 	/// Optional world overlay after the scene is drawn (same frame as ImGui `Update`…`Render`).
-	virtual void drawOverlay(sf::RenderWindow& window);
+	virtual void DrawOverlay(sf::RenderWindow& window);
 
 	/// Optional ImGui block in the editor tools "Parameters" section while this tool is active.
-	virtual void drawToolParametersUi() {}
+	virtual void DrawToolParametersUi() {}
 };

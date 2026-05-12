@@ -15,9 +15,9 @@ class MoveTool final : public IEditorTool
 public:
 	explicit MoveTool(SelectTool::SelectCallback onSelect = nullptr);
 
-	bool processEvent(const sf::Event& event) override;
-	void onPresent(const sf::Time& dt) override;
-	void drawToolParametersUi() override;
+	bool ProcessEvent(const sf::Event& event) override;
+	void Update(const sf::Time& dt) override;
+	void DrawToolParametersUi() override;
 
 private:
 	SelectTool::SelectCallback _onSelect;

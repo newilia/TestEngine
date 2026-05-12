@@ -2,10 +2,10 @@
 
 #include <imgui.h>
 
-bool TapTool::processEvent(const sf::Event& /*event*/) {
+bool TapTool::ProcessEvent(const sf::Event& /*event*/) {
 	return false;
 }
 
-void TapTool::drawToolParametersUi() {
+void TapTool::DrawToolParametersUi() {
 	ImGui::TextUnformatted("Pass tap event to scene");
 }

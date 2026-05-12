@@ -76,7 +76,7 @@ void PullTool::SetPullDestination(const sf::Vector2f& worldPos) {
 	_destination = worldPos;
 }
 
-bool PullTool::processEvent(const sf::Event& event) {
+bool PullTool::ProcessEvent(const sf::Event& event) {
 	auto toVec2f = [](sf::Vector2i p) {
 		return sf::Vector2f(static_cast<float>(p.x), static_cast<float>(p.y));
 	};
@@ -143,7 +143,7 @@ bool PullTool::processEvent(const sf::Event& event) {
 	return false;
 }
 
-void PullTool::onPresent(const sf::Time& dt) {
+void PullTool::Update(const sf::Time& dt) {
 	auto body = _pullingBody.lock();
 	if (!body) {
 		return;
@@ -165,7 +165,7 @@ void PullTool::onPresent(const sf::Time& dt) {
 	}
 }
 
-void PullTool::drawOverlay(sf::RenderWindow& window) {
+void PullTool::DrawOverlay(sf::RenderWindow& window) {
 	if (!_debugArrowEnabled) {
 		return;
 	}
@@ -175,7 +175,7 @@ void PullTool::drawOverlay(sf::RenderWindow& window) {
 	_arrow.draw(window, sf::RenderStates::Default);
 }
 
-void PullTool::drawToolParametersUi() {
+void PullTool::DrawToolParametersUi() {
 	float scale = GetPullForceScale();
 	if (ImGui::SliderFloat("Pull force scale", &scale, 0.01f, 10.f, "%.3f", ImGuiSliderFlags_Logarithmic)) {
 		SetPullForceScale(scale);

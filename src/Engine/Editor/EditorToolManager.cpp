@@ -82,26 +82,26 @@ bool EditorToolManager::ProcessEvent(const sf::Event& event) {
 	if (_activeToolIndex < 0 || _activeToolIndex >= kToolCount || !_tools[_activeToolIndex]) {
 		return false;
 	}
-	return _tools[_activeToolIndex]->processEvent(event);
+	return _tools[_activeToolIndex]->ProcessEvent(event);
 }
 
-void EditorToolManager::OnPresent(const sf::Time& dt) {
+void EditorToolManager::OnUpdate(const sf::Time& dt) {
 	if (_activeToolIndex < 0 || _activeToolIndex >= kToolCount || !_tools[_activeToolIndex]) {
 		return;
 	}
-	_tools[_activeToolIndex]->onPresent(dt);
+	_tools[_activeToolIndex]->Update(dt);
 }
 
 void EditorToolManager::DrawOverlay(sf::RenderWindow& window) {
 	if (_activeToolIndex < 0 || _activeToolIndex >= kToolCount || !_tools[_activeToolIndex]) {
 		return;
 	}
-	_tools[_activeToolIndex]->drawOverlay(window);
+	_tools[_activeToolIndex]->DrawOverlay(window);
 }
 
 void EditorToolManager::DrawActiveToolParametersUi() {
 	if (_activeToolIndex < 0 || _activeToolIndex >= kToolCount || !_tools[_activeToolIndex]) {
 		return;
 	}
-	_tools[_activeToolIndex]->drawToolParametersUi();
+	_tools[_activeToolIndex]->DrawToolParametersUi();
 }

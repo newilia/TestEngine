@@ -5,6 +5,6 @@
 class TapTool final : public IEditorTool
 {
 public:
-	[[nodiscard]] bool processEvent(const sf::Event& event) override;
-	void drawToolParametersUi() override;
+	[[nodiscard]] bool ProcessEvent(const sf::Event& event) override;
+	void DrawToolParametersUi() override;
 };
