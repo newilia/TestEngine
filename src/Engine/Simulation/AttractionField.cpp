@@ -34,7 +34,7 @@ static float EffectiveSourceMass(const PhysicsBodyBehaviour& rb) {
 	return rb.GetMass();
 }
 
-sf::Vector2f AttractionField::EvaluateAcceleration(const shared_ptr<AttractiveBehaviour>& receiver) const {
+sf::Vector2f AttractionField::EvaluateForce(const shared_ptr<AttractiveBehaviour>& receiver) const {
 	_sources.remove_if([](const std::weak_ptr<AttractiveBehaviour>& w) {
 		return w.expired();
 	});
@@ -52,6 +52,9 @@ sf::Vector2f AttractionField::EvaluateAcceleration(const shared_ptr<AttractiveBe
 	for (const auto& w : _sources) {
 		const auto other = w.lock();
 		if (!other || !other->IsEnabled() || other == receiver) {
+			continue;
+		}
+		if (other->GetAttraction() == 0.f) {
 			continue;
 		}
 		const auto otherNode = other->GetNode();
@@ -73,12 +76,9 @@ sf::Vector2f AttractionField::EvaluateAcceleration(const shared_ptr<AttractiveBe
 		if (r2 < 1e-8f) {
 			continue;
 		}
-		const float invR = 1.f / std::sqrt(r2);
+		const float invR = 1.f / std::sqrt(r2); // TODO ?
 		const float invR3 = invR * invR * invR; // 1 / (d2+e2)^{3/2}
 
-		if (other->GetAttraction() == 0.f) {
-			continue;
-		}
 		const float t = std::abs(other->GetAttraction()) / 100.f;
 		const float mag = std::pow(t, 1.2f);
 		const float dir = (other->GetAttraction() > 0.f) ? 1.f : -1.f;

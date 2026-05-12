@@ -17,7 +17,7 @@
 
 SelectTool::SelectTool(SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
 
-bool SelectTool::processEvent(const sf::Event& event) {
+bool SelectTool::ProcessEvent(const sf::Event& event) {
 	auto applyPick = [this](const sf::Vector2f& worldPoint, const bool isCtrlPressed) -> bool {
 		auto scene = Engine::MainContext::GetInstance().GetScene();
 		auto picked = scene ? scene->FindTopMostNodeAtPoint(worldPoint) : nullptr;
@@ -158,7 +158,7 @@ std::vector<std::shared_ptr<SceneNode>> SelectTool::BuildLiveMarqueeSelection(
 	return result;
 }
 
-void SelectTool::drawOverlay(sf::RenderWindow& window) {
+void SelectTool::DrawOverlay(sf::RenderWindow& window) {
 	if (!_isMarqueeSelecting) {
 		return;
 	}
@@ -174,7 +174,7 @@ void SelectTool::drawOverlay(sf::RenderWindow& window) {
 	window.draw(marquee);
 }
 
-void SelectTool::drawToolParametersUi() {
+void SelectTool::DrawToolParametersUi() {
 	ImGui::TextUnformatted("Click selects; Ctrl+Click toggles.");
 	ImGui::TextUnformatted("Drag L->R: intersect mode (blue). Drag R->L: contain mode (orange).");
 }

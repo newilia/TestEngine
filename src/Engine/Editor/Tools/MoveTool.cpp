@@ -24,7 +24,7 @@ namespace {
 
 MoveTool::MoveTool(SelectTool::SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
 
-bool MoveTool::processEvent(const sf::Event& event) {
+bool MoveTool::ProcessEvent(const sf::Event& event) {
 	auto toWorld = [&](sf::Vector2i pixel) -> sf::Vector2f {
 		if (auto mainWindow = Engine::MainContext::GetInstance().GetMainWindow()) {
 			return Utils::MapWindowPixelToWorld(*mainWindow, pixel);
@@ -108,7 +108,7 @@ bool MoveTool::processEvent(const sf::Event& event) {
 	return false;
 }
 
-void MoveTool::onPresent(const sf::Time& dt) {
+void MoveTool::Update(const sf::Time& dt) {
 	if (auto node = _grabbed.lock()) {
 		if (auto rb = node->FindBehaviour<PhysicsBodyBehaviour>()) {
 			ZeroMotion(rb.get());
@@ -116,6 +116,6 @@ void MoveTool::onPresent(const sf::Time& dt) {
 	}
 }
 
-void MoveTool::drawToolParametersUi() {
+void MoveTool::DrawToolParametersUi() {
 	ImGui::TextUnformatted("Drag physical bodies with LMB; velocity is cleared while moving.");
 }

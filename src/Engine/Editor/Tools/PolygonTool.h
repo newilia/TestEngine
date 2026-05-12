@@ -18,9 +18,9 @@ class PolygonTool final : public IEditorTool
 public:
 	explicit PolygonTool(SelectTool::SelectCallback onSelect = nullptr);
 
-	bool processEvent(const sf::Event& event) override;
-	void drawOverlay(sf::RenderWindow& window) override;
-	void drawToolParametersUi() override;
+	bool ProcessEvent(const sf::Event& event) override;
+	void DrawOverlay(sf::RenderWindow& window) override;
+	void DrawToolParametersUi() override;
 
 private:
 	void beginStroke(const sf::Vector2f& world, const sf::Vector2i& pixel);

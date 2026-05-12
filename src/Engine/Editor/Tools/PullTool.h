@@ -16,13 +16,13 @@ class PullTool final : public IEditorTool
 public:
 	explicit PullTool(SelectTool::SelectCallback onSelect = nullptr);
 
-	bool processEvent(const sf::Event& event) override;
-	void onPresent(const sf::Time& dt) override;
-	void drawOverlay(sf::RenderWindow& window) override;
-	void drawToolParametersUi() override;
+	bool ProcessEvent(const sf::Event& event) override;
+	void Update(const sf::Time& dt) override;
+	void DrawOverlay(sf::RenderWindow& window) override;
+	void DrawToolParametersUi() override;
 
-	void SetPullForceScale(float v);
 	float GetPullForceScale() const;
+	void SetPullForceScale(float v);
 	bool IsDebugArrowEnabled() const;
 	void SetDebugArrowEnabled(bool v);
 
@@ -31,6 +31,7 @@ private:
 	void StopPull();
 	void SetPullDestination(const sf::Vector2f& dest);
 
+private:
 	SelectTool::SelectCallback _onSelect;
 	float _pullForceScale = 1.f;
 	float _dampening = 0.05f;

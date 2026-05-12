@@ -29,7 +29,7 @@ public:
 	void SetActiveToolIndex(int index);
 
 	bool ProcessEvent(const sf::Event& event);
-	void OnPresent(const sf::Time& dt);
+	void OnUpdate(const sf::Time& dt);
 	void DrawOverlay(sf::RenderWindow& window);
 	void DrawActiveToolParametersUi();
 

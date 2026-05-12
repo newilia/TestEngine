@@ -23,6 +23,11 @@ namespace {
 		return full.transformPoint(c.getGeometricCenter());
 	}
 
+	bool IsRectValid(const sf::FloatRect rect) {
+		using std::isnan;
+		return !isnan(rect.position.x) && !isnan(rect.position.y) && !isnan(rect.size.x) && !isnan(rect.size.y);
+	}
+
 } // namespace
 
 void PhysicsProcessor::RegisterBody(shared_ptr<PhysicsBodyBehaviour> body) {
@@ -39,8 +44,8 @@ void PhysicsProcessor::UnregisterBody(PhysicsBodyBehaviour* body) {
 }
 
 void PhysicsProcessor::Update(const sf::Time& dt) {
-	const float subDt = dt.asSeconds() / _simulationSubsteps;
-	const float dampingFactor = _airFriction > 0.f ? std::exp(-_airFriction * subDt) : 1.f;
+	const float substepDt = dt.asSeconds() / _simulationSubsteps;
+	const float airDampingFactor = _airFriction > 0.f ? std::exp(-_airFriction * substepDt) : 1.f;
 
 	for (int i = 0; i < _simulationSubsteps; ++i) {
 		for (auto it = _bodies.begin(); it != _bodies.end();) {
@@ -49,25 +54,19 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 				it = _bodies.erase(it);
 				continue;
 			}
-			UpdateBodyVelocity(body.get(), subDt, dampingFactor);
+			IntergateVelocity(body.get(), substepDt, airDampingFactor);
 			++it;
 		}
 		for (auto it = _bodies.begin(); it != _bodies.end(); ++it) {
 			auto body = it->lock();
-			auto node = body->GetNode();
-			if (!node) {
-				continue;
-			}
-			auto pos = Utils::GetWorldPos(node);
-			pos += body->GetVelocity() * subDt;
-			Utils::SetLocalPosToWorld(node, pos);
+			IntegratePosition(body.get(), substepDt);
 		}
 
 		DetactAndResolveCollisions();
 	}
 }
 
-void PhysicsProcessor::UpdateBodyVelocity(PhysicsBodyBehaviour* body, float dtSec, float dampingFactor) {
+void PhysicsProcessor::IntergateVelocity(PhysicsBodyBehaviour* body, float dtSec, float airDampingFactor) {
 	auto node = Verify(body->GetNode());
 	if (!node) {
 		return;
@@ -83,15 +82,25 @@ void PhysicsProcessor::UpdateBodyVelocity(PhysicsBodyBehaviour* body, float dtSe
 
 	if (auto attractive = node->FindBehaviour<AttractiveBehaviour>()) {
 		if (attractive->IsEnabled()) {
-			sf::Vector2f a = _attractionField->EvaluateAcceleration(attractive);
+			sf::Vector2f a = _attractionField->EvaluateForce(attractive);
 			body->AddVelocity(a * dtSec);
 		}
 	}
 
-	if (dampingFactor != 1.f) {
-		auto dampedVel = body->GetVelocity() * dampingFactor;
+	if (airDampingFactor != 1.f) {
+		auto dampedVel = body->GetVelocity() * airDampingFactor;
 		body->SetVelocity(dampedVel);
 	}
+}
+
+void PhysicsProcessor::IntegratePosition(PhysicsBodyBehaviour* body, float dtSec) {
+	auto node = body->GetNode();
+	if (!node) {
+		return;
+	}
+	auto pos = Utils::GetWorldPos(node);
+	pos += body->GetVelocity() * dtSec;
+	Utils::SetLocalPosToWorld(node, pos);
 }
 
 void PhysicsProcessor::DetactAndResolveCollisions() {
@@ -131,6 +140,10 @@ void PhysicsProcessor::DetactAndResolveCollisions() {
 			continue;
 		}
 		auto bbox = node->GetWorldTransform().transformRect(shape->getGlobalBounds());
+		if (!IsRectValid(bbox)) {
+			++bodyListIndex;
+			continue;
+		}
 		sweepEntries.push_back({node.get(), body.get(), bbox, bodyListIndex});
 		++bodyListIndex;
 	}
@@ -616,7 +629,7 @@ std::shared_ptr<AttractionField> PhysicsProcessor::GetAttractionField() const {
 }
 
 void PhysicsProcessor::SetSimulationSubsteps(int substeps) {
-	_simulationSubsteps;
+	_simulationSubsteps = substeps;
 }
 
 int PhysicsProcessor::GetSimulationSubsteps() const {

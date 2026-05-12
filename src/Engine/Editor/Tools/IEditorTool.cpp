@@ -2,4 +2,4 @@
 
 #include <SFML/Graphics/RenderWindow.hpp>
 
-void IEditorTool::drawOverlay(sf::RenderWindow& /*window*/) {}
+void IEditorTool::DrawOverlay(sf::RenderWindow& /*window*/) {}

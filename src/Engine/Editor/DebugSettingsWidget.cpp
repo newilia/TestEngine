@@ -28,7 +28,7 @@ namespace Engine {
 				ImGui::SliderFloat("dt", &dt, 0.001, 0.1);
 				ImGui::SameLine();
 				if (ImGui::Button("Step")) {
-					auto substeps = physicsProc->GetSimulationSubsteps();
+					int substeps = physicsProc->GetSimulationSubsteps();
 					physicsProc->SetSimulationSubsteps(1);
 					physicsProc->Update(sf::seconds(dt));
 					physicsProc->SetSimulationSubsteps(substeps);
@@ -44,9 +44,9 @@ namespace Engine {
 				mainContext.SetSimSpeedMultiplier(std::max(1e-4f, speedMul));
 			}
 
-			int motionSubsteps = physicsProc->GetSimulationSubsteps();
-			if (ImGui::SliderInt("Motion substeps", &motionSubsteps, 1, 4)) {
-				physicsProc->SetSimulationSubsteps(motionSubsteps);
+			int substeps = physicsProc->GetSimulationSubsteps();
+			if (ImGui::SliderInt("Motion substeps", &substeps, 1, 4)) {
+				physicsProc->SetSimulationSubsteps(substeps);
 			}
 		}
 
