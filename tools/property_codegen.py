@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Scan src/**/*.h for META_CLASS(), META_PROPERTY_BASE(), /// @property, /// @getter, /// @setter, and /// @method tags; emit src/Codegen/<Stem>.generated.hpp.
+Scan src/**/*.h for META_CLASS(), META_PROPERTY_BASE(), META_ENUM(), /// @property, /// @getter,
+/// @setter, and /// @method tags; emit src/Codegen/<Stem>.generated.hpp.
 """
 
 from __future__ import annotations
@@ -14,7 +15,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 11
+CACHE_VERSION = 12
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
@@ -117,6 +118,28 @@ VOID_METHOD_RE = re.compile(
     r"(\w+)\s*\(\s*\)\s*"
     r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
 )
+_QUALIFIED_ID_ENUM = r"[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*"
+META_ENUM_LINE_RE = re.compile(
+    r"^\s*META_ENUM\s*\(\s*([A-Za-z_]\w*)\s*,\s*((?:[A-Za-z_]\w*)(?:\s*,\s*[A-Za-z_]\w*)*)\s*\)\s*;\s*$"
+)
+ENUM_PROP_FIELD_RE = re.compile(
+    r"^\s*(?:inline\s+|static\s+|mutable\s+)*"
+    + rf"({_QUALIFIED_ID_ENUM})"
+    + r"\s+(\w+)\s*(?:=\s*[^;]+)?\s*;\s*$"
+)
+GETTER_ENUM_METHOD_RE = re.compile(
+    r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?"
+    r"(?:const\s+)?"
+    + rf"({_QUALIFIED_ID_ENUM})(?:\s*&)?\s+"
+    + r"(\w+)\s*\([^)]*\)\s*"
+    r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
+)
+SETTER_ENUM_METHOD_RE = re.compile(
+    r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?void\s+"
+    r"(\w+)\s*\(\s*(?:const\s+)?"
+    + rf"({_QUALIFIED_ID_ENUM})(?:\s*&)?\s*\w+\s*\)\s*"
+    r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
+)
 KNOWN_TYPES = frozenset(
     {
         "float",
@@ -151,6 +174,7 @@ class PropSpec:
     is_pair: bool = False
     map_value_type: str | None = None
     assoc_container: str | None = None
+    enum_enumerators: tuple[str, ...] | None = None
 
 
 @dataclass
@@ -193,6 +217,7 @@ class GetterDecl:
     col: int
     attrs: dict[str, Any]
     is_vector: bool = False
+    enum_enumerators: tuple[str, ...] | None = None
 
 
 @dataclass
@@ -203,6 +228,7 @@ class SetterDecl:
     col: int
     attrs: dict[str, Any]
     is_vector: bool = False
+    enum_enumerators: tuple[str, ...] | None = None
 
 
 def pair_tag_key(attrs: dict[str, Any]) -> str | None:
@@ -326,6 +352,7 @@ def merge_getter_setter_decls(
                 is_pair=False,
                 map_value_type=None,
                 assoc_container=None,
+                enum_enumerators=g.enum_enumerators,
             )
         )
 
@@ -595,6 +622,51 @@ def classify_open_brace(
     return "other", None
 
 
+def class_enum_scope_parts(ns_stack: list[str], block_stack: list[dict[str, Any]]) -> list[str]:
+    parts: list[str] = list(ns_stack)
+    for b in block_stack:
+        if b.get("kind") == "class" and isinstance(b.get("name"), str):
+            parts.append(b["name"])
+    return parts
+
+
+def register_meta_enum(
+    path: Path,
+    line_no: int,
+    enum_name: str,
+    enumerators_csv: str,
+    ns_stack: list[str],
+    block_stack: list[dict[str, Any]],
+    file_enums: dict[str, tuple[str, ...]],
+) -> None:
+    ids = [x.strip() for x in enumerators_csv.split(",") if x.strip()]
+    if not ids:
+        raise ParseError("META_ENUM requires at least one enumerator", path, line_no, 1)
+    for eid in ids:
+        if not re.fullmatch(r"[A-Za-z_]\w*", eid):
+            raise ParseError(f"invalid enumerator `{eid}` in META_ENUM", path, line_no, 1)
+    parts = class_enum_scope_parts(ns_stack, block_stack) + [enum_name]
+    fq = "::".join(parts)
+    if fq in file_enums:
+        raise ParseError(f"duplicate META_ENUM for `{fq}`", path, line_no, 1)
+    file_enums[fq] = tuple(ids)
+
+
+def resolve_reflected_enum_type(
+    raw_type: str,
+    class_namespaces: tuple[str, ...],
+    file_enums: dict[str, tuple[str, ...]],
+) -> tuple[str, tuple[str, ...]] | None:
+    t = re.sub(r"\s*::\s*", "::", raw_type.strip())
+    if t in file_enums:
+        return t, file_enums[t]
+    if "::" not in t:
+        candidate = "::".join((*class_namespaces, t))
+        if candidate in file_enums:
+            return candidate, file_enums[candidate]
+    return None
+
+
 def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
     text = path.read_text(encoding="utf-8", errors="replace")
     lines = text.splitlines()
@@ -606,6 +678,7 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
     pending_ns: str | None = None
     finished: list[ClassSpec] = []
     pending: PendingTag | None = None
+    file_enums: dict[str, tuple[str, ...]] = {}
 
     def close_class_block(b: dict[str, Any]) -> None:
         if b.get("property_base") and not b.get("meta"):
@@ -810,26 +883,55 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                     )
                 else:
                     m_field = FIELD_RE.match(line)
-                    if not m_field:
-                        raise ParseError(
-                            f"expected field with supported type after @property (tag at line {pline})",
-                            path,
-                            line_no,
-                            1,
+                    if m_field:
+                        cpp_type, member = m_field.group(1), m_field.group(2)
+                        inner.setdefault("props", []).append(
+                            PropSpec(
+                                cpp_type=cpp_type,
+                                member=member,
+                                line=pline,
+                                col=pcol,
+                                attrs=attrs,
+                                is_getter=False,
+                                is_vector=False,
+                                is_bitset=False,
+                            )
                         )
-                    cpp_type, member = m_field.group(1), m_field.group(2)
-                    inner.setdefault("props", []).append(
-                        PropSpec(
-                            cpp_type=cpp_type,
-                            member=member,
-                            line=pline,
-                            col=pcol,
-                            attrs=attrs,
-                            is_getter=False,
-                            is_vector=False,
-                            is_bitset=False,
-                        )
-                    )
+                    else:
+                        m_en = ENUM_PROP_FIELD_RE.match(line)
+                        if m_en:
+                            raw_t, member = m_en.group(1), m_en.group(2)
+                            class_ns = tuple(inner["namespaces"])
+                            resolved = resolve_reflected_enum_type(raw_t, class_ns, file_enums)
+                            if resolved is None:
+                                raise ParseError(
+                                    f"expected field with supported type after @property (unknown type `{raw_t}`, "
+                                    f"tag at line {pline})",
+                                    path,
+                                    line_no,
+                                    1,
+                                )
+                            canon, en = resolved
+                            inner.setdefault("props", []).append(
+                                PropSpec(
+                                    cpp_type=canon,
+                                    member=member,
+                                    line=pline,
+                                    col=pcol,
+                                    attrs=attrs,
+                                    is_getter=False,
+                                    is_vector=False,
+                                    is_bitset=False,
+                                    enum_enumerators=en,
+                                )
+                            )
+                        else:
+                            raise ParseError(
+                                f"expected field with supported type after @property (tag at line {pline})",
+                                path,
+                                line_no,
+                                1,
+                            )
             elif kind == "getter":
                 if re.search(r"\bstatic\b", line):
                     raise ParseError(
@@ -866,12 +968,32 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                         )
                     )
                 else:
-                    raise ParseError(
-                        f"expected instance method with supported return type after @getter (tag at line {pline})",
-                        path,
-                        line_no,
-                        1,
-                    )
+                    m_getter_enum = GETTER_ENUM_METHOD_RE.match(line)
+                    resolved_ge: tuple[str, tuple[str, ...]] | None = None
+                    if m_getter_enum:
+                        raw_t, method = m_getter_enum.group(1), m_getter_enum.group(2)
+                        class_ns = tuple(inner["namespaces"])
+                        resolved_ge = resolve_reflected_enum_type(raw_t, class_ns, file_enums)
+                    if resolved_ge is not None:
+                        canon, en = resolved_ge
+                        inner.setdefault("getter_decls", []).append(
+                            GetterDecl(
+                                cpp_type=canon,
+                                method=method,
+                                line=pline,
+                                col=pcol,
+                                attrs=attrs,
+                                is_vector=False,
+                                enum_enumerators=en,
+                            )
+                        )
+                    else:
+                        raise ParseError(
+                            f"expected instance method with supported return type after @getter (tag at line {pline})",
+                            path,
+                            line_no,
+                            1,
+                        )
             elif kind == "setter":
                 if re.search(r"\bstatic\b", line):
                     raise ParseError(
@@ -894,25 +1016,45 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                         )
                     )
                 else:
-                    m_setter = SETTER_METHOD_RE.match(line)
-                    if not m_setter:
-                        raise ParseError(
-                            f"expected void Method(value_type) after @setter (tag at line {pline})",
-                            path,
-                            line_no,
-                            1,
+                    m_setter_enum = SETTER_ENUM_METHOD_RE.match(line)
+                    resolved_se: tuple[str, tuple[str, ...]] | None = None
+                    if m_setter_enum:
+                        smethod, raw_t = m_setter_enum.group(1), m_setter_enum.group(2)
+                        class_ns = tuple(inner["namespaces"])
+                        resolved_se = resolve_reflected_enum_type(raw_t, class_ns, file_enums)
+                    if resolved_se is not None:
+                        canon, en = resolved_se
+                        inner.setdefault("setter_decls", []).append(
+                            SetterDecl(
+                                cpp_type=canon,
+                                method=smethod,
+                                line=pline,
+                                col=pcol,
+                                attrs=attrs,
+                                is_vector=False,
+                                enum_enumerators=en,
+                            )
                         )
-                    smethod, stype = m_setter.group(1), m_setter.group(2)
-                    inner.setdefault("setter_decls", []).append(
-                        SetterDecl(
-                            cpp_type=stype,
-                            method=smethod,
-                            line=pline,
-                            col=pcol,
-                            attrs=attrs,
-                            is_vector=False,
+                    else:
+                        m_setter = SETTER_METHOD_RE.match(line)
+                        if not m_setter:
+                            raise ParseError(
+                                f"expected void Method(value_type) after @setter (tag at line {pline})",
+                                path,
+                                line_no,
+                                1,
+                            )
+                        smethod, stype = m_setter.group(1), m_setter.group(2)
+                        inner.setdefault("setter_decls", []).append(
+                            SetterDecl(
+                                cpp_type=stype,
+                                method=smethod,
+                                line=pline,
+                                col=pcol,
+                                attrs=attrs,
+                                is_vector=False,
+                            )
                         )
-                    )
             else:
                 if re.search(r"\bstatic\b", line):
                     raise ParseError(
@@ -938,6 +1080,11 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                     )
                 )
             pending = None
+            continue
+
+        me = META_ENUM_LINE_RE.match(line)
+        if me and not re.search(r"^\s*#\s*define\s+META_ENUM\b", raw_line):
+            register_meta_enum(path, line_no, me.group(1), me.group(2), ns_stack, block_stack, file_enums)
             continue
 
         m_using_bitset_alias = USING_BITSET_ALIAS_RE.match(line)
@@ -1156,6 +1303,15 @@ def method_menu_label(m: MethodSpec) -> str:
 
 
 def validate_values_provider_tag(p: PropSpec, path: Path) -> None:
+    if p.enum_enumerators is not None:
+        if p.attrs.get("valuesProvider") is not None:
+            raise ParseError(
+                "valuesProvider / @valuesProvider is not supported for META_ENUM properties",
+                path,
+                p.line,
+                p.col,
+            )
+        return
     vp = p.attrs.get("valuesProvider")
     if vp is None:
         return
@@ -2190,6 +2346,9 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
         out.append(f"#include {h}")
     if assoc_headers:
         out.append("#include <iterator>")
+    if any(p.enum_enumerators is not None for c in classes for p in c.props):
+        out.append("#include <utility>")
+        out.append("#include <vector>")
     out.append("")
 
     for c in classes:
@@ -2253,6 +2412,34 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                 )
                 meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
                 emit_std_pair_property(out, p, path, meta_arg, readonly)
+                continue
+
+            if p.enum_enumerators is not None:
+                has_meta = readonly or any(
+                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed", "valuesProvider")
+                )
+                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
+                canon = p.cpp_type
+                if p.is_getter:
+                    get_lambda = f"[this]() {{ return static_cast<int>(this->{p.member}()); }}"
+                else:
+                    get_lambda = f"[this]() {{ return static_cast<int>({p.member}); }}"
+                sn = setter_name if isinstance(setter_name, str) else ""
+                if p.is_getter and has_setter_method:
+                    set_lambda = f"[this](int v) {{ this->{sn}(static_cast<{canon}>(v)); }}"
+                elif readonly:
+                    set_lambda = "[this](int) {}"
+                else:
+                    set_lambda = f"[this](int v) {{ {p.member} = static_cast<{canon}>(v); }}"
+                fid = member_to_field_id(p.member)
+                label_esc = cpp_escape_string(default_label(p))
+                opts = ", ".join(
+                    f'{{ static_cast<int>({canon}::{ev}), "{cpp_escape_string(ev)}" }}'
+                    for ev in p.enum_enumerators
+                )
+                out.append(
+                    f'\tb.addEnum("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {{ {opts} }}, {meta_arg});'
+                )
                 continue
 
             if p.cpp_type not in KNOWN_TYPES:
