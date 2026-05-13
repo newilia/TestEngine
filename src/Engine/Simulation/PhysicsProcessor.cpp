@@ -89,7 +89,7 @@ sf::Vector2f PhysicsProcessor::EvaluateExternalForces(PhysicsBodyBehaviour* body
 	}
 	if (_airFriction != 0.f) {
 		const auto vel = body->GetVelocity();
-		if (vel != sf::Vector2f{}) {
+		if (vel.x + vel.y > 1e-10) {
 			result -= vel.normalized() * vel.lengthSquared() * _airFriction;
 		}
 	}
@@ -604,30 +604,47 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 	}
 
 	/* reaction */
-	auto norm_v1 = Utils::ScalarProjection(pb1->GetVelocity(), normal);
-	auto norm_v2 = Utils::ScalarProjection(pb2->GetVelocity(), normal);
-	auto norm_v2_to_v1 = norm_v1 - norm_v2;
+	const auto v1 = pb1->GetVelocity();
+	const auto v2 = pb2->GetVelocity();
+	const float norm_v1 = Utils::ScalarProjection(v1, normal);
+	const float norm_v2 = Utils::ScalarProjection(v2, normal);
+	const float norm_v2_to_v1 = norm_v1 - norm_v2;
 
 	if (bool areMovingTowards = norm_v2_to_v1 > 0.f) {
 		constexpr static float kNormVelocityCutoff = 100.f; // suppress low-energy collisions
 		const bool needSuppress = norm_v2_to_v1 < kNormVelocityCutoff;
-		const auto restitution = needSuppress ? 0.f : std::min(pb1->GetRestitution(), pb2->GetRestitution());
+		const auto restitution = std::min(pb1->GetRestitution(), pb2->GetRestitution());
 
-		float norm_dv1 = 0.f;
-		float norm_dv2 = 0.f;
+		// Tangent components are not affected by the collision response.
+		const sf::Vector2f v1_tang = v1 - normal * norm_v1;
+		const sf::Vector2f v2_tang = v2 - normal * norm_v2;
 
-		if (pb2->IsFixed()) {
-			norm_dv1 = -(1.f + restitution) * norm_v2_to_v1;
+		sf::Vector2f v1_norm;
+		sf::Vector2f v2_norm;
+
+		if (needSuppress) {
+			// Perfectly-inelastic along the normal: both bodies share the same
+			// normal velocity derived from the total normal momentum.
+			const float commonNormSpeed = pb2->IsFixed() ? 0.f : (m1 * norm_v1 + m2 * norm_v2) / (m1 + m2);
+			v1_norm = normal * commonNormSpeed;
+			v2_norm = pb2->IsFixed() ? normal * norm_v2 : v1_norm;
 		}
 		else {
-			norm_dv1 = -(1.f + restitution) * m2 / (m1 + m2) * norm_v2_to_v1;
-			norm_dv2 = (1.f + restitution) * m1 / (m1 + m2) * norm_v2_to_v1;
+			if (pb2->IsFixed()) {
+				v1_norm = normal * (-restitution * norm_v1);
+				v2_norm = normal * norm_v2;
+			}
+			else {
+				const float new_norm_v1 = norm_v1 - (1.f + restitution) * m2 / (m1 + m2) * norm_v2_to_v1;
+				const float new_norm_v2 = norm_v2 + (1.f + restitution) * m1 / (m1 + m2) * norm_v2_to_v1;
+				v1_norm = normal * new_norm_v1;
+				v2_norm = normal * new_norm_v2;
+			}
 		}
-
-		auto dv1 = normal * norm_dv1;
-		auto dv2 = normal * norm_dv2;
-		pb1->AddVelocity(dv1);
-		pb2->AddVelocity(dv2);
+		pb1->SetVelocity(v1_tang + v1_norm);
+		if (!pb2->IsFixed()) {
+			pb2->SetVelocity(v2_tang + v2_norm);
+		}
 		assert(!Utils::IsNan(pb1->GetVelocity()) && !Utils::IsNan(pb2->GetVelocity()));
 	}
 }

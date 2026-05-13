@@ -184,9 +184,9 @@ namespace BallGame1 {
 			attractive->SetAttraction(attraction);
 		}
 
-		auto warp = ballNode->RequireBehaviour<RadialUvWarpBehaviour>();
+		/*auto warp = ballNode->RequireBehaviour<RadialUvWarpBehaviour>();
 		warp->SetInfluenceRadius(warpRadius);
-		warp->SetIntensity(warpIntensity);
+		warp->SetIntensity(warpIntensity);*/
 
 		return ballNode;
 	}
