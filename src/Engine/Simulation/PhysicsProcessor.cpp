@@ -12,6 +12,7 @@
 #include <cassert>
 #include <cmath>
 #include <deque>
+#include <limits>
 #include <optional>
 #include <vector>
 
@@ -88,7 +89,9 @@ sf::Vector2f PhysicsProcessor::EvaluateExternalForces(PhysicsBodyBehaviour* body
 	}
 	if (_airFriction != 0.f) {
 		const auto vel = body->GetVelocity();
-		result -= vel.normalized() * vel.lengthSquared() * _airFriction;
+		if (vel != sf::Vector2f{}) {
+			result -= vel.normalized() * vel.lengthSquared() * _airFriction;
+		}
 	}
 	assert(!Utils::IsNan(result));
 	return result;
@@ -292,12 +295,10 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectPolygonPolygonInterse
 
 std::optional<IntersectionDetails> PhysicsProcessor::DetectCirclePolygonIntersection(const SceneNode& circleNode,
     const sf::CircleShape* circle, const SceneNode& polygonNode, const sf::Shape* polygonShape) {
-	std::vector<sf::Vector2f> edges_i_p;
-	edges_i_p.reserve(2);
-
-	const auto polygonPointsCount = polygonShape->getPointCount();
 	IntersectionDetails result;
-
+	std::vector<sf::Vector2f> intersectionPoints;
+	intersectionPoints.reserve(2);
+	const auto polygonPointsCount = polygonShape->getPointCount();
 	const sf::Vector2f circleCenterWorld = WorldCircleCenter(circleNode, *circle);
 
 	for (size_t i = 0; i < polygonPointsCount; ++i) {
@@ -305,59 +306,73 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectCirclePolygonIntersec
 		    Utils::GetShapePointWorldPos(polygonShape, &polygonNode, (i + 1) % polygonPointsCount)};
 
 		if (auto i_point = FindSegmentCircleIntersectionPoint(edge, circleCenterWorld, circle->getRadius())) {
-			edges_i_p.emplace_back(i_point->p1);
+			intersectionPoints.emplace_back(i_point->p1);
 			if (i_point->p2) {
-				edges_i_p.emplace_back(*i_point->p2);
+				intersectionPoints.emplace_back(*i_point->p2);
 			}
 		}
 	}
 
-	if (edges_i_p.size() == 0) {
+	if (intersectionPoints.size() <= 1) {
 		return std::nullopt;
 	}
 
-	if (edges_i_p.size() == 1) {
-		result.intersection.start = *edges_i_p.begin();
-		result.intersection.end = *edges_i_p.begin();
-	}
-	else {
-		result.intersection.start = *edges_i_p.begin();
-		result.intersection.end = *edges_i_p.rbegin();
-	}
-
+	result.intersection.start = *intersectionPoints.begin();
+	result.intersection.end = *intersectionPoints.rbegin();
+	assert(result.intersection.start != result.intersection.end);
 	return result;
 }
 
 std::optional<IntersectionDetails> PhysicsProcessor::DetectCircleCircleIntersection(
     const SceneNode& node1, const sf::CircleShape* circle1, const SceneNode& node2, const sf::CircleShape* circle2) {
 	using namespace Utils;
-	auto r1 = circle1->getRadius();
-	auto r2 = circle2->getRadius();
-	auto pos1 = WorldCircleCenter(node1, *circle1);
-	auto pos2 = WorldCircleCenter(node2, *circle2) - pos1;
-	float a = -2 * pos2.x;
-	float b = -2 * pos2.y;
-	float c = Sq(pos2.x) + Sq(pos2.y) + Sq(r1) - Sq(r2);
-	auto p = Sq(c) - Sq(r1) * (Sq(a) + Sq(b));
-	if (p > std::numeric_limits<float>::epsilon()) {
+	const float r1 = circle1->getRadius();
+	const float r2 = circle2->getRadius();
+	const sf::Vector2f pos1 = WorldCircleCenter(node1, *circle1);
+	const sf::Vector2f centerOffset = WorldCircleCenter(node2, *circle2) - pos1;
+
+	const float distSq = Sq(centerOffset.x) + Sq(centerOffset.y);
+	// Radical-axis math uses denom = 4 * distSq; skip concentric / near-concentric (denom → 0, radii match → non-finite).
+	constexpr float kCoincidentCentersRelSq = 1e-12f;
+	if (distSq <= kCoincidentCentersRelSq * Sq(std::max(r1 + r2, 1e-20f))) {
 		return std::nullopt;
 	}
-	float x0 = -a * c / (Sq(a) + Sq(b)) + pos1.x;
-	float y0 = -b * c / (Sq(a) + Sq(b)) + pos1.y;
+
+	const float centerDist = std::sqrt(distSq);
+	const float sumR = r1 + r2;
+	const float diffR = std::fabs(r1 - r2);
+	const float sumScale = std::max(sumR, 1e-6f);
+	const float sepEps = std::numeric_limits<float>::epsilon() * std::max(8.f * sumScale, 1.f);
+	if (centerDist > sumR + sepEps) {
+		return std::nullopt;
+	}
+	if (centerDist + sepEps < diffR) {
+		return std::nullopt;
+	}
+
+	const float a = -2.f * centerOffset.x;
+	const float b = -2.f * centerOffset.y;
+	const float c = distSq + Sq(r1) - Sq(r2);
+	const float denom = Sq(a) + Sq(b);
+
+	const float p = Sq(c) - Sq(r1) * denom;
+	const float pClampTol = std::numeric_limits<float>::epsilon() * std::max({std::fabs(Sq(c)), Sq(r1) * denom, 1.f});
+	if (p > pClampTol) {
+		return std::nullopt;
+	}
+
+	const float invDenom = 1.f / denom;
+	const float x0 = -a * c * invDenom + pos1.x;
+	const float y0 = -b * c * invDenom + pos1.y;
+	const float halfChord = std::sqrt(std::max(0.f, -p)) / denom;
+	if (halfChord <= std::numeric_limits<float>::epsilon()) {
+		return std::nullopt;
+	}
 
 	IntersectionDetails result;
-	if (IsZero(p)) {
-		result.intersection.start = sf::Vector2f(x0, y0);
-		result.intersection.end = result.intersection.start;
-	}
-	else {
-		float d = Sq(r1) - Sq(c) / (Sq(a) + Sq(b));
-		float mult = sqrt(d / (Sq(a) + Sq(b)));
-		result.intersection.start.x = x0 + b * mult;
-		result.intersection.start.y = y0 - a * mult;
-		result.intersection.end.x = x0 - b * mult;
-		result.intersection.end.y = y0 + a * mult;
-	}
+	result.intersection.start = {x0 + b * halfChord, y0 - a * halfChord};
+	result.intersection.end = {x0 - b * halfChord, y0 + a * halfChord};
+	assert(result.intersection.start != result.intersection.end);
 	return result;
 }
 
@@ -462,9 +477,13 @@ std::optional<SegmentIntersectionPoints> PhysicsProcessor::FindSegmentCircleInte
 	}
 
 	float slope = v.y / v.x;
-	float a = Sq(slope) + 1;
-	float b = slope * s.start.y - Sq(slope);
-	float c = Sq(s.start.y) + Sq(slope) * s.start.x - s.start.x * s.start.y * slope - Sq(radius);
+	float x0 = s.start.x;
+	float y0 = s.start.y;
+	float c_line = y0 - slope * x0;
+
+	float a = 1.f + Sq(slope);
+	float b = 2.f * slope * c_line;
+	float c = Sq(c_line) - Sq(radius);
 
 	auto x_resolution = SolveQuadraticEquation(a, b, c);
 	if (!x_resolution) {
@@ -534,74 +553,81 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 
 	const auto m1 = pb1->GetMass();
 	const auto m2 = pb2->GetMass();
-	auto v1_to_v2 = pb2->GetVelocity() - pb1->GetVelocity();
 
-	if (v1_to_v2.x == 0 && v1_to_v2.y == 0) {
-		v1_to_v2.x = 1e-5f; // resolve collision somehow
-		return;
+	assert(collision.intersection.getDirVector() != sf::Vector2f{});
+
+	auto tangent = collision.intersection.getDirVector().normalized();
+	auto normal = Utils::Normalize(sf::Vector2f(-tangent.y, tangent.x));
+	if (Utils::Dot(Utils::GetWorldPos(body2) - Utils::GetWorldPos(body1), normal) < 0.f) {
+		tangent = -tangent;
+		normal = -normal;
 	}
 
-	auto b1_tangent = collision.intersection.getDirVector();
-	auto b1_normal = Utils::Normalize(sf::Vector2f(-b1_tangent.y, b1_tangent.x));
-	if (Utils::Dot(Utils::GetWorldPos(body2) - Utils::GetWorldPos(body1), b1_normal) < 0.f) {
-		b1_tangent = -b1_tangent;
-		b1_normal = -b1_normal;
-	}
-
-	/* overlapping fixing */
-	auto getPenetrationDepth = [collisionPoint = collision.intersection.start](
+	/* displacement */
+	const sf::Vector2f collisionPoint = collision.intersection.start;
+	auto getPenetrationDepth = [collisionPoint](
 	                               sf::Shape const* shape, SceneNode const* node, const sf::Vector2f& bodyNormal) {
-		float result = 0.f;
 		auto* bodyBeh = node->FindBehaviour<PhysicsBodyBehaviour>().get();
 		if (!bodyBeh) {
 			return 0.f;
 		}
+		// Circle–circle / circle–polygon (circle side): farthest point along bodyNormal is on the
+		// geometric circle, not on SFML's tessellated outline.
+		if (const auto* circ = dynamic_cast<const sf::CircleShape*>(shape)) {
+			return Utils::ScalarProjection(WorldCircleCenter(*node, *circ) - collisionPoint, bodyNormal) +
+			       circ->getRadius();
+		}
+		// Polygon–polygon / circle–polygon (polygon side): for a convex outline the support map in
+		// direction bodyNormal hits a vertex (same as max over tessellation points).
+		float result = 0.f;
 		for (size_t i = 0; i < shape->getPointCount(); ++i) {
-			auto penetrationVec = Utils::GetShapePointWorldPos(shape, node, i) - collisionPoint;
-			float depth = Utils::Project(penetrationVec, bodyNormal);
-			result = std::max(result, depth);
+			const auto penetrationVec = Utils::GetShapePointWorldPos(shape, node, i) - collisionPoint;
+			result = std::max(result, Utils::ScalarProjection(penetrationVec, bodyNormal));
 		}
 		return result;
 	};
 
-	float penetrationDepthSum =
-	    getPenetrationDepth(shape1, body1.get(), b1_normal) + getPenetrationDepth(shape2, body2.get(), -b1_normal);
+	constexpr float kDisplacementFactor = 0.9f;
+	float displacementDistance =
+	    (getPenetrationDepth(shape1, body1.get(), normal) + getPenetrationDepth(shape2, body2.get(), -normal)) *
+	    kDisplacementFactor;
 
 	if (pb2->IsFixed()) {
-		auto b1_pos = Utils::GetWorldPos(body1) - b1_normal * penetrationDepthSum;
+		auto b1_pos = Utils::GetWorldPos(body1) - normal * displacementDistance;
 		Utils::SetLocalPosToWorld(body1, b1_pos);
 	}
 	else {
-		auto b1_pos = Utils::GetWorldPos(body1) - b1_normal * penetrationDepthSum * (m1 / (m1 + m2));
+		auto b1_pos = Utils::GetWorldPos(body1) - normal * displacementDistance * (m1 / (m1 + m2));
 		Utils::SetLocalPosToWorld(body1, b1_pos);
-		auto b2_pos = Utils::GetWorldPos(body2) + b1_normal * penetrationDepthSum * (m2 / (m1 + m2));
+		auto b2_pos = Utils::GetWorldPos(body2) + normal * displacementDistance * (m2 / (m1 + m2));
 		Utils::SetLocalPosToWorld(body2, b2_pos);
 	}
 
-	/* velocities handling */
-	if (bool areMovingTowards = Utils::Dot(b1_normal, v1_to_v2) < 0.f) {
-		const auto r = pb1->GetRestitution() * pb2->GetRestitution();
+	/* reaction */
+	auto norm_v1 = Utils::ScalarProjection(pb1->GetVelocity(), normal);
+	auto norm_v2 = Utils::ScalarProjection(pb2->GetVelocity(), normal);
+	auto norm_v2_to_v1 = norm_v1 - norm_v2;
 
-		auto norm_v1 = Utils::Project(pb1->GetVelocity(), b1_normal);
-		auto norm_v2 = Utils::Project(pb2->GetVelocity(), b1_normal);
-		auto norm_v_diff = norm_v1 - norm_v2;
+	if (bool areMovingTowards = norm_v2_to_v1 > 0.f) {
+		constexpr static float kNormVelocityCutoff = 100.f; // suppress low-energy collisions
+		const bool needSuppress = norm_v2_to_v1 < kNormVelocityCutoff;
+		const auto restitution = needSuppress ? 0.f : std::min(pb1->GetRestitution(), pb2->GetRestitution());
 
 		float norm_dv1 = 0.f;
 		float norm_dv2 = 0.f;
 
 		if (pb2->IsFixed()) {
-			norm_dv1 = -(1.f + r) * norm_v_diff;
+			norm_dv1 = -(1.f + restitution) * norm_v2_to_v1;
 		}
 		else {
-			norm_dv1 = -(1.f + r) * m2 / (m1 + m2) * norm_v_diff;
-			norm_dv2 = (1.f + r) * m1 / (m1 + m2) * norm_v_diff;
+			norm_dv1 = -(1.f + restitution) * m2 / (m1 + m2) * norm_v2_to_v1;
+			norm_dv2 = (1.f + restitution) * m1 / (m1 + m2) * norm_v2_to_v1;
 		}
 
-		auto dv1 = b1_normal * norm_dv1;
-		auto dv2 = b1_normal * norm_dv2;
+		auto dv1 = normal * norm_dv1;
+		auto dv2 = normal * norm_dv2;
 		pb1->AddVelocity(dv1);
 		pb2->AddVelocity(dv2);
-
 		assert(!Utils::IsNan(pb1->GetVelocity()) && !Utils::IsNan(pb2->GetVelocity()));
 	}
 }

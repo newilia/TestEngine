@@ -7,8 +7,13 @@
 
 namespace {
 	constexpr int kMinCirclePoints = 3;
+	constexpr int kDefaultCirclePoints = 64;
 	constexpr int kMaxCirclePoints = 512;
 } // namespace
+
+CircleShapeVisual::CircleShapeVisual() {
+	_circle.setPointCount(kDefaultCirclePoints);
+}
 
 const sf::Shape* CircleShapeVisual::GetBaseShape() const {
 	return &_circle;
