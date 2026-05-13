@@ -9,9 +9,13 @@
 
 #include <SFML/Graphics/CircleShape.hpp>
 
+#include <algorithm>
 #include <list>
 #include <memory>
 #include <optional>
+#include <random>
+#include <utility>
+#include <vector>
 
 class PhysicsProcessor : public Updatable
 {
@@ -40,6 +44,11 @@ public:
 	sf::Vector2f EvaluateExternalForces(PhysicsBodyBehaviour* body) const;
 
 private:
+	template <typename Fn, typename URBG>
+	void VisitBodiesInRandomOrder(Fn&& visitor, URBG&& urbg);
+	template <typename Fn>
+	void VisitBodiesInRandomOrder(Fn&& visitor);
+
 	void IntergateVelocity(PhysicsBodyBehaviour* body, float dtSec);
 	void IntegratePosition(PhysicsBodyBehaviour* body, float dtSec);
 	void DetactAndResolveCollisions();
@@ -65,3 +74,25 @@ private:
 	float _airFriction = 0.f;
 	int _simulationSubsteps = 1;
 };
+
+template <typename Fn, typename URBG>
+void PhysicsProcessor::VisitBodiesInRandomOrder(Fn&& visitor, URBG&& urbg) {
+	if (_bodies.empty()) {
+		return;
+	}
+	std::vector<std::weak_ptr<PhysicsBodyBehaviour>> order;
+	order.reserve(_bodies.size());
+	for (const auto& w : _bodies) {
+		order.push_back(w);
+	}
+	std::shuffle(order.begin(), order.end(), std::forward<URBG>(urbg));
+	for (auto& w : order) {
+		std::forward<Fn>(visitor)(w);
+	}
+}
+
+template <typename Fn>
+void PhysicsProcessor::VisitBodiesInRandomOrder(Fn&& visitor) {
+	thread_local std::mt19937 rng(std::random_device{}());
+	VisitBodiesInRandomOrder(std::forward<Fn>(visitor), rng);
+}

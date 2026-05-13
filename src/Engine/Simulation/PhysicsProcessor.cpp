@@ -43,20 +43,16 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 	const float substepDt = dt.asSeconds() / _simulationSubsteps;
 
 	for (int i = 0; i < _simulationSubsteps; ++i) {
-		for (auto it = _bodies.begin(); it != _bodies.end();) {
-			auto body = it->lock();
-			if (!body) {
-				it = _bodies.erase(it);
-				continue;
+		VisitBodiesInRandomOrder([&](const std::weak_ptr<PhysicsBodyBehaviour>& wBody) {
+			if (auto body = wBody.lock()) {
+				IntergateVelocity(body.get(), substepDt);
 			}
-			IntergateVelocity(body.get(), substepDt);
-			++it;
-		}
-		for (auto it = _bodies.begin(); it != _bodies.end(); ++it) {
-			auto body = it->lock();
-			IntegratePosition(body.get(), substepDt);
-		}
-
+		});
+		VisitBodiesInRandomOrder([&](const std::weak_ptr<PhysicsBodyBehaviour>& wBody) {
+			if (auto body = wBody.lock()) {
+				IntegratePosition(body.get(), substepDt);
+			}
+		});
 		DetactAndResolveCollisions();
 	}
 }
@@ -130,30 +126,31 @@ void PhysicsProcessor::DetactAndResolveCollisions() {
 	std::vector<BodySweepEntry> sweepEntries;
 	sweepEntries.reserve(_bodies.size());
 	size_t bodyListIndex = 0;
-	for (auto& wBody : _bodies) {
+
+	VisitBodiesInRandomOrder([&](const std::weak_ptr<PhysicsBodyBehaviour>& wBody) {
 		auto body = wBody.lock();
 		if (!body) {
 			++bodyListIndex;
-			continue;
+			return;
 		}
 		auto node = body->GetNode();
 		if (!node) {
 			++bodyListIndex;
-			continue;
+			return;
 		}
 		auto shape = body->GetColliderShape();
 		if (!shape) {
 			++bodyListIndex;
-			continue;
+			return;
 		}
 		auto bbox = node->GetWorldTransform().transformRect(shape->getGlobalBounds());
 		if (Utils::IsNan(bbox)) {
 			++bodyListIndex;
-			continue;
+			return;
 		}
 		sweepEntries.push_back({node.get(), body.get(), bbox, bodyListIndex});
 		++bodyListIndex;
-	}
+	});
 
 	std::sort(sweepEntries.begin(), sweepEntries.end(), [](const BodySweepEntry& a, const BodySweepEntry& b) {
 		return a.bb.position.x < b.bb.position.x;
@@ -177,7 +174,7 @@ void PhysicsProcessor::DetactAndResolveCollisions() {
 			if (!pairNeedsNarrowPhase(eA.body, eB.body)) {
 				continue;
 			}
-			const bool aIsFirstInBodyList = eA.listOrder < eB.listOrder;
+			const bool aIsFirstInBodyList = static_cast<bool>(rand());
 			auto* node1 = aIsFirstInBodyList ? eA.node : eB.node;
 			auto* node2 = aIsFirstInBodyList ? eB.node : eA.node;
 			auto* body1 = aIsFirstInBodyList ? eA.body : eB.body;
