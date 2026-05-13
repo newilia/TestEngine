@@ -13,6 +13,12 @@
 				"isDefault": true
 			},
 			"problemMatcher": "$msCompile",
+			"presentation": {
+				"reveal": "always",
+				"focus": true,
+				"revealProblems": "never",
+				"panel": "shared"
+			},
 			"detail": "Uses CMake Tools variant (status bar Debug/Release)."
 		},
 		{
@@ -38,14 +44,55 @@
 			"problemMatcher": []
 		},
 		{
+			"label": "Kill TestEngine (if running)",
+			"type": "process",
+			"command": "true",
+			"args": [],
+			"windows": {
+				"command": "cmd.exe",
+				"args": [
+					"/c",
+					"taskkill /F /IM TestEngine.exe /T >nul 2>&1 & exit /b 0"
+				]
+			},
+			"linux": {
+				"command": "/bin/sh",
+				"args": [
+					"-c",
+					"pkill -x TestEngine 2>/dev/null; exit 0"
+				]
+			},
+			"osx": {
+				"command": "/bin/sh",
+				"args": [
+					"-c",
+					"pkill -x TestEngine 2>/dev/null; exit 0"
+				]
+			},
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "silent",
+				"panel": "shared"
+			}
+		},
+		{
 			"label": "Property codegen",
 			"type": "process",
-			"command": "python",
+			"command": "python3",
 			"args": [
 				"${workspaceFolder}/tools/property_codegen.py",
 				"--root",
 				"${workspaceFolder}"
 			],
+			"windows": {
+				"command": "py",
+				"args": [
+					"-3",
+					"${workspaceFolder}/tools/property_codegen.py",
+					"--root",
+					"${workspaceFolder}"
+				]
+			},
 			"options": {
 				"cwd": "${workspaceFolder}"
 			},
@@ -72,7 +119,9 @@
 			},
 			"group": "build",
 			"presentation": {
-				"reveal": "silent",
+				"reveal": "always",
+				"focus": true,
+				"revealProblems": "never",
 				"panel": "shared"
 			},
 			"problemMatcher": "$msCompile"
@@ -93,7 +142,9 @@
 			},
 			"group": "build",
 			"presentation": {
-				"reveal": "silent",
+				"reveal": "always",
+				"focus": true,
+				"revealProblems": "never",
 				"panel": "shared"
 			},
 			"problemMatcher": "$msCompile"
@@ -102,6 +153,7 @@
 			"label": "Prelaunch Debug",
 			"dependsOrder": "sequence",
 			"dependsOn": [
+				"Kill TestEngine (if running)",
 				"Property codegen",
 				"CMake: build Debug"
 			],
@@ -111,6 +163,7 @@
 			"label": "Prelaunch Release",
 			"dependsOrder": "sequence",
 			"dependsOn": [
+				"Kill TestEngine (if running)",
 				"Property codegen",
 				"CMake: build Release"
 			],
