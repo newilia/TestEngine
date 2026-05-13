@@ -20,7 +20,8 @@ namespace Utils {
 	sf::Vector2f Normalize(const sf::Vector2f& vec);
 	float Dot(const sf::Vector2f& a, const sf::Vector2f& b);
 	sf::Vector2f Reflect(const sf::Vector2f& vector, const sf::Vector2f& relativeVector);
-	float Project(const sf::Vector2f& a, const sf::Vector2f& b);
+	float ScalarProjection(const sf::Vector2f& a, const sf::Vector2f& b);
+	sf::Vector2f Projection(const sf::Vector2f& a, const sf::Vector2f& b);
 	bool ArePointsCollinear(const sf::Vector2f& p1, const sf::Vector2f& p2, const sf::Vector2f& p3);
 
 	sf::Vector2f Rotate(const sf::Vector2f& v, float angle);

@@ -43,6 +43,7 @@ private:
 	void IntergateVelocity(PhysicsBodyBehaviour* body, float dtSec);
 	void IntegratePosition(PhysicsBodyBehaviour* body, float dtSec);
 	void DetactAndResolveCollisions();
+	void ResolveCollision(const IntersectionDetails& collision);
 
 	static std::optional<IntersectionDetails> DetectIntersection(
 	    SceneNode* node1, SceneNode* node2, PhysicsBodyBehaviour* body1, PhysicsBodyBehaviour* body2);
@@ -55,7 +56,6 @@ private:
 	static std::optional<SegmentIntersectionPoints> FindSegmentsIntersectionPoint(const Segment& e, const Segment& f);
 	static std::optional<SegmentIntersectionPoints> FindSegmentCircleIntersectionPoint(
 	    const Segment& seg, const sf::Vector2f& circleCenter, float radius);
-	static void ResolveCollision(const IntersectionDetails& collision);
 
 private:
 	std::shared_ptr<AttractionField> _attractionField = std::make_shared<AttractionField>();

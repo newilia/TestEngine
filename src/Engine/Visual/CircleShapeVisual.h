@@ -11,7 +11,7 @@ class CircleShapeVisual : public ShapeVisualBase
 	META_PROPERTY_BASE(ShapeVisualBase)
 
 public:
-	CircleShapeVisual() = default;
+	CircleShapeVisual();
 	const sf::Shape* GetBaseShape() const override;
 
 public:

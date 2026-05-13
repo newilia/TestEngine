@@ -147,12 +147,16 @@ namespace Utils {
 		return vector - 2.f * normal * Dot(vector, normal);
 	}
 
-	float Project(const sf::Vector2f& a, const sf::Vector2f& b) {
+	float ScalarProjection(const sf::Vector2f& a, const sf::Vector2f& b) {
 		auto result = Dot(a, b);
 		if (auto lengthB = Length(b); lengthB > std::numeric_limits<float>::epsilon()) {
 			result /= Length(b);
 		}
 		return result;
+	}
+
+	sf::Vector2f Projection(const sf::Vector2f& a, const sf::Vector2f& b) {
+		return b * ScalarProjection(a, b);
 	}
 
 	bool ArePointsCollinear(const sf::Vector2f& p1, const sf::Vector2f& p2, const sf::Vector2f& p3) {

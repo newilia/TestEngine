@@ -90,7 +90,7 @@ namespace BallGame1 {
 
 	std::shared_ptr<SceneNode> Env::CreateFieldNode() {
 		const auto wallThickness = 100;
-		const auto wallRestitution = 0.9;
+		const auto wallRestitution = 0.2f;
 
 		const float hx = _fieldSize.x * 0.5f;
 		const float hy = _fieldSize.y * 0.5f;
@@ -146,7 +146,7 @@ namespace BallGame1 {
 		node->AddChild(arrowNode);
 
 		auto gunController = node->RequireBehaviour<GunControllerBehaviour>();
-		gunController->SetRotationSpeed(1.5f);
+		gunController->SetRotationSpeed(2.5f);
 		constexpr auto halfAngle = sf::degrees(65);
 		gunController->SetRotationLimits(-halfAngle, halfAngle);
 
@@ -161,10 +161,10 @@ namespace BallGame1 {
 
 	std::shared_ptr<SceneNode> Env::CreateBallNode() {
 		constexpr float mass = 500.0f;
-		constexpr float restitution = 0.8f;
+		constexpr float restitution = 0.7f;
 		constexpr float radius = 20.0f;
 		constexpr auto color = sf::Color(128, 128, 128, 255);
-		constexpr float attraction = 500000;
+		constexpr float attraction = 50000;
 		constexpr float warpRadius = 500;
 		constexpr float warpIntensity = 0.05;
 
@@ -179,8 +179,10 @@ namespace BallGame1 {
 		body->SetMass(mass);
 		body->SetRestitution(restitution);
 
-		auto attractive = ballNode->RequireBehaviour<AttractiveBehaviour>();
-		attractive->SetAttraction(attraction);
+		if (attraction != 0.f) {
+			auto attractive = ballNode->RequireBehaviour<AttractiveBehaviour>();
+			attractive->SetAttraction(attraction);
+		}
 
 		auto warp = ballNode->RequireBehaviour<RadialUvWarpBehaviour>();
 		warp->SetInfluenceRadius(warpRadius);

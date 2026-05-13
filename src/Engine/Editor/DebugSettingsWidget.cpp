@@ -27,8 +27,8 @@ namespace Engine {
 			}
 			if (!simEnabled) {
 				ImGui::SameLine();
-				static float dt = 0.05;
-				ImGui::SliderFloat("dt", &dt, 0.001, 0.1);
+				static float dt = 0.01;
+				ImGui::SliderFloat("dt", &dt, 0.001, 0.0167);
 				ImGui::SameLine();
 				if (ImGui::Button("Step")) {
 					int substeps = physicsProc->GetSimulationSubsteps();
@@ -43,7 +43,8 @@ namespace Engine {
 			}
 			ImGui::SameLine();
 			float speedMul = mainContext.GetSimSpeedMultiplier();
-			if (ImGui::SliderFloat("Engine dt multiplier", &speedMul, 0.05f, 4.f, "%.3f")) {
+			if (ImGui::DragFloat(
+			        "Engine dt multiplier", &speedMul, 0.1f, 0.01f, 4.f, "%.3f", ImGuiSliderFlags_Logarithmic)) {
 				mainContext.SetSimSpeedMultiplier(std::max(1e-4f, speedMul));
 			}
 
@@ -100,7 +101,7 @@ namespace Engine {
 			}
 		}
 
-		ImGui::SeparatorText("Physics visualization");
+		ImGui::SeparatorText("Visualization");
 		{
 			auto& viz = Editor::GetInstance().GetPhysicsVisualizer();
 			bool showVel = viz.IsVelocityVisible();
