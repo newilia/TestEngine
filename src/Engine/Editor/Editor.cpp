@@ -28,7 +28,6 @@
 #include <vector>
 
 namespace {
-
 	constexpr const char kEditorDockHostWindow[] = "EditorDockHost";
 	constexpr const char kEditorDockSpaceId[] = "EditorDockSpace";
 	constexpr const char kSceneWindowTitle[] = "Scene";
@@ -38,114 +37,11 @@ namespace {
 	constexpr const char kImGuiStyleTitle[] = "Style";
 	constexpr const char kGameBackgroundWindowTitle[] = "Game background";
 
-	bool IsNodeInSubtree(const std::shared_ptr<SceneNode>& candidate, const std::shared_ptr<SceneNode>& treeRoot) {
-		if (!treeRoot || !candidate) {
-			return false;
-		}
-		for (auto cur = candidate; cur; cur = cur->GetParent()) {
-			if (cur == treeRoot) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	using Engine::EditorVisualTheme::kHierarchySelectionChildOutlineColor;
 	using Engine::EditorVisualTheme::kHierarchySelectionFallbackHalfSize;
 	using Engine::EditorVisualTheme::kHierarchySelectionOutlineColor;
 	using Engine::EditorVisualTheme::kHierarchySelectionOutlinePadPx;
 	using Engine::EditorVisualTheme::kHierarchySelectionOutlineThickness;
-
-	std::optional<sf::FloatRect> TryGetHierarchySelectionBounds(const SceneNode& node) {
-		sf::Transform fullTransform = node.GetWorldTransform();
-		if (auto visual = node.GetVisual()) {
-			const auto bounds = visual->GetLocalBounds();
-			if (const auto transform = visual->GetTransform()) {
-				fullTransform *= *transform;
-			}
-			return fullTransform.transformRect(bounds);
-		}
-		return std::nullopt;
-	}
-
-	void AppendHierarchyAabbOutlineLines(
-	    sf::VertexArray& lines, const sf::FloatRect& bounds, const sf::Color& outlineColor, float padPx) {
-		const float x0 = bounds.position.x - padPx;
-		const float y0 = bounds.position.y - padPx;
-		const float x1 = bounds.position.x + bounds.size.x + padPx;
-		const float y1 = bounds.position.y + bounds.size.y + padPx;
-
-		const std::size_t startIndex = lines.getVertexCount();
-		lines.resize(startIndex + 8);
-		lines[startIndex].position = {x0, y0};
-		lines[startIndex].color = outlineColor;
-		lines[startIndex + 1].position = {x1, y0};
-		lines[startIndex + 1].color = outlineColor;
-		lines[startIndex + 2].position = {x1, y0};
-		lines[startIndex + 2].color = outlineColor;
-		lines[startIndex + 3].position = {x1, y1};
-		lines[startIndex + 3].color = outlineColor;
-		lines[startIndex + 4].position = {x1, y1};
-		lines[startIndex + 4].color = outlineColor;
-		lines[startIndex + 5].position = {x0, y1};
-		lines[startIndex + 5].color = outlineColor;
-		lines[startIndex + 6].position = {x0, y1};
-		lines[startIndex + 6].color = outlineColor;
-		lines[startIndex + 7].position = {x0, y0};
-		lines[startIndex + 7].color = outlineColor;
-	}
-
-	void CollectHierarchyFallbackMarker(
-	    const SceneNode& node, const sf::Color& outlineColor, std::vector<sf::CircleShape>& outCircles) {
-		const sf::Vector2f pos = Utils::GetWorldPos(node.shared_from_this());
-		sf::CircleShape marker(kHierarchySelectionFallbackHalfSize);
-		marker.setOrigin({kHierarchySelectionFallbackHalfSize, kHierarchySelectionFallbackHalfSize});
-		marker.setPosition(pos);
-		marker.setFillColor(sf::Color::Transparent);
-		marker.setOutlineColor(outlineColor);
-		marker.setOutlineThickness(kHierarchySelectionOutlineThickness);
-		outCircles.push_back(std::move(marker));
-	}
-
-	void GatherDescendantHierarchySelectionOutlines(const SceneNode& parent,
-	    const std::unordered_set<const SceneNode*>& selectedSet, sf::VertexArray& lineOutlines,
-	    std::vector<sf::CircleShape>& fallbackMarkers) {
-		for (const auto& child : parent.GetChildren()) {
-			if (!child || !child->IsEnabled() || !child->IsVisible()) {
-				continue;
-			}
-			const auto* childPtr = static_cast<const SceneNode*>(child.get());
-			if (!selectedSet.contains(childPtr)) {
-				if (const std::optional<sf::FloatRect> bb = TryGetHierarchySelectionBounds(*child)) {
-					const sf::FloatRect& b = *bb;
-					if (b.size.x > 0.f && b.size.y > 0.f) {
-						AppendHierarchyAabbOutlineLines(
-						    lineOutlines, b, kHierarchySelectionChildOutlineColor, kHierarchySelectionOutlinePadPx);
-					}
-					else {
-						CollectHierarchyFallbackMarker(*child, kHierarchySelectionChildOutlineColor, fallbackMarkers);
-					}
-				}
-				else {
-					CollectHierarchyFallbackMarker(*child, kHierarchySelectionChildOutlineColor, fallbackMarkers);
-				}
-			}
-			GatherDescendantHierarchySelectionOutlines(*child, selectedSet, lineOutlines, fallbackMarkers);
-		}
-	}
-
-	void GatherPrimaryHierarchySelectionOutline(
-	    const SceneNode& node, sf::VertexArray& lineOutlines, std::vector<sf::CircleShape>& fallbackMarkers) {
-		if (const std::optional<sf::FloatRect> bb = TryGetHierarchySelectionBounds(node)) {
-			const sf::FloatRect& b = *bb;
-			if (b.size.x > 0.f && b.size.y > 0.f) {
-				AppendHierarchyAabbOutlineLines(
-				    lineOutlines, b, kHierarchySelectionOutlineColor, kHierarchySelectionOutlinePadPx);
-				return;
-			}
-		}
-		CollectHierarchyFallbackMarker(node, kHierarchySelectionOutlineColor, fallbackMarkers);
-	}
 } // namespace
 
 namespace Engine {
@@ -261,7 +157,7 @@ namespace Engine {
 		ImGui::DockBuilderSplitNode(id_main, ImGuiDir_Left, 0.20f, &id_left, &id_main);
 		ImGui::DockBuilderSplitNode(id_main, ImGuiDir_Right, 0.25f, &id_right, &id_center);
 		ImGui::DockBuilderSplitNode(id_left, ImGuiDir_Down, 0.5f, &id_left_bottom, &id_left_top);
-		ImGui::DockBuilderSplitNode(id_right, ImGuiDir_Down, 0.5f, &id_right_bottom, &id_right_top);
+		ImGui::DockBuilderSplitNode(id_right, ImGuiDir_Down, 0.8f, &id_right_bottom, &id_right_top);
 
 		ImGui::DockBuilderDockWindow(kSceneWindowTitle, id_left_top);
 
@@ -274,7 +170,6 @@ namespace Engine {
 		ImGui::DockBuilderDockWindow(kDebugWindowTitle, id_right_bottom);
 
 		ImGui::DockBuilderFinish(dockspaceId);
-
 		_isLayoutFinished = true;
 	}
 
@@ -627,5 +522,109 @@ namespace Engine {
 				MainContext::GetInstance().ZoomCamera(zoomFactor, e.position);
 			}
 		}
+	}
+
+	bool Editor::IsNodeInSubtree(
+	    const std::shared_ptr<SceneNode>& candidate, const std::shared_ptr<SceneNode>& treeRoot) {
+		if (!treeRoot || !candidate) {
+			return false;
+		}
+		for (auto cur = candidate; cur; cur = cur->GetParent()) {
+			if (cur == treeRoot) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	std::optional<sf::FloatRect> Editor::TryGetHierarchySelectionBounds(const SceneNode& node) {
+		sf::Transform fullTransform = node.GetWorldTransform();
+		if (auto visual = node.GetVisual()) {
+			const auto bounds = visual->GetLocalBounds();
+			if (const auto transform = visual->GetTransform()) {
+				fullTransform *= *transform;
+			}
+			return fullTransform.transformRect(bounds);
+		}
+		return std::nullopt;
+	}
+
+	void Editor::AppendHierarchyAabbOutlineLines(
+	    sf::VertexArray& lines, const sf::FloatRect& bounds, const sf::Color& outlineColor, float padPx) {
+		const float x0 = bounds.position.x - padPx;
+		const float y0 = bounds.position.y - padPx;
+		const float x1 = bounds.position.x + bounds.size.x + padPx;
+		const float y1 = bounds.position.y + bounds.size.y + padPx;
+
+		const std::size_t startIndex = lines.getVertexCount();
+		lines.resize(startIndex + 8);
+		lines[startIndex].position = {x0, y0};
+		lines[startIndex].color = outlineColor;
+		lines[startIndex + 1].position = {x1, y0};
+		lines[startIndex + 1].color = outlineColor;
+		lines[startIndex + 2].position = {x1, y0};
+		lines[startIndex + 2].color = outlineColor;
+		lines[startIndex + 3].position = {x1, y1};
+		lines[startIndex + 3].color = outlineColor;
+		lines[startIndex + 4].position = {x1, y1};
+		lines[startIndex + 4].color = outlineColor;
+		lines[startIndex + 5].position = {x0, y1};
+		lines[startIndex + 5].color = outlineColor;
+		lines[startIndex + 6].position = {x0, y1};
+		lines[startIndex + 6].color = outlineColor;
+		lines[startIndex + 7].position = {x0, y0};
+		lines[startIndex + 7].color = outlineColor;
+	}
+
+	void Editor::CollectHierarchyFallbackMarker(
+	    const SceneNode& node, const sf::Color& outlineColor, std::vector<sf::CircleShape>& outCircles) {
+		const sf::Vector2f pos = Utils::GetWorldPos(node.shared_from_this());
+		sf::CircleShape marker(kHierarchySelectionFallbackHalfSize);
+		marker.setOrigin({kHierarchySelectionFallbackHalfSize, kHierarchySelectionFallbackHalfSize});
+		marker.setPosition(pos);
+		marker.setFillColor(sf::Color::Transparent);
+		marker.setOutlineColor(outlineColor);
+		marker.setOutlineThickness(kHierarchySelectionOutlineThickness);
+		outCircles.push_back(std::move(marker));
+	}
+
+	void Editor::GatherDescendantHierarchySelectionOutlines(const SceneNode& parent,
+	    const std::unordered_set<const SceneNode*>& selectedSet, sf::VertexArray& lineOutlines,
+	    std::vector<sf::CircleShape>& fallbackMarkers) {
+		for (const auto& child : parent.GetChildren()) {
+			if (!child || !child->IsEnabled() || !child->IsVisible()) {
+				continue;
+			}
+			const auto* childPtr = static_cast<const SceneNode*>(child.get());
+			if (!selectedSet.contains(childPtr)) {
+				if (const std::optional<sf::FloatRect> bb = TryGetHierarchySelectionBounds(*child)) {
+					const sf::FloatRect& b = *bb;
+					if (b.size.x > 0.f && b.size.y > 0.f) {
+						AppendHierarchyAabbOutlineLines(
+						    lineOutlines, b, kHierarchySelectionChildOutlineColor, kHierarchySelectionOutlinePadPx);
+					}
+					else {
+						CollectHierarchyFallbackMarker(*child, kHierarchySelectionChildOutlineColor, fallbackMarkers);
+					}
+				}
+				else {
+					CollectHierarchyFallbackMarker(*child, kHierarchySelectionChildOutlineColor, fallbackMarkers);
+				}
+			}
+			GatherDescendantHierarchySelectionOutlines(*child, selectedSet, lineOutlines, fallbackMarkers);
+		}
+	}
+
+	void Editor::GatherPrimaryHierarchySelectionOutline(
+	    const SceneNode& node, sf::VertexArray& lineOutlines, std::vector<sf::CircleShape>& fallbackMarkers) {
+		if (const std::optional<sf::FloatRect> bb = TryGetHierarchySelectionBounds(node)) {
+			const sf::FloatRect& b = *bb;
+			if (b.size.x > 0.f && b.size.y > 0.f) {
+				AppendHierarchyAabbOutlineLines(
+				    lineOutlines, b, kHierarchySelectionOutlineColor, kHierarchySelectionOutlinePadPx);
+				return;
+			}
+		}
+		CollectHierarchyFallbackMarker(node, kHierarchySelectionOutlineColor, fallbackMarkers);
 	}
 } // namespace Engine

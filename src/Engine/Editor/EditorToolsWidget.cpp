@@ -7,21 +7,22 @@
 namespace Engine {
 
 	void EditorToolsWidget::Draw(EditorToolManager& toolManager) {
-		ImGui::TextUnformatted("Tools");
-		ImGui::Separator();
-
-		const char* names[] = {"Tap", "Select", "Pull", "Move", "Polygon"};
-		for (int i = 0; i < EditorToolManager::kToolCount; ++i) {
-			const std::string label = EditorToolManager::FormatToolPaletteLabel(i, names[i]);
-			if (ImGui::RadioButton(label.c_str(), toolManager.GetActiveToolIndex() == i)) {
+		for (int i = 0; i < toolManager.GetToolCount(); ++i) {
+			const std::string label = toolManager.GetToolFormattedName(i);
+			bool isActive = toolManager.GetActiveToolIndex() == i;
+			if (isActive) {
+				ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]);
+			}
+			if (ImGui::Button(label.c_str())) {
 				toolManager.SetActiveToolIndex(i);
 			}
+			ImGui::SameLine();
+			if (isActive) {
+				ImGui::PopStyleColor();
+			}
 		}
-
-		ImGui::Spacing();
-		ImGui::Separator();
-		ImGui::TextUnformatted("Parameters");
-
+		ImGui::NewLine();
+		ImGui::SeparatorText("Parameters");
 		toolManager.DrawActiveToolParametersUi();
 	}
 

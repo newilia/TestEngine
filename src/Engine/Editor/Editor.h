@@ -19,6 +19,7 @@
 #include <imgui.h>
 
 #include <memory>
+#include <unordered_set>
 #include <vector>
 
 namespace sf {
@@ -81,6 +82,19 @@ namespace Engine {
 		void TryApplyDefaultEditorDockLayout(ImGuiID dockspaceId, const ImVec2& dockspaceSize) const;
 		void DrawCursorWorldCoordsOverlay(sf::RenderWindow& window);
 		void DrawViewportSelectionOverlay(sf::RenderWindow& window);
+
+		static bool IsNodeInSubtree(
+		    const std::shared_ptr<SceneNode>& candidate, const std::shared_ptr<SceneNode>& treeRoot);
+		static std::optional<sf::FloatRect> TryGetHierarchySelectionBounds(const SceneNode& node);
+		static void AppendHierarchyAabbOutlineLines(
+		    sf::VertexArray& lines, const sf::FloatRect& bounds, const sf::Color& outlineColor, float padPx);
+		static void CollectHierarchyFallbackMarker(
+		    const SceneNode& node, const sf::Color& outlineColor, std::vector<sf::CircleShape>& outCircles);
+		static void GatherDescendantHierarchySelectionOutlines(const SceneNode& parent,
+		    const std::unordered_set<const SceneNode*>& selectedSet, sf::VertexArray& lineOutlines,
+		    std::vector<sf::CircleShape>& fallbackMarkers);
+		static void GatherPrimaryHierarchySelectionOutline(
+		    const SceneNode& node, sf::VertexArray& lineOutlines, std::vector<sf::CircleShape>& fallbackMarkers);
 
 		bool _isOpen = true;
 		mutable bool _isLayoutFinished = false;
