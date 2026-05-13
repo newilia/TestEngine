@@ -49,7 +49,10 @@ namespace Engine {
 			if (ImGui::Button("1.0")) {
 				mainContext.SetSimSpeedMultiplier(1.0f);
 			}
+
 			ImGui::SameLine();
+			ImGui::SetNextItemWidth(Utils::GetRemainingWidth());
+
 			float speedMul = mainContext.GetSimSpeedMultiplier();
 			if (ImGui::DragFloat(
 			        "Sim dt multiplier", &speedMul, 0.01f, 0.01f, 4.f, "%.3f", ImGuiSliderFlags_Logarithmic)) {
@@ -86,13 +89,8 @@ namespace Engine {
 				physicsProc->SetGravityEnabled(gravOn);
 			}
 			ImGui::SameLine();
+			ImGui::SetNextItemWidth(Utils::GetRemainingWidth());
 
-			{
-				auto& g = *ImGui::GetCurrentContext();
-				auto width = g.CurrentWindow->DC.ItemWidthDefault;
-				width -= g.FontSize + g.Style.FramePadding.y * 2 + g.Style.ItemSpacing.x;
-				ImGui::SetNextItemWidth(width);
-			}
 			sf::Vector2f g = physicsProc->GetGravity();
 			float gxy[2] = {g.x, g.y};
 			if (ImGui::DragFloat2("Gravity (px/s^2)", gxy, 10.f, -50000.f, 50000.f, "%.1f")) {
@@ -255,6 +253,7 @@ namespace Engine {
 				sceneLighting.SetDistanceRangeScale(1.0f);
 			}
 			ImGui::SameLine();
+			ImGui::SetNextItemWidth(Utils::GetRemainingWidth());
 			float distanceScale = sceneLighting.GetDistanceRangeScale();
 			if (ImGui::SliderFloat("Light distance scale", &distanceScale, 0.1f, 3.f, "%.2f")) {
 				sceneLighting.SetDistanceRangeScale(distanceScale);
@@ -264,6 +263,7 @@ namespace Engine {
 				sceneLighting.SetGlobalIntensityScale(1.0f);
 			}
 			ImGui::SameLine();
+			ImGui::SetNextItemWidth(Utils::GetRemainingWidth());
 			float intensityScale = sceneLighting.GetGlobalIntensityScale();
 			if (ImGui::SliderFloat("Light intensity scale", &intensityScale, 0.1f, 3.f, "%.2f")) {
 				sceneLighting.SetGlobalIntensityScale(intensityScale);

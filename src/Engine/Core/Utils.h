@@ -87,4 +87,6 @@ namespace Utils {
 
 	sf::Vector2f GetShapePointWorldPos(sf::Shape const* shape, SceneNode const* node, size_t pointIndex);
 
+	float GetRemainingWidth();
+
 } // namespace Utils

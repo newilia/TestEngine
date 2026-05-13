@@ -20,6 +20,9 @@
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics/Text.hpp>
 
+#include <imgui.h>
+#include <imgui_internal.h>
+
 #include <algorithm>
 #include <cmath>
 #include <unordered_map>
@@ -477,6 +480,13 @@ namespace Utils {
 		auto tr = node->GetWorldTransform() * shape->getTransform();
 		auto p = shape->getPoint(pointIndex);
 		return tr.transformPoint(p);
+	}
+
+	float GetRemainingWidth() {
+		auto& g = *ImGui::GetCurrentContext();
+		auto width = g.CurrentWindow->DC.ItemWidthDefault;
+		auto cursorPos = ImGui::GetCursorPos().x;
+		return width - cursorPos + 10;
 	}
 
 } // namespace Utils
