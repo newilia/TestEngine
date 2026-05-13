@@ -2,6 +2,7 @@
 
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/MainContext.h"
+#include "Engine/Core/Utils.h"
 #include "Engine/Editor/Editor.h"
 #include "Engine/Render/SceneLighting.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
@@ -44,7 +45,7 @@ namespace Engine {
 			ImGui::SameLine();
 			float speedMul = mainContext.GetSimSpeedMultiplier();
 			if (ImGui::DragFloat(
-			        "Engine dt multiplier", &speedMul, 0.1f, 0.01f, 4.f, "%.3f", ImGuiSliderFlags_Logarithmic)) {
+			        "Sim dt multiplier", &speedMul, 0.01f, 0.01f, 4.f, "%.3f", ImGuiSliderFlags_Logarithmic)) {
 				mainContext.SetSimSpeedMultiplier(std::max(1e-4f, speedMul));
 			}
 
@@ -58,6 +59,19 @@ namespace Engine {
 			ImGui::SeparatorText("Physics");
 			{
 				ImGui::Text("Bodies: %d", static_cast<int>(ph->GetAllBodies().size()));
+
+				{
+					float systemImpulse = 0.f;
+					float systemEnergy = 0.f;
+					for (const auto& wBody : ph->GetAllBodies()) {
+						if (auto body = wBody.lock()) {
+							auto vel = body->GetVelocity().length();
+							systemImpulse += body->GetMass() * vel;
+							systemEnergy += body->GetMass() * vel * vel / 2;
+						}
+					}
+					ImGui::Text("P = %.0f, E = %.0f", systemImpulse, systemEnergy);
+				}
 
 				bool gravOn = ph->IsGravityEnabled();
 				if (ImGui::Checkbox("##World gravity", &gravOn)) {

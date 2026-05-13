@@ -27,13 +27,6 @@ void AttractionField::Unregister(const shared_ptr<AttractiveBehaviour>& s) {
 	});
 }
 
-static float EffectiveSourceMass(const PhysicsBodyBehaviour& rb) {
-	if (rb.IsFixed() || !std::isfinite(rb.GetMass()) || rb.GetMass() <= 0.f) {
-		return 1.f;
-	}
-	return rb.GetMass();
-}
-
 sf::Vector2f AttractionField::EvaluateForce(
     sf::Vector2f worldPos, const PhysicsBodyBehaviour::GroupSet& interactionGroups) const {
 	return EvaluateForceImpl(worldPos, interactionGroups, nullptr);
@@ -111,7 +104,7 @@ sf::Vector2f AttractionField::EvaluateForceImpl(sf::Vector2f posI,
 		float sourceWeight = 1.f;
 		if (_useMassCoupling) {
 			if (const auto srb = otherNode->FindBehaviour<PhysicsBodyBehaviour>()) {
-				sourceWeight = EffectiveSourceMass(*srb);
+				sourceWeight = srb->GetMass();
 			}
 		}
 
