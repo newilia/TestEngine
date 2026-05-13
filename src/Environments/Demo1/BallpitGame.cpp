@@ -68,7 +68,7 @@ namespace Demo1 {
 				auto bodyBeh = wallNode->RequireBehaviour<PhysicsBodyBehaviour>();
 				bodyBeh->SetFixed(true);
 				bodyBeh->SetRestitution(wallRestitution);
-				bodyBeh->GetInteractionGroups().set(kAquariumPhysicsGroup, true);
+				bodyBeh->GetCollisionGroups().set(kAquariumPhysicsGroup, true);
 			}
 		}
 
@@ -137,7 +137,7 @@ namespace Demo1 {
 				rb->SetRestitution(ballRestitution);
 				rb->SetFriction(kBallFriction);
 				rb->SetVelocity({velXY(gen), velXY(gen)});
-				rb->GetInteractionGroups().set(kAquariumPhysicsGroup, true);
+				rb->GetCollisionGroups().set(kAquariumPhysicsGroup, true);
 
 				root->AddChild(ballNode);
 				ballNode->GetLocalTransform()->SetPosition(pos);
@@ -171,8 +171,8 @@ namespace Demo1 {
 
 		std::random_device rd;
 		std::mt19937 gen(rd());
-		AddBalls(root.get(), aquariumWidth, aquariumHeight, baseBallRadius, ballRadiusVariability, baseBallColor,
-		    ballColorVariability, ballCount, ballRestitution, gen);
+		AddBalls(root.get(), aquariumWidth - baseBallRadius * 2, aquariumHeight - baseBallRadius * 2, baseBallRadius,
+		    ballRadiusVariability, baseBallColor, ballColorVariability, ballCount, ballRestitution, gen);
 
 		return root;
 	}

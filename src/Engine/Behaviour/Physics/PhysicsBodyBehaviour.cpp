@@ -113,20 +113,20 @@ void PhysicsBodyBehaviour::SetGravityScale(float s) {
 	_gravityScale = s;
 }
 
-PhysicsBodyBehaviour::GroupSet& PhysicsBodyBehaviour::GetInteractionGroups() {
-	return _interactionGroups;
+PhysicsBodyBehaviour::GroupSet& PhysicsBodyBehaviour::GetCollisionGroups() {
+	return _collisionGroups;
 }
 
-const PhysicsBodyBehaviour::GroupSet& PhysicsBodyBehaviour::GetInteractionGroups() const {
-	return _interactionGroups;
+const PhysicsBodyBehaviour::GroupSet& PhysicsBodyBehaviour::GetCollisionGroups() const {
+	return _collisionGroups;
 }
 
-PhysicsBodyBehaviour::GroupSet& PhysicsBodyBehaviour::GetOverlappingGroups() {
-	return _overlappingGroups;
+PhysicsBodyBehaviour::GroupSet& PhysicsBodyBehaviour::GetOverlapGroups() {
+	return _overlapGroups;
 }
 
-const PhysicsBodyBehaviour::GroupSet& PhysicsBodyBehaviour::GetOverlappingGroups() const {
-	return _overlappingGroups;
+const PhysicsBodyBehaviour::GroupSet& PhysicsBodyBehaviour::GetOverlapGroups() const {
+	return _overlapGroups;
 }
 
 Signal<const IntersectionDetails&>& PhysicsBodyBehaviour::GetOnCollideSignal() const {

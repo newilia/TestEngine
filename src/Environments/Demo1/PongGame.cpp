@@ -150,7 +150,7 @@ namespace Demo1 {
 			shape->setFillColor(color);
 
 			auto physicsBody = node->RequireBehaviour<PhysicsBodyBehaviour>();
-			physicsBody->GetInteractionGroups().set(1, true);
+			physicsBody->GetCollisionGroups().set(1, true);
 			physicsBody->SetFixed(true);
 			physicsBody->SetRestitution(kBodiesRestitution);
 
@@ -226,9 +226,9 @@ namespace Demo1 {
 			rigidBody->SetMass(3.14f * radius * radius);
 			rigidBody->SetRestitution(kBodiesRestitution);
 			rigidBody->SetVelocity(vel);
-			rigidBody->GetInteractionGroups().set(0, true);
-			rigidBody->GetInteractionGroups().set(1, true);
-			rigidBody->GetOverlappingGroups().set(0, true);
+			rigidBody->GetCollisionGroups().set(0, true);
+			rigidBody->GetCollisionGroups().set(1, true);
+			rigidBody->GetOverlapGroups().set(0, true);
 			rigidBody->SetGravityScale(0.f);
 
 			root->AddChild(ball->GetNode());
@@ -272,7 +272,7 @@ namespace Demo1 {
 
 				if (i < 2) {
 					rectShape->setFillColor(sf::Color(200, 200, 200, 50));
-					bodyBeh->GetOverlappingGroups().set(0, true);
+					bodyBeh->GetOverlapGroups().set(0, true);
 
 					if (i == 0) {
 						[[maybe_unused]] auto subscription =
@@ -289,7 +289,7 @@ namespace Demo1 {
 				}
 				else {
 					rectShape->setFillColor(sf::Color(200, 200, 200, 255));
-					bodyBeh->GetInteractionGroups().set(0, true);
+					bodyBeh->GetCollisionGroups().set(0, true);
 				}
 			}
 		}

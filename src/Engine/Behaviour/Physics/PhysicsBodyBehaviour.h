@@ -58,11 +58,11 @@ public:
 	float GetGravityScale() const;
 	void SetGravityScale(float s);
 
-	GroupSet& GetInteractionGroups();
-	const GroupSet& GetInteractionGroups() const;
+	GroupSet& GetCollisionGroups();
+	const GroupSet& GetCollisionGroups() const;
 
-	GroupSet& GetOverlappingGroups();
-	const GroupSet& GetOverlappingGroups() const;
+	GroupSet& GetOverlapGroups();
+	const GroupSet& GetOverlapGroups() const;
 
 	Signal<const IntersectionDetails&>& GetOnCollideSignal() const;
 	Signal<const IntersectionDetails&>& GetOnOverlapSignal() const;
@@ -76,16 +76,16 @@ private:
 	sf::Vector2f _velocity{};
 	/// @property
 	float _angularSpeed = 0.f;
-	/// @property(minValue=0.f, maxValue=1.1f, dragSpeed=0.05f, tooltip="Values over 1.0 make body unstable")
+	/// @property(minValue=0.f, maxValue=1.f, dragSpeed=0.05f)
 	float _restitution = 0.5f;
 	/// @property(minValue=0.f, maxValue=1.f, dragSpeed=0.05f)
 	float _friction = 0.5f;
 	/// @property(minValue=-1.f, maxValue=1.f, dragSpeed=0.05f, tooltip="Scales world gravity on this body")
 	float _gravityScale = 1.f;
-	/// @property(tooltip="Bodies with common groups will interact in a physical way (collisions, forces, etc.)")
-	GroupSet _interactionGroups = {{true}};
+	/// @property
+	GroupSet _collisionGroups = {{true}};
 	/// @property(tooltip="Bodies with common groups will trigger overlap signal, but won't interact in a physical way")
-	GroupSet _overlappingGroups;
+	GroupSet _overlapGroups;
 
 	mutable Signal<const IntersectionDetails&> _onCollideSignal;
 	mutable Signal<const IntersectionDetails&> _onOverlapSignal;

@@ -48,7 +48,7 @@ namespace {
 	}};
 
 	void SetSolarInteractionMask(PhysicsBodyBehaviour& rb, int planetIndexOrMinusOneForSun) {
-		auto& g = rb.GetInteractionGroups();
+		auto& g = rb.GetCollisionGroups();
 		g.reset();
 		g.set(7, true);
 		/*if (planetIndexOrMinusOneForSun < 0) {
