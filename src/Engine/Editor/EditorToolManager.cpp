@@ -15,6 +15,17 @@
 #include <algorithm>
 #include <utility>
 
+EditorToolManager::EditorToolManager() {
+	const auto setHierarchySelection = [](std::shared_ptr<SceneNode> node) {
+		Engine::Editor::GetInstance().SetSelectedNode(std::move(node));
+	};
+	_tools.emplace_back("Tap", std::make_unique<TapTool>());
+	_tools.emplace_back("Select", std::make_unique<SelectTool>(setHierarchySelection));
+	_tools.emplace_back("Pull", std::make_unique<PullTool>());
+	_tools.emplace_back("Move", std::make_unique<MoveTool>(setHierarchySelection));
+	_tools.emplace_back("Polygon", std::make_unique<PolygonTool>());
+}
+
 std::optional<int> EditorToolManager::TryToolIndexFromDigitKey(const sf::Keyboard::Key key) {
 	switch (key) {
 	case sf::Keyboard::Key::Num1:
@@ -42,17 +53,21 @@ std::optional<int> EditorToolManager::TryToolIndexFromDigitKey(const sf::Keyboar
 	}
 }
 
-std::string EditorToolManager::FormatToolPaletteLabel(const int toolIndex, const char* const displayName) {
+std::string EditorToolManager::GetToolFormattedName(int index) const {
 	static constexpr char kDigits[] = "1234567890";
-	if (toolIndex >= 0 && toolIndex < static_cast<int>(sizeof(kDigits)) - 1) {
-		return fmt::format("[{}] {}", kDigits[toolIndex], displayName);
+	if (index >= 0 && index < static_cast<int>(sizeof(kDigits)) - 1) {
+		return fmt::format("[{}] {}", kDigits[index], _tools[index].first);
 	}
-	return std::string(displayName);
+	return "";
+}
+
+int EditorToolManager::GetToolCount() const {
+	return static_cast<int>(_tools.size());
 }
 
 bool EditorToolManager::TryActivateToolViaDigitKey(const sf::Keyboard::Key key) {
 	const std::optional<int> slot = TryToolIndexFromDigitKey(key);
-	if (!slot || *slot < 0 || *slot >= kToolCount) {
+	if (!slot || *slot < 0 || *slot >= GetToolCount()) {
 		return false;
 	}
 	SetActiveToolIndex(*slot);
@@ -63,45 +78,34 @@ int EditorToolManager::GetActiveToolIndex() const {
 	return _activeToolIndex;
 }
 
-EditorToolManager::EditorToolManager() {
-	const auto setHierarchySelection = [](std::shared_ptr<SceneNode> node) {
-		Engine::Editor::GetInstance().SetSelectedNode(std::move(node));
-	};
-	_tools[0] = std::make_unique<TapTool>();
-	_tools[1] = std::make_unique<SelectTool>(setHierarchySelection);
-	_tools[2] = std::make_unique<PullTool>();
-	_tools[3] = std::make_unique<MoveTool>(setHierarchySelection);
-	_tools[4] = std::make_unique<PolygonTool>();
-}
-
 void EditorToolManager::SetActiveToolIndex(int index) {
-	_activeToolIndex = std::clamp(index, 0, kToolCount - 1);
+	_activeToolIndex = std::clamp(index, 0, GetToolCount() - 1);
 }
 
 bool EditorToolManager::ProcessEvent(const sf::Event& event) {
-	if (_activeToolIndex < 0 || _activeToolIndex >= kToolCount || !_tools[_activeToolIndex]) {
+	if (_activeToolIndex < 0 || _activeToolIndex >= GetToolCount() || !_tools[_activeToolIndex].second) {
 		return false;
 	}
-	return _tools[_activeToolIndex]->ProcessEvent(event);
+	return _tools[_activeToolIndex].second->ProcessEvent(event);
 }
 
 void EditorToolManager::OnUpdate(const sf::Time& dt) {
-	if (_activeToolIndex < 0 || _activeToolIndex >= kToolCount || !_tools[_activeToolIndex]) {
+	if (_activeToolIndex < 0 || _activeToolIndex >= GetToolCount() || !_tools[_activeToolIndex].second) {
 		return;
 	}
-	_tools[_activeToolIndex]->Update(dt);
+	_tools[_activeToolIndex].second->Update(dt);
 }
 
 void EditorToolManager::DrawOverlay(sf::RenderWindow& window) {
-	if (_activeToolIndex < 0 || _activeToolIndex >= kToolCount || !_tools[_activeToolIndex]) {
+	if (_activeToolIndex < 0 || _activeToolIndex >= GetToolCount() || !_tools[_activeToolIndex].second) {
 		return;
 	}
-	_tools[_activeToolIndex]->DrawOverlay(window);
+	_tools[_activeToolIndex].second->DrawOverlay(window);
 }
 
 void EditorToolManager::DrawActiveToolParametersUi() {
-	if (_activeToolIndex < 0 || _activeToolIndex >= kToolCount || !_tools[_activeToolIndex]) {
+	if (_activeToolIndex < 0 || _activeToolIndex >= GetToolCount() || !_tools[_activeToolIndex].second) {
 		return;
 	}
-	_tools[_activeToolIndex]->DrawToolParametersUi();
+	_tools[_activeToolIndex].second->DrawToolParametersUi();
 }
