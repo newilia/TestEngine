@@ -109,7 +109,6 @@ namespace Engine {
 			if (!ImGui::SFML::Init(*_mainWindow)) {
 				return;
 			}
-			ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 			_isImGuiInitialized = true;
 		}
 	}

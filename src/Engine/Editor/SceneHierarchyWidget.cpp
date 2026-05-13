@@ -311,8 +311,6 @@ namespace Engine {
 			ImGui::TextUnformatted("No active scene");
 			return;
 		}
-		ImGui::TextUnformatted("Scene hierarchy");
-		ImGui::Separator();
 		ImGui::BeginChild("##scene_hierarchy_widget_tree", ImVec2(0, 0.0f), true);
 		DrawNode(*root, "Root", 0);
 		ImGui::EndChild();

@@ -16,6 +16,8 @@
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/Keyboard.hpp>
 
+#include <imgui.h>
+
 #include <memory>
 #include <vector>
 
@@ -76,10 +78,12 @@ namespace Engine {
 		Editor();
 
 		void DrawLayout();
+		void TryApplyDefaultEditorDockLayout(ImGuiID dockspaceId, const ImVec2& dockspaceSize) const;
 		void DrawCursorWorldCoordsOverlay(sf::RenderWindow& window);
 		void DrawViewportSelectionOverlay(sf::RenderWindow& window);
 
 		bool _isOpen = true;
+		mutable bool _isLayoutFinished = false;
 		std::optional<sf::Vector2i> _cameraMoveMouseOriginPos; // nullopt when not moving
 		SceneHierarchyWidget _sceneHierarchyWidget{};
 		NodeInspectorWidget _nodeInspectorWidget{};
