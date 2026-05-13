@@ -55,7 +55,7 @@ sf::Vector2f AttractionField::EvaluateForce(const shared_ptr<AttractiveBehaviour
 	if (!recvRb) {
 		return {};
 	}
-	return EvaluateForceImpl(posI, recvRb->GetInteractionGroups(), receiver.get());
+	return EvaluateForceImpl(posI, recvRb->GetCollisionGroups(), receiver.get());
 }
 
 sf::Vector2f AttractionField::EvaluateForceImpl(sf::Vector2f posI,
@@ -84,7 +84,7 @@ sf::Vector2f AttractionField::EvaluateForceImpl(sf::Vector2f posI,
 		if (!otherRb) {
 			continue;
 		}
-		if (!(interactionGroups & otherRb->GetInteractionGroups()).any()) {
+		if (!(interactionGroups & otherRb->GetCollisionGroups()).any()) {
 			continue;
 		}
 		auto otherPos = Utils::GetWorldPos(otherNode);

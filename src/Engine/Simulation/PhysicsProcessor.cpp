@@ -122,8 +122,8 @@ void PhysicsProcessor::DetactAndResolveCollisions() {
 	};
 
 	auto pairNeedsNarrowPhase = [](const PhysicsBodyBehaviour* pb1, const PhysicsBodyBehaviour* pb2) {
-		const bool interactionPair = (pb1->GetInteractionGroups() & pb2->GetInteractionGroups()).any();
-		const bool overlapPair = (pb1->GetOverlappingGroups() & pb2->GetOverlappingGroups()).any();
+		const bool interactionPair = (pb1->GetCollisionGroups() & pb2->GetCollisionGroups()).any();
+		const bool overlapPair = (pb1->GetOverlapGroups() & pb2->GetOverlapGroups()).any();
 		return interactionPair || overlapPair;
 	};
 
@@ -186,7 +186,7 @@ void PhysicsProcessor::DetactAndResolveCollisions() {
 				continue;
 			}
 			if (auto intersection = DetectIntersection(node1, node2, body1, body2)) {
-				if ((body1->GetInteractionGroups() & body2->GetInteractionGroups()).any()) {
+				if ((body1->GetCollisionGroups() & body2->GetCollisionGroups()).any()) {
 					if (!body1->IsFixed() || !body2->IsFixed()) {
 						ResolveCollision(*intersection);
 						body1->GetOnCollideSignal().Emit(*intersection);
@@ -194,7 +194,7 @@ void PhysicsProcessor::DetactAndResolveCollisions() {
 					}
 				}
 
-				if ((body1->GetOverlappingGroups() & body2->GetOverlappingGroups()).any()) {
+				if ((body1->GetOverlapGroups() & body2->GetOverlapGroups()).any()) {
 					body1->GetOnOverlapSignal().Emit(*intersection);
 					body2->GetOnOverlapSignal().Emit(*intersection);
 				}

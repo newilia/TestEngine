@@ -104,7 +104,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		rect->SetOutlineThickness(0.0f);
 
 		auto bodyBeh = node->RequireBehaviour<PhysicsBodyBehaviour>();
-		bodyBeh->GetInteractionGroups().set(0, true);
+		bodyBeh->GetCollisionGroups().set(0, true);
 		bodyBeh->SetFixed(true);
 		bodyBeh->SetRestitution(commonRestitution);
 
@@ -122,6 +122,14 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	constexpr int rowsCount = 15;
 	constexpr int colsCount = 12;
 	constexpr int circlesCount = rowsCount * colsCount;
+	constexpr float radius = 15.f;
+	constexpr auto kColor1 = sf::Color{200, 40, 40, 255};
+	constexpr auto kColor2 = sf::Color{40, 200, 40, 255};
+	constexpr auto kColor3 = sf::Color{40, 40, 200, 255};
+	const auto minX = -boxSize.x / 2;
+	const auto maxX = boxSize.x / 2;
+	const auto minY = -boxSize.y / 2;
+	const auto maxY = boxSize.y / 2;
 
 	for (int i = 0; i < circlesCount; ++i) {
 		const auto gridRow = i / colsCount;
@@ -130,12 +138,6 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 
 		auto circleNode = make_shared<SceneNode>();
 		circleNode->SetName(fmt::format("circle_{}", i));
-		circleNode->RequireBehaviour<PhysicsBodyBehaviour>()->GetInteractionGroups().set(0, true);
-
-		constexpr float radius = 15.f;
-		constexpr auto kColor1 = sf::Color{200, 40, 40, 255};
-		constexpr auto kColor2 = sf::Color{40, 200, 40, 255};
-		constexpr auto kColor3 = sf::Color{40, 40, 200, 255};
 
 		const auto color = (kind == 0) ? kColor1 : ((kind == 1) ? kColor2 : kColor3);
 		const auto outlineColor = sf::Color(color.r / 2, color.g / 2, color.b / 2, 255);
@@ -148,10 +150,6 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 
 		// position in grid
 		{
-			const auto minX = -boxSize.x / 2;
-			const auto maxX = boxSize.x / 2;
-			const auto minY = -boxSize.y / 2;
-			const auto maxY = boxSize.y / 2;
 			const auto x = minX + (1 + gridCol) * (maxX - minX) / (colsCount + 1) + rand() % 2;
 			const auto y = minY + (1 + gridRow) * (maxY - minY) / (rowsCount + 1);
 			circleNode->GetLocalTransform()->SetPosition(sf::Vector2f{x, y});

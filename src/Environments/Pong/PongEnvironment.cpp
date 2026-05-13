@@ -112,9 +112,9 @@ void PongEnvironment::AddBall(Scene* scene, float radius) {
 	rigidBody->SetMass(3.14f * radius * radius);
 	rigidBody->SetRestitution(bodiesRestitution);
 	rigidBody->SetVelocity(vel);
-	rigidBody->GetInteractionGroups().set(0, true);
-	rigidBody->GetInteractionGroups().set(1, true);
-	rigidBody->GetOverlappingGroups().set(0, true);
+	rigidBody->GetCollisionGroups().set(0, true);
+	rigidBody->GetCollisionGroups().set(1, true);
+	rigidBody->GetOverlapGroups().set(0, true);
 	scene->GetRoot()->AddChild(ball->GetNode());
 
 	sBall = ball;
@@ -180,7 +180,7 @@ void PongEnvironment::AddWalls(Scene* scene) {
 
 		if (i < 2) {
 			rectShape->setFillColor(sf::Color(200, 200, 200, 50));
-			bodyBeh->GetOverlappingGroups().set(0, true);
+			bodyBeh->GetOverlapGroups().set(0, true);
 
 			if (i == 0) {
 				Subscribe(bodyBeh->GetOnOverlapSignal(), [this](const IntersectionDetails&) {
@@ -195,7 +195,7 @@ void PongEnvironment::AddWalls(Scene* scene) {
 		}
 		else {
 			rectShape->setFillColor(sf::Color(200, 200, 200, 255));
-			bodyBeh->GetInteractionGroups().set(0, true);
+			bodyBeh->GetCollisionGroups().set(0, true);
 		}
 		scene->GetRoot()->AddChild(std::move(wallNode));
 	}
