@@ -622,7 +622,6 @@ namespace Engine {
 			if (b.size.x > 0.f && b.size.y > 0.f) {
 				AppendHierarchyAabbOutlineLines(
 				    lineOutlines, b, kHierarchySelectionOutlineColor, kHierarchySelectionOutlinePadPx);
-				return;
 			}
 		}
 		CollectHierarchyFallbackMarker(node, kHierarchySelectionOutlineColor, fallbackMarkers);

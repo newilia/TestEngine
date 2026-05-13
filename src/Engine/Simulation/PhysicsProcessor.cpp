@@ -4,9 +4,11 @@
 #include "Engine/Behaviour/Physics/IntersectionDetails.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Core/Transform.h"
 #include "Engine/Core/Utils.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
+#include <SFML/System/Angle.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -22,6 +24,15 @@ namespace {
 		sf::Transform full = node.GetWorldTransform();
 		full *= c.getTransform();
 		return full.transformPoint(c.getGeometricCenter());
+	}
+
+	float Cross2D(const sf::Vector2f& a, const sf::Vector2f& b) {
+		return a.x * b.y - a.y * b.x;
+	}
+
+	/// 2D scalar ω: in-plane velocity contribution ω×r = (-ω*r.y, ω*r.x).
+	sf::Vector2f OmegaCrossR(float omega, const sf::Vector2f& r) {
+		return {-omega * r.y, omega * r.x};
 	}
 
 } // namespace
@@ -106,8 +117,14 @@ void PhysicsProcessor::IntegratePosition(PhysicsBodyBehaviour* body, float dtSec
 	if (Utils::IsNan(pos)) {
 		return;
 	}
+	if (body->IsFixed()) {
+		return;
+	}
 	pos += body->GetVelocity() * dtSec;
 	Utils::SetLocalPosToWorld(node, pos);
+
+	auto xf = node->GetLocalTransform();
+	xf->SetRotation(xf->GetRotation() + sf::radians(body->GetAngularSpeed() * dtSec));
 }
 
 void PhysicsProcessor::DetactAndResolveCollisions() {
@@ -550,6 +567,11 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 
 	auto shape1 = pb1->GetColliderShape();
 	auto shape2 = pb2->GetColliderShape();
+	if (!shape1 || !shape2) {
+		return;
+	}
+	pb1->RefreshCollisionShapeCache();
+	pb2->RefreshCollisionShapeCache();
 
 	const auto m1 = pb1->GetMass();
 	const auto m2 = pb2->GetMass();
@@ -603,48 +625,90 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 		Utils::SetLocalPosToWorld(body2, b2_pos);
 	}
 
-	/* reaction */
-	const auto v1 = pb1->GetVelocity();
-	const auto v2 = pb2->GetVelocity();
-	const float norm_v1 = Utils::ScalarProjection(v1, normal);
-	const float norm_v2 = Utils::ScalarProjection(v2, normal);
-	const float norm_v2_to_v1 = norm_v1 - norm_v2;
+	/* reaction — normal impulse at contact (linear + angular, 2D rigid) */
+	const sf::Vector2f contact = (collision.intersection.start + collision.intersection.end) * 0.5f;
 
-	if (bool areMovingTowards = norm_v2_to_v1 > 0.f) {
-		constexpr static float kNormVelocityCutoff = 100.f; // suppress low-energy collisions
-		const bool needSuppress = norm_v2_to_v1 < kNormVelocityCutoff;
-		const auto restitution = std::min(pb1->GetRestitution(), pb2->GetRestitution());
+	const sf::Transform shapeToWorld1 = body1->GetWorldTransform() * shape1->getTransform();
+	const sf::Transform shapeToWorld2 = body2->GetWorldTransform() * shape2->getTransform();
+	const sf::Vector2f comWorld1 = pb1->GetCollisionComWorld(shapeToWorld1);
+	const sf::Vector2f comWorld2 = pb2->GetCollisionComWorld(shapeToWorld2);
 
-		// Tangent components are not affected by the collision response.
-		const sf::Vector2f v1_tang = v1 - normal * norm_v1;
-		const sf::Vector2f v2_tang = v2 - normal * norm_v2;
+	const float I1 = pb1->EstimateCollisionInertiaWorld(m1, shapeToWorld1);
+	const float I2 = pb2->EstimateCollisionInertiaWorld(m2, shapeToWorld2);
 
-		sf::Vector2f v1_norm;
-		sf::Vector2f v2_norm;
+	const float invM1 = (pb1->IsFixed() || m1 <= 0.f) ? 0.f : 1.f / m1;
+	const float invM2 = (pb2->IsFixed() || m2 <= 0.f) ? 0.f : 1.f / m2;
+	const float invI1 = (pb1->IsFixed() || I1 <= 0.f) ? 0.f : 1.f / I1;
+	const float invI2 = (pb2->IsFixed() || I2 <= 0.f) ? 0.f : 1.f / I2;
 
-		if (needSuppress) {
-			// Perfectly-inelastic along the normal: both bodies share the same
-			// normal velocity derived from the total normal momentum.
-			const float commonNormSpeed = pb2->IsFixed() ? 0.f : (m1 * norm_v1 + m2 * norm_v2) / (m1 + m2);
-			v1_norm = normal * commonNormSpeed;
-			v2_norm = pb2->IsFixed() ? normal * norm_v2 : v1_norm;
-		}
-		else {
-			if (pb2->IsFixed()) {
-				v1_norm = normal * (-restitution * norm_v1);
-				v2_norm = normal * norm_v2;
+	const sf::Vector2f r1 = contact - comWorld1;
+	const sf::Vector2f r2 = contact - comWorld2;
+
+	const float w1 = pb1->IsFixed() ? 0.f : pb1->GetAngularSpeed();
+	const float w2 = pb2->IsFixed() ? 0.f : pb2->GetAngularSpeed();
+
+	const sf::Vector2f v1 = pb1->GetVelocity();
+	const sf::Vector2f v2 = pb2->GetVelocity();
+	const sf::Vector2f v1p = v1 + OmegaCrossR(w1, r1);
+	const sf::Vector2f v2p = v2 + OmegaCrossR(w2, r2);
+	const sf::Vector2f vRel = v2p - v1p;
+	const float vn = Utils::Dot(vRel, normal);
+
+	if (vn < 0.f) {
+		constexpr static float kNormVelocityCutoff = 100.f;
+		const float approachSpeed = -vn;
+		const bool needSuppress = approachSpeed < kNormVelocityCutoff;
+		const float e = needSuppress ? 0.f : std::min(pb1->GetRestitution(), pb2->GetRestitution());
+
+		const float rn1 = Cross2D(r1, normal);
+		const float rn2 = Cross2D(r2, normal);
+		const float denom = invM1 + invM2 + rn1 * rn1 * invI1 + rn2 * rn2 * invI2;
+		float appliedJnMag = 0.f;
+		if (denom > std::numeric_limits<float>::epsilon()) {
+			const float J = -(1.f + e) * vn / denom;
+			appliedJnMag = std::abs(J);
+			const sf::Vector2f impulse = normal * J;
+			if (invM1 > 0.f) {
+				pb1->AddVelocity(-impulse * invM1);
+				pb1->SetAngularSpeed(pb1->GetAngularSpeed() - J * rn1 * invI1);
 			}
-			else {
-				const float new_norm_v1 = norm_v1 - (1.f + restitution) * m2 / (m1 + m2) * norm_v2_to_v1;
-				const float new_norm_v2 = norm_v2 + (1.f + restitution) * m1 / (m1 + m2) * norm_v2_to_v1;
-				v1_norm = normal * new_norm_v1;
-				v2_norm = normal * new_norm_v2;
+			if (invM2 > 0.f) {
+				pb2->AddVelocity(impulse * invM2);
+				pb2->SetAngularSpeed(pb2->GetAngularSpeed() + J * rn2 * invI2);
 			}
 		}
-		pb1->SetVelocity(v1_tang + v1_norm);
-		if (!pb2->IsFixed()) {
-			pb2->SetVelocity(v2_tang + v2_norm);
+
+		/* tangential (Coulomb) friction impulse — removes slip at contact, drives spin via r×t */
+		if (appliedJnMag > std::numeric_limits<float>::epsilon()) {
+			const float w1f = pb1->IsFixed() ? 0.f : pb1->GetAngularSpeed();
+			const float w2f = pb2->IsFixed() ? 0.f : pb2->GetAngularSpeed();
+			const sf::Vector2f v1f = pb1->GetVelocity();
+			const sf::Vector2f v2f = pb2->GetVelocity();
+			const sf::Vector2f v1pf = v1f + OmegaCrossR(w1f, r1);
+			const sf::Vector2f v2pf = v2f + OmegaCrossR(w2f, r2);
+			const sf::Vector2f vRelf = v2pf - v1pf;
+			const float vt = Utils::Dot(vRelf, tangent);
+
+			const float rt1 = Cross2D(r1, tangent);
+			const float rt2 = Cross2D(r2, tangent);
+			const float denomT = invM1 + invM2 + rt1 * rt1 * invI1 + rt2 * rt2 * invI2;
+			if (denomT > std::numeric_limits<float>::epsilon()) {
+				const float mu = std::min(pb1->GetFriction(), pb2->GetFriction());
+				const float JtFree = -vt / denomT;
+				const float JtMax = mu * appliedJnMag;
+				const float Jt = std::clamp(JtFree, -JtMax, JtMax);
+				const sf::Vector2f impT = tangent * Jt;
+				if (invM1 > 0.f) {
+					pb1->AddVelocity(-impT * invM1);
+					pb1->SetAngularSpeed(pb1->GetAngularSpeed() - Jt * rt1 * invI1);
+				}
+				if (invM2 > 0.f) {
+					pb2->AddVelocity(impT * invM2);
+					pb2->SetAngularSpeed(pb2->GetAngularSpeed() + Jt * rt2 * invI2);
+				}
+			}
 		}
+
 		assert(!Utils::IsNan(pb1->GetVelocity()) && !Utils::IsNan(pb2->GetVelocity()));
 	}
 }

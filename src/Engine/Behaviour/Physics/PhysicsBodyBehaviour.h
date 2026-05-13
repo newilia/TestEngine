@@ -9,9 +9,11 @@
 #include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/Rect.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
+#include <SFML/Graphics/Transform.hpp>
 
 #include <bitset>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <memory>
 #include <variant>
@@ -67,6 +69,11 @@ public:
 	Signal<const IntersectionDetails&>& GetOnCollideSignal() const;
 	Signal<const IntersectionDetails&>& GetOnOverlapSignal() const;
 
+	/// Rebuilds cached collider COM / inertia geometry when the shape instance changes.
+	void RefreshCollisionShapeCache();
+	[[nodiscard]] sf::Vector2f GetCollisionComWorld(const sf::Transform& shapeToWorld) const;
+	[[nodiscard]] float EstimateCollisionInertiaWorld(float mass, const sf::Transform& shapeToWorld) const;
+
 private:
 	/// @property
 	float _mass = 1.f;
@@ -89,4 +96,31 @@ private:
 
 	mutable Signal<const IntersectionDetails&> _onCollideSignal;
 	mutable Signal<const IntersectionDetails&> _onOverlapSignal;
+
+	enum class CollisionGeomKind : std::uint8_t
+	{
+		None,
+		Circle,
+		Rectangle,
+		PolygonRough
+	};
+
+	static float MinCollisionInertia(float mass);
+
+	const sf::Shape* _collisionCacheShapePtr = nullptr;
+	bool _collisionGeomCacheOk = false;
+	CollisionGeomKind _collisionGeomKind = CollisionGeomKind::None;
+	sf::Vector2f _collisionComLocal{};
+	float _collisionCircleRadiusLocal = 0.f;
+	sf::Vector2f _collisionRectSize{};
+	/// I_z / m in shape-local units ([length]²), convex polygon via fan from vertex 0 + parallel axis to COM.
+	float _polygonIzPerMassLocal = 0.f;
+
+	mutable bool _inertiaWorldCacheValid = false;
+	mutable float _cachedInertiaWorld = 0.f;
+	mutable float _cachedInertiaMass = 0.f;
+	mutable float _cachedInertiaShapeToWorldMatrix[16]{};
+
+	[[nodiscard]] bool InertiaWorldCacheMatches(float mass, const sf::Transform& shapeToWorld) const;
+	void StoreInertiaWorldCache(float mass, const sf::Transform& shapeToWorld, float inertiaWorld) const;
 };
