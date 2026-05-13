@@ -16,12 +16,12 @@ public:
 	explicit MoveTool(SelectTool::SelectCallback onSelect = nullptr);
 
 	bool ProcessEvent(const sf::Event& event) override;
-	void Update(const sf::Time& dt) override;
 	void DrawToolParametersUi() override;
 
 private:
 	SelectTool::SelectCallback _onSelect;
-	std::weak_ptr<SceneNode> _grabbed;
+	std::weak_ptr<SceneNode> _grabbedNode;
 	sf::Vector2f _grabOffset{};
 	bool _dragging = false;
+	bool _wasBodyFixed = false;
 };
