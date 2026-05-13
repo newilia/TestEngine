@@ -20,7 +20,10 @@
 				"${config:testEngine.launch.envArg}"
 			],
 			"cwd": "${workspaceFolder}",
-			"preLaunchTask": "Prelaunch Debug"
+			"preLaunchTask": "Prelaunch Debug",
+			"preTerminateCommands": [
+				"nofail process kill"
+			]
 		},
 		{
 			"name": "Release",
@@ -31,7 +34,10 @@
 				"${config:testEngine.launch.envArg}"
 			],
 			"cwd": "${workspaceFolder}",
-			"preLaunchTask": "Prelaunch Release"
+			"preLaunchTask": "Prelaunch Release",
+			"preTerminateCommands": [
+				"nofail process kill"
+			]
 		}
 	]
 }
