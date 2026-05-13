@@ -32,12 +32,12 @@ bool MoveTool::ProcessEvent(const sf::Event& event) {
 		return sf::Vector2f();
 	};
 
-	auto tryBegin = [&](const sf::Vector2f& pos) -> bool {
+	auto tryGrab = [&](const sf::Vector2f& pos) -> bool {
 		auto scene = Engine::MainContext::GetInstance().GetScene();
 		auto picked = scene ? scene->FindTopMostNodeAtPoint(pos) : nullptr;
 		if (!picked) {
 			_dragging = false;
-			_grabbed.reset();
+			_grabbedNode.reset();
 			if (_onSelect) {
 				_onSelect(nullptr);
 			}
@@ -48,16 +48,18 @@ bool MoveTool::ProcessEvent(const sf::Event& event) {
 		}
 		const sf::Vector2f nodePos = Utils::GetWorldPos(picked);
 		_grabOffset = nodePos - pos;
-		_grabbed = picked;
+		_grabbedNode = picked;
 		_dragging = true;
 		if (auto rb = picked->FindBehaviour<PhysicsBodyBehaviour>()) {
 			ZeroMotion(rb.get());
+			_wasBodyFixed = rb->IsFixed();
+			rb->SetFixed(true);
 		}
 		return true;
 	};
 
 	auto moveTo = [&](const sf::Vector2f& pos) {
-		auto node = _grabbed.lock();
+		auto node = _grabbedNode.lock();
 		if (!node) {
 			return;
 		}
@@ -67,32 +69,41 @@ bool MoveTool::ProcessEvent(const sf::Event& event) {
 		}
 	};
 
+	auto release = [this]() {
+		_dragging = false;
+		if (auto node = _grabbedNode.lock()) {
+			if (auto rb = node->FindBehaviour<PhysicsBodyBehaviour>()) {
+				rb->SetFixed(_wasBodyFixed);
+			}
+		}
+		_grabbedNode.reset();
+	};
+
 	if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
 		if (pressed->button == sf::Mouse::Button::Left) {
-			return tryBegin(toWorld(pressed->position));
+			return tryGrab(toWorld(pressed->position));
 		}
 	}
 	if (const auto* touch = event.getIf<sf::Event::TouchBegan>()) {
 		if (touch->finger == 0) {
-			return tryBegin(toWorld(touch->position));
+			return tryGrab(toWorld(touch->position));
 		}
 	}
 
 	if (_dragging) {
 		if (const auto* released = event.getIf<sf::Event::MouseButtonReleased>()) {
 			if (released->button == sf::Mouse::Button::Left) {
-				_dragging = false;
-				_grabbed.reset();
+				release();
 				return true;
 			}
 		}
 		if (const auto* ended = event.getIf<sf::Event::TouchEnded>()) {
 			if (ended->finger == 0) {
-				_dragging = false;
-				_grabbed.reset();
+				release();
 				return true;
 			}
 		}
+
 		if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
 			moveTo(toWorld(moved->position));
 			return true;
@@ -106,14 +117,6 @@ bool MoveTool::ProcessEvent(const sf::Event& event) {
 	}
 
 	return false;
-}
-
-void MoveTool::Update(const sf::Time& dt) {
-	if (auto node = _grabbed.lock()) {
-		if (auto rb = node->FindBehaviour<PhysicsBodyBehaviour>()) {
-			ZeroMotion(rb.get());
-		}
-	}
 }
 
 void MoveTool::DrawToolParametersUi() {

@@ -171,7 +171,8 @@ namespace Demo1 {
 
 		std::random_device rd;
 		std::mt19937 gen(rd());
-		AddBalls(root.get(), aquariumWidth - baseBallRadius * 2, aquariumHeight - baseBallRadius * 2, baseBallRadius,
+		auto ballsMargin = (baseBallRadius + ballRadiusVariability) * 4;
+		AddBalls(root.get(), aquariumWidth - ballsMargin, aquariumHeight - ballsMargin, baseBallRadius,
 		    ballRadiusVariability, baseBallColor, ballColorVariability, ballCount, ballRestitution, gen);
 
 		return root;
