@@ -1,5 +1,6 @@
 #include "GameControllerBehaviour.h"
 
+#include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Transform.h"
@@ -91,6 +92,9 @@ namespace BallGame1 {
 		if (auto body = ballNode->FindBehaviour<PhysicsBodyBehaviour>()) {
 			body->SetFixed(true);
 		}
+		if (auto attractive = ballNode->FindBehaviour<AttractiveBehaviour>()) {
+			attractive->SetEnabled(false);
+		}
 	}
 
 	void GameControllerBehaviour::DetachBallFromGun() {
@@ -105,6 +109,9 @@ namespace BallGame1 {
 		Utils::SetLocalPosToWorld(ballNode, worldPos);
 		if (auto body = ballNode->FindBehaviour<PhysicsBodyBehaviour>()) {
 			body->SetFixed(false);
+		}
+		if (auto attractive = ballNode->FindBehaviour<AttractiveBehaviour>()) {
+			attractive->SetEnabled(true);
 		}
 	}
 } // namespace BallGame1
