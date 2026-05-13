@@ -18,8 +18,15 @@
 namespace Engine {
 	void DebugSettingsWidget::Draw() const {
 		auto& mainContext = Engine::MainContext::GetInstance();
-		auto physicsProc = mainContext.GetPhysicsProcessor();
+		auto physicsProc = mainContext.GetPhysicsProcessor().get();
+		DrawSimulationSettings(mainContext, physicsProc);
+		DrawPhysicsSettings(mainContext, physicsProc);
+		DrawVisualizationSettings(mainContext);
+		DrawPerformanceInfo(mainContext);
+		DrawRenderSettings(mainContext);
+	}
 
+	void DebugSettingsWidget::DrawSimulationSettings(MainContext& mainContext, PhysicsProcessor* physicsProc) const {
 		ImGui::SeparatorText("Simulation");
 		{
 			bool simEnabled = !mainContext.IsSimPaused();
@@ -54,67 +61,69 @@ namespace Engine {
 				physicsProc->SetSimulationSubsteps(substeps);
 			}
 		}
+	}
 
-		if (const auto ph = physicsProc) {
-			ImGui::SeparatorText("Physics");
+	void DebugSettingsWidget::DrawPhysicsSettings(MainContext& mainContext, PhysicsProcessor* physicsProc) const {
+		ImGui::SeparatorText("Physics");
+		{
+			ImGui::Text("Bodies: %d", static_cast<int>(physicsProc->GetAllBodies().size()));
+
 			{
-				ImGui::Text("Bodies: %d", static_cast<int>(ph->GetAllBodies().size()));
-
-				{
-					float systemImpulse = 0.f;
-					float systemEnergy = 0.f;
-					for (const auto& wBody : ph->GetAllBodies()) {
-						if (auto body = wBody.lock()) {
-							auto vel = body->GetVelocity().length();
-							systemImpulse += body->GetMass() * vel;
-							systemEnergy += body->GetMass() * vel * vel / 2;
-						}
+				float systemImpulse = 0.f;
+				float systemEnergy = 0.f;
+				for (const auto& wBody : physicsProc->GetAllBodies()) {
+					if (auto body = wBody.lock()) {
+						auto vel = body->GetVelocity().length();
+						systemImpulse += body->GetMass() * vel;
+						systemEnergy += body->GetMass() * vel * vel / 2;
 					}
-					ImGui::Text("P = %.0f, E = %.0f", systemImpulse, systemEnergy);
+				}
+				ImGui::Text("P = %.0f, E = %.0f", systemImpulse, systemEnergy);
+			}
+
+			bool gravOn = physicsProc->IsGravityEnabled();
+			if (ImGui::Checkbox("##World gravity", &gravOn)) {
+				physicsProc->SetGravityEnabled(gravOn);
+			}
+			ImGui::SameLine();
+
+			{
+				auto& g = *ImGui::GetCurrentContext();
+				auto width = g.CurrentWindow->DC.ItemWidthDefault;
+				width -= g.FontSize + g.Style.FramePadding.y * 2 + g.Style.ItemSpacing.x;
+				ImGui::SetNextItemWidth(width);
+			}
+			sf::Vector2f g = physicsProc->GetGravity();
+			float gxy[2] = {g.x, g.y};
+			if (ImGui::DragFloat2("Gravity (px/s^2)", gxy, 10.f, -50000.f, 50000.f, "%.1f")) {
+				physicsProc->SetGravity({gxy[0], gxy[1]});
+			}
+
+			float airFriction = physicsProc->GetAirFriction();
+			if (ImGui::SliderFloat("Air friction (1/s)", &airFriction, 0.f, 0.1f, "%.4f")) {
+				physicsProc->SetAirFriction(airFriction);
+			}
+
+			if (auto field = physicsProc->GetAttractionField()) {
+				ImGui::Text("Attraction:");
+				bool massCoupling = field->GetUseMassCoupling();
+				float strength = field->GetGlobalStrengthScale();
+				if (ImGui::DragFloat("Field strength", &strength, 0.2f, -100, 100, "%.2f")) {
+					field->SetGlobalStrengthScale(strength);
 				}
 
-				bool gravOn = ph->IsGravityEnabled();
-				if (ImGui::Checkbox("##World gravity", &gravOn)) {
-					ph->SetGravityEnabled(gravOn);
+				float softEps = field->GetSofteningEps();
+				if (ImGui::DragFloat("Field softening eps", &softEps, 0.25f, 0.1f, 1.0e3f, "%.2f")) {
+					field->SetSofteningEps(softEps);
 				}
-				ImGui::SameLine();
-
-				{
-					auto& g = *ImGui::GetCurrentContext();
-					auto width = g.CurrentWindow->DC.ItemWidthDefault;
-					width -= g.FontSize + g.Style.FramePadding.y * 2 + g.Style.ItemSpacing.x;
-					ImGui::SetNextItemWidth(width);
-				}
-				sf::Vector2f g = ph->GetGravity();
-				float gxy[2] = {g.x, g.y};
-				if (ImGui::DragFloat2("Gravity (px/s^2)", gxy, 10.f, -50000.f, 50000.f, "%.1f")) {
-					ph->SetGravity({gxy[0], gxy[1]});
-				}
-
-				float airFriction = ph->GetAirFriction();
-				if (ImGui::SliderFloat("Air friction (1/s)", &airFriction, 0.f, 0.1f, "%.4f")) {
-					ph->SetAirFriction(airFriction);
-				}
-
-				if (auto field = ph->GetAttractionField()) {
-					ImGui::Text("Attraction:");
-					bool massCoupling = field->GetUseMassCoupling();
-					float strength = field->GetGlobalStrengthScale();
-					if (ImGui::DragFloat("Field strength", &strength, 0.2f, -100, 100, "%.2f")) {
-						field->SetGlobalStrengthScale(strength);
-					}
-
-					float softEps = field->GetSofteningEps();
-					if (ImGui::DragFloat("Field softening eps", &softEps, 0.25f, 0.1f, 1.0e3f, "%.2f")) {
-						field->SetSofteningEps(softEps);
-					}
-					if (ImGui::Checkbox("Mass couples sources", &massCoupling)) {
-						field->SetUseMassCoupling(massCoupling);
-					}
+				if (ImGui::Checkbox("Mass couples sources", &massCoupling)) {
+					field->SetUseMassCoupling(massCoupling);
 				}
 			}
 		}
+	}
 
+	void DebugSettingsWidget::DrawVisualizationSettings(MainContext& mainContext) const {
 		ImGui::SeparatorText("Visualization");
 		{
 			auto& viz = Editor::GetInstance().GetPhysicsVisualizer();
@@ -216,7 +225,9 @@ namespace Engine {
 				}
 			}
 		}
+	}
 
+	void DebugSettingsWidget::DrawPerformanceInfo(MainContext& mainContext) const {
 		ImGui::SeparatorText("Performance");
 		{
 			bool vsync = mainContext.IsVerticalSyncEnabled();
@@ -229,7 +240,9 @@ namespace Engine {
 			ImGui::Text("Tick dt:  %.3f s (%.1f fps)", static_cast<double>(mainContext.GetSimTickDt().asSeconds()),
 			    mainContext.GetCurrentTickRate());
 		}
+	}
 
+	void DebugSettingsWidget::DrawRenderSettings(MainContext& mainContext) const {
 		ImGui::SeparatorText("Render");
 		{
 			auto& sceneLighting = SceneLighting::GetInstance();
