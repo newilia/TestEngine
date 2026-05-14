@@ -29,16 +29,21 @@ public:
 	sf::Vector2f GetOrigin() const;
 	/// @setter
 	void SetOrigin(const sf::Vector2f& origin);
-	/// @getter
-	bool GetDrawSector() const;
-	/// @setter
+	/// @getter(name="DrawSector");
+	bool IsDrawSector() const;
+	/// @setter(name="DrawSector");
 	void SetDrawSector(bool drawSector);
+	/// @getter
+	sf::Color GetSectorColor() const;
+	/// @setter
+	void SetSectorColor(sf::Color color);
 
 private:
 	void RebuildSectorVertices() const;
 
-	bool _drawSector = true;
 	sf::CircleShape _circle;
+	bool _drawSector = true;
+	sf::Color _sectorColor;
 	mutable sf::VertexArray _sectorVertices;
 	mutable bool _isSectorDirty = true;
 };

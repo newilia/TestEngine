@@ -31,7 +31,7 @@ void CircleShapeVisual::SetRadius(float radius) {
 }
 
 void CircleShapeVisual::Draw(sf::RenderTarget& target, sf::RenderStates states) const {
-	target.draw(_circle, states);
+	ShapeVisualBase::Draw(target, states);
 
 	if (_drawSector) {
 		if (_isSectorDirty) {
@@ -51,11 +51,14 @@ void CircleShapeVisual::RebuildSectorVertices() const {
 	_sectorVertices.setPrimitiveType(sf::PrimitiveType::TriangleFan);
 	_sectorVertices.resize(kSectorPoints + 2);
 	_sectorVertices[0].position = {0.f, 0.f};
+	_sectorVertices[0].color = _sectorColor;
 	_sectorVertices[kSectorPoints + 1].position = {0.f, 0.f};
+	_sectorVertices[kSectorPoints + 1].color = _sectorColor;
 
 	for (int i = 0; i < kSectorPoints; i++) {
 		const sf::Angle angle = kAngleStep * i;
 		_sectorVertices[i + 1].position = Utils::Rotate(sf::Vector2f(0, radius), angle.asRadians());
+		_sectorVertices[i + 1].color = _sectorColor;
 	}
 	_isSectorDirty = false;
 }
@@ -77,10 +80,19 @@ void CircleShapeVisual::SetPointCount(int count) {
 	_circle.setPointCount(static_cast<std::size_t>(clamped));
 }
 
-bool CircleShapeVisual::GetDrawSector() const {
+bool CircleShapeVisual::IsDrawSector() const {
 	return _drawSector;
 }
 
 void CircleShapeVisual::SetDrawSector(bool drawSector) {
 	_drawSector = drawSector;
+}
+
+sf::Color CircleShapeVisual::GetSectorColor() const {
+	return _sectorColor;
+}
+
+void CircleShapeVisual::SetSectorColor(sf::Color color) {
+	_sectorColor = color;
+	_isSectorDirty = true;
 }
