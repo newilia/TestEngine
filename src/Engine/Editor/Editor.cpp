@@ -100,6 +100,19 @@ namespace Engine {
 		const ImGuiViewport* viewport = ImGui::GetMainViewport();
 		const ImGuiID dockspaceId = ImGui::GetID(kEditorDockSpaceId);
 
+		if (ImGui::BeginMainMenuBar()) {
+			if (ImGui::BeginMenu("File")) {
+				if (ImGui::MenuItem("Open")) {
+					// stub
+				}
+				if (ImGui::MenuItem("Save")) {
+					// stub
+				}
+				ImGui::EndMenu();
+			}
+			ImGui::EndMainMenuBar();
+		}
+
 		ImGui::DockSpaceOverViewport(dockspaceId, viewport, ImGuiDockNodeFlags_PassthruCentralNode);
 		TryApplyDefaultEditorDockLayout(dockspaceId, ImGui::GetWindowSize());
 
