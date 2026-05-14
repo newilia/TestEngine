@@ -90,7 +90,9 @@ namespace {
 
 } // namespace
 
-Scene::Scene() : _root(std::make_shared<SceneNode>()) {}
+Scene::Scene() : _root(std::make_shared<SceneNode>()) {
+	_root->SetName("Root");
+}
 
 std::shared_ptr<SceneNode> Scene::GetRoot() const {
 	return _root;

@@ -312,7 +312,7 @@ namespace Engine {
 			return;
 		}
 		ImGui::BeginChild("##scene_hierarchy_widget_tree", ImVec2(0, 0.0f), true);
-		DrawNode(*root, "Root", 0);
+		DrawNode(*root, "<unnamed>", 0);
 		ImGui::EndChild();
 	}
 } // namespace Engine

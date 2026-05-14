@@ -12,10 +12,6 @@
 template <typename T>
 class RefWrapper
 {
-	static constexpr bool kIsNode = std::is_same_v<T, SceneNode>;
-	static constexpr bool kIsEntity = std::is_base_of_v<EntityOnNode, T> && !kIsNode;
-	static_assert(kIsNode || kIsEntity, "RefWrapper<T>: T must be SceneNode or a subclass of EntityOnNode");
-
 public:
 	[[nodiscard]] Engine::SceneObjectId GetId() const {
 		return _id;
@@ -36,6 +32,12 @@ public:
 	}
 
 	[[nodiscard]] std::shared_ptr<T> Resolve(const Scene& scene) const {
+		// Checked here (not at class scope): `RefWrapper<Derived>` members inside `Derived` instantiate
+		// `RefWrapper<Derived>` while `Derived` is still incomplete, so `std::is_base_of` would be unreliable.
+		constexpr bool isNode = std::is_same_v<T, SceneNode>;
+		constexpr bool isEntity = std::is_base_of_v<EntityOnNode, T> && !isNode;
+		static_assert(isNode || isEntity, "RefWrapper<T>: T must be SceneNode or a subclass of EntityOnNode");
+
 		if (_id == Engine::kInvalidSceneObjectId) {
 			_cached.reset();
 			return nullptr;
@@ -45,7 +47,7 @@ public:
 				return locked;
 			}
 		}
-		if constexpr (kIsNode) {
+		if constexpr (isNode) {
 			auto n = scene.FindNodeByObjectId(_id);
 			_cached = n;
 			return n;
