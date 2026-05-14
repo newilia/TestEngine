@@ -9,6 +9,7 @@
 #include "Engine/Editor/Editor.h"
 #include "Engine/Editor/EditorVisualTheme.h"
 #include "Engine/Editor/SceneCloneUtils.h"
+#include "Engine/Serialization/SceneEntityRegistry.h"
 
 #include <fmt/format.h>
 #include <imgui.h>
@@ -430,6 +431,35 @@ namespace {
 		return common;
 	}
 
+	bool IsSceneEntityRegistrationAddable(const Engine::Serialization::SceneEntityRegistration& registration,
+	    const std::vector<std::shared_ptr<SceneNode>>& nodes) {
+		using Engine::Serialization::SceneEntityKind;
+		if (registration.kind == SceneEntityKind::Transform) {
+			return false;
+		}
+		if (registration.kind == SceneEntityKind::Visual) {
+			for (const auto& node : nodes) {
+				if (!node) {
+					continue;
+				}
+				if (node->GetVisual()) {
+					return false;
+				}
+			}
+		}
+		if (registration.kind == SceneEntityKind::SortingStrategy) {
+			for (const auto& node : nodes) {
+				if (!node) {
+					continue;
+				}
+				if (node->GetSortingStrategy()) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
 	std::vector<const SceneNode*> BuildSortedSelectionFingerprint(
 	    const std::vector<std::shared_ptr<SceneNode>>& nodes) {
 		std::vector<const SceneNode*> fingerprint;
@@ -676,6 +706,38 @@ namespace Engine {
 		}
 	}
 
+	void NodeInspectorWidget::DrawAddSceneEntitySection(
+	    const std::vector<std::shared_ptr<SceneNode>>& validNodes) const {
+		ImGui::Separator();
+		ImGui::PushID("add_scene_entity");
+		const Serialization::SceneEntityRegistry& registry = Serialization::SceneEntityRegistry::GetInstance();
+		int addableCount = 0;
+		for (const Serialization::SceneEntityRegistration& registration : registry.GetAll()) {
+			if (IsSceneEntityRegistrationAddable(registration, validNodes)) {
+				++addableCount;
+			}
+		}
+		const char* preview = addableCount > 0 ? "Add component..." : "Add component (none)";
+		if (addableCount == 0) {
+			ImGui::BeginDisabled();
+		}
+		if (ImGui::BeginCombo("##add_scene_entity_combo", preview)) {
+			for (const Serialization::SceneEntityRegistration& registration : registry.GetAll()) {
+				if (!IsSceneEntityRegistrationAddable(registration, validNodes)) {
+					continue;
+				}
+				if (ImGui::Selectable(registration.typeId.c_str())) {
+					(void)Editor::GetInstance().AddSceneEntityFromRegistry(validNodes, registration.typeId);
+				}
+			}
+			ImGui::EndCombo();
+		}
+		if (addableCount == 0) {
+			ImGui::EndDisabled();
+		}
+		ImGui::PopID();
+	}
+
 	void NodeInspectorWidget::Draw(const std::vector<std::shared_ptr<SceneNode>>& nodes) const {
 		std::vector<std::shared_ptr<SceneNode>> validNodes;
 		validNodes.reserve(nodes.size());
@@ -691,9 +753,10 @@ namespace Engine {
 
 		if (validNodes.size() == 1) {
 			DrawSingleNode(validNodes.front());
-			return;
 		}
-
-		DrawMultiNode(validNodes);
+		else {
+			DrawMultiNode(validNodes);
+		}
+		DrawAddSceneEntitySection(validNodes);
 	}
 } // namespace Engine
