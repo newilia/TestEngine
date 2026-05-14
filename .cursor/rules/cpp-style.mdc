@@ -1,5 +1,5 @@
 ---
-description: C++ style — naming, [[nodiscard]], class member order (TestEngine src)
+description: C++ style — naming, [[nodiscard]], .cpp helpers, class member order (TestEngine src)
 globs:
   - src/**/*.h
   - src/**/*.hpp
@@ -25,9 +25,17 @@ alwaysApply: false
 
 Use only when ignoring the return risks **bugs, leaks, or broken invariants** (ownership handles, required status, protocol steps). Avoid on benign getters or debug helpers. Do not change generated `src/Codegen/*_gen.hpp` attributes unless codegen does.
 
+## Free functions in `.cpp` files
+
+Many file-scope or anonymous-namespace functions in one `.cpp` **clutter** the file and make ownership and flow harder to see. Prefer **`private` / `static` methods on the class** (or a small dedicated helper type in the same module) when the logic clearly belongs to that type.
+
+**Exceptions (fine at file scope):** short one-off helpers, `constexpr` / `const` constants, and other **small, obviously local** utilities tied to that translation unit (often in an anonymous namespace).
+
 ## Class member order (per access section)
 
 Within each `public:` / `protected:` / `private:` block, order **member functions**: constructors and destructor; `virtual` without `override` (if any); `override` / `override final`; remaining **instance** methods; then **`static` member functions** (unless the file already groups a few next to constructors as factories — keep that local pattern).
+
+Within each **logical group** of methods (especially the remaining instance methods), follow an order that reads naturally: **lifecycle or pipeline** when it helps, then by **how central** the API is, or by **typical call sequence** (setup → steady-state → teardown) when that matches how the class is used. Prefer clarity and consistency with the file’s existing layout over cosmetic reshuffles.
 
 **Data members:** `static` and instance fields together, usually **`static` data after instance data** in that section when adding new members; nested types / enums: follow dominant style in the file.
 

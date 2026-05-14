@@ -39,5 +39,5 @@ Roots: **`src/`**, **`src/Codegen/`**. Paths relative to those roots, e.g. `#inc
 ## Other rules
 
 - **Agent defaults** (build, commits, comments, asserts): [`testengine-agent.mdc`](testengine-agent.mdc)
-- **C++ style** (`[[nodiscard]]`, override order): [`cpp-style.mdc`](cpp-style.mdc)
+- **C++ style** (`[[nodiscard]]`, class / `.cpp` layout, member order): [`cpp-style.mdc`](cpp-style.mdc)
 - **Property / inspector codegen**: [`property-codegen.mdc`](property-codegen.mdc)
