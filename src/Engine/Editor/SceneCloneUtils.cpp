@@ -1,25 +1,15 @@
 #include "Engine/Editor/SceneCloneUtils.h"
 
-#include "Engine/Behaviour/ButtonBehaviour.h"
-#include "Engine/Behaviour/FpsCounterBehaviour.h"
-#include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
-#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/PropertyNode.h"
 #include "Engine/Core/PropertyTree.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Transform.h"
+#include "Engine/Serialization/SceneEntityRegistry.h"
 #include "Engine/Sorting/SortingStrategy.h"
-#include "Engine/Visual/CircleShapeVisual.h"
-#include "Engine/Visual/ConvexShapeVisual.h"
-#include "Engine/Visual/RectangleShapeVisual.h"
-#include "Engine/Visual/SpriteVisual.h"
-#include "Engine/Visual/TextVisual.h"
-#include "Engine/Visual/VectorArrowVisual.h"
-#include "Environments/Demo1/SolarSystemBehaviour.h"
-#include "Environments/Pong/AiPlatformControllerBehaviour.h"
-#include "Environments/Pong/UserPlatformControllerBehaviour.h"
+#include "Engine/Visual/Visual.h"
 
 #include <algorithm>
+#include <string>
 
 namespace Engine {
 	namespace {
@@ -180,14 +170,6 @@ namespace Engine {
 			}
 		}
 
-		template <typename T>
-		std::shared_ptr<EntityOnNode> MakeAndCopy(const std::shared_ptr<EntityOnNode>& source) {
-			auto target = std::make_shared<T>();
-			if (CopyReflectedProperties(*source, *target)) {
-				return target;
-			}
-			return nullptr;
-		}
 	} // namespace
 
 	bool CopyReflectedProperties(IPropertiesProvider& source, IPropertiesProvider& target) {
@@ -224,50 +206,17 @@ namespace Engine {
 		if (!source) {
 			return nullptr;
 		}
-		if (std::dynamic_pointer_cast<Transform>(source)) {
-			return MakeAndCopy<Transform>(source);
+		const auto& registry = Serialization::SceneEntityRegistry::GetInstance();
+		const std::string typeId = registry.GetTypeIdForEntity(source);
+		if (typeId.empty()) {
+			return nullptr;
 		}
-		if (std::dynamic_pointer_cast<CircleShapeVisual>(source)) {
-			return MakeAndCopy<CircleShapeVisual>(source);
+		auto target = registry.CreateByTypeId(typeId);
+		if (!target) {
+			return nullptr;
 		}
-		if (std::dynamic_pointer_cast<RectangleShapeVisual>(source)) {
-			return MakeAndCopy<RectangleShapeVisual>(source);
-		}
-		if (std::dynamic_pointer_cast<ConvexShapeVisual>(source)) {
-			return MakeAndCopy<ConvexShapeVisual>(source);
-		}
-		if (std::dynamic_pointer_cast<TextVisual>(source)) {
-			return MakeAndCopy<TextVisual>(source);
-		}
-		if (std::dynamic_pointer_cast<SpriteVisual>(source)) {
-			return MakeAndCopy<SpriteVisual>(source);
-		}
-		if (std::dynamic_pointer_cast<VectorArrowVisual>(source)) {
-			return MakeAndCopy<VectorArrowVisual>(source);
-		}
-		if (std::dynamic_pointer_cast<RelativeSortingStrategy>(source)) {
-			return MakeAndCopy<RelativeSortingStrategy>(source);
-		}
-		if (std::dynamic_pointer_cast<PhysicsBodyBehaviour>(source)) {
-			return MakeAndCopy<PhysicsBodyBehaviour>(source);
-		}
-		if (std::dynamic_pointer_cast<AttractiveBehaviour>(source)) {
-			return MakeAndCopy<AttractiveBehaviour>(source);
-		}
-		if (std::dynamic_pointer_cast<FpsCounterBehaviour>(source)) {
-			return MakeAndCopy<FpsCounterBehaviour>(source);
-		}
-		if (std::dynamic_pointer_cast<ButtonBehaviour>(source)) {
-			return MakeAndCopy<ButtonBehaviour>(source);
-		}
-		if (std::dynamic_pointer_cast<AiPlatformControllerBehaviour>(source)) {
-			return MakeAndCopy<AiPlatformControllerBehaviour>(source);
-		}
-		if (std::dynamic_pointer_cast<UserPlatformControllerBehaviour>(source)) {
-			return MakeAndCopy<UserPlatformControllerBehaviour>(source);
-		}
-		if (std::dynamic_pointer_cast<SolarSystemBehaviour>(source)) {
-			return MakeAndCopy<SolarSystemBehaviour>(source);
+		if (CopyReflectedProperties(*source, *target)) {
+			return target;
 		}
 		return nullptr;
 	}

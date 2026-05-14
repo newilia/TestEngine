@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Scan src/**/*.h for META_CLASS(), META_PROPERTY_BASE(), META_ENUM(), /// @property, /// @getter,
-/// @setter, and /// @method tags; emit src/Codegen/<Stem>.generated.hpp.
+/// @setter, and /// @method tags; emit src/Codegen/<Stem>.generated.hpp and
+/// src/Codegen/SceneEntityRegistry.generated.cpp (scene entity registration).
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 12
+CACHE_VERSION = 14
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
@@ -127,6 +128,11 @@ ENUM_PROP_FIELD_RE = re.compile(
     + rf"({_QUALIFIED_ID_ENUM})"
     + r"\s+(\w+)\s*(?:=\s*[^;]+)?\s*;\s*$"
 )
+OBJECT_PROP_FIELD_RE = re.compile(
+    r"^\s*(?:inline\s+|static\s+|mutable\s+)*"
+    + rf"({_QUALIFIED_ID_ENUM})"
+    + r"\s+(\w+)\s*(?:=\s*[^;]+)?\s*;\s*$"
+)
 GETTER_ENUM_METHOD_RE = re.compile(
     r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?"
     r"(?:const\s+)?"
@@ -172,6 +178,7 @@ class PropSpec:
     is_map: bool = False
     is_set: bool = False
     is_pair: bool = False
+    is_object: bool = False
     map_value_type: str | None = None
     assoc_container: str | None = None
     enum_enumerators: tuple[str, ...] | None = None
@@ -667,6 +674,21 @@ def resolve_reflected_enum_type(
     return None
 
 
+def resolve_reflected_object_type(
+    raw_type: str,
+    class_namespaces: tuple[str, ...],
+    reflected_types: set[str],
+) -> str | None:
+    t = re.sub(r"\s*::\s*", "::", raw_type.strip())
+    if t in reflected_types:
+        return t
+    if "::" not in t:
+        candidate = "::".join((*class_namespaces, t))
+        if candidate in reflected_types:
+            return candidate
+    return None
+
+
 def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
     text = path.read_text(encoding="utf-8", errors="replace")
     lines = text.splitlines()
@@ -926,12 +948,29 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                                 )
                             )
                         else:
-                            raise ParseError(
-                                f"expected field with supported type after @property (tag at line {pline})",
-                                path,
-                                line_no,
-                                1,
-                            )
+                            m_obj = OBJECT_PROP_FIELD_RE.match(line)
+                            if m_obj:
+                                cpp_type, member = m_obj.group(1), m_obj.group(2)
+                                inner.setdefault("props", []).append(
+                                    PropSpec(
+                                        cpp_type=re.sub(r"\s*::\s*", "::", cpp_type.strip()),
+                                        member=member,
+                                        line=pline,
+                                        col=pcol,
+                                        attrs=attrs,
+                                        is_getter=False,
+                                        is_vector=False,
+                                        is_bitset=False,
+                                        is_object=True,
+                                    )
+                                )
+                            else:
+                                raise ParseError(
+                                    f"expected field with supported type after @property (tag at line {pline})",
+                                    path,
+                                    line_no,
+                                    1,
+                                )
             elif kind == "getter":
                 if re.search(r"\bstatic\b", line):
                     raise ParseError(
@@ -2329,6 +2368,8 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
     if any(p.is_pair for c in classes for p in c.props):
         out.append("#include <utility>")
     assoc_headers: set[str] = set()
+    reflected_types = {c.qualified() for c in classes}
+
     for c in classes:
         for p in c.props:
             if not (p.is_map or p.is_set):
@@ -2440,6 +2481,35 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
                 out.append(
                     f'\tb.addEnum("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {{ {opts} }}, {meta_arg});'
                 )
+                continue
+
+            if p.is_object:
+                if p.is_getter:
+                    raise ParseError(
+                        "nested object properties must be data members (not @getter) in codegen v1",
+                        path,
+                        p.line,
+                        p.col,
+                    )
+                resolved_object_type = resolve_reflected_object_type(
+                    p.cpp_type, c.namespaces, reflected_types
+                )
+                if resolved_object_type is None:
+                    raise ParseError(
+                        f"unsupported nested object type `{p.cpp_type}`; add META_CLASS() to the type in the same header or use supported scalar/container field type",
+                        path,
+                        p.line,
+                        p.col,
+                    )
+                has_meta = readonly or any(
+                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed", "valuesProvider")
+                )
+                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
+                fid = member_to_field_id(p.member)
+                label_esc = cpp_escape_string(default_label(p))
+                out.append(f'\tb.pushObject("{fid}", "{label_esc}", {meta_arg});')
+                out.append(f"\tthis->{p.member}.BuildPropertyTree(b);")
+                out.append("\tb.pop();")
                 continue
 
             if p.cpp_type not in KNOWN_TYPES:
@@ -2568,6 +2638,106 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
         out.append("")
 
     return "\n".join(out).rstrip() + "\n"
+
+
+def should_register_scene_entity(rel_src: str, c: ClassSpec) -> bool:
+    """Whether this META_CLASS type participates in scene XML entity registry."""
+    n = c.class_name
+    if rel_src == "Engine/Core/SceneNode.h":
+        return False
+    if rel_src.startswith("Engine/Background/"):
+        return False
+    if rel_src == "Engine/Visual/Visual.h" and n == "Visual":
+        return False
+    if n == "ShapeVisualBase":
+        return False
+    if rel_src == "Engine/Core/Transform.h" and n == "Transform":
+        return True
+    if rel_src == "Engine/Sorting/SortingStrategy.h" and n == "RelativeSortingStrategy":
+        return True
+    if rel_src.startswith("Engine/Visual/"):
+        return True
+    if rel_src.startswith("Engine/Behaviour/"):
+        return True
+    if rel_src.startswith("Environments/"):
+        return True
+    return False
+
+
+def scene_entity_type_id(rel_src: str, class_name: str) -> str:
+    """Stable string id stored in XML (matches prior hand-picked ids)."""
+    parts = rel_src.split("/")
+    if parts and parts[0] == "Engine":
+        return f"Engine.{class_name}"
+    if len(parts) >= 2 and parts[0] == "Environments":
+        return f"{parts[1]}.{class_name}"
+    return class_name
+
+
+def scene_entity_kind_cpp(rel_src: str, class_name: str) -> str:
+    """C++ enumerator name for Engine::Serialization::SceneEntityKind."""
+    if class_name == "Transform" and rel_src == "Engine/Core/Transform.h":
+        return "Transform"
+    if class_name == "RelativeSortingStrategy":
+        return "SortingStrategy"
+    if rel_src.startswith("Engine/Visual/"):
+        return "Visual"
+    return "Behaviour"
+
+
+def collect_scene_entity_registry_entries(root: Path) -> list[tuple[ClassSpec, str]]:
+    """(ClassSpec, rel_header_posix) sorted for stable output."""
+    src = root / "src"
+    by_qualified: dict[str, tuple[ClassSpec, str]] = {}
+    for h in sorted(src.rglob("*.h"), key=lambda p: p.as_posix()):
+        if "Codegen" in h.parts:
+            continue
+        rel_header = h.relative_to(src).as_posix()
+        classes, _ = parse_header(h)
+        for c in classes:
+            if should_register_scene_entity(rel_header, c):
+                by_qualified[c.qualified()] = (c, rel_header)
+    out = list(by_qualified.values())
+    out.sort(
+        key=lambda t: (
+            scene_entity_type_id(t[1], t[0].class_name),
+            t[0].qualified(),
+        )
+    )
+    return out
+
+
+def generate_scene_entity_registry_cpp(root: Path) -> str:
+    entries = collect_scene_entity_registry_entries(root)
+    lines: list[str] = [
+        "// Auto-generated by tools/property_codegen.py — do not edit.",
+        '#include "Engine/Serialization/SceneEntityRegistrar.h"',
+        "",
+    ]
+    includes = sorted({rel_h for _, rel_h in entries})
+    for inc in includes:
+        lines.append(f'#include "{inc}"')
+    lines.append("")
+    lines.append("namespace {")
+    lines.append("")
+    lines.append("struct TeCodegenSceneEntityRegistration {")
+    lines.append("\tTeCodegenSceneEntityRegistration() {")
+    lines.append("\t\tusing ::Engine::Serialization::RegisterSceneEntity;")
+    lines.append("\t\tusing ::Engine::Serialization::SceneEntityKind;")
+    for c, rel_h in entries:
+        q = c.qualified()
+        tid = scene_entity_type_id(rel_h, c.class_name)
+        tid_esc = cpp_escape_string(tid)
+        kind = scene_entity_kind_cpp(rel_h, c.class_name)
+        lines.append(f'\t\tRegisterSceneEntity<{q}>("{tid_esc}", SceneEntityKind::{kind});')
+    lines.append("\t}")
+    lines.append("};")
+    lines.append("")
+    lines.append("TeCodegenSceneEntityRegistration teCodegenSceneEntityRegistration{};")
+    lines.append("")
+    lines.append("} // namespace")
+    lines.append("")
+    return "\n".join(lines)
 
 
 def load_cache(cache_path: Path) -> dict[str, Any]:
@@ -2710,6 +2880,19 @@ def main() -> int:
         else:
             print(f"[codegen] unchanged {out_path.relative_to(root)}")
         cache_files[rel] = sig
+
+    registry_path = codegen_dir / "SceneEntityRegistry.generated.cpp"
+    try:
+        reg_content = generate_scene_entity_registry_cpp(root)
+    except ParseError as e:
+        print(f"[codegen] ERROR: {e}", file=sys.stderr)
+        return 1
+    old_reg = registry_path.read_text(encoding="utf-8") if registry_path.is_file() else None
+    if old_reg != reg_content:
+        registry_path.write_text(reg_content, encoding="utf-8")
+        print(f"[codegen] wrote {registry_path.relative_to(root)}")
+    else:
+        print(f"[codegen] unchanged {registry_path.relative_to(root)}")
 
     cache_files = {k: cache_files[k] for k in sorted(cache_files)}
     save_cache(cache_path, {"version": CACHE_VERSION, "files": cache_files})

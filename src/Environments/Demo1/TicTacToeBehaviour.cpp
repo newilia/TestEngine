@@ -28,10 +28,6 @@ namespace {
 
 } // namespace
 
-TicTacToeBehaviour::TicTacToeBehaviour(
-    std::shared_ptr<TextVisual> hudText, std::array<std::shared_ptr<TextVisual>, 9> cellTexts)
-    : _hudText(std::move(hudText)), _cellTexts(std::move(cellTexts)) {}
-
 void TicTacToeBehaviour::OnInit() {
 	BeginNewRound();
 }
@@ -55,6 +51,12 @@ void TicTacToeBehaviour::OnUpdate(const sf::Time& dt) {
 	}
 
 	RefreshHud();
+}
+
+void TicTacToeBehaviour::SetTextVisuals(
+    std::shared_ptr<TextVisual> hudText, std::array<std::shared_ptr<TextVisual>, 9> cellTexts) {
+	_hudText = std::move(hudText);
+	_cellTexts = std::move(cellTexts);
 }
 
 void TicTacToeBehaviour::OnCellTapped(const int cellIndex) {

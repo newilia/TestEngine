@@ -2,7 +2,6 @@
 
 #include "AttractiveBehaviour.generated.hpp"
 #include "Engine/Core/MainContext.h"
-#include "Engine/Core/SceneNode.h"
 #include "Engine/Simulation/AttractionField.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 

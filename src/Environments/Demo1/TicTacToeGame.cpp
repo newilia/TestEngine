@@ -101,8 +101,8 @@ namespace Demo1 {
 			cellTexts[static_cast<std::size_t>(i)] = cellV;
 		}
 
-		auto behaviour = std::make_shared<TicTacToeBehaviour>(hudVisual, cellTexts);
-		root->AddBehaviour(behaviour);
+		auto ticTacToe = root->RequireBehaviour<TicTacToeBehaviour>();
+		ticTacToe->SetTextVisuals(hudVisual, cellTexts);
 
 		for (int i = 0; i < 9; ++i) {
 			const int row = i / 3;
@@ -116,7 +116,7 @@ namespace Demo1 {
 			auto hit = std::make_shared<TicTacToeCellHitVisual>();
 			hit->GetShape()->setSize({kCell, kCell});
 			hit->GetShape()->setFillColor(sf::Color(0, 0, 0, 0));
-			hit->Configure(i, behaviour);
+			hit->Configure(i, ticTacToe);
 			cellNode->SetVisual(std::move(hit));
 
 			auto cellSort = std::make_shared<RelativeSortingStrategy>();
