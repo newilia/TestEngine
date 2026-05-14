@@ -125,81 +125,126 @@ namespace Engine {
 			return MainContext::GetInstance().GetScene();
 		}
 
-		void DrawSceneRefEntityRow(const char* label, const std::shared_ptr<EntityOnNode>& entity,
-		    const PropAccessSceneRef* access, bool (*predicate)(const std::shared_ptr<EntityOnNode>&)) {
+		void DrawSceneRefEntityLeaf(const char* label, const std::shared_ptr<EntityOnNode>& entity,
+		    const PropAccessSceneRef* access, std::uint32_t selectedId,
+		    bool (*predicate)(const std::shared_ptr<EntityOnNode>&)) {
 			if (!entity) {
 				return;
 			}
 			if (predicate && !predicate(entity)) {
 				return;
 			}
-			if (ImGui::SmallButton(label)) {
+			const bool selected = (entity->GetSceneObjectId() == selectedId);
+			if (ImGui::Selectable(label, selected, ImGuiSelectableFlags_None)) {
 				access->set(entity->GetSceneObjectId());
 				ImGui::CloseCurrentPopup();
 			}
 		}
 
 		void DrawSceneRefPickerContent(const Scene& scene, const PropertyNode& n, const PropAccessSceneRef* access) {
-			if (ImGui::Button("Clear reference")) {
-				access->set(0);
-				ImGui::CloseCurrentPopup();
-			}
-			ImGui::Separator();
 			const auto root = scene.GetRoot();
 			if (!root) {
 				ImGui::TextUnformatted("Scene has no root");
 				return;
 			}
 
+			const std::uint32_t selectedId = access->get();
 			const std::function<void(const std::shared_ptr<SceneNode>&, int)> visit =
 			    [&](const std::shared_ptr<SceneNode>& node, int depth) {
 				    if (!node) {
 					    return;
 				    }
 				    ImGui::PushID(node.get());
-				    ImGui::Indent(static_cast<float>(depth) * 12.f);
 				    const std::string& nm = node->GetName();
 				    const char* disp = nm.empty() ? "<unnamed>" : nm.c_str();
+				    const std::uint32_t nodeObjectId = node->GetSceneObjectId();
 
 				    if (n.meta.sceneRefFilterKind == SceneRefFilterKind::SceneNode) {
-					    if (ImGui::Selectable(disp, false, ImGuiSelectableFlags_None, ImVec2(-1, 0))) {
-						    access->set(node->GetSceneObjectId());
+					    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+					    if (nodeObjectId == selectedId) {
+						    flags |= ImGuiTreeNodeFlags_Selected;
+					    }
+					    if (depth == 0) {
+						    flags |= ImGuiTreeNodeFlags_DefaultOpen;
+					    }
+					    const bool hasSceneChildren = !node->GetChildren().empty();
+					    if (!hasSceneChildren) {
+						    flags |= ImGuiTreeNodeFlags_Leaf;
+					    }
+					    const bool open = ImGui::TreeNodeEx("##sn", flags, "%s", disp);
+					    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+						    access->set(nodeObjectId);
 						    ImGui::CloseCurrentPopup();
+					    }
+					    if (open) {
+						    for (const auto& child : node->GetChildren()) {
+							    visit(child, depth + 1);
+						    }
+						    ImGui::TreePop();
 					    }
 				    }
 				    else {
-					    ImGui::TextUnformatted(disp);
-					    DrawSceneRefEntityRow("  Transform",
-					        std::static_pointer_cast<EntityOnNode>(node->GetLocalTransform()), access,
-					        n.meta.sceneRefEntityIsAllowed);
-					    if (const auto visual = node->GetVisual()) {
-						    DrawSceneRefEntityRow("  Visual", std::static_pointer_cast<EntityOnNode>(visual), access,
-						        n.meta.sceneRefEntityIsAllowed);
+					    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+					    if (depth == 0) {
+						    flags |= ImGuiTreeNodeFlags_DefaultOpen;
 					    }
-					    if (const auto sorting = node->GetSortingStrategy()) {
-						    DrawSceneRefEntityRow("  Sorting", std::static_pointer_cast<EntityOnNode>(sorting), access,
-						        n.meta.sceneRefEntityIsAllowed);
-					    }
-					    for (const auto& behaviour : node->GetBehaviours()) {
-						    if (!behaviour) {
-							    continue;
+					    const bool hasSceneChildren = !node->GetChildren().empty();
+					    bool hasEntityChildren =
+					        node->GetLocalTransform() || node->GetVisual() || node->GetSortingStrategy();
+					    if (!hasEntityChildren) {
+						    for (const auto& b : node->GetBehaviours()) {
+							    if (b) {
+								    hasEntityChildren = true;
+								    break;
+							    }
 						    }
-						    const std::string bl = std::string("  Behaviour: ") + typeid(*behaviour.get()).name();
-						    ImGui::PushID(behaviour.get());
-						    DrawSceneRefEntityRow(bl.c_str(), std::static_pointer_cast<EntityOnNode>(behaviour), access,
+					    }
+					    if (!hasSceneChildren && !hasEntityChildren) {
+						    flags |= ImGuiTreeNodeFlags_Leaf;
+					    }
+					    const bool open = ImGui::TreeNodeEx("##sn", flags, "%s", disp);
+					    if (open) {
+						    DrawSceneRefEntityLeaf("Transform",
+						        std::static_pointer_cast<EntityOnNode>(node->GetLocalTransform()), access, selectedId,
 						        n.meta.sceneRefEntityIsAllowed);
-						    ImGui::PopID();
+						    if (const auto visual = node->GetVisual()) {
+							    DrawSceneRefEntityLeaf("Visual", std::static_pointer_cast<EntityOnNode>(visual), access,
+							        selectedId, n.meta.sceneRefEntityIsAllowed);
+						    }
+						    if (const auto sorting = node->GetSortingStrategy()) {
+							    DrawSceneRefEntityLeaf("Sorting", std::static_pointer_cast<EntityOnNode>(sorting),
+							        access, selectedId, n.meta.sceneRefEntityIsAllowed);
+						    }
+						    int behaviourIndex = 0;
+						    for (const auto& behaviour : node->GetBehaviours()) {
+							    if (!behaviour) {
+								    continue;
+							    }
+							    ImGui::PushID(behaviour.get());
+							    Behaviour* const bp = behaviour.get();
+							    const std::string bl =
+							        fmt::format("Behaviour #{} ({})", behaviourIndex, typeid(*bp).name());
+							    DrawSceneRefEntityLeaf(bl.c_str(), std::static_pointer_cast<EntityOnNode>(behaviour),
+							        access, selectedId, n.meta.sceneRefEntityIsAllowed);
+							    ImGui::PopID();
+							    ++behaviourIndex;
+						    }
+						    for (const auto& child : node->GetChildren()) {
+							    visit(child, depth + 1);
+						    }
+						    ImGui::TreePop();
 					    }
 				    }
 
-				    for (const auto& child : node->GetChildren()) {
-					    visit(child, depth + 1);
-				    }
-				    ImGui::Unindent(static_cast<float>(depth) * 12.f);
 				    ImGui::PopID();
 			    };
 
 			visit(root, 0);
+
+			if (ImGui::SmallButton("Clear reference")) {
+				access->set(0);
+				ImGui::CloseCurrentPopup();
+			}
 		}
 
 	} // namespace
