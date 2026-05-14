@@ -49,7 +49,7 @@ add_custom_target(
 
 file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/**.cpp")
 file(GLOB_RECURSE ENGINE_HEADERS CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/**.h")
-file(GLOB_RECURSE ENGINE_CODEGEN CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/Codegen/*_gen.hpp")
+file(GLOB_RECURSE ENGINE_CODEGEN CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/Codegen/*.generated.hpp")
 
 if(NOT ENGINE_SOURCES)
 	message(FATAL_ERROR "No source files found in src/. Check project structure.")
