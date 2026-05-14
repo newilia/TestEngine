@@ -358,6 +358,10 @@ namespace {
 		case Engine::PropertyKind::Color:
 			merged.access = BuildMergedScalarAccess<Engine::PropAccessColor, sf::Color>(nodes, merged.meta);
 			break;
+		case Engine::PropertyKind::SceneRef:
+			merged.access = BuildMergedScalarAccess<Engine::PropAccessSceneRef, std::uint32_t>(
+			    nodes, merged.meta, AreAllEqual<std::uint32_t>, BuildIntegerRangeMarker<std::uint32_t>);
+			break;
 		}
 		return merged;
 	}

@@ -13,7 +13,7 @@ namespace Engine::Serialization {
 	class SceneSerializer
 	{
 	public:
-		static SerializationResult SaveSceneToFile(const Scene& scene, const std::filesystem::path& path);
+		static SerializationResult SaveSceneToFile(Scene& scene, const std::filesystem::path& path);
 		static std::pair<std::shared_ptr<Scene>, SerializationResult> LoadSceneFromFile(
 		    const std::filesystem::path& path);
 	};

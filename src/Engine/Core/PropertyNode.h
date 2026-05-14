@@ -91,6 +91,12 @@ namespace Engine {
 		std::function<void(sf::Color)> set;
 	};
 
+	struct PropAccessSceneRef
+	{
+		std::function<std::uint32_t()> get;
+		std::function<void(std::uint32_t)> set;
+	};
+
 	/// Optional size control for `PropertyKind::Sequence` lists.
 	struct PropAccessSequence
 	{
@@ -105,9 +111,10 @@ namespace Engine {
 		std::function<void(std::size_t pairIndex)> removePair;
 	};
 
-	using PropertyAccess = std::variant<PropAccessNone, PropAccessBool, PropAccessInt32, PropAccessInt64,
-	    PropAccessFloat, PropAccessDouble, PropAccessString, PropAccessEnum, PropAccessVec2f, PropAccessVec2i,
-	    PropAccessVec2u, PropAccessVec3f, PropAccessColor, PropAccessSequence, PropAccessAssociative>;
+	using PropertyAccess =
+	    std::variant<PropAccessNone, PropAccessBool, PropAccessInt32, PropAccessInt64, PropAccessFloat,
+	        PropAccessDouble, PropAccessString, PropAccessEnum, PropAccessVec2f, PropAccessVec2i, PropAccessVec2u,
+	        PropAccessVec3f, PropAccessColor, PropAccessSceneRef, PropAccessSequence, PropAccessAssociative>;
 
 	struct PropertyNode
 	{

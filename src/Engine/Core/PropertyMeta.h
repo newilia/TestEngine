@@ -3,11 +3,21 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
+class EntityOnNode;
+
 namespace Engine {
+
+	enum class SceneRefFilterKind
+	{
+		SceneNode,
+		Entity,
+	};
+
 	/// UI hints separate from value type; used by the editor drawer only.
 	struct PropertyMeta
 	{
@@ -33,5 +43,9 @@ namespace Engine {
 		std::function<std::vector<std::int64_t>()> valuesProviderInt64;
 		std::function<std::vector<float>()> valuesProviderFloat;
 		std::function<std::vector<double>()> valuesProviderDouble;
+
+		/// For `PropertyKind::SceneRef` (inspector / picker).
+		SceneRefFilterKind sceneRefFilterKind = SceneRefFilterKind::SceneNode;
+		bool (*sceneRefEntityIsAllowed)(const std::shared_ptr<EntityOnNode>&) = nullptr;
 	};
 } // namespace Engine

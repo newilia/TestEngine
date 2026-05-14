@@ -1,5 +1,7 @@
 #include "Engine/Editor/SceneCloneUtils.h"
 
+#include "Engine/Behaviour/Behaviour.h"
+#include "Engine/Core/IPropertiesProvider.h"
 #include "Engine/Core/PropertyNode.h"
 #include "Engine/Core/PropertyTree.h"
 #include "Engine/Core/SceneNode.h"
@@ -48,6 +50,50 @@ namespace Engine {
 			const std::size_t count = std::min(source.children.size(), target.children.size());
 			for (std::size_t i = 0; i < count; ++i) {
 				AlignContainerSizes(source.children[i], target.children[i]);
+			}
+		}
+
+		void ClearSceneRefsInPropertyNode(PropertyNode& node) {
+			if (node.kind == PropertyKind::SceneRef) {
+				if (auto* acc = std::get_if<PropAccessSceneRef>(&node.access)) {
+					if (acc->set) {
+						acc->set(0);
+					}
+				}
+			}
+			for (PropertyNode& child : node.children) {
+				ClearSceneRefsInPropertyNode(child);
+			}
+		}
+
+		void ClearSceneRefsInProvider(IPropertiesProvider& provider) {
+			PropertyTree tree;
+			PropertyBuilder builder(tree);
+			provider.BuildPropertyTree(builder);
+			for (PropertyNode& root : tree.roots) {
+				ClearSceneRefsInPropertyNode(root);
+			}
+		}
+
+		void ClearSceneRefsOnClonedSubtree(const std::shared_ptr<SceneNode>& root) {
+			if (!root) {
+				return;
+			}
+			ClearSceneRefsInProvider(*root);
+			ClearSceneRefsInProvider(*root->GetLocalTransform());
+			if (const auto sorting = root->GetSortingStrategy()) {
+				ClearSceneRefsInProvider(*sorting);
+			}
+			if (const auto visual = root->GetVisual()) {
+				ClearSceneRefsInProvider(*visual);
+			}
+			for (const auto& behaviour : root->GetBehaviours()) {
+				if (behaviour) {
+					ClearSceneRefsInProvider(*behaviour);
+				}
+			}
+			for (const auto& child : root->GetChildren()) {
+				ClearSceneRefsOnClonedSubtree(child);
 			}
 		}
 
@@ -152,6 +198,14 @@ namespace Engine {
 				}
 				return;
 			}
+			case PropertyKind::SceneRef: {
+				const auto* s = std::get_if<PropAccessSceneRef>(&source.access);
+				const auto* t = std::get_if<PropAccessSceneRef>(&target.access);
+				if (s && t && s->get && t->set) {
+					t->set(s->get());
+				}
+				return;
+			}
 			case PropertyKind::Object:
 			case PropertyKind::Sequence:
 			case PropertyKind::Associative:
@@ -216,6 +270,7 @@ namespace Engine {
 			return nullptr;
 		}
 		if (CopyReflectedProperties(*source, *target)) {
+			ClearSceneRefsInProvider(*target);
 			return target;
 		}
 		return nullptr;
@@ -249,6 +304,7 @@ namespace Engine {
 				clone->AddChild(childClone);
 			}
 		}
+		ClearSceneRefsOnClonedSubtree(clone);
 		return clone;
 	}
 

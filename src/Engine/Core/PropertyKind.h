@@ -16,6 +16,8 @@ namespace Engine {
 		Vec2u,
 		Vec3f,
 		Color,
+		/// Serialized scene object id (`RefWrapper`); editor uses hierarchy picker.
+		SceneRef,
 		/// Group / struct: only `children` are shown.
 		Object,
 		/// Indexed list: `children` are elements; optional resize via `sequence`.

@@ -1,7 +1,16 @@
 #include "Engine/Editor/PropertyTreeDrawer.h"
 
+#include "Engine/Behaviour/Behaviour.h"
+#include "Engine/Core/EntityOnNode.h"
+#include "Engine/Core/MainContext.h"
 #include "Engine/Core/PropertyNode.h"
+#include "Engine/Core/Scene.h"
+#include "Engine/Core/SceneNode.h"
+#include "Engine/Core/Transform.h"
+#include "Engine/Sorting/SortingStrategy.h"
+#include "Engine/Visual/Visual.h"
 
+#include <fmt/format.h>
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -108,6 +117,91 @@ namespace Engine {
 			}
 			*options.anyLeafEdited = true;
 		}
+
+		std::shared_ptr<Scene> ResolveSceneForRefs(const PropertyTreeDrawOptions& options) {
+			if (options.sceneForSceneRefsOverride) {
+				return options.sceneForSceneRefsOverride;
+			}
+			return MainContext::GetInstance().GetScene();
+		}
+
+		void DrawSceneRefEntityRow(const char* label, const std::shared_ptr<EntityOnNode>& entity,
+		    const PropAccessSceneRef* access, bool (*predicate)(const std::shared_ptr<EntityOnNode>&)) {
+			if (!entity) {
+				return;
+			}
+			if (predicate && !predicate(entity)) {
+				return;
+			}
+			if (ImGui::SmallButton(label)) {
+				access->set(entity->GetSceneObjectId());
+				ImGui::CloseCurrentPopup();
+			}
+		}
+
+		void DrawSceneRefPickerContent(const Scene& scene, const PropertyNode& n, const PropAccessSceneRef* access) {
+			if (ImGui::Button("Clear reference")) {
+				access->set(0);
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::Separator();
+			const auto root = scene.GetRoot();
+			if (!root) {
+				ImGui::TextUnformatted("Scene has no root");
+				return;
+			}
+
+			const std::function<void(const std::shared_ptr<SceneNode>&, int)> visit =
+			    [&](const std::shared_ptr<SceneNode>& node, int depth) {
+				    if (!node) {
+					    return;
+				    }
+				    ImGui::PushID(node.get());
+				    ImGui::Indent(static_cast<float>(depth) * 12.f);
+				    const std::string& nm = node->GetName();
+				    const char* disp = nm.empty() ? "<unnamed>" : nm.c_str();
+
+				    if (n.meta.sceneRefFilterKind == SceneRefFilterKind::SceneNode) {
+					    if (ImGui::Selectable(disp, false, ImGuiSelectableFlags_None, ImVec2(-1, 0))) {
+						    access->set(node->GetSceneObjectId());
+						    ImGui::CloseCurrentPopup();
+					    }
+				    }
+				    else {
+					    ImGui::TextUnformatted(disp);
+					    DrawSceneRefEntityRow("  Transform",
+					        std::static_pointer_cast<EntityOnNode>(node->GetLocalTransform()), access,
+					        n.meta.sceneRefEntityIsAllowed);
+					    if (const auto visual = node->GetVisual()) {
+						    DrawSceneRefEntityRow("  Visual", std::static_pointer_cast<EntityOnNode>(visual), access,
+						        n.meta.sceneRefEntityIsAllowed);
+					    }
+					    if (const auto sorting = node->GetSortingStrategy()) {
+						    DrawSceneRefEntityRow("  Sorting", std::static_pointer_cast<EntityOnNode>(sorting), access,
+						        n.meta.sceneRefEntityIsAllowed);
+					    }
+					    for (const auto& behaviour : node->GetBehaviours()) {
+						    if (!behaviour) {
+							    continue;
+						    }
+						    const std::string bl = std::string("  Behaviour: ") + typeid(*behaviour.get()).name();
+						    ImGui::PushID(behaviour.get());
+						    DrawSceneRefEntityRow(bl.c_str(), std::static_pointer_cast<EntityOnNode>(behaviour), access,
+						        n.meta.sceneRefEntityIsAllowed);
+						    ImGui::PopID();
+					    }
+				    }
+
+				    for (const auto& child : node->GetChildren()) {
+					    visit(child, depth + 1);
+				    }
+				    ImGui::Unindent(static_cast<float>(depth) * 12.f);
+				    ImGui::PopID();
+			    };
+
+			visit(root, 0);
+		}
+
 	} // namespace
 
 	void PropertyTreeDrawer::Draw(const PropertyTree& tree, PropertyTreeDrawOptions options) const {
@@ -820,6 +914,64 @@ namespace Engine {
 						};
 						a->set(sf::Color{clamp255(rgba[0]), clamp255(rgba[1]), clamp255(rgba[2]), clamp255(rgba[3])});
 						MarkLeafEditedIfMixed(n, drawOptions);
+					}
+					PopMixedFlagIfNeeded(n.meta);
+				}
+				ItemTooltipAfter(n.meta);
+			}
+			break;
+		}
+		case PropertyKind::SceneRef: {
+			if (const auto* a = std::get_if<PropAccessSceneRef>(&n.access)) {
+				DrawLabelLeft(n);
+				const std::shared_ptr<Scene> scene = ResolveSceneForRefs(drawOptions);
+				const std::uint32_t cur = a->get();
+				std::string summary = "None";
+				if (cur != 0) {
+					if (scene) {
+						if (n.meta.sceneRefFilterKind == SceneRefFilterKind::SceneNode) {
+							if (const auto target = scene->FindNodeByObjectId(cur)) {
+								const std::string& nm = target->GetName();
+								summary = nm.empty() ? fmt::format("Node {}", cur) : nm;
+							}
+							else {
+								summary = fmt::format("Missing {}", cur);
+							}
+						}
+						else if (const auto ent = scene->FindEntityByObjectId(cur)) {
+							summary = fmt::format("{} [{}]", typeid(*ent).name(), cur);
+						}
+						else {
+							summary = fmt::format("Missing {}", cur);
+						}
+					}
+					else {
+						summary = fmt::format("id {}", cur);
+					}
+				}
+				if (readOnly) {
+					ImGui::TextUnformatted(n.meta.hasMixedValues ? MixedMarker(n.meta) : summary.c_str());
+				}
+				else {
+					PushMixedFlagIfNeeded(n.meta);
+					ImGui::TextUnformatted(summary.c_str());
+					ImGui::SameLine();
+					const std::string popupId = fmt::format("SceneRefPick##{}", n.id);
+					if (ImGui::Button("Pick…")) {
+						ImGui::OpenPopup(popupId.c_str());
+					}
+					if (ImGui::BeginPopupModal(popupId.c_str(), nullptr,
+					        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings)) {
+						if (!scene) {
+							ImGui::TextUnformatted("No active scene");
+						}
+						else {
+							DrawSceneRefPickerContent(*scene, n, a);
+						}
+						if (ImGui::Button("Close")) {
+							ImGui::CloseCurrentPopup();
+						}
+						ImGui::EndPopup();
 					}
 					PopMixedFlagIfNeeded(n.meta);
 				}
