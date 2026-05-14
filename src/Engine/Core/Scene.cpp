@@ -1,10 +1,19 @@
 #include "Scene.h"
 
+#include "Engine/Behaviour/Behaviour.h"
+#include "Engine/Core/EntityOnNode.h"
 #include "Engine/Core/MainContext.h"
+#include "Engine/Core/Transform.h"
 #include "Engine/Core/Utils.h"
+#include "Engine/Sorting/SortingStrategy.h"
+#include "Engine/Visual/Visual.h"
 
 #include <algorithm>
+#include <functional>
+#include <limits>
 #include <optional>
+#include <random>
+#include <unordered_set>
 #include <vector>
 
 namespace {
@@ -113,9 +122,17 @@ void Scene::Update(const sf::Time& dt) {
 }
 
 void Scene::Init() {
+	WireGraphOwningScene();
+	RebuildObjectIndex();
 	EventHandlerBase::SubscribeForEvents();
 	if (_root) {
 		_root->NotifyLifecycleInitRecursive();
+	}
+}
+
+void Scene::WireGraphOwningScene() {
+	if (_root) {
+		_root->PropagateOwningScene(std::dynamic_pointer_cast<Scene>(shared_from_this()));
 	}
 }
 
@@ -123,6 +140,7 @@ void Scene::Deinit() {
 	EventHandlerBase::UnsubscribeFromEvents();
 	if (_root) {
 		_root->NotifyLifecycleDeinitRecursive();
+		_root->PropagateOwningScene({});
 	}
 }
 
@@ -152,4 +170,119 @@ std::vector<std::shared_ptr<SceneNode>> Scene::FindNodesInRect(
 	const sf::FloatRect normalizedRect = NormalizeRect(worldRect);
 	FindNodesInRectRec(_root, normalizedRect, mode, result);
 	return result;
+}
+
+namespace {
+
+	Engine::SceneObjectId RandomNonZeroSceneObjectId() {
+		thread_local std::mt19937 rng{std::random_device{}()};
+		std::uniform_int_distribution<std::uint32_t> dist(1u, (std::numeric_limits<std::uint32_t>::max)());
+		return dist(rng);
+	}
+
+	void EnsureUniqueSceneObjectId(Engine::SceneObjectId& id, std::unordered_set<std::uint32_t>& claimed) {
+		if (id != Engine::kInvalidSceneObjectId && !claimed.contains(id)) {
+			claimed.insert(id);
+			return;
+		}
+		do {
+			id = RandomNonZeroSceneObjectId();
+		}
+		while (claimed.contains(id));
+		claimed.insert(id);
+	}
+
+} // namespace
+
+void Scene::MarkSceneObjectIndexDirty() {
+	_sceneObjectIndexDirty = true;
+}
+
+void Scene::FlushSceneObjectIndexIfDirty() {
+	if (!_sceneObjectIndexDirty) {
+		return;
+	}
+	RebuildObjectIndex();
+}
+
+void Scene::RebuildObjectIndex() {
+	std::unordered_set<std::uint32_t> claimed;
+	std::vector<std::pair<std::uint32_t, std::weak_ptr<SceneNode>>> nodeEntries;
+	std::vector<std::pair<std::uint32_t, std::weak_ptr<EntityOnNode>>> entityEntries;
+	nodeEntries.reserve(256);
+	entityEntries.reserve(256);
+
+	const std::function<void(const std::shared_ptr<SceneNode>&)> visit = [&](const std::shared_ptr<SceneNode>& node) {
+		if (!node) {
+			return;
+		}
+		Engine::SceneObjectId nid = node->GetSceneObjectId();
+		EnsureUniqueSceneObjectId(nid, claimed);
+		node->SetSceneObjectId(nid);
+		nodeEntries.push_back({nid, node});
+
+		if (const auto transform = node->GetLocalTransform()) {
+			Engine::SceneObjectId tid = transform->GetSceneObjectId();
+			EnsureUniqueSceneObjectId(tid, claimed);
+			transform->SetSceneObjectId(tid);
+			entityEntries.push_back({tid, transform});
+		}
+		if (const auto visual = node->GetVisual()) {
+			Engine::SceneObjectId vid = visual->GetSceneObjectId();
+			EnsureUniqueSceneObjectId(vid, claimed);
+			visual->SetSceneObjectId(vid);
+			entityEntries.push_back({vid, visual});
+		}
+		if (const auto sorting = node->GetSortingStrategy()) {
+			Engine::SceneObjectId sid = sorting->GetSceneObjectId();
+			EnsureUniqueSceneObjectId(sid, claimed);
+			sorting->SetSceneObjectId(sid);
+			entityEntries.push_back({sid, sorting});
+		}
+		for (const auto& behaviour : node->GetBehaviours()) {
+			if (!behaviour) {
+				continue;
+			}
+			Engine::SceneObjectId bid = behaviour->GetSceneObjectId();
+			EnsureUniqueSceneObjectId(bid, claimed);
+			behaviour->SetSceneObjectId(bid);
+			entityEntries.push_back({bid, behaviour});
+		}
+		for (const auto& child : node->GetChildren()) {
+			visit(child);
+		}
+	};
+
+	_nodesByObjectId.clear();
+	_entitiesByObjectId.clear();
+	visit(_root);
+	for (const auto& [id, w] : nodeEntries) {
+		_nodesByObjectId[id] = w;
+	}
+	for (const auto& [id, w] : entityEntries) {
+		_entitiesByObjectId[id] = w;
+	}
+	_sceneObjectIndexDirty = false;
+}
+
+std::shared_ptr<SceneNode> Scene::FindNodeByObjectId(Engine::SceneObjectId id) const {
+	if (id == Engine::kInvalidSceneObjectId) {
+		return nullptr;
+	}
+	const auto it = _nodesByObjectId.find(id);
+	if (it == _nodesByObjectId.end()) {
+		return nullptr;
+	}
+	return it->second.lock();
+}
+
+std::shared_ptr<EntityOnNode> Scene::FindEntityByObjectId(Engine::SceneObjectId id) const {
+	if (id == Engine::kInvalidSceneObjectId) {
+		return nullptr;
+	}
+	const auto it = _entitiesByObjectId.find(id);
+	if (it == _entitiesByObjectId.end()) {
+		return nullptr;
+	}
+	return it->second.lock();
 }

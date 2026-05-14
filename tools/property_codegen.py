@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 14
+CACHE_VERSION = 15
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
@@ -37,6 +37,9 @@ FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*"
     r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector2i|sf::Vector2u|sf::Vector3f|sf::Color|sf::Angle)\s+"
     r"(\w+)\s*.*;\s*$"
+)
+REFWRAPPER_FIELD_RE = re.compile(
+    r"^\s*(?:inline\s+|static\s+|mutable\s+)*RefWrapper\s*<\s*((?:[A-Za-z_]\w*\s*::\s*)*[A-Za-z_]\w*)\s*>\s+(\w+)\s*;\s*$"
 )
 # Element / component types for std::vector, std::pair, std::map, std::set (same set everywhere).
 _VEC_ELT = r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector2i|sf::Vector2u|sf::Vector3f|sf::Color|sf::Angle)"
@@ -179,6 +182,8 @@ class PropSpec:
     is_set: bool = False
     is_pair: bool = False
     is_object: bool = False
+    is_ref_wrapper: bool = False
+    ref_inner_type: str | None = None
     map_value_type: str | None = None
     assoc_container: str | None = None
     enum_enumerators: tuple[str, ...] | None = None
@@ -904,12 +909,13 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                         )
                     )
                 else:
-                    m_field = FIELD_RE.match(line)
-                    if m_field:
-                        cpp_type, member = m_field.group(1), m_field.group(2)
+                    m_ref = REFWRAPPER_FIELD_RE.match(line)
+                    if m_ref:
+                        inner_t, member = m_ref.group(1), m_ref.group(2)
+                        inner_t = re.sub(r"\s*::\s*", "::", inner_t.strip())
                         inner.setdefault("props", []).append(
                             PropSpec(
-                                cpp_type=cpp_type,
+                                cpp_type=f"RefWrapper<{inner_t}>",
                                 member=member,
                                 line=pline,
                                 col=pcol,
@@ -917,26 +923,17 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                                 is_getter=False,
                                 is_vector=False,
                                 is_bitset=False,
+                                is_ref_wrapper=True,
+                                ref_inner_type=inner_t,
                             )
                         )
                     else:
-                        m_en = ENUM_PROP_FIELD_RE.match(line)
-                        if m_en:
-                            raw_t, member = m_en.group(1), m_en.group(2)
-                            class_ns = tuple(inner["namespaces"])
-                            resolved = resolve_reflected_enum_type(raw_t, class_ns, file_enums)
-                            if resolved is None:
-                                raise ParseError(
-                                    f"expected field with supported type after @property (unknown type `{raw_t}`, "
-                                    f"tag at line {pline})",
-                                    path,
-                                    line_no,
-                                    1,
-                                )
-                            canon, en = resolved
+                        m_field = FIELD_RE.match(line)
+                        if m_field:
+                            cpp_type, member = m_field.group(1), m_field.group(2)
                             inner.setdefault("props", []).append(
                                 PropSpec(
-                                    cpp_type=canon,
+                                    cpp_type=cpp_type,
                                     member=member,
                                     line=pline,
                                     col=pcol,
@@ -944,16 +941,26 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                                     is_getter=False,
                                     is_vector=False,
                                     is_bitset=False,
-                                    enum_enumerators=en,
                                 )
                             )
                         else:
-                            m_obj = OBJECT_PROP_FIELD_RE.match(line)
-                            if m_obj:
-                                cpp_type, member = m_obj.group(1), m_obj.group(2)
+                            m_en = ENUM_PROP_FIELD_RE.match(line)
+                            if m_en:
+                                raw_t, member = m_en.group(1), m_en.group(2)
+                                class_ns = tuple(inner["namespaces"])
+                                resolved = resolve_reflected_enum_type(raw_t, class_ns, file_enums)
+                                if resolved is None:
+                                    raise ParseError(
+                                        f"expected field with supported type after @property (unknown type `{raw_t}`, "
+                                        f"tag at line {pline})",
+                                        path,
+                                        line_no,
+                                        1,
+                                    )
+                                canon, en = resolved
                                 inner.setdefault("props", []).append(
                                     PropSpec(
-                                        cpp_type=re.sub(r"\s*::\s*", "::", cpp_type.strip()),
+                                        cpp_type=canon,
                                         member=member,
                                         line=pline,
                                         col=pcol,
@@ -961,16 +968,33 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                                         is_getter=False,
                                         is_vector=False,
                                         is_bitset=False,
-                                        is_object=True,
+                                        enum_enumerators=en,
                                     )
                                 )
                             else:
-                                raise ParseError(
-                                    f"expected field with supported type after @property (tag at line {pline})",
-                                    path,
-                                    line_no,
-                                    1,
-                                )
+                                m_obj = OBJECT_PROP_FIELD_RE.match(line)
+                                if m_obj:
+                                    cpp_type, member = m_obj.group(1), m_obj.group(2)
+                                    inner.setdefault("props", []).append(
+                                        PropSpec(
+                                            cpp_type=re.sub(r"\s*::\s*", "::", cpp_type.strip()),
+                                            member=member,
+                                            line=pline,
+                                            col=pcol,
+                                            attrs=attrs,
+                                            is_getter=False,
+                                            is_vector=False,
+                                            is_bitset=False,
+                                            is_object=True,
+                                        )
+                                    )
+                                else:
+                                    raise ParseError(
+                                        f"expected field with supported type after @property (tag at line {pline})",
+                                        path,
+                                        line_no,
+                                        1,
+                                    )
             elif kind == "getter":
                 if re.search(r"\bstatic\b", line):
                     raise ParseError(
@@ -2314,6 +2338,11 @@ def emit_std_vector_property(
     out.append("\tb.endSequence();")
 
 
+def ref_inner_is_scene_node(inner: str) -> bool:
+    t = inner.strip()
+    return t == "SceneNode" or t.endswith("::SceneNode")
+
+
 def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
     out: list[str] = [
         "// Generated by tools/property_codegen.py — do not edit.",
@@ -2367,6 +2396,9 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
         out.append("#include <bitset>")
     if any(p.is_pair for c in classes for p in c.props):
         out.append("#include <utility>")
+    if any(p.is_ref_wrapper for c in classes for p in c.props):
+        out.append("#include <memory>")
+        out.append('#include "Engine/Core/EntityOnNode.h"')
     assoc_headers: set[str] = set()
     reflected_types = {c.qualified() for c in classes}
 
@@ -2406,6 +2438,44 @@ def generate_file_content(path: Path, classes: list[ClassSpec]) -> str:
             setter_name = a.get("setter")
             has_setter_method = isinstance(setter_name, str) and bool(setter_name)
             readonly = (a.get("readonly") is True) or (p.is_getter and not has_setter_method)
+
+            if p.is_ref_wrapper:
+                if p.is_getter:
+                    raise ParseError(
+                        "RefWrapper fields must be data members (not @getter) in codegen v1",
+                        path,
+                        p.line,
+                        p.col,
+                    )
+                inner = p.ref_inner_type or ""
+                filter_kind = (
+                    "Engine::SceneRefFilterKind::SceneNode"
+                    if ref_inner_is_scene_node(inner)
+                    else "Engine::SceneRefFilterKind::Entity"
+                )
+                fid = member_to_field_id(p.member)
+                label_esc = cpp_escape_string(default_label(p))
+                get_lambda = f"[this]() -> std::uint32_t {{ return static_cast<std::uint32_t>(this->{p.member}.GetId()); }}"
+                set_lambda = (
+                    "[](std::uint32_t) {}"
+                    if readonly
+                    else f"[this](std::uint32_t v) {{ this->{p.member}.SetId(static_cast<Engine::SceneObjectId>(v)); }}"
+                )
+                out.append("\t{")
+                out.append("\t\tEngine::PropertyMeta _sm{};")
+                if readonly:
+                    out.append("\t\t_sm.readOnly = true;")
+                if isinstance(a.get("tooltip"), str):
+                    out.append(f'\t\t_sm.tooltip = "{cpp_escape_string(a["tooltip"])}";')
+                out.append(f"\t\t_sm.sceneRefFilterKind = {filter_kind};")
+                if not ref_inner_is_scene_node(inner):
+                    out.append(
+                        f"\t\t_sm.sceneRefEntityIsAllowed = [](const std::shared_ptr<EntityOnNode>& e) -> bool "
+                        f"{{ return static_cast<bool>(std::dynamic_pointer_cast<{inner}>(e)); }};"
+                    )
+                out.append(f'\t\tb.addSceneRef("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, _sm);')
+                out.append("\t}")
+                continue
 
             if p.is_bitset:
                 if p.is_getter:

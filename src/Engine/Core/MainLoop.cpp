@@ -125,6 +125,9 @@ namespace Engine {
 				scene->Update(simulatedDt);
 			}
 		}
+		if (auto scene = mainContext.GetScene()) {
+			scene->FlushSceneObjectIndexIfDirty();
+		}
 	}
 
 	bool MainLoop::PresentFrame() {

@@ -2,6 +2,10 @@
 
 #include "Engine/Core/PropertyTree.h"
 
+#include <memory>
+
+class Scene;
+
 namespace Engine {
 
 	struct PropertyTreeDrawOptions
@@ -11,6 +15,8 @@ namespace Engine {
 		bool unwrapSingleRootObject = false;
 		/// If non-null, set to true when a leaf with `PropertyMeta::hasMixedValues` was edited (merged inspector cache).
 		bool* anyLeafEdited = nullptr;
+		/// If set, `PropertyKind::SceneRef` picker uses this scene; otherwise `MainContext::GetScene()`.
+		std::shared_ptr<Scene> sceneForSceneRefsOverride;
 	};
 
 	/// ImGui rendering for `PropertyTree` built from `IInspectable::BuildPropertyTree`.

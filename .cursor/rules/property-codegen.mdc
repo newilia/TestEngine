@@ -120,7 +120,13 @@ Scanner picks classes from headers under **`src/`** (excluding **`Codegen/`**) t
 
 ## Supported field types (v1)
 
-`float`, `double`, `bool`, `int`, `std::int32_t`, `std::int64_t`, `std::string`, `sf::Vector2f`, `sf::Vector2i`, `sf::Vector2u`, `sf::Vector3f`, `sf::Color`, **`sf::Angle`**, plus any **`META_ENUM`**-declared `enum class` in the same scanned header (inspector: combo with enumerator names). The inspector edits **`sf::Angle` as degrees** (`asDegrees()` / `sf::degrees(float)`); radians are not shown in the UI. **`sf::Vector2i`** uses integer drag controls; **`sf::Vector2u`** uses unsigned 32-bit drag controls (both axes). Other types → codegen error until mapped in `tools/property_codegen.py`.
+`float`, `double`, `bool`, `int`, `std::int32_t`, `std::int64_t`, `std::string`, `sf::Vector2f`, `sf::Vector2i`, `sf::Vector2u`, `sf::Vector3f`, `sf::Color`, **`sf::Angle`**, **`RefWrapper<T>`** (see below), plus any **`META_ENUM`**-declared `enum class` in the same scanned header (inspector: combo with enumerator names). The inspector edits **`sf::Angle` as degrees** (`asDegrees()` / `sf::degrees(float)`); radians are not shown in the UI. **`sf::Vector2i`** uses integer drag controls; **`sf::Vector2u`** uses unsigned 32-bit drag controls (both axes). Other types → codegen error until mapped in `tools/property_codegen.py`.
+
+### `RefWrapper<T>` (scene object reference by id)
+
+- One line: **`RefWrapper<SceneNode> _nodeRef;`** or **`RefWrapper<MyBehaviour> _behaviourRef;`** after `/// @property`. **`T`** must be **`SceneNode`** (possibly qualified) or a concrete type derived from **`EntityOnNode`** (behaviour, visual, transform, sorting strategy, etc.); include **`#include "Engine/Core/RefWrapper.h"`** and the full definition of **`T`** in the same header.
+- Stores **`Engine::SceneObjectId`**; **`Resolve(const Scene&)`** returns **`std::shared_ptr<T>`** and caches a **`weak_ptr`**. Not `@getter` / `@setter` in v1.
+- Inspector: **`PropertyKind::SceneRef`** — **Pick…** opens a hierarchy modal (scene from **`MainContext`** unless **`PropertyTreeDrawOptions::sceneForSceneRefsOverride`** is set).
 
 ## `std::bitset<N>` (fixed bit masks)
 

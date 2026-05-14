@@ -2,6 +2,7 @@
 
 #include "Engine/Core/FontManager.h"
 #include "Engine/Core/MainContext.h"
+#include "Engine/Core/Scene.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Utils.h"
 #include "Engine/Editor/Commands/CutEntityCommand.h"
@@ -30,6 +31,7 @@
 #include <vector>
 
 namespace {
+
 	constexpr const char kEditorDockHostWindow[] = "EditorDockHost";
 	constexpr const char kEditorDockSpaceId[] = "EditorDockSpace";
 	constexpr const char kSceneWindowTitle[] = "Scene";
@@ -306,8 +308,9 @@ namespace Engine {
 			if (!entity) {
 				return false;
 			}
-			return _history.Execute(
+			const bool executed = _history.Execute(
 			    std::make_unique<EditorCommands::PasteEntityCommand>(parent, entity, _clipboard.GetEntitySlot()));
+			return executed;
 		}
 		return false;
 	}

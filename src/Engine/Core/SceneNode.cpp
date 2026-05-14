@@ -2,6 +2,7 @@
 
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/MainContext.h"
+#include "Engine/Core/Scene.h"
 #include "Engine/Core/Transform.h"
 #include "Engine/Core/Utils.h"
 #include "Engine/Visual/ShapeVisualBase.h"
@@ -21,6 +22,14 @@ const std::string& SceneNode::GetName() const {
 	return _name;
 }
 
+Engine::SceneObjectId SceneNode::GetSceneObjectId() const {
+	return _sceneObjectId;
+}
+
+void SceneNode::SetSceneObjectId(Engine::SceneObjectId id) {
+	_sceneObjectId = id;
+}
+
 shared_ptr<SceneNode> SceneNode::GetParent() const {
 	return _parent.lock();
 }
@@ -35,9 +44,10 @@ shared_ptr<Visual> SceneNode::GetVisual() const {
 
 shared_ptr<Transform> SceneNode::GetLocalTransform() const {
 	if (!_localTransform) {
-		auto self = std::static_pointer_cast<SceneNode>(const_cast<SceneNode*>(this)->shared_from_this());
+		auto self = const_cast<SceneNode*>(this)->shared_from_this();
 		_localTransform = std::make_shared<Transform>();
 		_localTransform->AttachTo(self);
+		self->NotifyActiveSceneObjectIndexDirty();
 	}
 	return _localTransform;
 }
@@ -139,6 +149,7 @@ void SceneNode::SetVisual(shared_ptr<Visual>&& visual) {
 	if (_visual) {
 		_visual->AttachTo(shared_from_this());
 	}
+	NotifyActiveSceneObjectIndexDirty();
 }
 
 void SceneNode::SetSortingStrategy(const shared_ptr<RelativeSortingStrategy>& sorting) {
@@ -146,6 +157,7 @@ void SceneNode::SetSortingStrategy(const shared_ptr<RelativeSortingStrategy>& so
 	if (_sortingStrategy) {
 		_sortingStrategy->AttachTo(shared_from_this());
 	}
+	NotifyActiveSceneObjectIndexDirty();
 }
 
 void SceneNode::AddChild(const std::shared_ptr<SceneNode>& child) {
@@ -160,25 +172,30 @@ void SceneNode::AddChildAt(const std::shared_ptr<SceneNode>& child, std::size_t 
 	}
 	_children.insert(_children.begin() + static_cast<std::ptrdiff_t>(index), child);
 	child->SetParent(shared_from_this());
+	child->PropagateOwningScene(_owningScene);
 	child->MarkWorldTransformSubtreeDirty();
 	if (IsInActiveScene()) {
 		child->NotifyLifecycleInitRecursive();
 	}
+	NotifyActiveSceneObjectIndexDirty();
 }
 
 void SceneNode::RemoveChild(SceneNode* child) {
 	auto it = std::ranges::find_if(_children.begin(), _children.end(), [child](const auto& ptr) {
 		return ptr.get() == child;
 	});
-	if (it != _children.end()) {
-		shared_ptr<SceneNode> node = *it;
-		if (node->IsInActiveScene()) {
-			node->NotifyLifecycleDeinitRecursive();
-		}
-		node->SetParent(nullptr);
-		node->MarkWorldTransformSubtreeDirty();
-		_children.erase(it);
+	if (it == _children.end()) {
+		return;
 	}
+	shared_ptr<SceneNode> node = *it;
+	if (node->IsInActiveScene()) {
+		node->NotifyLifecycleDeinitRecursive();
+	}
+	node->PropagateOwningScene({});
+	node->SetParent(nullptr);
+	node->MarkWorldTransformSubtreeDirty();
+	_children.erase(it);
+	NotifyActiveSceneObjectIndexDirty();
 }
 
 shared_ptr<SceneNode> SceneNode::FindChild(const std::string& id, bool recursively) {
@@ -222,6 +239,7 @@ void SceneNode::AddBehaviour(shared_ptr<Behaviour> behaviour) {
 	behaviour->AttachTo(shared_from_this());
 	_behaviours.push_back(std::move(behaviour));
 	_behaviours.back()->OnAttached();
+	NotifyActiveSceneObjectIndexDirty();
 }
 
 void SceneNode::RemoveBehaviour(Behaviour* behaviour) {
@@ -233,6 +251,7 @@ void SceneNode::RemoveBehaviour(Behaviour* behaviour) {
 	}
 	DetachBehaviourForRemove(*it);
 	_behaviours.erase(it);
+	NotifyActiveSceneObjectIndexDirty();
 }
 
 void SceneNode::SetEnabled(bool isEnabled) {
@@ -269,12 +288,11 @@ void SceneNode::NotifyVisibleRecursive(bool isVisible) {
 	}
 }
 
-shared_ptr<SceneNode> SceneNode::GetSubtreeRoot() const {
-	auto cur = std::const_pointer_cast<SceneNode>(shared_from_this());
-	while (auto p = cur->GetParent()) {
-		cur = std::move(p);
+void SceneNode::PropagateOwningScene(const weak_ptr<Scene>& scene) {
+	_owningScene = scene;
+	for (const auto& c : _children) {
+		c->PropagateOwningScene(scene);
 	}
-	return cur;
 }
 
 void SceneNode::IterateBehavioursSafely(const std::function<void(shared_ptr<Behaviour>)>& func) {
@@ -285,16 +303,16 @@ void SceneNode::IterateBehavioursSafely(const std::function<void(shared_ptr<Beha
 }
 
 bool SceneNode::IsInActiveScene() const {
-	auto active = Engine::MainContext::GetInstance().GetScene();
-	if (!active) {
-		return false;
+	if (const auto owned = _owningScene.lock()) {
+		return owned == Engine::MainContext::GetInstance().GetScene();
 	}
-	const auto activeRoot = active->GetRoot();
-	if (!activeRoot) {
-		return false;
+	return false;
+}
+
+void SceneNode::NotifyActiveSceneObjectIndexDirty() const {
+	if (const auto scene = _owningScene.lock()) {
+		scene->MarkSceneObjectIndexDirty();
 	}
-	auto root = GetSubtreeRoot();
-	return root && root.get() == activeRoot.get();
 }
 
 void SceneNode::NotifyLifecycleInitRecursive() {

@@ -2,6 +2,7 @@
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Behaviour/EventHandlerBehaviourBase.h"
 #include "Engine/Core/MetaClass.h"
+#include "Engine/Core/RefWrapper.h"
 
 #include <functional>
 
@@ -30,6 +31,9 @@ namespace BallGame1 {
 		void DetachBallFromGun();
 
 	private:
+		/// @property
+		RefWrapper<SceneNode> _test;
+
 		std::function<std::shared_ptr<SceneNode>(void)> _createBall;
 		std::weak_ptr<SceneNode> _fieldNode;
 		std::weak_ptr<SceneNode> _ballNode;

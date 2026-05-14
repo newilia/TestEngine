@@ -3,6 +3,7 @@
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Core/IPropertiesProvider.h"
 #include "Engine/Core/MetaClass.h"
+#include "Engine/Core/SceneObjectId.h"
 #include "Engine/Sorting/SortingStrategy.h"
 #include "Engine/Visual/Visual.h"
 #include "Updatable.h"
@@ -20,6 +21,7 @@ using std::make_shared;
 using std::shared_ptr;
 using std::weak_ptr;
 
+class Scene;
 class Transform;
 class PhysicsBodyBehaviour;
 
@@ -47,6 +49,9 @@ public:
 	void SetEnabled(bool isEnabled);
 	bool IsVisible() const;
 	void SetVisible(bool isVisible);
+
+	Engine::SceneObjectId GetSceneObjectId() const;
+	void SetSceneObjectId(Engine::SceneObjectId id);
 
 	// Hierarchy
 	shared_ptr<SceneNode> GetParent() const;
@@ -99,6 +104,8 @@ public:
 	void NotifyLifecycleInitRecursive();
 	void NotifyLifecycleDeinitRecursive();
 
+	friend class Scene;
+
 private:
 	void NotifyEnabledRecursive(bool isEnabled);
 	void NotifyVisibleRecursive(bool isVisible);
@@ -106,7 +113,8 @@ private:
 	void SetParent(const shared_ptr<SceneNode>& parent);
 	void DetachBehaviourForRemove(const shared_ptr<Behaviour>& b);
 	bool IsInActiveScene() const;
-	shared_ptr<SceneNode> GetSubtreeRoot() const;
+	void PropagateOwningScene(const weak_ptr<Scene>& scene);
+	void NotifyActiveSceneObjectIndexDirty() const;
 	// prevents UB if _behaviours is modified during iteration loop
 	void IterateBehavioursSafely(const std::function<void(shared_ptr<Behaviour>)>& func);
 
@@ -129,6 +137,8 @@ private:
 	shared_ptr<RelativeSortingStrategy> _sortingStrategy;
 	std::vector<shared_ptr<Behaviour>> _behaviours;
 	bool _wasNodeLifecycleInited = false;
+	Engine::SceneObjectId _sceneObjectId = Engine::kInvalidSceneObjectId;
+	weak_ptr<Scene> _owningScene;
 };
 
 template <typename TVisual>

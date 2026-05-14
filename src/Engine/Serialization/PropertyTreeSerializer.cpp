@@ -50,6 +50,8 @@ namespace Engine::Serialization {
 				return "Vec3f";
 			case PropertyKind::Color:
 				return "Color";
+			case PropertyKind::SceneRef:
+				return "SceneRef";
 			case PropertyKind::Object:
 				return "Object";
 			case PropertyKind::Sequence:
@@ -238,6 +240,15 @@ namespace Engine::Serialization {
 				xmlProperty.append_attribute(kGAttr).set_value(value.g);
 				xmlProperty.append_attribute(kBAttr).set_value(value.b);
 				xmlProperty.append_attribute(kAAttr).set_value(value.a);
+				return;
+			}
+			case PropertyKind::SceneRef: {
+				const auto* access = std::get_if<PropAccessSceneRef>(&node.access);
+				if (!access || !access->get) {
+					result.AddError(node.id, "Missing SceneRef getter");
+					return;
+				}
+				xmlProperty.append_attribute(kValueAttr).set_value(access->get());
 				return;
 			}
 			case PropertyKind::Object:
@@ -451,6 +462,16 @@ namespace Engine::Serialization {
 				access->set(
 				    sf::Color(static_cast<std::uint8_t>(rAttr.as_uint()), static_cast<std::uint8_t>(gAttr.as_uint()),
 				        static_cast<std::uint8_t>(bAttr.as_uint()), static_cast<std::uint8_t>(aAttr.as_uint())));
+				return;
+			}
+			case PropertyKind::SceneRef: {
+				auto* access = std::get_if<PropAccessSceneRef>(&targetNode.access);
+				const pugi::xml_attribute valueAttr = xmlNode.attribute(kValueAttr);
+				if (!access || !access->set || !valueAttr) {
+					result.AddError(path, "Missing SceneRef setter or value");
+					return;
+				}
+				access->set(static_cast<std::uint32_t>(valueAttr.as_uint()));
 				return;
 			}
 			case PropertyKind::Object:
