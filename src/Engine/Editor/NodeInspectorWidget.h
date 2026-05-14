@@ -34,6 +34,7 @@ namespace Engine {
 	private:
 		void DrawSingleNode(const std::shared_ptr<SceneNode>& node) const;
 		void DrawMultiNode(const std::vector<std::shared_ptr<SceneNode>>& nodes) const;
+		void DrawAddSceneEntitySection(const std::vector<std::shared_ptr<SceneNode>>& validNodes) const;
 
 		PropertyTreeDrawer _propertyDrawer{};
 		mutable NodeInspectorMergeState _mergeState{};

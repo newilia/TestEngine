@@ -1,10 +1,13 @@
 #include "Engine/Editor/Editor.h"
 
+#include "Engine/Behaviour/Behaviour.h"
+#include "Engine/Core/EntityOnNode.h"
 #include "Engine/Core/FontManager.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Utils.h"
+#include "Engine/Editor/Commands/AddSceneEntityBatchCommand.h"
 #include "Engine/Editor/Commands/CutEntityCommand.h"
 #include "Engine/Editor/Commands/CutNodeCommand.h"
 #include "Engine/Editor/Commands/DeleteEntityCommand.h"
@@ -13,7 +16,10 @@
 #include "Engine/Editor/Commands/PasteNodeCommand.h"
 #include "Engine/Editor/EditorVisualTheme.h"
 #include "Engine/Editor/ImGui/Themes.h"
+#include "Engine/Serialization/SceneEntityRegistry.h"
 #include "Engine/Serialization/SceneSerializer.h"
+#include "Engine/Sorting/SortingStrategy.h"
+#include "Engine/Visual/Visual.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
@@ -47,6 +53,23 @@ namespace {
 	using Engine::EditorVisualTheme::kHierarchySelectionOutlineColor;
 	using Engine::EditorVisualTheme::kHierarchySelectionOutlinePadPx;
 	using Engine::EditorVisualTheme::kHierarchySelectionOutlineThickness;
+
+	[[nodiscard]] std::optional<Engine::EntitySlot> TrySlotForSceneEntityKind(
+	    Engine::Serialization::SceneEntityKind kind) {
+		using Engine::EntitySlot;
+		using Engine::Serialization::SceneEntityKind;
+		switch (kind) {
+		case SceneEntityKind::Behaviour:
+			return EntitySlot::Behaviour;
+		case SceneEntityKind::Visual:
+			return EntitySlot::Visual;
+		case SceneEntityKind::SortingStrategy:
+			return EntitySlot::SortingStrategy;
+		case SceneEntityKind::Transform:
+			return std::nullopt;
+		}
+		return std::nullopt;
+	}
 } // namespace
 
 namespace Engine {
@@ -369,6 +392,82 @@ namespace Engine {
 
 	bool Editor::CanPasteEntityToSelectedNode() const {
 		return GetSelectedNode() && _clipboard.HasEntity();
+	}
+
+	bool Editor::AddSceneEntityFromRegistry(
+	    const std::vector<std::shared_ptr<SceneNode>>& nodes, std::string_view typeId) {
+		std::vector<std::shared_ptr<SceneNode>> targets;
+		targets.reserve(nodes.size());
+		for (const auto& node : nodes) {
+			if (node) {
+				targets.push_back(node);
+			}
+		}
+		if (targets.empty()) {
+			return false;
+		}
+		const Serialization::SceneEntityRegistry& registry = Serialization::SceneEntityRegistry::GetInstance();
+		const Serialization::SceneEntityRegistration* registration = nullptr;
+		for (const Serialization::SceneEntityRegistration& r : registry.GetAll()) {
+			if (r.typeId == typeId) {
+				registration = &r;
+				break;
+			}
+		}
+		if (!registration) {
+			return false;
+		}
+		const Serialization::SceneEntityKind kind = registration->kind;
+		if (kind == Serialization::SceneEntityKind::Transform) {
+			return false;
+		}
+		const std::optional<EntitySlot> slot = TrySlotForSceneEntityKind(kind);
+		if (!slot) {
+			return false;
+		}
+		if (kind == Serialization::SceneEntityKind::Visual) {
+			for (const auto& node : targets) {
+				if (node->GetVisual()) {
+					return false;
+				}
+			}
+		}
+		if (kind == Serialization::SceneEntityKind::SortingStrategy) {
+			for (const auto& node : targets) {
+				if (node->GetSortingStrategy()) {
+					return false;
+				}
+			}
+		}
+		std::vector<EditorCommands::AddSceneEntityBatchCommand::Entry> entries;
+		entries.reserve(targets.size());
+		for (const auto& node : targets) {
+			std::shared_ptr<EntityOnNode> entity = registry.CreateByTypeId(typeId);
+			if (!entity) {
+				return false;
+			}
+			if (*slot == EntitySlot::Behaviour) {
+				if (!std::dynamic_pointer_cast<Behaviour>(entity)) {
+					return false;
+				}
+			}
+			else if (*slot == EntitySlot::Visual) {
+				if (!std::dynamic_pointer_cast<Visual>(entity)) {
+					return false;
+				}
+			}
+			else if (*slot == EntitySlot::SortingStrategy) {
+				if (!std::dynamic_pointer_cast<RelativeSortingStrategy>(entity)) {
+					return false;
+				}
+			}
+			EditorCommands::AddSceneEntityBatchCommand::Entry entry;
+			entry.node = node;
+			entry.entity = std::move(entity);
+			entry.slot = *slot;
+			entries.push_back(std::move(entry));
+		}
+		return _history.Execute(std::make_unique<EditorCommands::AddSceneEntityBatchCommand>(std::move(entries)));
 	}
 
 	EditorToolManager& Editor::GetEditorToolManager() {

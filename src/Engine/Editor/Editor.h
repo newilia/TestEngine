@@ -19,6 +19,7 @@
 #include <imgui.h>
 
 #include <memory>
+#include <string_view>
 #include <unordered_set>
 #include <vector>
 
@@ -68,6 +69,7 @@ namespace Engine {
 		bool DeleteNode(const std::shared_ptr<SceneNode>& node);
 		bool DeleteEntity(const std::shared_ptr<EntityOnNode>& entity, EntitySlot slot);
 		bool CanPasteEntityToSelectedNode() const;
+		bool AddSceneEntityFromRegistry(const std::vector<std::shared_ptr<SceneNode>>& nodes, std::string_view typeId);
 
 		EditorToolManager& GetEditorToolManager();
 		const EditorToolManager& GetEditorToolManager() const;
