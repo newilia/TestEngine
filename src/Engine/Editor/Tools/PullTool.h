@@ -39,5 +39,6 @@ private:
 	bool _debugArrowEnabled = true;
 	VectorArrowShape _arrow;
 	std::weak_ptr<SceneNode> _pullingBody;
+	sf::Vector2f _grabLocal{};
 	bool _isDragging = false;
 };

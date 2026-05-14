@@ -57,9 +57,11 @@ std::shared_ptr<SceneNode> PullTool::FindBodyAtPoint(const sf::Vector2f& screenP
 			if (auto node = body->GetNode()) {
 				if (auto visual = node->GetVisual()) {
 					if (visual->HitTest(worldMousePos)) {
-						_pullingBody = body->GetNode();
+						const auto node = body->GetNode();
+						_pullingBody = node;
+						_grabLocal = node->GetWorldTransform().getInverse().transformPoint(worldMousePos);
 						SetPullDestination(worldMousePos);
-						return body->GetNode();
+						return node;
 					}
 				}
 			}
@@ -70,6 +72,7 @@ std::shared_ptr<SceneNode> PullTool::FindBodyAtPoint(const sf::Vector2f& screenP
 
 void PullTool::StopPull() {
 	_pullingBody.reset();
+	_grabLocal = {};
 }
 
 void PullTool::SetPullDestination(const sf::Vector2f& worldPos) {
@@ -148,12 +151,13 @@ void PullTool::Update(const sf::Time& dt) {
 	if (!body) {
 		return;
 	}
+	const sf::Vector2f grabWorld = body->GetWorldTransform().transformPoint(_grabLocal);
 	_arrow.setFillColor(sf::Color::Green);
-	_arrow.SetStartPos(Utils::GetWorldPos(body));
+	_arrow.SetStartPos(grabWorld);
 	_arrow.SetEndPos(_destination);
 
 	if (auto rigidBody = body->FindBehaviour<PhysicsBodyBehaviour>()) {
-		auto pullVector = _destination - Utils::GetWorldPos(body);
+		auto pullVector = _destination - grabWorld;
 		auto distance = Utils::Length(pullVector);
 		if (distance <= std::numeric_limits<float>::epsilon()) {
 			return;
