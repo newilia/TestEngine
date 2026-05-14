@@ -13,3 +13,6 @@
 [submodule "third-party/imgui-sfml"]
 	path = third-party/imgui-sfml
 	url = https://github.com/SFML/imgui-sfml.git
+[submodule "third-party/pugixml"]
+	path = third-party/pugixml
+	url = https://github.com/zeux/pugixml.git

@@ -117,6 +117,7 @@ add_subdirectory(third-party/SFML EXCLUDE_FROM_ALL)
 set(IMGUI_DIR "${CMAKE_SOURCE_DIR}/third-party/imgui" CACHE PATH "" FORCE)
 set(IMGUI_SFML_FIND_SFML OFF CACHE BOOL "" FORCE)
 add_subdirectory(third-party/imgui-sfml EXCLUDE_FROM_ALL)
+add_subdirectory(third-party/pugixml EXCLUDE_FROM_ALL)
 
 target_link_libraries(TestEngine PRIVATE
     sfml-graphics
@@ -124,6 +125,7 @@ target_link_libraries(TestEngine PRIVATE
     sfml-system
     sfml-audio
     sfml-network
+    pugixml::pugixml
     ImGui-SFML::ImGui-SFML
 )
 

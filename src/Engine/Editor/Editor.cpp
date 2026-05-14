@@ -12,6 +12,7 @@
 #include "Engine/Editor/Commands/PasteNodeCommand.h"
 #include "Engine/Editor/EditorVisualTheme.h"
 #include "Engine/Editor/ImGui/Themes.h"
+#include "Engine/Serialization/SceneSerializer.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
@@ -23,6 +24,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
+#include <filesystem>
 #include <optional>
 #include <unordered_set>
 #include <vector>
@@ -36,6 +38,7 @@ namespace {
 	constexpr const char kDebugWindowTitle[] = "Debug";
 	constexpr const char kImGuiStyleTitle[] = "Style";
 	constexpr const char kGameBackgroundWindowTitle[] = "Game background";
+	const std::filesystem::path kCurrentScenePrefabPath = "assets/prefabs/CurrentScene.xml";
 
 	using Engine::EditorVisualTheme::kHierarchySelectionChildOutlineColor;
 	using Engine::EditorVisualTheme::kHierarchySelectionFallbackHalfSize;
@@ -102,11 +105,11 @@ namespace Engine {
 
 		if (ImGui::BeginMainMenuBar()) {
 			if (ImGui::BeginMenu("File")) {
-				if (ImGui::MenuItem("Open")) {
-					// stub
+				if (ImGui::MenuItem("Open", "Ctrl+O")) {
+					(void)LoadSceneFromPrefab();
 				}
-				if (ImGui::MenuItem("Save")) {
-					// stub
+				if (ImGui::MenuItem("Save", "Ctrl+S")) {
+					(void)SaveSceneToPrefab();
 				}
 				ImGui::EndMenu();
 			}
@@ -469,6 +472,14 @@ namespace Engine {
 			return;
 		}
 		if (!ImGui::GetIO().WantCaptureKeyboard) {
+			if (e.control && !e.shift && e.code == sf::Keyboard::Key::S) {
+				(void)SaveSceneToPrefab();
+				return;
+			}
+			if (e.control && !e.shift && e.code == sf::Keyboard::Key::O) {
+				(void)LoadSceneFromPrefab();
+				return;
+			}
 			if (e.control && !e.shift && e.code == sf::Keyboard::Key::Z) {
 				(void)_history.Undo();
 				return;
@@ -504,6 +515,26 @@ namespace Engine {
 		if (_isOpen && !ImGui::GetIO().WantCaptureKeyboard && _editorToolManager->TryActivateToolViaDigitKey(e.code)) {
 			return;
 		}
+	}
+
+	bool Editor::SaveSceneToPrefab() {
+		const auto scene = MainContext::GetInstance().GetScene();
+		if (!scene) {
+			return false;
+		}
+		const auto saveResult = Serialization::SceneSerializer::SaveSceneToFile(*scene, kCurrentScenePrefabPath);
+		return saveResult.isSuccess;
+	}
+
+	bool Editor::LoadSceneFromPrefab() {
+		auto [loadedScene, loadResult] = Serialization::SceneSerializer::LoadSceneFromFile(kCurrentScenePrefabPath);
+		if (!loadResult.isSuccess || !loadedScene) {
+			return false;
+		}
+		MainContext::GetInstance().SetScene(loadedScene);
+		ClearNodeSelection();
+		_history = EditorHistory{};
+		return true;
 	}
 
 	void Editor::OnKeyRelease(const sf::Event::KeyReleased& /*e*/) {}

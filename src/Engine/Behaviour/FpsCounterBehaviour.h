@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Behaviour/Behaviour.h"
+#include "Engine/Core/MetaClass.h"
 
 #include <memory>
 
@@ -9,6 +10,8 @@ class TextVisual;
 
 class FpsCounterBehaviour : public Behaviour
 {
+	META_CLASS()
+
 public:
 	void OnUpdate(const sf::Time& dt) override;
 

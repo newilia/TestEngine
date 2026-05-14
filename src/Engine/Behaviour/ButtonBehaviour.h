@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Behaviour/EventHandlerBehaviourBase.h"
+#include "Engine/Core/MetaClass.h"
 #include "Engine/Core/Signal.h"
 
 #include <SFML/Window/Event.hpp>
@@ -9,6 +10,8 @@
 /// (see `Visual::HitTest`). Mouse: left button. Touch: first finger (`finger == 0`) only.
 class ButtonBehaviour : public EventHandlerBehaviourBase
 {
+	META_CLASS()
+
 public:
 	void OnEvent(const sf::Event& event) override;
 

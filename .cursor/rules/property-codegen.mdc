@@ -22,6 +22,33 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 4. In **one** corresponding `.cpp`: `#include "<HeaderStem>.generated.hpp"` after the class header so out-of-line `BuildPropertyTree` sees the full class type.
 5. Build `TestEngine`; CMake target **`Codegen`** runs first. Include generated headers as `#include "Foo_gen.hpp"` (`src/Codegen` is on the include path).
 
+## Scene entity registry (XML save/load)
+
+Types that participate in **scene XML** (`SceneSerializer` / `PropertyTreeSerializer`) need a **stable string `typeId`** and a **default factory** (`std::make_shared<T>()`). The Python generator emits **`src/Codegen/SceneEntityRegistry.generated.cpp`**, which includes the relevant headers and calls **`Engine::Serialization::RegisterSceneEntity<T>(typeId, SceneEntityKind::…)`** at static init. **Do not** add manual registration in `.cpp` files; extend **`tools/property_codegen.py`** only if the inclusion / id rules must change.
+
+### Usage (author)
+
+1. Put **`META_CLASS()`** (and **`#include "Engine/Core/MetaClass.h"`**) on the **`EntityOnNode`** subtype you want on nodes in saved scenes — same as the inspector workflow.
+2. In **one** `.cpp` for that type, **`#include "<HeaderStem>.generated.hpp"`** (required for `BuildPropertyTree`; the registry TU pulls in the **header** only).
+3. Run configure/build (or **`python tools/property_codegen.py`**); **`SceneEntityRegistry.generated.cpp`** is regenerated every run.
+
+### Which types are registered (v1 heuristics)
+
+Scanner picks classes from headers under **`src/`** (excluding **`Codegen/`**) that pass **`should_register_scene_entity`** in **`tools/property_codegen.py`**: e.g. **`Transform`**, **`RelativeSortingStrategy`**, concrete types under **`Engine/Visual/`** (not the abstract **`Visual`** base, not **`ShapeVisualBase`**), **`Engine/Behaviour/`** (any depth), **`Environments/<EnvName>/`**. Excluded: **`SceneNode`**, **`Engine/Background/`**, and any type the script lists explicitly (see **`TicTacToeBehaviour`** — no default ctor).
+
+### Stable `typeId` strings
+
+- Under **`Engine/`**: **`Engine.<ClassName>`** (class name only, not nested path).
+- Under **`Environments/<Folder>/`**: **`<Folder>.<ClassName>`** (e.g. **`Pong.UserPlatformControllerBehaviour`**).
+- Changing folder or class renames **breaks** existing XML references to that id.
+
+### Limitations
+
+- **Default constructor required:** registration uses **`std::make_shared<T>()`** with no arguments. Types with **only** user-defined constructors that take parameters are **not** auto-registered (exclude in **`should_register_scene_entity`**, or add a default ctor and a separate init path if design allows).
+- **Abstract / non-instantiable** bases (`Visual`, `ShapeVisualBase`) are filtered out; only concrete leaf types should appear.
+- **`META_CLASS()`** is still required: the scanner only sees classes it parses as codegen targets.
+- **`SceneNode`** itself is not a registered entity kind in this registry (hierarchy is serialized separately).
+
 ## `META_ENUM` (`enum class` in the inspector)
 
 - On a **single line** in a header (same file as the reflecting class, typically inside the same `namespace` as the class): `META_ENUM(MyEnumType, Value1, Value2, Value3);` — expands to `enum class MyEnumType { Value1, Value2, Value3 }` via `Engine/Core/MetaClass.h`. Enumerators are comma-separated identifiers only (no `= value` in v1).
@@ -134,6 +161,7 @@ Adding a **new** `src/**.cpp` is picked up on the next build/configure via `CONF
 - At most one `META_PROPERTY_BASE(...)` per class; it must appear in the same class as `META_CLASS()` (scanner error if `META_PROPERTY_BASE` is used without `META_CLASS`).
 - Templates, tricky macros, multi-line declarations, and **nested** `std::vector`s are **not** supported in v1.
 - `#define META_CLASS()` / `#define META_PROPERTY_BASE(...)` in `MetaClass.h` are ignored by the scanner (not treated as usage).
+- **Scene XML entity registry** (separate section above): types must be **default-constructible** via **`make_shared`**; see that section for heuristics and exclusions.
 
 ## Cache and force rebuild
 

@@ -5,6 +5,7 @@
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Transform.h"
 #include "Engine/Visual/TextVisual.h"
+#include "FpsCounterBehaviour.generated.hpp"
 
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/System/Vector2.hpp>

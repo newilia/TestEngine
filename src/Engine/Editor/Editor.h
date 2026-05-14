@@ -79,6 +79,8 @@ namespace Engine {
 		Editor();
 
 		void DrawLayout();
+		bool SaveSceneToPrefab();
+		bool LoadSceneFromPrefab();
 		void TryApplyDefaultEditorDockLayout(ImGuiID dockspaceId, const ImVec2& dockspaceSize) const;
 		void DrawCursorWorldCoordsOverlay(sf::RenderWindow& window);
 		void DrawViewportSelectionOverlay(sf::RenderWindow& window);

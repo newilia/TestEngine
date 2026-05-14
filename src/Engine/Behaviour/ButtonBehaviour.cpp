@@ -1,5 +1,6 @@
 #include "ButtonBehaviour.h"
 
+#include "ButtonBehaviour.generated.hpp"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Utils.h"
