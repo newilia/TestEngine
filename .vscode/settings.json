@@ -43,6 +43,7 @@
 		"-I${workspaceFolder}/third-party/fmt/include",
 		"-I${workspaceFolder}/third-party/imgui",
 		"-I${workspaceFolder}/third-party/imgui-sfml",
+		"-I${workspaceFolder}/third-party/pugixml/src",
 		"-include",
 		"${workspaceFolder}/src/TestEngineGlobals.h"
 	],
