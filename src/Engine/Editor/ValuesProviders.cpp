@@ -1,5 +1,7 @@
 #include "Engine/Editor/ValuesProviders.h"
 
+#include "Engine/Core/ContentPaths.h"
+
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
@@ -8,22 +10,6 @@
 namespace {
 
 	namespace fs = std::filesystem;
-
-	std::optional<fs::path> FindRepoRoot(const fs::path& start) {
-		fs::path p = fs::absolute(start);
-		for (int depth = 0; depth < 40; ++depth) {
-			const fs::path cmake = p / "CMakeLists.txt";
-			const fs::path resources = p / "resources";
-			if (fs::is_regular_file(cmake) && fs::is_directory(resources)) {
-				return p;
-			}
-			if (!p.has_parent_path() || p == p.root_path()) {
-				break;
-			}
-			p = p.parent_path();
-		}
-		return std::nullopt;
-	}
 
 	void AsciiLowerInPlace(std::string& s) {
 		for (char& c : s) {
@@ -54,25 +40,22 @@ namespace {
 namespace Editor::ValuesProviders {
 
 	std::vector<std::string> GetBackgroundTextures() {
-		const auto root = FindRepoRoot(fs::current_path());
-		if (!root) {
-			return {};
-		}
-		const fs::path dir = *root / "resources" / "textures" / "backgrounds";
+		const fs::path root = Engine::ContentRoot();
+		const fs::path dir = root / "resources" / "textures" / "backgrounds";
 		std::error_code ec;
 		if (!fs::exists(dir, ec) || !fs::is_directory(dir, ec)) {
 			return {};
 		}
 		std::vector<std::string> out;
 		for (fs::recursive_directory_iterator it(dir, fs::directory_options::skip_permission_denied), end; it != end;
-		     ++it) {
+		    ++it) {
 			if (!it->is_regular_file()) {
 				continue;
 			}
 			if (!HasImageExtension(it->path())) {
 				continue;
 			}
-			std::string rel = RepoRelativeLower(*root, it->path());
+			std::string rel = RepoRelativeLower(root, it->path());
 			if (!rel.empty()) {
 				out.push_back(std::move(rel));
 			}

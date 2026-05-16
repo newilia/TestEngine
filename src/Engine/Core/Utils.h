@@ -8,6 +8,7 @@
 #include <optional>
 #include <ranges>
 #include <string>
+#include <string_view>
 #include <vector>
 
 class Visual;
@@ -57,6 +58,10 @@ namespace Utils {
 
 	/// Системно разворачивает окно (Windows: `ShowWindow` + `SW_MAXIMIZE`); на других ОС — пусто.
 	void MaximizeWindow(const sf::RenderWindow& window);
+
+#ifdef _WIN32
+	[[nodiscard]] std::wstring Utf8ToWide(std::string_view utf8);
+#endif
 
 	template <typename T, typename U>
 	std::shared_ptr<T> SharedPtrCast(const U* ptr) {

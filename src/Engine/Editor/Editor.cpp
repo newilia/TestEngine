@@ -1,6 +1,7 @@
 #include "Engine/Editor/Editor.h"
 
 #include "Engine/Behaviour/Behaviour.h"
+#include "Engine/Core/ContentPaths.h"
 #include "Engine/Core/EntityOnNode.h"
 #include "Engine/Core/FontManager.h"
 #include "Engine/Core/MainContext.h"
@@ -16,6 +17,7 @@
 #include "Engine/Editor/Commands/PasteNodeCommand.h"
 #include "Engine/Editor/EditorVisualTheme.h"
 #include "Engine/Editor/ImGui/Themes.h"
+#include "Engine/Editor/NativeFileDialog.h"
 #include "Engine/Serialization/SceneEntityRegistry.h"
 #include "Engine/Serialization/SceneSerializer.h"
 #include "Engine/Sorting/SortingStrategy.h"
@@ -27,14 +29,21 @@
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/Mouse.hpp>
 
+#include <fmt/format.h>
 #include <imgui-SFML.h>
 #include <imgui.h>
 #include <imgui_internal.h>
 
 #include <filesystem>
 #include <optional>
+#include <string>
 #include <unordered_set>
 #include <vector>
+
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#endif
 
 namespace {
 
@@ -46,8 +55,6 @@ namespace {
 	constexpr const char kDebugWindowTitle[] = "Debug";
 	constexpr const char kImGuiStyleTitle[] = "Style";
 	constexpr const char kGameBackgroundWindowTitle[] = "Game background";
-	const std::filesystem::path kCurrentScenePrefabPath = "assets/prefabs/CurrentScene.xml";
-
 	using Engine::EditorVisualTheme::kHierarchySelectionChildOutlineColor;
 	using Engine::EditorVisualTheme::kHierarchySelectionFallbackHalfSize;
 	using Engine::EditorVisualTheme::kHierarchySelectionOutlineColor;
@@ -131,10 +138,13 @@ namespace Engine {
 		if (ImGui::BeginMainMenuBar()) {
 			if (ImGui::BeginMenu("File")) {
 				if (ImGui::MenuItem("Open", "Ctrl+O")) {
-					(void)LoadSceneFromPrefab();
+					(void)LoadScene();
 				}
 				if (ImGui::MenuItem("Save", "Ctrl+S")) {
-					(void)SaveSceneToPrefab();
+					(void)SaveScene();
+				}
+				if (ImGui::MenuItem("Save As…", "Ctrl+Shift+S")) {
+					(void)SaveSceneAs();
 				}
 				ImGui::EndMenu();
 			}
@@ -575,11 +585,15 @@ namespace Engine {
 		}
 		if (!ImGui::GetIO().WantCaptureKeyboard) {
 			if (e.control && !e.shift && e.code == sf::Keyboard::Key::S) {
-				(void)SaveSceneToPrefab();
+				(void)SaveScene();
+				return;
+			}
+			if (e.control && e.shift && e.code == sf::Keyboard::Key::S) {
+				(void)SaveSceneAs();
 				return;
 			}
 			if (e.control && !e.shift && e.code == sf::Keyboard::Key::O) {
-				(void)LoadSceneFromPrefab();
+				(void)LoadScene();
 				return;
 			}
 			if (e.control && !e.shift && e.code == sf::Keyboard::Key::Z) {
@@ -619,23 +633,104 @@ namespace Engine {
 		}
 	}
 
-	bool Editor::SaveSceneToPrefab() {
+	EditorDialogs::SceneFileDialogOptions Editor::MakeSceneFileDialogOptions() const {
+		EditorDialogs::SceneFileDialogOptions opts;
+#ifdef _WIN32
+		if (const sf::RenderWindow* window = MainContext::GetInstance().GetMainWindow()) {
+			opts.parentHwnd = static_cast<HWND>(window->getNativeHandle());
+		}
+#endif
+		opts.initialDirectory = DefaultScenePrefabsDirectory();
+		if (_currentScenePath) {
+			opts.suggestedFileName = *_currentScenePath;
+			opts.initialDirectory = _currentScenePath->parent_path();
+		}
+		else {
+			opts.suggestedFileName = DefaultScenePrefabAbsolutePath();
+		}
+		return opts;
+	}
+
+	void Editor::ShowSerializationErrorDialog(
+	    std::string_view title, const Serialization::SerializationResult& result) const {
+		std::string body;
+		for (const Serialization::SerializationDiagnostic& d : result.diagnostics) {
+			const char* level = d.level == Serialization::SerializationDiagnosticLevel::Warning ? "Warning" : "Error";
+			if (!body.empty()) {
+				body += "\n\n";
+			}
+			if (d.path.empty()) {
+				body += fmt::format("{}: {}", level, d.message);
+			}
+			else {
+				body += fmt::format("{} ({}): {}", level, d.path, d.message);
+			}
+		}
+		if (body.empty()) {
+			body = "Unknown serialization error";
+		}
+#ifdef _WIN32
+		const std::wstring wideTitle = Utils::Utf8ToWide(title);
+		const std::wstring wideBody = Utils::Utf8ToWide(body);
+		HWND parent = nullptr;
+		if (const sf::RenderWindow* window = MainContext::GetInstance().GetMainWindow()) {
+			parent = static_cast<HWND>(window->getNativeHandle());
+		}
+		(void)MessageBoxW(parent, wideBody.c_str(), wideTitle.c_str(), MB_OK | MB_ICONERROR);
+#else
+		(void)title;
+		(void)result;
+#endif
+	}
+
+	bool Editor::SaveScene() {
+		if (!_currentScenePath) {
+			return SaveSceneAs();
+		}
 		const auto scene = MainContext::GetInstance().GetScene();
 		if (!scene) {
 			return false;
 		}
-		const auto saveResult = Serialization::SceneSerializer::SaveSceneToFile(*scene, kCurrentScenePrefabPath);
-		return saveResult.isSuccess;
+		const auto saveResult = Serialization::SceneSerializer::SaveSceneToFile(*scene, *_currentScenePath);
+		if (!saveResult.isSuccess) {
+			ShowSerializationErrorDialog("Save scene", saveResult);
+			return false;
+		}
+		return true;
 	}
 
-	bool Editor::LoadSceneFromPrefab() {
-		auto [loadedScene, loadResult] = Serialization::SceneSerializer::LoadSceneFromFile(kCurrentScenePrefabPath);
+	bool Editor::SaveSceneAs() {
+		const auto scene = MainContext::GetInstance().GetScene();
+		if (!scene) {
+			return false;
+		}
+		const auto path = EditorDialogs::PickSceneXmlSave(MakeSceneFileDialogOptions());
+		if (!path) {
+			return false;
+		}
+		const auto saveResult = Serialization::SceneSerializer::SaveSceneToFile(*scene, *path);
+		if (!saveResult.isSuccess) {
+			ShowSerializationErrorDialog("Save scene", saveResult);
+			return false;
+		}
+		_currentScenePath = ResolveContentPath(*path);
+		return true;
+	}
+
+	bool Editor::LoadScene() {
+		const auto path = EditorDialogs::PickSceneXmlOpen(MakeSceneFileDialogOptions());
+		if (!path) {
+			return false;
+		}
+		auto [loadedScene, loadResult] = Serialization::SceneSerializer::LoadSceneFromFile(*path);
 		if (!loadResult.isSuccess || !loadedScene) {
+			ShowSerializationErrorDialog("Load scene", loadResult);
 			return false;
 		}
 		MainContext::GetInstance().SetScene(loadedScene);
 		ClearNodeSelection();
 		_history = EditorHistory{};
+		_currentScenePath = ResolveContentPath(*path);
 		return true;
 	}
 

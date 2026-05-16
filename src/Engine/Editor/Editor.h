@@ -7,10 +7,12 @@
 #include "Engine/Editor/EditorToolManager.h"
 #include "Engine/Editor/EditorToolsWidget.h"
 #include "Engine/Editor/GameBackgroundWidget.h"
+#include "Engine/Editor/NativeFileDialog.h"
 #include "Engine/Editor/NodeInspectorWidget.h"
 #include "Engine/Editor/PhysicsVisualizer.h"
 #include "Engine/Editor/SceneClipboard.h"
 #include "Engine/Editor/SceneHierarchyWidget.h"
+#include "Engine/Serialization/SerializationResult.h"
 
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Window/Event.hpp>
@@ -18,6 +20,7 @@
 
 #include <imgui.h>
 
+#include <filesystem>
 #include <memory>
 #include <string_view>
 #include <unordered_set>
@@ -81,8 +84,12 @@ namespace Engine {
 		Editor();
 
 		void DrawLayout();
-		bool SaveSceneToPrefab();
-		bool LoadSceneFromPrefab();
+		bool LoadScene();
+		bool SaveScene();
+		bool SaveSceneAs();
+		[[nodiscard]] EditorDialogs::SceneFileDialogOptions MakeSceneFileDialogOptions() const;
+		void ShowSerializationErrorDialog(
+		    std::string_view title, const Serialization::SerializationResult& result) const;
 		void TryApplyDefaultEditorDockLayout(ImGuiID dockspaceId, const ImVec2& dockspaceSize) const;
 		void DrawCursorWorldCoordsOverlay(sf::RenderWindow& window);
 		void DrawViewportSelectionOverlay(sf::RenderWindow& window);
@@ -112,6 +119,7 @@ namespace Engine {
 		EditorHistory _history{};
 		SceneClipboard _clipboard{};
 		PhysicsVisualizer _physicsVisualizer{};
+		std::optional<std::filesystem::path> _currentScenePath;
 	};
 
 } // namespace Engine
