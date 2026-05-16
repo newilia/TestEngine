@@ -4,8 +4,10 @@
 #include "Engine/Core/Singleton.h"
 
 #include <cstdint>
+#include <filesystem>
 #include <memory>
 #include <optional>
+#include <string>
 
 class PhysicsProcessor;
 class FontManager;
@@ -35,6 +37,8 @@ namespace Engine {
 		    std::uint32_t style = sf::Style::Default, sf::State state = sf::State::Windowed);
 
 		sf::RenderWindow* GetMainWindow() const;
+
+		void UpdateMainWindowTitle(const std::optional<std::filesystem::path>& sceneFilePath);
 
 		float GetSimSpeedMultiplier() const;
 		void SetSimSpeedMultiplier(float val);
@@ -91,5 +95,6 @@ namespace Engine {
 		bool _haveTickRate = false;
 		sf::Vector2u _mainWindowPixelSizeForView{};
 		bool _haveMainWindowPixelSizeForView = false;
+		std::string _mainWindowBaseTitleUtf8;
 	};
 } // namespace Engine

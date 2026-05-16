@@ -651,6 +651,16 @@ namespace Engine {
 		return opts;
 	}
 
+	void Editor::SetCurrentScenePath(std::optional<std::filesystem::path> path) {
+		if (path) {
+			_currentScenePath = ResolveContentPath(*path);
+		}
+		else {
+			_currentScenePath.reset();
+		}
+		MainContext::GetInstance().UpdateMainWindowTitle(_currentScenePath);
+	}
+
 	void Editor::ShowSerializationErrorDialog(
 	    std::string_view title, const Serialization::SerializationResult& result) const {
 		std::string body;
@@ -713,7 +723,7 @@ namespace Engine {
 			ShowSerializationErrorDialog("Save scene", saveResult);
 			return false;
 		}
-		_currentScenePath = ResolveContentPath(*path);
+		SetCurrentScenePath(*path);
 		return true;
 	}
 
@@ -730,7 +740,7 @@ namespace Engine {
 		MainContext::GetInstance().SetScene(loadedScene);
 		ClearNodeSelection();
 		_history = EditorHistory{};
-		_currentScenePath = ResolveContentPath(*path);
+		SetCurrentScenePath(*path);
 		return true;
 	}
 
