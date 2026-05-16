@@ -129,6 +129,10 @@ target_link_libraries(TestEngine PRIVATE
     ImGui-SFML::ImGui-SFML
 )
 
+if(WIN32)
+	target_link_libraries(TestEngine PRIVATE ole32)
+endif()
+
 # Стартовый проект в Visual Studio (F5) — иначе часто остаётся ALL_BUILD / таргет из third-party
 set_property(DIRECTORY "${CMAKE_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT TestEngine)
 

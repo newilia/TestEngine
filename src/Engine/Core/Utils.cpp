@@ -353,6 +353,24 @@ namespace Utils {
 #endif
 	}
 
+#ifdef _WIN32
+	std::wstring Utf8ToWide(std::string_view utf8) {
+		if (utf8.empty()) {
+			return {};
+		}
+		const int byteCount = static_cast<int>(utf8.size());
+		const int wideCount = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8.data(), byteCount, nullptr, 0);
+		if (wideCount <= 0) {
+			return {};
+		}
+		std::wstring wide(static_cast<size_t>(wideCount), L'\0');
+		if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8.data(), byteCount, wide.data(), wideCount) <= 0) {
+			return {};
+		}
+		return wide;
+	}
+#endif
+
 	sf::Vector2f MapWindowPixelToWorld(const sf::RenderWindow& window, const sf::Vector2i& pixel) {
 		return window.mapPixelToCoords(pixel);
 	}
