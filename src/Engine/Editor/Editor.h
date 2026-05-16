@@ -90,6 +90,7 @@ namespace Engine {
 		[[nodiscard]] EditorDialogs::SceneFileDialogOptions MakeSceneFileDialogOptions() const;
 		void ShowSerializationErrorDialog(
 		    std::string_view title, const Serialization::SerializationResult& result) const;
+		void SetCurrentScenePath(std::optional<std::filesystem::path> path);
 		void TryApplyDefaultEditorDockLayout(ImGuiID dockspaceId, const ImVec2& dockspaceSize) const;
 		void DrawCursorWorldCoordsOverlay(sf::RenderWindow& window);
 		void DrawViewportSelectionOverlay(sf::RenderWindow& window);

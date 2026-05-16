@@ -6,6 +6,7 @@
 #include "Engine/Core/Utils.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 
+#include <fmt/format.h>
 #include <imgui-SFML.h>
 #include <imgui.h>
 
@@ -171,11 +172,23 @@ namespace Engine {
 
 	std::shared_ptr<sf::RenderWindow> MainContext::CreateMainWindow(
 	    sf::VideoMode mode, const sf::String& title, std::uint32_t style, sf::State state) {
+		const sf::U8String& baseTitleUtf8 = title.toUtf8();
+		_mainWindowBaseTitleUtf8.assign(reinterpret_cast<const char*>(baseTitleUtf8.data()), baseTitleUtf8.size());
 		_mainWindow = std::make_shared<sf::RenderWindow>(mode, title, style, state);
 		ApplyWindowFrameSettings();
 		_mainWindowPixelSizeForView = _mainWindow->getSize();
 		_haveMainWindowPixelSizeForView = _mainWindowPixelSizeForView.x != 0u && _mainWindowPixelSizeForView.y != 0u;
 		return _mainWindow;
+	}
+
+	void MainContext::UpdateMainWindowTitle(const std::optional<std::filesystem::path>& sceneFilePath) {
+		if (!_mainWindow) {
+			return;
+		}
+		const std::string composed =
+		    sceneFilePath ? fmt::format("{} - {}", _mainWindowBaseTitleUtf8, sceneFilePath->generic_string())
+		                  : _mainWindowBaseTitleUtf8;
+		_mainWindow->setTitle(sf::String::fromUtf8(composed.begin(), composed.end()));
 	}
 
 	float MainContext::GetCurrentFps() const {
