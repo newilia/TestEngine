@@ -80,7 +80,7 @@ void CircleShapeVisual::SetPointCount(int count) {
 	_circle.setPointCount(static_cast<std::size_t>(clamped));
 }
 
-bool CircleShapeVisual::IsDrawSector() const {
+bool CircleShapeVisual::GetDrawSector() const {
 	return _drawSector;
 }
 
