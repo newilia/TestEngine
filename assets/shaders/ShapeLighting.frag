@@ -1,3 +1,4 @@
+const int kShapeLightingMax = 64;
 uniform vec4 u_fill_color;
 
 uniform vec2 u_world_origin;
@@ -60,7 +61,7 @@ float dist_seg(vec2 p, vec2 a, vec2 b)
 float convex_edge_distance(vec2 p)
 {
     float d = 1e9;
-    for (int i = 0; i < 64; i++)
+    for (int i = 0; i < kShapeLightingMax; i++)
     {
         if (i >= u_vertex_count)
             break;
@@ -109,6 +110,11 @@ vec2 edge_distance_grad(vec2 localPos)
     return vec2(-dpx, -dpy);
 }
 
+vec2 direction_local_from_world(vec2 worldDir)
+{
+    return (u_local_from_world * vec3(worldDir, 0.0)).xy;
+}
+
 void main()
 {
     vec2 worldPos = world_pos_from_frag();
@@ -118,7 +124,7 @@ void main()
     vec3 lit = vec3(0.0);
     float bw = max(u_bevel_width, 1e-3);
 
-    for (int i = 0; i < 64; i++)
+    for (int i = 0; i < kShapeLightingMax; i++)
     {
         if (i >= u_light_count)
             break;
@@ -140,7 +146,7 @@ void main()
             profile = pow(profile, spread);
 
             vec2 N = normalize(edge_distance_grad(localPos) + vec2(1e-5, 1e-5));
-            vec2 Ldir = normalize(toLight + vec2(1e-5, 1e-5));
+            vec2 Ldir = normalize(direction_local_from_world(toLight) + vec2(1e-5, 1e-5));
             float nd = max(dot(N, Ldir), 0.0);
             float specPow = mix(14.0, 2.0, u_diffusion);
             float glossySpec = pow(nd, specPow);

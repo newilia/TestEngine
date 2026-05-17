@@ -88,7 +88,7 @@ namespace Engine {
 		};
 
 		void FillShapeFragUniformsFromSfShape(
-		    const sf::Shape* shape, const Transform& nodeTransform, ShapeFragUniforms& out) {
+		    const sf::Shape* shape, const Transform& nodeLocalTransform, ShapeFragUniforms& out) {
 			if (!shape) {
 				return;
 			}
@@ -104,7 +104,7 @@ namespace Engine {
 			}
 			else if (const auto* circle = dynamic_cast<const sf::CircleShape*>(shape)) {
 				out.shapeKind = 1;
-				out.circleCenter = nodeTransform.GetOrigin();
+				out.circleCenter = nodeLocalTransform.GetOrigin();
 				out.circleRadius = circle->getRadius();
 			}
 			else if (const auto* rect = dynamic_cast<const sf::RectangleShape*>(shape)) {
