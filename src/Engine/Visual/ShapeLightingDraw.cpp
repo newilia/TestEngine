@@ -2,7 +2,6 @@
 
 #include "Engine/Behaviour/ShapeLightReceiverBehaviour.h"
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Core/Transform.h"
 #include "Engine/Render/SceneLighting.h"
 #include "Engine/Visual/ShapeVisualBase.h"
 
@@ -87,8 +86,7 @@ namespace Engine {
 			sf::Vector2f rectMax{1.f, 1.f};
 		};
 
-		void FillShapeFragUniformsFromSfShape(
-		    const sf::Shape* shape, const Transform& nodeLocalTransform, ShapeFragUniforms& out) {
+		void FillShapeFragUniformsFromSfShape(const sf::Shape* shape, ShapeFragUniforms& out) {
 			if (!shape) {
 				return;
 			}
@@ -104,14 +102,14 @@ namespace Engine {
 			}
 			else if (const auto* circle = dynamic_cast<const sf::CircleShape*>(shape)) {
 				out.shapeKind = 1;
-				out.circleCenter = nodeLocalTransform.GetOrigin();
+				out.circleCenter = circle->getGeometricCenter();
 				out.circleRadius = circle->getRadius();
 			}
 			else if (const auto* rect = dynamic_cast<const sf::RectangleShape*>(shape)) {
 				out.shapeKind = 2;
-				const sf::FloatRect lb = rect->getLocalBounds();
-				out.rectMin = lb.position;
-				out.rectMax = {lb.position.x + lb.size.x, lb.position.y + lb.size.y};
+				const sf::Vector2f size = rect->getSize();
+				out.rectMin = {0.f, 0.f};
+				out.rectMax = {size.x, size.y};
 			}
 			else {
 				const sf::FloatRect lb = shape->getLocalBounds();
@@ -154,9 +152,9 @@ namespace Engine {
 		const sf::FloatRect worldBounds = node->GetWorldTransform().transformRect(visual.GetGlobalBounds());
 		SceneLighting::GetInstance().SelectLightsForBounds(worldBounds, tlsLights, kMaxLights);
 
-		const sf::Transform full = states.transform;
-		const sf::Transform invWorldFromLocal = full.getInverse();
-		const sf::Glsl::Mat3 localFromWorld = invWorldFromLocal;
+		// Match SFML draw: states.transform * shape.getTransform() (see Utils::IsWorldPointInsideOfShape).
+		const sf::Transform worldFromShapeLocal = states.transform * shape->getTransform();
+		const sf::Glsl::Mat3 localFromWorld = worldFromShapeLocal.getInverse();
 
 		const sf::Vector2u targetSize = target.getSize();
 		const sf::Vector2f w00 = target.mapPixelToCoords({0, 0});
@@ -179,7 +177,7 @@ namespace Engine {
 		    static_cast<float>(fill.b) / 255.f, static_cast<float>(fill.a) / 255.f);
 
 		ShapeFragUniforms gpu{};
-		FillShapeFragUniformsFromSfShape(shape, *node->GetLocalTransform(), gpu);
+		FillShapeFragUniformsFromSfShape(shape, gpu);
 
 		std::array<sf::Glsl::Vec2, kMaxConvexVerts> verts{};
 		for (int i = 0; i < gpu.vertCount; ++i) {
