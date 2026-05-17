@@ -90,7 +90,7 @@ namespace {
 
 } // namespace
 
-Scene::Scene() : _root(std::make_shared<SceneNode>()) {
+Scene::Scene() : _root(SceneNode::Create()) {
 	_root->SetName("Root");
 }
 
@@ -223,12 +223,6 @@ void Scene::RebuildObjectIndex() {
 		node->SetSceneObjectId(nid);
 		nodeEntries.push_back({nid, node});
 
-		if (const auto transform = node->GetLocalTransform()) {
-			Engine::SceneObjectId tid = transform->GetSceneObjectId();
-			EnsureUniqueSceneObjectId(tid, claimed);
-			transform->SetSceneObjectId(tid);
-			entityEntries.push_back({tid, transform});
-		}
 		if (const auto visual = node->GetVisual()) {
 			Engine::SceneObjectId vid = visual->GetSceneObjectId();
 			EnsureUniqueSceneObjectId(vid, claimed);

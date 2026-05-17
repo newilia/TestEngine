@@ -88,7 +88,7 @@ void PolygonTool::finalizeStroke() {
 		return;
 	}
 
-	auto node = std::make_shared<SceneNode>();
+	auto node = SceneNode::Create();
 	node->SetName("Polygon");
 	auto visual = std::make_shared<ConvexShapeVisual>();
 	visual->SetPoints(localPts);

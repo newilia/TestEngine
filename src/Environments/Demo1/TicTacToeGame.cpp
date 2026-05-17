@@ -53,8 +53,8 @@ namespace Demo1 {
 		};
 
 		void AddGridLine(const std::shared_ptr<SceneNode>& root, sf::Vector2f pos, sf::Vector2f size) {
-			auto node = std::make_shared<SceneNode>();
-			node->GetLocalTransform()->SetPosition(pos);
+			auto node = SceneNode::Create();
+			node->SetLocalPosition(pos);
 			auto rect = std::make_shared<RectangleShapeVisual>();
 			rect->GetShape()->setSize(size);
 			rect->GetShape()->setFillColor(sf::Color(220, 220, 220));
@@ -67,7 +67,7 @@ namespace Demo1 {
 	} // namespace
 
 	std::shared_ptr<SceneNode> CreateTicTacToeGameNode() {
-		auto root = std::make_shared<SceneNode>();
+		auto root = SceneNode::Create();
 		root->SetName("TicTacToe");
 
 		auto& ctx = Engine::MainContext::GetInstance();
@@ -77,9 +77,9 @@ namespace Demo1 {
 		auto hudVisual = std::make_shared<TextVisual>();
 		hudVisual->Init(*font, "", 18);
 		hudVisual->SetFillColor(sf::Color::White);
-		auto hudNode = std::make_shared<SceneNode>();
+		auto hudNode = SceneNode::Create();
 		hudNode->SetName("TicTacToeHUD");
-		hudNode->GetLocalTransform()->SetPosition({0.f, -52.f});
+		hudNode->SetLocalPosition({0.f, -52.f});
 		hudNode->SetVisual(hudVisual);
 		root->AddChild(hudNode);
 
@@ -107,11 +107,11 @@ namespace Demo1 {
 		for (int i = 0; i < 9; ++i) {
 			const int row = i / 3;
 			const int col = i % 3;
-			auto cellNode = std::make_shared<SceneNode>();
+			auto cellNode = SceneNode::Create();
 			cellNode->SetName(fmt::format("TicTacToeCell{}", i));
 			const float x = static_cast<float>(col) * (kCell + kLine);
 			const float y = static_cast<float>(row) * (kCell + kLine);
-			cellNode->GetLocalTransform()->SetPosition({x, y});
+			cellNode->SetLocalPosition({x, y});
 
 			auto hit = std::make_shared<TicTacToeCellHitVisual>();
 			hit->GetShape()->setSize({kCell, kCell});
@@ -123,8 +123,8 @@ namespace Demo1 {
 			cellSort->SetPriority(10);
 			cellNode->SetSortingStrategy(std::move(cellSort));
 
-			auto markerNode = std::make_shared<SceneNode>();
-			markerNode->GetLocalTransform()->SetPosition({kCell * 0.5f, kCell * 0.5f});
+			auto markerNode = SceneNode::Create();
+			markerNode->SetLocalPosition({kCell * 0.5f, kCell * 0.5f});
 			markerNode->SetVisual(std::shared_ptr<TextVisual>(cellTexts[static_cast<std::size_t>(i)]));
 			auto markerSort = std::make_shared<RelativeSortingStrategy>();
 			markerSort->SetPriority(20);

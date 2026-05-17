@@ -2,6 +2,7 @@
 
 #include "Engine/Core/PropertyTree.h"
 
+#include <functional>
 #include <memory>
 
 class Scene;
@@ -17,6 +18,8 @@ namespace Engine {
 		bool* anyLeafEdited = nullptr;
 		/// If set, `PropertyKind::SceneRef` picker uses this scene; otherwise `MainContext::GetScene()`.
 		std::shared_ptr<Scene> sceneForSceneRefsOverride;
+		/// Called after a writable leaf commits a new value (inspector-driven edits).
+		std::function<void()> onPropertyEdited;
 	};
 
 	/// ImGui rendering for `PropertyTree` built from `IInspectable::BuildPropertyTree`.

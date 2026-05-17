@@ -99,7 +99,7 @@ void SolarSystemBehaviour::Restart() {
 	const float vChar = 72.f;
 
 	{
-		auto sunNode = std::make_shared<SceneNode>();
+		auto sunNode = SceneNode::Create();
 		sunNode->SetName("SolarSun");
 		auto circleVisual = sunNode->RequireVisual<CircleShapeVisual>();
 		const float sunVisR = std::max(8.f, 6.96f * _visualRadiusScale);
@@ -124,7 +124,7 @@ void SolarSystemBehaviour::Restart() {
 		sunNode->AddBehaviour(std::move(attractive));
 
 		root->AddChild(sunNode);
-		sunNode->GetLocalTransform()->SetPosition({0.f, 0.f});
+		sunNode->SetLocalPosition({0.f, 0.f});
 	}
 
 	for (int i = 0; i < kPlanetCount; ++i) {
@@ -140,7 +140,7 @@ void SolarSystemBehaviour::Restart() {
 		const float vModel = vChar * (p.meanOrbitalSpeedKmS / 29.78f);
 		const sf::Vector2f vel = tangent * (vModel * _orbitalSpeedScale);
 
-		auto planet = std::make_shared<SceneNode>();
+		auto planet = SceneNode::Create();
 		planet->SetName(std::string("Planet_") + p.name);
 		auto circleVisual = planet->RequireVisual<CircleShapeVisual>();
 		const float visR = std::max(2.f, p.radiusEarthRadii * _visualRadiusScale);
@@ -165,7 +165,7 @@ void SolarSystemBehaviour::Restart() {
 		planet->AddBehaviour(recv);
 
 		root->AddChild(planet);
-		planet->GetLocalTransform()->SetPosition(pos);
+		planet->SetLocalPosition(pos);
 	}
 
 	root->NotifyLifecycleInitRecursive();

@@ -112,6 +112,9 @@ namespace Engine {
 		}
 
 		void MarkLeafEditedIfMixed(const PropertyNode& node, const PropertyTreeDrawOptions& options) {
+			if (options.onPropertyEdited) {
+				options.onPropertyEdited();
+			}
 			if (options.anyLeafEdited == nullptr || !node.meta.hasMixedValues) {
 				return;
 			}
@@ -189,8 +192,7 @@ namespace Engine {
 						    flags |= ImGuiTreeNodeFlags_DefaultOpen;
 					    }
 					    const bool hasSceneChildren = !node->GetChildren().empty();
-					    bool hasEntityChildren =
-					        node->GetLocalTransform() || node->GetVisual() || node->GetSortingStrategy();
+					    bool hasEntityChildren = node->GetVisual() || node->GetSortingStrategy();
 					    if (!hasEntityChildren) {
 						    for (const auto& b : node->GetBehaviours()) {
 							    if (b) {
@@ -204,9 +206,6 @@ namespace Engine {
 					    }
 					    const bool open = ImGui::TreeNodeEx("##sn", flags, "%s", disp);
 					    if (open) {
-						    DrawSceneRefEntityLeaf("Transform",
-						        std::static_pointer_cast<EntityOnNode>(node->GetLocalTransform()), access, selectedId,
-						        n.meta.sceneRefEntityIsAllowed);
 						    if (const auto visual = node->GetVisual()) {
 							    DrawSceneRefEntityLeaf("Visual", std::static_pointer_cast<EntityOnNode>(visual), access,
 							        selectedId, n.meta.sceneRefEntityIsAllowed);

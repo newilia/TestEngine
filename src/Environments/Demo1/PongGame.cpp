@@ -89,17 +89,17 @@ namespace Demo1 {
 				return;
 			}
 
-			sBall->GetNode()->GetLocalTransform()->SetPosition(InitialBallPositionLocal());
+			sBall->GetNode()->SetLocalPosition(InitialBallPositionLocal());
 			auto ballRb = sBall->GetNode()->RequireBehaviour<PhysicsBodyBehaviour>();
 			ballRb->SetVelocity(InitialBallVelocity());
 			ballRb->SetAngularSpeed(0.f);
 
-			sUserPlatform->GetLocalTransform()->SetPosition(InitialUserPlatformPositionLocal());
+			sUserPlatform->SetLocalPosition(InitialUserPlatformPositionLocal());
 			if (auto u = sUserPlatform->FindBehaviour<UserPlatformControllerBehaviour>()) {
 				u->ResyncSpawnFromNode();
 			}
 
-			sAiPlatform->GetLocalTransform()->SetPosition(InitialAiPlatformPositionLocal());
+			sAiPlatform->SetLocalPosition(InitialAiPlatformPositionLocal());
 			if (auto ai = sAiPlatform->FindBehaviour<AiPlatformControllerBehaviour>()) {
 				ai->ResyncSpawnFromNode();
 				ai->ClearPendingObservations();
@@ -113,7 +113,7 @@ namespace Demo1 {
 			scoreText->SetString(fmt::format("{}:{}", userScore, aiScore));
 			const auto lb = scoreText->GetLocalBounds();
 			scoreText->SetOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
-			scoreboardNode->GetLocalTransform()->SetPosition({0.f, 0.f});
+			scoreboardNode->SetLocalPosition({0.f, 0.f});
 		}
 
 		void OnLose() {
@@ -129,7 +129,7 @@ namespace Demo1 {
 		}
 
 		shared_ptr<SceneNode> CreateDefaultPlatform(sf::Vector2f size, float rotationDeg, sf::Color color) {
-			auto node = make_shared<SceneNode>();
+			auto node = SceneNode::Create();
 			node->SetName("Platform");
 			auto convexShape = std::make_shared<ConvexShapeVisual>();
 			node->SetVisual(convexShape);
@@ -158,7 +158,7 @@ namespace Demo1 {
 		}
 
 		shared_ptr<SceneNode> MakeMovementBoundsRect(const char* name, sf::Vector2f size) {
-			auto node = make_shared<SceneNode>();
+			auto node = SceneNode::Create();
 			node->SetName(name);
 			auto rv = make_shared<RectangleShapeVisual>();
 			auto* sh = rv->GetShape();
@@ -189,10 +189,10 @@ namespace Demo1 {
 			m.aiStrip = MakeMovementBoundsRect("PongBounds_AiStrip", {sz.x, stripH});
 
 			root->AddChild(m.userStrip);
-			m.userStrip->GetLocalTransform()->SetPosition({0.f, hy - stripH * 0.5f});
+			m.userStrip->SetLocalPosition({0.f, hy - stripH * 0.5f});
 
 			root->AddChild(m.aiStrip);
-			m.aiStrip->GetLocalTransform()->SetPosition({0.f, -hy + stripH * 0.5f});
+			m.aiStrip->SetLocalPosition({0.f, -hy + stripH * 0.5f});
 
 			return m;
 		}
@@ -203,7 +203,7 @@ namespace Demo1 {
 			const sf::Color color(40, 170, 255, 200);
 			const sf::Vector2f vel = initialVelocity;
 
-			auto ballNode = make_shared<SceneNode>();
+			auto ballNode = SceneNode::Create();
 			auto circleVisual = ballNode->RequireVisual<CircleShapeVisual>();
 			auto ball = make_shared<PongBall>(ballNode);
 			ball->SetupBehaviours();
@@ -232,7 +232,7 @@ namespace Demo1 {
 			rigidBody->SetGravityScale(0.f);
 
 			root->AddChild(ball->GetNode());
-			ballNode->GetLocalTransform()->SetPosition(InitialBallPositionLocal());
+			ballNode->SetLocalPosition(InitialBallPositionLocal());
 
 			ballNode->NotifyLifecycleInitRecursive();
 
@@ -254,7 +254,7 @@ namespace Demo1 {
 			const sf::Vector2f wallCentersLocal[] = {
 			    {0.f, hy + t * 0.5f}, {0.f, -hy - t * 0.5f}, {-hx - t * 0.5f, 0.f}, {hx + t * 0.5f, 0.f}};
 			for (int i = 0; i < 4; ++i) {
-				auto wallNode = make_shared<SceneNode>();
+				auto wallNode = SceneNode::Create();
 				wallNode->SetName(wallNames[i]);
 				auto rectVisual = std::make_shared<RectangleShapeVisual>();
 				wallNode->SetVisual(rectVisual);
@@ -264,7 +264,7 @@ namespace Demo1 {
 				rectShape->setOrigin(Utils::FindCenterOfMass(rectShape));
 
 				root->AddChild(wallNode);
-				wallNode->GetLocalTransform()->SetPosition(wallCentersLocal[i]);
+				wallNode->SetLocalPosition(wallCentersLocal[i]);
 
 				auto bodyBeh = wallNode->RequireBehaviour<PhysicsBodyBehaviour>();
 				bodyBeh->SetFixed(true);
@@ -309,7 +309,7 @@ namespace Demo1 {
 			userBehaviour->_speedFactor = velFactor;
 
 			root->AddChild(platformNode);
-			platformNode->GetLocalTransform()->SetPosition(InitialUserPlatformPositionLocal());
+			platformNode->SetLocalPosition(InitialUserPlatformPositionLocal());
 
 			sUserPlatform = platformNode;
 		}
@@ -333,7 +333,7 @@ namespace Demo1 {
 			aiBehaviour->SetReactionDelay(sf::milliseconds(100));
 
 			root->AddChild(platformNode);
-			platformNode->GetLocalTransform()->SetPosition(InitialAiPlatformPositionLocal());
+			platformNode->SetLocalPosition(InitialAiPlatformPositionLocal());
 
 			sAiPlatform = platformNode;
 		}
@@ -347,7 +347,7 @@ namespace Demo1 {
 			userScore = 0;
 			aiScore = 0;
 
-			auto node = std::make_shared<SceneNode>();
+			auto node = SceneNode::Create();
 			auto sorting = std::make_shared<RelativeSortingStrategy>();
 			sorting->SetPriority(-1);
 			node->SetSortingStrategy(sorting);
@@ -371,7 +371,7 @@ namespace Demo1 {
 			});
 
 			root->AddChild(std::move(node));
-			scoreboardNode->GetLocalTransform()->SetPosition({0.f, 0.f});
+			scoreboardNode->SetLocalPosition({0.f, 0.f});
 		}
 
 		void OnScoreboardTap() {
@@ -409,7 +409,7 @@ namespace Demo1 {
 		const sf::Vector2f fieldPos{fieldCenter.x - fieldWidth * 0.5f, fieldCenter.y - fieldHeight * 0.5f};
 		SetPongPlayfieldRectOverride(sf::FloatRect(fieldPos, {fieldWidth, fieldHeight}));
 
-		auto root = make_shared<SceneNode>();
+		auto root = SceneNode::Create();
 		root->SetName("Pong");
 		Utils::SetLocalPosToWorld(root, GetPongPlayfieldRect().getCenter());
 		RegisterPongGameRoot(root);

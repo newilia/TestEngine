@@ -63,7 +63,7 @@ namespace BallGame1 {
 		if (!ballNode || !gunNode) {
 			return;
 		}
-		auto gunRotation = gunNode->GetLocalTransform()->GetRotation().asRadians();
+		auto gunRotation = gunNode->GetLocalRotation().asRadians();
 		auto ballBody = ballNode->RequireBehaviour<PhysicsBodyBehaviour>();
 		auto moveDirection = sf::Vector2f(std::sin(gunRotation), -std::cos(gunRotation));
 		ballBody->SetVelocity(moveDirection * _shootVelocity);

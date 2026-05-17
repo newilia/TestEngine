@@ -15,7 +15,7 @@
 #include <cassert>
 
 std::shared_ptr<SceneNode> CreateFpsCounterNode() {
-	auto node = std::make_shared<SceneNode>();
+	auto node = SceneNode::Create();
 	node->SetName("Fps");
 
 	auto& context = Engine::MainContext::GetInstance();
@@ -26,7 +26,7 @@ std::shared_ptr<SceneNode> CreateFpsCounterNode() {
 	auto text = std::make_shared<TextVisual>();
 	text->Init(*font);
 	text->SetFillColor(sf::Color::White);
-	node->GetLocalTransform()->SetPosition(pos);
+	node->SetLocalPosition(pos);
 	node->SetVisual(text);
 
 	auto beh = std::make_shared<FpsCounterBehaviour>();

@@ -337,13 +337,20 @@ namespace Engine {
 			return executed;
 		}
 		if (_clipboard.HasEntity()) {
+			const EntitySlot slot = _clipboard.GetEntitySlot();
+			if (slot == EntitySlot::Transform) {
+				auto transform = _clipboard.InstantiateTransform();
+				if (!transform) {
+					return false;
+				}
+				return _history.Execute(
+				    std::make_unique<EditorCommands::PasteEntityCommand>(parent, nullptr, slot, std::move(transform)));
+			}
 			auto entity = _clipboard.InstantiateEntity();
 			if (!entity) {
 				return false;
 			}
-			const bool executed = _history.Execute(
-			    std::make_unique<EditorCommands::PasteEntityCommand>(parent, entity, _clipboard.GetEntitySlot()));
-			return executed;
+			return _history.Execute(std::make_unique<EditorCommands::PasteEntityCommand>(parent, entity, slot));
 		}
 		return false;
 	}
@@ -384,6 +391,10 @@ namespace Engine {
 
 	bool Editor::CopyEntity(const std::shared_ptr<EntityOnNode>& entity, EntitySlot slot) {
 		return entity && _clipboard.CopyEntity(entity, slot);
+	}
+
+	bool Editor::CopyNodeTransform(const std::shared_ptr<SceneNode>& node) {
+		return node && _clipboard.CopyNodeTransform(node);
 	}
 
 	bool Editor::CutEntity(const std::shared_ptr<EntityOnNode>& entity, EntitySlot slot) {

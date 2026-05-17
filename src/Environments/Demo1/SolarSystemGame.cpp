@@ -25,14 +25,14 @@ namespace Demo1 {
 			return nullptr;
 		}
 
-		auto mainRoot = make_shared<SceneNode>();
+		auto mainRoot = SceneNode::Create();
 		mainRoot->SetName("SolarSystem");
 
-		auto solarRoot = make_shared<SceneNode>();
+		auto solarRoot = SceneNode::Create();
 		solarRoot->SetName("SolarSystemRoot");
 		mainRoot->AddChild(solarRoot);
 
-		auto control = make_shared<SceneNode>();
+		auto control = SceneNode::Create();
 		control->SetName("SolarControl");
 		auto rectVisual = make_shared<RectangleShapeVisual>();
 		control->SetVisual(rectVisual);
@@ -51,7 +51,7 @@ namespace Demo1 {
 			labelVisual->SetFillColor(sf::Color(235, 240, 255, 255));
 			const auto lb = labelVisual->GetLocalBounds();
 			labelVisual->SetOrigin({lb.position.x + lb.size.x * 0.5f, lb.position.y + lb.size.y * 0.5f});
-			auto labelNode = make_shared<SceneNode>();
+			auto labelNode = SceneNode::Create();
 			labelNode->SetName("SolarControlLabel");
 			labelNode->SetVisual(std::move(labelVisual));
 			control->AddChild(labelNode);
@@ -71,7 +71,7 @@ namespace Demo1 {
 		    });
 
 		mainRoot->AddChild(control);
-		control->GetLocalTransform()->SetPosition({0.f, -320.f});
+		control->SetLocalPosition({0.f, -320.f});
 
 		return mainRoot;
 	}

@@ -24,6 +24,7 @@ namespace Engine::Serialization {
 		constexpr const char kNodeElement[] = "Node";
 		constexpr const char kPropertiesElement[] = "Properties";
 		constexpr const char kTransformElement[] = "Transform";
+		constexpr const char kTransformTypeId[] = "Engine.Transform";
 		constexpr const char kVisualElement[] = "Visual";
 		constexpr const char kSortingElement[] = "SortingStrategy";
 		constexpr const char kBehavioursElement[] = "Behaviours";
@@ -49,13 +50,11 @@ namespace Engine::Serialization {
 			pugi::xml_node nodeProperties = xmlNode.append_child(kPropertiesElement);
 			result.Merge(PropertyTreeSerializer::SaveProvider(*sceneNode, nodeProperties));
 
-			const auto transform = sceneNode->GetLocalTransform();
-			const std::string transformTypeId = SceneEntityRegistry::GetInstance().GetTypeIdForEntity(transform);
+			const Transform& transform = sceneNode->GetLocalTransform();
 			pugi::xml_node transformNode = xmlNode.append_child(kTransformElement);
-			transformNode.append_attribute(kTypeAttr).set_value(transformTypeId.c_str());
-			WriteObjectIdAttr(transformNode, transform->GetSceneObjectId());
+			transformNode.append_attribute(kTypeAttr).set_value(kTransformTypeId);
 			pugi::xml_node transformProperties = transformNode.append_child(kPropertiesElement);
-			result.Merge(PropertyTreeSerializer::SaveProvider(*transform, transformProperties));
+			result.Merge(PropertyTreeSerializer::SaveProvider(sceneNode->GetLocalTransform(), transformProperties));
 
 			if (const auto visual = sceneNode->GetVisual()) {
 				const std::string visualTypeId = SceneEntityRegistry::GetInstance().GetTypeIdForEntity(visual);
@@ -138,12 +137,10 @@ namespace Engine::Serialization {
 			}
 
 			if (const pugi::xml_node transformNode = xmlNode.child(kTransformElement)) {
-				const auto transform = targetNode->GetLocalTransform();
-				if (const pugi::xml_attribute oidAttr = transformNode.attribute(kObjectIdAttr)) {
-					transform->SetSceneObjectId(static_cast<Engine::SceneObjectId>(oidAttr.as_uint()));
-				}
 				if (const pugi::xml_node transformProperties = transformNode.child(kPropertiesElement)) {
-					result.Merge(PropertyTreeSerializer::LoadProvider(*transform, transformProperties));
+					result.Merge(
+					    PropertyTreeSerializer::LoadProvider(targetNode->GetLocalTransform(), transformProperties));
+					targetNode->MarkWorldTransformSubtreeDirty();
 				}
 			}
 
@@ -215,7 +212,7 @@ namespace Engine::Serialization {
 
 			if (const pugi::xml_node childrenNode = xmlNode.child(kChildrenElement)) {
 				for (const pugi::xml_node xmlChild : childrenNode.children(kNodeElement)) {
-					auto childSceneNode = std::make_shared<SceneNode>();
+					auto childSceneNode = SceneNode::Create();
 					if (const pugi::xml_attribute oidAttr = xmlChild.attribute(kObjectIdAttr)) {
 						childSceneNode->SetSceneObjectId(static_cast<Engine::SceneObjectId>(oidAttr.as_uint()));
 					}

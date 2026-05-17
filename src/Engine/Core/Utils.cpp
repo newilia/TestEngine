@@ -457,10 +457,10 @@ namespace Utils {
 		if (auto parent = n->GetParent()) {
 			const sf::Vector2f local = parent->GetWorldTransform().getInverse().transformPoint(worldPos);
 			assert(!IsNan(local));
-			n->GetLocalTransform()->SetPosition(local);
+			n->SetLocalPosition(local);
 		}
 		else {
-			n->GetLocalTransform()->SetPosition(worldPos);
+			n->SetLocalPosition(worldPos);
 		}
 	}
 
