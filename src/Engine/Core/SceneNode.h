@@ -92,10 +92,6 @@ public:
 	template <typename T>
 	void RemoveBehaviour();
 
-	// Transform, visual, sorting strategy, or behaviour on this node
-	template <typename T>
-	shared_ptr<T> FindEntity() const; // TODO is it necessary?
-
 	// Hit-testing: subtree nodes under a world point (scene picks top-most / dispatches taps).
 	void FindNodesAtPoint(
 	    const sf::Vector2f& worldPoint, std::vector<shared_ptr<SceneNode>>& result, bool tapResponsiveOnly = false);
@@ -161,25 +157,6 @@ void SceneNode::RemoveBehaviour() {
 			++it;
 		}
 	}
-}
-
-template <typename T>
-shared_ptr<T> SceneNode::FindEntity() const {
-	if (auto t = std::dynamic_pointer_cast<T>(GetLocalTransform())) {
-		return t;
-	}
-	if (auto v = std::dynamic_pointer_cast<T>(_visual)) {
-		return v;
-	}
-	if (auto s = std::dynamic_pointer_cast<T>(_sortingStrategy)) {
-		return s;
-	}
-	for (auto& b : _behaviours) {
-		if (auto t = std::dynamic_pointer_cast<T>(b)) {
-			return t;
-		}
-	}
-	return nullptr;
 }
 
 template <typename T>
