@@ -63,14 +63,6 @@ void CircleShapeVisual::RebuildSectorVertices() const {
 	_isSectorDirty = false;
 }
 
-sf::Vector2f CircleShapeVisual::GetOrigin() const {
-	return _circle.getOrigin();
-}
-
-void CircleShapeVisual::SetOrigin(const sf::Vector2f& origin) {
-	_circle.setOrigin(origin);
-}
-
 int CircleShapeVisual::GetPointCount() const {
 	return static_cast<int>(_circle.getPointCount());
 }

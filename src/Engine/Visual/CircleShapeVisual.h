@@ -26,10 +26,6 @@ public:
 	/// @setter
 	void SetPointCount(int count);
 	/// @getter
-	sf::Vector2f GetOrigin() const;
-	/// @setter
-	void SetOrigin(const sf::Vector2f& origin);
-	/// @getter
 	bool GetDrawSector() const;
 	/// @setter
 	void SetDrawSector(bool drawSector);
