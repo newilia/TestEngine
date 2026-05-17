@@ -85,6 +85,25 @@ float rect_edge_distance(vec2 p)
     return min(dx, dy);
 }
 
+vec2 rect_edge_distance_grad(vec2 p)
+{
+    float dxLeft = p.x - u_rect_min.x;
+    float dxRight = u_rect_max.x - p.x;
+    float dyBottom = p.y - u_rect_min.y;
+    float dyTop = u_rect_max.y - p.y;
+    float dx = min(dxLeft, dxRight);
+    float dy = min(dyBottom, dyTop);
+
+    if (dx < dy)
+        return (dxLeft < dxRight) ? vec2(-1.0, 0.0) : vec2(1.0, 0.0);
+    if (dy < dx)
+        return (dyBottom < dyTop) ? vec2(0.0, -1.0) : vec2(0.0, 1.0);
+
+    float sx = (dxLeft < dxRight) ? -1.0 : 1.0;
+    float sy = (dyBottom < dyTop) ? -1.0 : 1.0;
+    return normalize(vec2(sx, sy));
+}
+
 float edge_distance_field(vec2 localPos)
 {
     if (u_shape_kind == 1)
@@ -104,6 +123,8 @@ vec2 edge_distance_grad(vec2 localPos)
             return vec2(0.0);
         return d / len;
     }
+    if (u_shape_kind == 2)
+        return rect_edge_distance_grad(localPos);
     float e = 0.6;
     float dpx = edge_distance_field(localPos + vec2(e, 0.0)) - edge_distance_field(localPos - vec2(e, 0.0));
     float dpy = edge_distance_field(localPos + vec2(0.0, e)) - edge_distance_field(localPos - vec2(0.0, e));
