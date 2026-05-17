@@ -29,9 +29,9 @@ public:
 	sf::Vector2f GetOrigin() const;
 	/// @setter
 	void SetOrigin(const sf::Vector2f& origin);
-	/// @getter(name="DrawSector");
-	bool IsDrawSector() const;
-	/// @setter(name="DrawSector");
+	/// @getter
+	bool GetDrawSector() const;
+	/// @setter
 	void SetDrawSector(bool drawSector);
 	/// @getter
 	sf::Color GetSectorColor() const;
