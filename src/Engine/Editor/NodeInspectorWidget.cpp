@@ -386,8 +386,37 @@ namespace {
 		return merged;
 	}
 
+	std::string DynamicTypeTitle(const std::type_info& typeInfo) {
+		return std::string(typeInfo.name() + sizeof("class"));
+	}
+
+	template <typename TObject>
+	std::string DynamicTypeTitle(const TObject& object) {
+		return DynamicTypeTitle(typeid(object));
+	}
+
 	std::string BehaviourTitle(const Behaviour& behaviour) {
-		return (typeid(behaviour).name() + sizeof("class"));
+		return DynamicTypeTitle(behaviour);
+	}
+
+	std::string CommonEntityTypeTitleOrFallback(const std::vector<std::shared_ptr<SceneNode>>& nodes,
+	    const std::function<std::shared_ptr<EntityOnNode>(const std::shared_ptr<SceneNode>&)>& getEntity,
+	    const char* fallbackTitle) {
+		if (nodes.empty()) {
+			return fallbackTitle;
+		}
+		const auto firstEntity = getEntity(nodes.front());
+		if (!firstEntity) {
+			return fallbackTitle;
+		}
+		const std::type_index commonType(typeid(*firstEntity));
+		for (std::size_t i = 1; i < nodes.size(); ++i) {
+			const auto entity = getEntity(nodes[i]);
+			if (!entity || std::type_index(typeid(*entity)) != commonType) {
+				return fallbackTitle;
+			}
+		}
+		return DynamicTypeTitle(*firstEntity);
 	}
 
 	std::vector<std::pair<std::type_index, std::string>> FindCommonBehaviourTypes(
@@ -620,12 +649,14 @@ namespace Engine {
 		    _propertyDrawer);
 
 		if (const auto sorting = node->GetSortingStrategy()) {
+			const std::string sortingTitle = DynamicTypeTitle(*sorting);
 			DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::SortingStrategy,
-			    "Sorting strategy", dynamic_cast<IPropertiesProvider*>(sorting.get()), sorting,
+			    sortingTitle.c_str(), dynamic_cast<IPropertiesProvider*>(sorting.get()), sorting,
 			    EntitySlot::SortingStrategy, nullptr, _propertyDrawer);
 		}
 		if (const auto visual = node->GetVisual()) {
-			DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::Visual, "Visual",
+			const std::string visualTitle = DynamicTypeTitle(*visual);
+			DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::Visual, visualTitle.c_str(),
 			    dynamic_cast<IPropertiesProvider*>(visual.get()), visual, EntitySlot::Visual, nullptr, _propertyDrawer);
 		}
 		for (const auto& behaviour : node->GetBehaviours()) {
@@ -676,8 +707,14 @@ namespace Engine {
 			sortingProviders.push_back(dynamic_cast<IPropertiesProvider*>(sorting.get()));
 		}
 		if (hasCommonSorting) {
+			const std::string sortingTitle = CommonEntityTypeTitleOrFallback(
+			    validNodes,
+			    [](const std::shared_ptr<SceneNode>& node) {
+				    return std::static_pointer_cast<EntityOnNode>(node->GetSortingStrategy());
+			    },
+			    "Sorting strategy");
 			DrawMergedProviderBlockCached(EditorVisualTheme::InspectorSectionHeaderStyle::SortingStrategy,
-			    "Sorting strategy", sortingProviders, _propertyDrawer, _mergeState.sortingMerged);
+			    sortingTitle.c_str(), sortingProviders, _propertyDrawer, _mergeState.sortingMerged);
 		}
 
 		bool hasCommonVisual = true;
@@ -692,7 +729,13 @@ namespace Engine {
 			visualProviders.push_back(dynamic_cast<IPropertiesProvider*>(visual.get()));
 		}
 		if (hasCommonVisual) {
-			DrawMergedProviderBlockCached(EditorVisualTheme::InspectorSectionHeaderStyle::Visual, "Visual",
+			const std::string visualTitle = CommonEntityTypeTitleOrFallback(
+			    validNodes,
+			    [](const std::shared_ptr<SceneNode>& node) {
+				    return std::static_pointer_cast<EntityOnNode>(node->GetVisual());
+			    },
+			    "Visual");
+			DrawMergedProviderBlockCached(EditorVisualTheme::InspectorSectionHeaderStyle::Visual, visualTitle.c_str(),
 			    visualProviders, _propertyDrawer, _mergeState.visualMerged);
 		}
 
