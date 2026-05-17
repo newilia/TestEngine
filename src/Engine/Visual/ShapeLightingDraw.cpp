@@ -2,6 +2,7 @@
 
 #include "Engine/Behaviour/ShapeLightReceiverBehaviour.h"
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Core/Transform.h"
 #include "Engine/Render/SceneLighting.h"
 #include "Engine/Visual/ShapeVisualBase.h"
 
@@ -86,7 +87,8 @@ namespace Engine {
 			sf::Vector2f rectMax{1.f, 1.f};
 		};
 
-		void FillShapeFragUniformsFromSfShape(const sf::Shape* shape, ShapeFragUniforms& out) {
+		void FillShapeFragUniformsFromSfShape(
+		    const sf::Shape* shape, const Transform& nodeTransform, ShapeFragUniforms& out) {
 			if (!shape) {
 				return;
 			}
@@ -102,7 +104,7 @@ namespace Engine {
 			}
 			else if (const auto* circle = dynamic_cast<const sf::CircleShape*>(shape)) {
 				out.shapeKind = 1;
-				out.circleCenter = circle->getOrigin();
+				out.circleCenter = nodeTransform.GetOrigin();
 				out.circleRadius = circle->getRadius();
 			}
 			else if (const auto* rect = dynamic_cast<const sf::RectangleShape*>(shape)) {
@@ -142,17 +144,17 @@ namespace Engine {
 			return false;
 		}
 
-		const sf::Transform full = states.transform * shape->getTransform();
-		const sf::FloatRect worldBounds = full.transformRect(shape->getLocalBounds());
-
 		thread_local std::vector<GpuPointLight> tlsLights;
 		tlsLights.clear();
 		const std::size_t lightPool = SceneLighting::GetInstance().GetLights().size();
 		if (tlsLights.capacity() < lightPool) {
 			tlsLights.reserve(lightPool);
 		}
+
+		const sf::FloatRect worldBounds = node->GetWorldTransform().transformRect(visual.GetGlobalBounds());
 		SceneLighting::GetInstance().SelectLightsForBounds(worldBounds, tlsLights, kMaxLights);
 
+		const sf::Transform full = states.transform;
 		const sf::Transform invWorldFromLocal = full.getInverse();
 		const sf::Glsl::Mat3 localFromWorld = invWorldFromLocal;
 
@@ -177,7 +179,7 @@ namespace Engine {
 		    static_cast<float>(fill.b) / 255.f, static_cast<float>(fill.a) / 255.f);
 
 		ShapeFragUniforms gpu{};
-		FillShapeFragUniformsFromSfShape(shape, gpu);
+		FillShapeFragUniformsFromSfShape(shape, *node->GetLocalTransform(), gpu);
 
 		std::array<sf::Glsl::Vec2, kMaxConvexVerts> verts{};
 		for (int i = 0; i < gpu.vertCount; ++i) {
