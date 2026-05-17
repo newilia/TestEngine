@@ -45,7 +45,7 @@ namespace Demo1 {
 
 	shared_ptr<SceneNode> CreateBackgroundNode() {
 		auto& mainContext = Engine::MainContext::GetInstance();
-		auto node = make_shared<SceneNode>();
+		auto node = SceneNode::Create();
 		auto sprite = make_shared<SpriteVisual>();
 		auto texture = mainContext.GetTextureManager()->LoadTexture("resources/textures/fern_dark_green.jpg");
 		if (texture) {
@@ -55,7 +55,7 @@ namespace Demo1 {
 		auto sorting = make_shared<RelativeSortingStrategy>();
 		sorting->SetPriority(-10);
 		node->SetSortingStrategy(std::move(sorting));
-		node->GetLocalTransform()->SetScale({2.f, 2.f});
+		node->SetLocalScale({2.f, 2.f});
 		return node;
 	}
 
@@ -76,14 +76,14 @@ namespace Demo1 {
 			const float ballRadius = 20;
 			auto pongRoot =
 			    CreatePongGameNode(fieldW, fieldH, platformWidth, platformThickness, wallsThickness, ballRadius);
-			pongRoot->GetLocalTransform()->SetPosition({800, 2000});
+			pongRoot->SetLocalPosition({800, 2000});
 			scene->GetRoot()->AddChild(std::move(pongRoot));
 		}
 
 		{
 			auto ticTacToe = CreateTicTacToeGameNode();
-			ticTacToe->GetLocalTransform()->SetPosition({500, 500});
-			ticTacToe->GetLocalTransform()->SetScale({1.5, 1.5});
+			ticTacToe->SetLocalPosition({500, 500});
+			ticTacToe->SetLocalScale({1.5, 1.5});
 			scene->GetRoot()->AddChild(std::move(ticTacToe));
 		}
 
@@ -100,13 +100,13 @@ namespace Demo1 {
 			const float WallRestitution = 1.f;
 			auto ballpit = CreateBallpitGameNode(AquariumW, AquariumH, WallThickness, BaseRadius, RadiusVar, BaseColor,
 			    ColorVar, BallCount, BallRestitution, WallRestitution);
-			ballpit->GetLocalTransform()->SetPosition({2100, 700});
+			ballpit->SetLocalPosition({2100, 700});
 			scene->GetRoot()->AddChild(std::move(ballpit));
 		}
 
 		{
 			auto solar = CreateSolarSystemGameNode();
-			solar->GetLocalTransform()->SetPosition({2700, 5000});
+			solar->SetLocalPosition({2700, 5000});
 			scene->GetRoot()->AddChild(std::move(solar));
 		}
 		return scene;

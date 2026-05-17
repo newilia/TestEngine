@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 15
+CACHE_VERSION = 16
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
@@ -2722,7 +2722,7 @@ def should_register_scene_entity(rel_src: str, c: ClassSpec) -> bool:
     if n == "ShapeVisualBase":
         return False
     if rel_src == "Engine/Core/Transform.h" and n == "Transform":
-        return True
+        return False
     if rel_src == "Engine/Sorting/SortingStrategy.h" and n == "RelativeSortingStrategy":
         return True
     if rel_src.startswith("Engine/Visual/"):

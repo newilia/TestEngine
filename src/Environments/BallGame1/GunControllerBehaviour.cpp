@@ -66,21 +66,20 @@ namespace BallGame1 {
 	void GunControllerBehaviour::OnEvent(const sf::Event& event) {
 		if (const auto* e = event.getIf<sf::Event::MouseMovedRaw>()) {
 			if (auto node = GetNode()) {
-				auto xf = node->GetLocalTransform();
 				const float deltaRad = e->delta.x * _rotationSpeed / 1000.f;
 				const float minDeg = _rotationLimits.first.asDegrees();
 				const float maxDeg = _rotationLimits.second.asDegrees();
 
 				if (minDeg <= maxDeg) {
-					const float cur = SignedDegrees(xf->GetRotation());
+					const float cur = SignedDegrees(node->GetLocalRotation());
 					const float nextDeg = cur + sf::radians(deltaRad).asDegrees();
 					const float clamped = std::clamp(nextDeg, minDeg, maxDeg);
-					xf->SetRotation(sf::degrees(clamped));
+					node->SetLocalRotation(sf::degrees(clamped));
 				}
 				else {
-					const float cur = DegreesNormalized360(xf->GetRotation().asDegrees());
+					const float cur = DegreesNormalized360(node->GetLocalRotation().asDegrees());
 					const float nextDeg = DegreesNormalized360(cur + sf::radians(deltaRad).asDegrees());
-					xf->SetRotation(sf::degrees(ClampDegreesOnCircle(nextDeg, minDeg, maxDeg)));
+					node->SetLocalRotation(sf::degrees(ClampDegreesOnCircle(nextDeg, minDeg, maxDeg)));
 				}
 			}
 		}

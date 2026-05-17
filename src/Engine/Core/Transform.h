@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/Core/EntityOnNode.h"
+#include "Engine/Core/IPropertiesProvider.h"
 #include "Engine/Core/MetaClass.h"
 
 #include <SFML/Graphics/Transform.hpp>
@@ -8,9 +8,9 @@
 #include <SFML/System/Angle.hpp>
 #include <SFML/System/Vector2.hpp>
 
-/// Wrapper for sf::Transformable. Held by `SceneNode` as local TRS relative to the parent.
-/// Mutations use setters only so hierarchy caches stay consistent (no public `sf::Transformable`).
-class Transform final : public EntityOnNode
+/// Local TRS relative to the parent node. Owned by `SceneNode`; does not reference the node.
+/// World-matrix invalidation is handled by `SceneNode` when local transform changes.
+class Transform final : public Engine::IPropertiesProvider
 {
 	META_CLASS()
 
@@ -36,9 +36,6 @@ public:
 	sf::Vector2f GetOrigin() const;
 	/// @setter
 	void SetOrigin(sf::Vector2f v);
-
-private:
-	void NotifyTransformChanged();
 
 private:
 	sf::Transformable _transformable;

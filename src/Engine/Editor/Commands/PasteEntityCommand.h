@@ -17,8 +17,8 @@ namespace Engine::EditorCommands {
 	class PasteEntityCommand final : public Engine::IEditorCommand
 	{
 	public:
-		PasteEntityCommand(
-		    std::shared_ptr<SceneNode> node, std::shared_ptr<EntityOnNode> entity, Engine::EntitySlot slot);
+		PasteEntityCommand(std::shared_ptr<SceneNode> node, std::shared_ptr<EntityOnNode> entity,
+		    Engine::EntitySlot slot, std::shared_ptr<Transform> transformEntity = nullptr);
 
 		bool Execute() override;
 		void Undo() override;
@@ -26,6 +26,7 @@ namespace Engine::EditorCommands {
 	private:
 		std::weak_ptr<SceneNode> _node;
 		std::shared_ptr<EntityOnNode> _entity;
+		std::shared_ptr<Transform> _transformEntity;
 		Engine::EntitySlot _slot = Engine::EntitySlot::Behaviour;
 		std::shared_ptr<Transform> _previousTransformState;
 		std::shared_ptr<Visual> _previousVisual;

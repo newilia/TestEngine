@@ -11,26 +11,29 @@
 
 namespace Engine::EditorCommands {
 
-	PasteEntityCommand::PasteEntityCommand(
-	    std::shared_ptr<SceneNode> node, std::shared_ptr<EntityOnNode> entity, Engine::EntitySlot slot)
-	    : _node(std::move(node)), _entity(std::move(entity)), _slot(slot) {}
+	PasteEntityCommand::PasteEntityCommand(std::shared_ptr<SceneNode> node, std::shared_ptr<EntityOnNode> entity,
+	    Engine::EntitySlot slot, std::shared_ptr<Transform> transformEntity)
+	    : _node(std::move(node)), _entity(std::move(entity)), _transformEntity(std::move(transformEntity)),
+	      _slot(slot) {}
 
 	bool PasteEntityCommand::Execute() {
 		auto node = _node.lock();
-		if (!node || !_entity) {
+		if (!node) {
 			return false;
 		}
 		if (_slot == Engine::EntitySlot::Transform) {
-			auto transformEntity = std::dynamic_pointer_cast<Transform>(_entity);
-			if (!transformEntity) {
+			if (!_transformEntity) {
 				return false;
 			}
 			if (!_previousTransformState) {
-				_previousTransformState =
-				    std::dynamic_pointer_cast<Transform>(Engine::CloneEntity(node->GetLocalTransform()));
+				_previousTransformState = Engine::CloneTransform(node->GetLocalTransform());
 			}
-			(void)Engine::CopyReflectedProperties(*transformEntity, *node->GetLocalTransform());
+			(void)Engine::CopyReflectedProperties(*_transformEntity, node->GetLocalTransform());
+			node->MarkWorldTransformSubtreeDirty();
 			return true;
+		}
+		if (!_entity) {
+			return false;
 		}
 		if (_slot == Engine::EntitySlot::Visual) {
 			if (!_previousVisual) {
@@ -84,7 +87,7 @@ namespace Engine::EditorCommands {
 		}
 		if (_slot == Engine::EntitySlot::Transform) {
 			if (_previousTransformState) {
-				(void)Engine::CopyReflectedProperties(*_previousTransformState, *node->GetLocalTransform());
+				node->CopyLocalTransformFrom(*_previousTransformState);
 			}
 			return;
 		}

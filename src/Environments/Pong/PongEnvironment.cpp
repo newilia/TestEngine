@@ -86,7 +86,7 @@ void PongEnvironment::AddBall(Scene* scene, float radius) {
 	const sf::Vector2f vel = InitialBallVelocity();
 	const sf::Vector2f pos = InitialBallPosition();
 
-	auto ballNode = make_shared<SceneNode>();
+	auto ballNode = SceneNode::Create();
 	ballNode->SetName("Ball");
 
 	auto ball = make_shared<PongBall>(ballNode);
@@ -122,7 +122,7 @@ void PongEnvironment::AddBall(Scene* scene, float radius) {
 
 shared_ptr<SceneNode> PongEnvironment::CreateDefaultPlatform(
     sf::Vector2f size, sf::Vector2f pos, float rotationDeg, sf::Color color) const {
-	auto node = make_shared<SceneNode>();
+	auto node = SceneNode::Create();
 	node->SetName("Platform");
 	auto convexShape = std::make_shared<ConvexShapeVisual>();
 	node->SetVisual(convexShape);
@@ -164,7 +164,7 @@ void PongEnvironment::AddWalls(Scene* scene) {
 	sf::Vector2f wallPositions[] = {{o.x + sz.x / 2, o.y + sz.y + wallOffset}, {o.x + sz.x / 2, o.y - wallOffset},
 	    {o.x - wallOffset, o.y + sz.y / 2}, {o.x + sz.x + wallOffset, o.y + sz.y / 2}};
 	for (int i = 0; i < 4; ++i) {
-		auto wallNode = make_shared<SceneNode>();
+		auto wallNode = SceneNode::Create();
 		wallNode->SetName(wallNames[i]);
 		auto rectVisual = std::make_shared<RectangleShapeVisual>();
 		wallNode->SetVisual(rectVisual);
@@ -256,7 +256,7 @@ void PongEnvironment::AddScoreboard(Scene* scene) {
 	_userScore = 0;
 	_aiScore = 0;
 
-	auto node = std::make_shared<SceneNode>();
+	auto node = SceneNode::Create();
 	auto sorting = std::make_shared<RelativeSortingStrategy>();
 	sorting->SetPriority(-1);
 	node->SetSortingStrategy(sorting);

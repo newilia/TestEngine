@@ -80,7 +80,7 @@ namespace Engine {
 				return;
 			}
 			ClearSceneRefsInProvider(*root);
-			ClearSceneRefsInProvider(*root->GetLocalTransform());
+			ClearSceneRefsInProvider(root->GetLocalTransform());
 			if (const auto sorting = root->GetSortingStrategy()) {
 				ClearSceneRefsInProvider(*sorting);
 			}
@@ -256,6 +256,15 @@ namespace Engine {
 		return true;
 	}
 
+	std::shared_ptr<Transform> CloneTransform(const Transform& source) {
+		auto target = std::make_shared<Transform>();
+		if (CopyReflectedProperties(const_cast<Transform&>(source), *target)) {
+			ClearSceneRefsInProvider(*target);
+			return target;
+		}
+		return nullptr;
+	}
+
 	std::shared_ptr<EntityOnNode> CloneEntity(const std::shared_ptr<EntityOnNode>& source) {
 		if (!source) {
 			return nullptr;
@@ -280,11 +289,11 @@ namespace Engine {
 		if (!source) {
 			return nullptr;
 		}
-		auto clone = std::make_shared<SceneNode>();
+		auto clone = SceneNode::Create();
 		clone->SetName(source->GetName());
 		clone->SetEnabled(source->IsEnabled());
 		clone->SetVisible(source->IsVisible());
-		(void)CopyReflectedProperties(*source->GetLocalTransform(), *clone->GetLocalTransform());
+		clone->CopyLocalTransformFrom(source->GetLocalTransform());
 
 		if (auto visualClone = std::dynamic_pointer_cast<Visual>(CloneEntity(source->GetVisual()))) {
 			clone->SetVisual(std::move(visualClone));

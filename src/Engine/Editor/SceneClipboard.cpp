@@ -1,6 +1,7 @@
 #include "Engine/Editor/SceneClipboard.h"
 
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Core/Transform.h"
 
 namespace Engine {
 
@@ -19,6 +20,18 @@ namespace Engine {
 			return false;
 		}
 		_payload = EntityPayload{.slot = slot, .prototype = std::move(prototype)};
+		return true;
+	}
+
+	bool SceneClipboard::CopyNodeTransform(const std::shared_ptr<SceneNode>& node) {
+		if (!node) {
+			return false;
+		}
+		auto prototype = CloneTransform(node->GetLocalTransform());
+		if (!prototype) {
+			return false;
+		}
+		_payload = EntityPayload{.slot = EntitySlot::Transform, .transformPrototype = std::move(prototype)};
 		return true;
 	}
 
@@ -46,7 +59,20 @@ namespace Engine {
 
 	std::shared_ptr<EntityOnNode> SceneClipboard::InstantiateEntity() const {
 		if (const auto* payload = std::get_if<EntityPayload>(&_payload)) {
+			if (payload->slot == EntitySlot::Transform) {
+				return nullptr;
+			}
 			return CloneEntity(payload->prototype);
+		}
+		return nullptr;
+	}
+
+	std::shared_ptr<Transform> SceneClipboard::InstantiateTransform() const {
+		if (const auto* payload = std::get_if<EntityPayload>(&_payload)) {
+			if (payload->slot != EntitySlot::Transform || !payload->transformPrototype) {
+				return nullptr;
+			}
+			return CloneTransform(*payload->transformPrototype);
 		}
 		return nullptr;
 	}

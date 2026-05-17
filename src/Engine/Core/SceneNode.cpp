@@ -42,14 +42,60 @@ shared_ptr<Visual> SceneNode::GetVisual() const {
 	return _visual;
 }
 
-shared_ptr<Transform> SceneNode::GetLocalTransform() const {
-	if (!_localTransform) {
-		auto self = const_cast<SceneNode*>(this)->shared_from_this();
-		_localTransform = std::make_shared<Transform>();
-		_localTransform->AttachTo(self);
-		self->NotifyActiveSceneObjectIndexDirty();
-	}
+std::shared_ptr<SceneNode> SceneNode::Create() {
+	return std::make_shared<SceneNode>();
+}
+
+Transform& SceneNode::GetLocalTransform() {
 	return _localTransform;
+}
+
+const Transform& SceneNode::GetLocalTransform() const {
+	return _localTransform;
+}
+
+sf::Vector2f SceneNode::GetLocalPosition() const {
+	return _localTransform.GetPosition();
+}
+
+void SceneNode::SetLocalPosition(sf::Vector2f v) {
+	_localTransform.SetPosition(v);
+	MarkWorldTransformSubtreeDirty();
+}
+
+sf::Vector2f SceneNode::GetLocalScale() const {
+	return _localTransform.GetScale();
+}
+
+void SceneNode::SetLocalScale(sf::Vector2f v) {
+	_localTransform.SetScale(v);
+	MarkWorldTransformSubtreeDirty();
+}
+
+sf::Angle SceneNode::GetLocalRotation() const {
+	return _localTransform.GetRotation();
+}
+
+void SceneNode::SetLocalRotation(sf::Angle angle) {
+	_localTransform.SetRotation(angle);
+	MarkWorldTransformSubtreeDirty();
+}
+
+sf::Vector2f SceneNode::GetLocalOrigin() const {
+	return _localTransform.GetOrigin();
+}
+
+void SceneNode::SetLocalOrigin(sf::Vector2f v) {
+	_localTransform.SetOrigin(v);
+	MarkWorldTransformSubtreeDirty();
+}
+
+void SceneNode::CopyLocalTransformFrom(const Transform& source) {
+	_localTransform.SetPosition(source.GetPosition());
+	_localTransform.SetScale(source.GetScale());
+	_localTransform.SetRotation(source.GetRotation());
+	_localTransform.SetOrigin(source.GetOrigin());
+	MarkWorldTransformSubtreeDirty();
 }
 
 shared_ptr<RelativeSortingStrategy> SceneNode::GetSortingStrategy() const {
@@ -77,10 +123,10 @@ const sf::Transform& SceneNode::GetWorldTransform() const {
 		return _cachedWorldTransform;
 	}
 	if (auto parent = GetParent()) {
-		_cachedWorldTransform = parent->GetWorldTransform() * GetLocalTransform()->GetTransform();
+		_cachedWorldTransform = parent->GetWorldTransform() * GetLocalTransform().GetTransform();
 	}
 	else {
-		_cachedWorldTransform = GetLocalTransform()->GetTransform();
+		_cachedWorldTransform = GetLocalTransform().GetTransform();
 	}
 	_worldTransformDirty = false;
 	return _cachedWorldTransform;
@@ -99,7 +145,7 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	}
 
 	sf::RenderStates nodeStates = states;
-	nodeStates.transform *= GetLocalTransform()->GetTransform();
+	nodeStates.transform *= GetLocalTransform().GetTransform();
 
 	if (_visual) {
 		_visual->Draw(target, nodeStates);

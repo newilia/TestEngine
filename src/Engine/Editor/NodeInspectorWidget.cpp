@@ -488,7 +488,8 @@ namespace {
 
 	void DrawMergedProviderBlockCached(Engine::EditorVisualTheme::InspectorSectionHeaderStyle sectionStyle,
 	    const char* title, const std::vector<Engine::IPropertiesProvider*>& inspectables,
-	    const Engine::PropertyTreeDrawer& drawer, std::optional<Engine::PropertyTree>& mergedCache) {
+	    const Engine::PropertyTreeDrawer& drawer, std::optional<Engine::PropertyTree>& mergedCache,
+	    std::function<void()> onPropertyEdited = nullptr) {
 		if (inspectables.empty()) {
 			return;
 		}
@@ -516,7 +517,9 @@ namespace {
 			return;
 		}
 		bool editedMixedLeaf = false;
-		drawer.Draw(*mergedCache, {.unwrapSingleRootObject = true, .anyLeafEdited = &editedMixedLeaf});
+		Engine::PropertyTreeDrawOptions drawOptions{.unwrapSingleRootObject = true, .anyLeafEdited = &editedMixedLeaf};
+		drawOptions.onPropertyEdited = std::move(onPropertyEdited);
+		drawer.Draw(*mergedCache, drawOptions);
 		if (editedMixedLeaf) {
 			mergedCache.reset();
 		}
@@ -524,7 +527,8 @@ namespace {
 
 	void DrawIPropertiesProviderBlock(Engine::EditorVisualTheme::InspectorSectionHeaderStyle sectionStyle,
 	    const char* title, Engine::IPropertiesProvider* inspectable, const std::shared_ptr<EntityOnNode>& entity,
-	    Engine::EntitySlot slot, const Engine::PropertyTreeDrawer& drawer) {
+	    Engine::EntitySlot slot, const std::shared_ptr<SceneNode>& ownerNode,
+	    const Engine::PropertyTreeDrawer& drawer) {
 		if (!inspectable) {
 			return;
 		}
@@ -538,11 +542,16 @@ namespace {
 		Engine::EditorVisualTheme::PushInspectorSectionHeaderColors(sectionStyle);
 		const bool open = ImGui::CollapsingHeader(title);
 		Engine::EditorVisualTheme::PopInspectorSectionHeaderColors();
-		if (!tree.inspectorMethods.empty() || entity) {
+		if (!tree.inspectorMethods.empty() || entity || (slot == Engine::EntitySlot::Transform && ownerNode)) {
 			if (ImGui::BeginPopupContextItem("inspector_reflected_methods", ImGuiPopupFlags_MouseButtonRight)) {
-				if (entity) {
+				if (entity || (slot == Engine::EntitySlot::Transform && ownerNode)) {
 					if (ImGui::MenuItem("Copy")) {
-						(void)Engine::Editor::GetInstance().CopyEntity(entity, slot);
+						if (slot == Engine::EntitySlot::Transform && ownerNode) {
+							(void)Engine::Editor::GetInstance().CopyNodeTransform(ownerNode);
+						}
+						else if (entity) {
+							(void)Engine::Editor::GetInstance().CopyEntity(entity, slot);
+						}
 					}
 					const bool canCutOrDelete = (slot != Engine::EntitySlot::Transform);
 					if (!canCutOrDelete) {
@@ -586,7 +595,15 @@ namespace {
 			return;
 		}
 		if (!tree.roots.empty()) {
-			drawer.Draw(tree, {.unwrapSingleRootObject = true});
+			Engine::PropertyTreeDrawOptions drawOptions{.unwrapSingleRootObject = true};
+			if (slot == Engine::EntitySlot::Transform && ownerNode) {
+				drawOptions.onPropertyEdited = [weakNode = std::weak_ptr<SceneNode>(ownerNode)]() {
+					if (auto node = weakNode.lock()) {
+						node->MarkWorldTransformSubtreeDirty();
+					}
+				};
+			}
+			drawer.Draw(tree, drawOptions);
 		}
 		ImGui::PopID();
 	}
@@ -596,20 +613,20 @@ namespace Engine {
 
 	void NodeInspectorWidget::DrawSingleNode(const std::shared_ptr<SceneNode>& node) const {
 		DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::SceneNode, "SceneNode",
-		    dynamic_cast<IPropertiesProvider*>(node.get()), nullptr, EntitySlot::Behaviour, _propertyDrawer);
+		    dynamic_cast<IPropertiesProvider*>(node.get()), nullptr, EntitySlot::Behaviour, node, _propertyDrawer);
 
 		DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::Transform, "Transform",
-		    dynamic_cast<IPropertiesProvider*>(node->GetLocalTransform().get()), node->GetLocalTransform(),
-		    EntitySlot::Transform, _propertyDrawer);
+		    dynamic_cast<IPropertiesProvider*>(&node->GetLocalTransform()), nullptr, EntitySlot::Transform, node,
+		    _propertyDrawer);
 
 		if (const auto sorting = node->GetSortingStrategy()) {
 			DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::SortingStrategy,
 			    "Sorting strategy", dynamic_cast<IPropertiesProvider*>(sorting.get()), sorting,
-			    EntitySlot::SortingStrategy, _propertyDrawer);
+			    EntitySlot::SortingStrategy, nullptr, _propertyDrawer);
 		}
 		if (const auto visual = node->GetVisual()) {
 			DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::Visual, "Visual",
-			    dynamic_cast<IPropertiesProvider*>(visual.get()), visual, EntitySlot::Visual, _propertyDrawer);
+			    dynamic_cast<IPropertiesProvider*>(visual.get()), visual, EntitySlot::Visual, nullptr, _propertyDrawer);
 		}
 		for (const auto& behaviour : node->GetBehaviours()) {
 			if (!behaviour) {
@@ -617,7 +634,8 @@ namespace Engine {
 			}
 			const std::string className = BehaviourTitle(*behaviour);
 			DrawIPropertiesProviderBlock(EditorVisualTheme::InspectorSectionHeaderStyle::Behaviour, className.c_str(),
-			    dynamic_cast<IPropertiesProvider*>(behaviour.get()), behaviour, EntitySlot::Behaviour, _propertyDrawer);
+			    dynamic_cast<IPropertiesProvider*>(behaviour.get()), behaviour, EntitySlot::Behaviour, nullptr,
+			    _propertyDrawer);
 		}
 	}
 
@@ -633,12 +651,18 @@ namespace Engine {
 		transformProviders.reserve(validNodes.size());
 		for (const auto& node : validNodes) {
 			sceneNodeProviders.push_back(dynamic_cast<IPropertiesProvider*>(node.get()));
-			transformProviders.push_back(dynamic_cast<IPropertiesProvider*>(node->GetLocalTransform().get()));
+			transformProviders.push_back(dynamic_cast<IPropertiesProvider*>(&node->GetLocalTransform()));
 		}
 		DrawMergedProviderBlockCached(EditorVisualTheme::InspectorSectionHeaderStyle::SceneNode, "SceneNode",
 		    sceneNodeProviders, _propertyDrawer, _mergeState.sceneNodeMerged);
 		DrawMergedProviderBlockCached(EditorVisualTheme::InspectorSectionHeaderStyle::Transform, "Transform",
-		    transformProviders, _propertyDrawer, _mergeState.transformMerged);
+		    transformProviders, _propertyDrawer, _mergeState.transformMerged, [nodes = validNodes]() {
+			    for (const auto& node : nodes) {
+				    if (node) {
+					    node->MarkWorldTransformSubtreeDirty();
+				    }
+			    }
+		    });
 
 		bool hasCommonSorting = true;
 		std::vector<IPropertiesProvider*> sortingProviders;

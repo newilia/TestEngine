@@ -53,7 +53,7 @@ namespace Demo1 {
 			    {0.f, hy + t * 0.5f}, {0.f, -hy - t * 0.5f}, {-hx - t * 0.5f, 0.f}, {hx + t * 0.5f, 0.f}};
 
 			for (int i = 0; i < 4; ++i) {
-				auto wallNode = make_shared<SceneNode>();
+				auto wallNode = SceneNode::Create();
 				wallNode->SetName(wallNames[i]);
 				auto rectVisual = make_shared<RectangleShapeVisual>();
 				wallNode->SetVisual(rectVisual);
@@ -63,7 +63,7 @@ namespace Demo1 {
 				rectShape->setFillColor(sf::Color(120, 180, 220, 90));
 
 				root->AddChild(wallNode);
-				wallNode->GetLocalTransform()->SetPosition(wallCentersLocal[i]);
+				wallNode->SetLocalPosition(wallCentersLocal[i]);
 
 				auto bodyBeh = wallNode->RequireBehaviour<PhysicsBodyBehaviour>();
 				bodyBeh->SetFixed(true);
@@ -118,7 +118,7 @@ namespace Demo1 {
 				}
 				placed.emplace_back(pos, r);
 
-				auto ballNode = make_shared<SceneNode>();
+				auto ballNode = SceneNode::Create();
 				ballNode->SetName("Ballpit_ball");
 				auto circleVisual = ballNode->RequireVisual<CircleShapeVisual>();
 				circleVisual->SetPointCount(32);
@@ -140,7 +140,7 @@ namespace Demo1 {
 				rb->GetCollisionGroups().set(kAquariumPhysicsGroup, true);
 
 				root->AddChild(ballNode);
-				ballNode->GetLocalTransform()->SetPosition(pos);
+				ballNode->SetLocalPosition(pos);
 			}
 		}
 
@@ -164,7 +164,7 @@ namespace Demo1 {
 			return nullptr;
 		}
 
-		auto root = make_shared<SceneNode>();
+		auto root = SceneNode::Create();
 		root->SetName("Ballpit");
 
 		AddAquariumWalls(root.get(), aquariumWidth, aquariumHeight, wallThickness, wallRestitution);

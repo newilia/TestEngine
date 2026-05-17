@@ -4,6 +4,7 @@
 #include "Engine/Core/IPropertiesProvider.h"
 #include "Engine/Core/MetaClass.h"
 #include "Engine/Core/SceneObjectId.h"
+#include "Engine/Core/Transform.h"
 #include "Engine/Sorting/SortingStrategy.h"
 #include "Engine/Visual/Visual.h"
 #include "Updatable.h"
@@ -22,7 +23,6 @@ using std::shared_ptr;
 using std::weak_ptr;
 
 class Scene;
-class Transform;
 class PhysicsBodyBehaviour;
 
 class SceneNode final : public enable_shared_from_this<SceneNode>,
@@ -34,6 +34,7 @@ class SceneNode final : public enable_shared_from_this<SceneNode>,
 
 public:
 	SceneNode() = default;
+	[[nodiscard]] static std::shared_ptr<SceneNode> Create();
 	virtual ~SceneNode() = default;
 
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
@@ -64,10 +65,21 @@ public:
 	std::vector<shared_ptr<SceneNode>> FindChildren(const std::string& id, bool recursively);
 	void RemoveFromParent();
 
-	// Transform (local component + cached world)
-	shared_ptr<Transform> GetLocalTransform() const;
+	// Transform (embedded local component + cached world)
+	Transform& GetLocalTransform();
+	const Transform& GetLocalTransform() const;
 	const sf::Transform& GetWorldTransform() const;
 	void MarkWorldTransformSubtreeDirty() const;
+
+	sf::Vector2f GetLocalPosition() const;
+	void SetLocalPosition(sf::Vector2f v);
+	sf::Vector2f GetLocalScale() const;
+	void SetLocalScale(sf::Vector2f v);
+	sf::Angle GetLocalRotation() const;
+	void SetLocalRotation(sf::Angle angle);
+	sf::Vector2f GetLocalOrigin() const;
+	void SetLocalOrigin(sf::Vector2f v);
+	void CopyLocalTransformFrom(const Transform& source);
 
 	// Visual & draw order
 	shared_ptr<Visual> GetVisual() const;
@@ -125,9 +137,8 @@ private:
 private:
 	weak_ptr<SceneNode> _parent;
 	std::vector<shared_ptr<SceneNode>> _children;
-	mutable shared_ptr<Transform>
-	    _localTransform; // TODO consider making this non-lazy and non-shared, since it's always needed and only one per node
-	mutable bool _worldTransformDirty = true; // TODO consider move to Transform component
+	Transform _localTransform;
+	mutable bool _worldTransformDirty = true;
 	mutable sf::Transform _cachedWorldTransform{};
 	shared_ptr<Visual> _visual;
 	shared_ptr<RelativeSortingStrategy> _sortingStrategy;

@@ -123,8 +123,7 @@ void PhysicsProcessor::IntegratePosition(PhysicsBodyBehaviour* body, float dtSec
 	pos += body->GetVelocity() * dtSec;
 	Utils::SetLocalPosToWorld(node, pos);
 
-	auto xf = node->GetLocalTransform();
-	xf->SetRotation(xf->GetRotation() + sf::radians(body->GetAngularSpeed() * dtSec));
+	node->SetLocalRotation(node->GetLocalRotation() + sf::radians(body->GetAngularSpeed() * dtSec));
 }
 
 void PhysicsProcessor::DetactAndResolveCollisions() {

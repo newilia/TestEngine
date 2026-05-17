@@ -58,7 +58,7 @@ void TestEnvironment::OnEvent(const sf::Event& event) {
 
 std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	auto scene = make_shared<Scene>();
-	auto container = make_shared<SceneNode>();
+	auto container = SceneNode::Create();
 	container->SetName("container");
 	Engine::MainContext::GetInstance().FocusCameraOnNode(container);
 	scene->GetRoot()->AddChild(container);
@@ -91,7 +91,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	};
 
 	for (int i = 0; i < 4; ++i) {
-		auto node = make_shared<SceneNode>();
+		auto node = SceneNode::Create();
 		node->SetName(wallNames[i]);
 		container->AddChild(std::move(node));
 
@@ -136,7 +136,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		const auto gridCol = i % colsCount;
 		int kind = 3.f * gridCol / colsCount;
 
-		auto circleNode = make_shared<SceneNode>();
+		auto circleNode = SceneNode::Create();
 		circleNode->SetName(fmt::format("circle_{}", i));
 
 		const auto color = (kind == 0) ? kColor1 : ((kind == 1) ? kColor2 : kColor3);
@@ -152,7 +152,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 		{
 			const auto x = minX + (1 + gridCol) * (maxX - minX) / (colsCount + 1) + rand() % 2;
 			const auto y = minY + (1 + gridRow) * (maxY - minY) / (rowsCount + 1);
-			circleNode->GetLocalTransform()->SetPosition(sf::Vector2f{x, y});
+			circleNode->SetLocalPosition(sf::Vector2f{x, y});
 		}
 
 		auto bodyBeh = circleNode->RequireBehaviour<PhysicsBodyBehaviour>();

@@ -56,9 +56,9 @@ namespace BallGame1 {
 	std::shared_ptr<Scene> Env::BuildScene() {
 		auto scene = make_shared<Scene>();
 
-		auto rootNode = make_shared<SceneNode>();
+		auto rootNode = SceneNode::Create();
 		rootNode->SetName("Game");
-		rootNode->GetLocalTransform()->SetPosition({1700, 700});
+		rootNode->SetLocalPosition({1700, 700});
 		scene->GetRoot()->AddChild(rootNode);
 
 		rootNode->AddChild(CreateFieldNode());
@@ -75,7 +75,7 @@ namespace BallGame1 {
 		auto scoreNode = CreateScoreNode();
 		rootNode->AddChild(scoreNode);
 
-		auto tmpNode = make_shared<SceneNode>();
+		auto tmpNode = SceneNode::Create();
 		rootNode->AddChild(tmpNode);
 
 		gameController->SetFieldNode(tmpNode);
@@ -105,10 +105,10 @@ namespace BallGame1 {
 
 		const sf::Color wallColor{120, 180, 220, 90};
 
-		auto fieldNode = make_shared<SceneNode>();
+		auto fieldNode = SceneNode::Create();
 		fieldNode->SetName("Field");
 		for (int i = 0; i < 4; ++i) {
-			auto wallNode = make_shared<SceneNode>();
+			auto wallNode = SceneNode::Create();
 			wallNode->SetName(wallNames[i]);
 			auto rectVisual = wallNode->RequireVisual<RectangleShapeVisual>();
 			auto* rectShape = rectVisual->GetShape();
@@ -117,7 +117,7 @@ namespace BallGame1 {
 			rectShape->setFillColor(wallColor);
 
 			fieldNode->AddChild(wallNode);
-			wallNode->GetLocalTransform()->SetPosition(wallCentersLocal[i]);
+			wallNode->SetLocalPosition(wallCentersLocal[i]);
 
 			auto bodyBeh = wallNode->RequireBehaviour<PhysicsBodyBehaviour>();
 			bodyBeh->SetFixed(true);
@@ -128,8 +128,8 @@ namespace BallGame1 {
 
 	std::shared_ptr<SceneNode> Env::CreateGunNode() {
 		auto& mainContext = Engine::MainContext::GetInstance();
-		auto node = make_shared<SceneNode>();
-		node->GetLocalTransform()->SetPosition({0, _fieldSize.y * 0.5f});
+		auto node = SceneNode::Create();
+		node->SetLocalPosition({0, _fieldSize.y * 0.5f});
 		node->SetName("Gun");
 
 		auto rectangle = node->RequireVisual<RectangleShapeVisual>();
@@ -137,7 +137,7 @@ namespace BallGame1 {
 		rectangle->SetOrigin({20, 200});
 		rectangle->SetFillColor(sf::Color::White);
 
-		auto arrowNode = make_shared<SceneNode>();
+		auto arrowNode = SceneNode::Create();
 		arrowNode->SetName("Arrow");
 		auto arrowVisual = arrowNode->RequireVisual<VectorArrowVisual>();
 		arrowVisual->SetStartPos({0, 0});
@@ -154,7 +154,7 @@ namespace BallGame1 {
 	}
 
 	std::shared_ptr<SceneNode> Env::CreateScoreNode() {
-		auto node = make_shared<SceneNode>();
+		auto node = SceneNode::Create();
 		node->SetName("Score");
 		return node;
 	}
@@ -168,7 +168,7 @@ namespace BallGame1 {
 		constexpr float warpRadius = 500;
 		constexpr float warpIntensity = 0.05;
 
-		auto ballNode = make_shared<SceneNode>();
+		auto ballNode = SceneNode::Create();
 		ballNode->SetName("Ball");
 
 		auto visual = ballNode->RequireVisual<CircleShapeVisual>();

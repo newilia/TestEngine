@@ -1,14 +1,7 @@
 #include "Engine/Core/Transform.h"
 
 #include "Engine/Core/PropertyTree.h"
-#include "Engine/Core/SceneNode.h"
 #include "Transform.generated.hpp"
-
-void Transform::NotifyTransformChanged() {
-	if (auto n = GetNode()) {
-		n->MarkWorldTransformSubtreeDirty();
-	}
-}
 
 sf::Transform Transform::GetTransform() const {
 	return _transformable.getTransform();
@@ -20,7 +13,6 @@ sf::Vector2f Transform::GetPosition() const {
 
 void Transform::SetPosition(sf::Vector2f v) {
 	_transformable.setPosition(v);
-	NotifyTransformChanged();
 }
 
 sf::Vector2f Transform::GetScale() const {
@@ -29,7 +21,6 @@ sf::Vector2f Transform::GetScale() const {
 
 void Transform::SetScale(sf::Vector2f v) {
 	_transformable.setScale(v);
-	NotifyTransformChanged();
 }
 
 sf::Angle Transform::GetRotation() const {
@@ -38,7 +29,6 @@ sf::Angle Transform::GetRotation() const {
 
 void Transform::SetRotation(sf::Angle angle) {
 	_transformable.setRotation(angle);
-	NotifyTransformChanged();
 }
 
 sf::Vector2f Transform::GetOrigin() const {
@@ -47,5 +37,4 @@ sf::Vector2f Transform::GetOrigin() const {
 
 void Transform::SetOrigin(sf::Vector2f v) {
 	_transformable.setOrigin(v);
-	NotifyTransformChanged();
 }
