@@ -28,7 +28,6 @@ uniform float u_bevel_width;
 uniform int u_ease_circ;
 uniform float u_diffusion;
 uniform float u_lighting_strength;
-uniform int u_blend_mode;
 
 float ease_curve(float t)
 {
@@ -183,13 +182,6 @@ void main()
 
     lit *= clamp(u_lighting_strength, 0.0, 1.0);
 
-    vec3 base = u_fill_color.rgb;
-    float a = u_fill_color.a;
-    vec3 rgb = clamp(base + lit, 0.0, 1.0);
-    if (u_blend_mode == 1)
-    {
-        vec3 clampedLit = clamp(lit, 0.0, 1.0);
-        rgb = 1.0 - (1.0 - base) * (1.0 - clampedLit);
-    }
-    gl_FragColor = vec4(clamp(rgb, 0.0, 1.0), a);
+    // Pass 2 only: RGB is lighting contribution; blend mode combines with pass-1 base colors.
+    gl_FragColor = vec4(clamp(lit, 0.0, 1.0), u_fill_color.a);
 }

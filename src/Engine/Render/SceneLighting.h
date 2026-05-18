@@ -13,6 +13,7 @@
 #include <vector>
 
 class PointLightBehaviour;
+class SceneNode;
 
 namespace Engine {
 
@@ -27,6 +28,7 @@ namespace Engine {
 		sf::Vector2f position{};
 		sf::Glsl::Vec3 color{};
 		float radius = 1.f;
+		const SceneNode* sourceNode = nullptr;
 	};
 
 	class SceneLighting : public Singleton<SceneLighting>
@@ -50,8 +52,9 @@ namespace Engine {
 		const std::vector<GpuPointLight>& GetLights() const;
 
 		/// Fills `out` with up to `maxLights` lights affecting `receiverBounds` (world space).
-		void SelectLightsForBounds(
-		    const sf::FloatRect& receiverBounds, std::vector<GpuPointLight>& out, std::size_t maxLights) const;
+		/// Skips lights whose `PointLightBehaviour` lives on `excludeLightsOnNode` (if non-null).
+		void SelectLightsForBounds(const sf::FloatRect& receiverBounds, const SceneNode* excludeLightsOnNode,
+		    std::vector<GpuPointLight>& out, std::size_t maxLights) const;
 
 	private:
 		SceneLighting() = default;

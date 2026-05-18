@@ -20,10 +20,10 @@ bool ShapeVisualBase::HitTest(const sf::Vector2f& worldPoint) const {
 
 void ShapeVisualBase::Draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	if (auto shape = GetBaseShape()) {
-		if (Engine::TryDrawShapeWithLighting(*this, target, states)) {
-			return;
-		}
-		target.draw(*shape, states);
+		sf::RenderStates baseStates = states;
+		baseStates.shader = nullptr;
+		target.draw(*shape, baseStates);
+		Engine::DrawShapeLightingPass(*this, target, states);
 	}
 }
 
