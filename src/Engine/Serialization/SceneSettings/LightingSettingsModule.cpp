@@ -53,7 +53,7 @@ namespace Engine::Serialization {
 				node.append_attribute(kBlendModeAttr).set_value(BlendModeToString(lighting.GetBlendMode()));
 			}
 
-			void Load(const pugi::xml_node& settingsParent, SerializationResult& /*result*/) const override {
+			void Load(const pugi::xml_node& settingsParent, SerializationResult& result) const override {
 				const pugi::xml_node node = settingsParent.child(kElementName);
 				if (!node) {
 					return;
@@ -72,6 +72,9 @@ namespace Engine::Serialization {
 					LightingBlendMode mode{};
 					if (TryParseBlendMode(attr.as_string(), mode)) {
 						lighting.SetBlendMode(mode);
+					}
+					else {
+						result.AddWarning(kBlendModeAttr, "Unknown lighting blend mode");
 					}
 				}
 			}

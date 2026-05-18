@@ -31,24 +31,19 @@ namespace Engine::Serialization {
 			xmlElement.append_attribute(kObjectIdAttr).set_value(id);
 		}
 
-		void SaveNodeRecursive(
-		    const std::shared_ptr<SceneNode>& sceneNode, pugi::xml_node xmlParent, SerializationResult& result) {
-			if (!sceneNode) {
-				result.AddError(kNodeElement, "Scene node is null");
-				return;
-			}
-
+		void SaveNodeRecursive(const SceneNode& sceneNode, pugi::xml_node xmlParent, SerializationResult& result) {
 			pugi::xml_node xmlNode = xmlParent.append_child(kNodeElement);
-			WriteObjectIdAttr(xmlNode, sceneNode->GetSceneObjectId());
+			WriteObjectIdAttr(xmlNode, sceneNode.GetSceneObjectId());
 			pugi::xml_node nodeProperties = xmlNode.append_child(kPropertiesElement);
-			result.Merge(PropertyTreeSerializer::SaveProvider(*sceneNode, nodeProperties));
+			result.Merge(PropertyTreeSerializer::SaveProvider(const_cast<SceneNode&>(sceneNode), nodeProperties));
 
 			pugi::xml_node transformNode = xmlNode.append_child(kTransformElement);
 			transformNode.append_attribute(kTypeAttr).set_value(kTransformTypeId);
 			pugi::xml_node transformProperties = transformNode.append_child(kPropertiesElement);
-			result.Merge(PropertyTreeSerializer::SaveProvider(sceneNode->GetLocalTransform(), transformProperties));
+			result.Merge(PropertyTreeSerializer::SaveProvider(
+			    const_cast<Transform&>(sceneNode.GetLocalTransform()), transformProperties));
 
-			if (const auto visual = sceneNode->GetVisual()) {
+			if (const auto visual = sceneNode.GetVisual()) {
 				const std::string visualTypeId = SceneEntityRegistry::GetInstance().GetTypeIdForEntity(visual);
 				if (visualTypeId.empty()) {
 					result.AddWarning("Visual", "Visual type is not registered and will be skipped");
@@ -62,7 +57,7 @@ namespace Engine::Serialization {
 				}
 			}
 
-			if (const auto sorting = sceneNode->GetSortingStrategy()) {
+			if (const auto sorting = sceneNode.GetSortingStrategy()) {
 				const std::string sortingTypeId = SceneEntityRegistry::GetInstance().GetTypeIdForEntity(sorting);
 				if (sortingTypeId.empty()) {
 					result.AddWarning("SortingStrategy", "Sorting strategy type is not registered and will be skipped");
@@ -77,7 +72,7 @@ namespace Engine::Serialization {
 			}
 
 			pugi::xml_node behavioursNode = xmlNode.append_child(kBehavioursElement);
-			for (const auto& behaviour : sceneNode->GetBehaviours()) {
+			for (const auto& behaviour : sceneNode.GetBehaviours()) {
 				const std::string behaviourTypeId = SceneEntityRegistry::GetInstance().GetTypeIdForEntity(behaviour);
 				if (behaviourTypeId.empty()) {
 					result.AddWarning("Behaviour", "Behaviour type is not registered and will be skipped");
@@ -91,8 +86,10 @@ namespace Engine::Serialization {
 			}
 
 			pugi::xml_node childrenNode = xmlNode.append_child(kChildrenElement);
-			for (const auto& child : sceneNode->GetChildren()) {
-				SaveNodeRecursive(child, childrenNode, result);
+			for (const auto& child : sceneNode.GetChildren()) {
+				if (child) {
+					SaveNodeRecursive(*child, childrenNode, result);
+				}
 			}
 		}
 
@@ -214,7 +211,7 @@ namespace Engine::Serialization {
 
 	void SceneNodeTreeSerializer::SaveNode(
 	    const SceneNode& sceneNode, pugi::xml_node xmlParent, SerializationResult& result) {
-		SaveNodeRecursive(std::const_pointer_cast<SceneNode>(sceneNode.shared_from_this()), xmlParent, result);
+		SaveNodeRecursive(sceneNode, xmlParent, result);
 	}
 
 	void SceneNodeTreeSerializer::LoadNode(
