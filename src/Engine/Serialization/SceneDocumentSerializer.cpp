@@ -88,33 +88,35 @@ namespace Engine::Serialization {
 
 	SceneDocumentLoadResult SceneDocumentSerializer::LoadDocumentFromFile(const std::filesystem::path& path) {
 		SceneDocumentLoadResult loadResult;
-		loadResult.scene = std::make_shared<Scene>();
 
 		pugi::xml_document document;
 		const pugi::xml_parse_result parseResult = document.load_file(path.string().c_str());
 		if (!parseResult) {
 			loadResult.result.AddError(path.string(), "Failed to parse XML file");
-			loadResult.scene.reset();
 			return loadResult;
 		}
 
 		const pugi::xml_node sceneElement = document.child(kSceneElement);
 		const pugi::xml_node prefabElement = document.child(kPrefabElement);
 
-		SceneSettingsRegistry::GetInstance().ApplyAllDefaults();
-
 		if (sceneElement) {
 			loadResult.kind = SceneDocumentKind::Scene;
-			if (const pugi::xml_node settingsNode = sceneElement.child(kSettingsElement)) {
-				SceneSettingsRegistry::GetInstance().LoadAll(settingsNode, loadResult.result);
+			if (const pugi::xml_attribute versionAttr = sceneElement.attribute(kVersionAttr)) {
+				if (versionAttr.as_int() > kSceneVersion) {
+					loadResult.result.AddWarning(kSceneElement, "Scene version is newer than supported");
+				}
 			}
 		}
 		else if (prefabElement) {
 			loadResult.kind = SceneDocumentKind::Prefab;
+			if (const pugi::xml_attribute versionAttr = prefabElement.attribute(kVersionAttr)) {
+				if (versionAttr.as_int() > kPrefabVersion) {
+					loadResult.result.AddWarning(kPrefabElement, "Prefab version is newer than supported");
+				}
+			}
 		}
 		else {
 			loadResult.result.AddError(path.string(), "XML root must be Scene or Prefab");
-			loadResult.scene.reset();
 			return loadResult;
 		}
 
@@ -122,12 +124,24 @@ namespace Engine::Serialization {
 		const pugi::xml_node rootNode = documentRoot.child(kNodeElement);
 		if (!rootNode) {
 			loadResult.result.AddError(path.string(), "Document XML does not contain root Node");
+			return loadResult;
+		}
+
+		loadResult.scene = std::make_shared<Scene>();
+		if (auto root = loadResult.scene->GetRoot()) {
+			SceneNodeTreeSerializer::LoadNode(rootNode, *root, loadResult.result);
+		}
+
+		if (!loadResult.result.isSuccess) {
 			loadResult.scene.reset();
 			return loadResult;
 		}
 
-		if (auto root = loadResult.scene->GetRoot()) {
-			SceneNodeTreeSerializer::LoadNode(rootNode, *root, loadResult.result);
+		SceneSettingsRegistry::GetInstance().ApplyAllDefaults();
+		if (sceneElement) {
+			if (const pugi::xml_node settingsNode = sceneElement.child(kSettingsElement)) {
+				SceneSettingsRegistry::GetInstance().LoadAll(settingsNode, loadResult.result);
+			}
 		}
 
 		if (!loadResult.result.isSuccess) {

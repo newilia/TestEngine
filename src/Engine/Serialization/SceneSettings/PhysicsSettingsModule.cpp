@@ -5,6 +5,8 @@
 
 #include <SFML/System/Vector2.hpp>
 
+#include <algorithm>
+
 namespace Engine::Serialization {
 	namespace {
 

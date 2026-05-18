@@ -751,7 +751,10 @@ namespace Engine {
 			ImGui::TextUnformatted("Choose how to save this document:");
 			ImGui::RadioButton("Scene (hierarchy + world settings)", &_saveKindModalSelection, 0);
 			ImGui::RadioButton("Prefab (hierarchy only)", &_saveKindModalSelection, 1);
-			if (ImGui::Button("OK", ImVec2(120.f, 0.f))) {
+			const bool confirm = ImGui::Button("OK", ImVec2(120.f, 0.f)) ||
+			                     (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
+			                         ImGui::IsKeyPressed(ImGuiKey_Enter, false));
+			if (confirm) {
 				_documentKind = _saveKindModalSelection == 1 ? Serialization::SceneDocumentKind::Prefab
 				                                             : Serialization::SceneDocumentKind::Scene;
 				_documentKindChosen = true;
@@ -766,7 +769,10 @@ namespace Engine {
 				_pendingSaveAs = false;
 			}
 			ImGui::SameLine();
-			if (ImGui::Button("Cancel", ImVec2(120.f, 0.f))) {
+			const bool cancel = ImGui::Button("Cancel", ImVec2(120.f, 0.f)) ||
+			                    (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
+			                        ImGui::IsKeyPressed(ImGuiKey_Escape, false));
+			if (cancel) {
 				_showSaveDocumentKindModal = false;
 				_pendingSaveAs = false;
 				ImGui::CloseCurrentPopup();

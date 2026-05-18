@@ -6,7 +6,6 @@
 #include "Engine/Serialization/PropertyTreeSerializer.h"
 #include "Engine/Serialization/SceneSettings/ISceneSettingsModule.h"
 
-#include <filesystem>
 #include <string_view>
 
 namespace Engine::Serialization {
@@ -18,11 +17,6 @@ namespace Engine::Serialization {
 		constexpr const char kTypeNone[] = "None";
 		constexpr const char kTypePlainColor[] = "PlainColor";
 		constexpr const char kTypeParallaxTexture[] = "ParallaxTexture";
-		constexpr const char kTexturePathAttr[] = "texturePath";
-		constexpr const char kOpacityAttr[] = "opacity";
-		constexpr const char kScaleWithCameraAttr[] = "scaleWithCamera";
-		constexpr const char kMoveWithCameraAttr[] = "moveWithCamera";
-		constexpr const char kDefaultScaleAttr[] = "defaultScale";
 
 		class BackgroundSettingsModule final : public ISceneSettingsModule
 		{
@@ -47,9 +41,6 @@ namespace Engine::Serialization {
 				}
 				else if (dynamic_cast<ParallaxTextureGameBackground*>(bg) != nullptr) {
 					node.append_attribute(kTypeAttr).set_value(kTypeParallaxTexture);
-					if (const auto* parallax = dynamic_cast<ParallaxTextureGameBackground*>(bg)) {
-						node.append_attribute(kTexturePathAttr).set_value(parallax->GetTexturePath().c_str());
-					}
 				}
 				else {
 					return;
@@ -87,14 +78,7 @@ namespace Engine::Serialization {
 				}
 
 				if (std::string_view{type} == kTypeParallaxTexture) {
-					const char* texturePath = node.attribute(kTexturePathAttr).as_string();
-					float opacity = node.attribute(kOpacityAttr).as_float(1.f);
-					float scaleWithCamera = node.attribute(kScaleWithCameraAttr).as_float(0.f);
-					float moveWithCamera = node.attribute(kMoveWithCameraAttr).as_float(0.35f);
-					float defaultScale = node.attribute(kDefaultScaleAttr).as_float(256.f);
-					ctx->SetParallaxTextureBackground(
-					    texturePath ? std::filesystem::path{texturePath} : std::filesystem::path{}, opacity,
-					    scaleWithCamera, moveWithCamera, defaultScale);
+					ctx->SetParallaxTextureBackground({}, 1.f, 0.f, 0.35f, 256.f);
 					if (auto* parallax = dynamic_cast<ParallaxTextureGameBackground*>(ctx->GetBackground())) {
 						if (const pugi::xml_node propertiesNode = node.child(kPropertiesElement)) {
 							result.Merge(PropertyTreeSerializer::LoadProvider(*parallax, propertiesNode));
