@@ -24,7 +24,7 @@ namespace {
 
 } // namespace
 
-MoveTool::MoveTool(SelectTool::SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
+MoveTool::MoveTool(EditorNodePick::SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
 
 bool MoveTool::ProcessEvent(const sf::Event& event) {
 	auto toWorld = [&](sf::Vector2i pixel) -> sf::Vector2f {

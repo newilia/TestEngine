@@ -42,6 +42,7 @@ namespace Engine {
 		void BuildTreeOrder(SceneNode& node, std::vector<std::shared_ptr<SceneNode>>& treeOrder) const;
 		void RemoveFromSelectionOrder(const SceneNode& node);
 		void RebuildSelectionMapFromOrder();
+		[[nodiscard]] bool IsOnPathToRevealSelectionTarget(const SceneNode& node) const;
 
 		[[nodiscard]] std::vector<std::shared_ptr<SceneNode>> ResolveDraggedNodes(SceneNode& source) const;
 		[[nodiscard]] static HierarchyDropHint ReadDropHintFromItem();

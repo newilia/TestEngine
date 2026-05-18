@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Editor/EditorNodePick.h"
 #include "Engine/Editor/Tools/IEditorTool.h"
-#include "Engine/Editor/Tools/SelectTool.h"
 #include "Engine/Visual/VectorArrowVisual.h"
 
 #include <SFML/System/Time.hpp>
@@ -14,7 +14,7 @@
 class PullTool final : public IEditorTool
 {
 public:
-	explicit PullTool(SelectTool::SelectCallback onSelect = nullptr);
+	explicit PullTool(EditorNodePick::SelectCallback onSelect = nullptr);
 
 	bool ProcessEvent(const sf::Event& event) override;
 	void Update(const sf::Time& dt) override;
@@ -32,7 +32,7 @@ private:
 	void SetPullDestination(const sf::Vector2f& dest);
 
 private:
-	SelectTool::SelectCallback _onSelect;
+	EditorNodePick::SelectCallback _onSelect;
 	float _pullForceScale = 1.f;
 	float _dampening = 0.05f;
 	sf::Vector2f _destination;

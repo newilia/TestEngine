@@ -1,7 +1,7 @@
 #pragma once
 
+#include "Engine/Editor/EditorNodePick.h"
 #include "Engine/Editor/Tools/IEditorTool.h"
-#include "Engine/Editor/Tools/SelectTool.h"
 
 #include <SFML/System/Vector2.hpp>
 
@@ -13,13 +13,13 @@ class SceneNode;
 class MoveTool final : public IEditorTool
 {
 public:
-	explicit MoveTool(SelectTool::SelectCallback onSelect = nullptr);
+	explicit MoveTool(EditorNodePick::SelectCallback onSelect = nullptr);
 
 	bool ProcessEvent(const sf::Event& event) override;
 	void DrawToolParametersUi() override;
 
 private:
-	SelectTool::SelectCallback _onSelect;
+	EditorNodePick::SelectCallback _onSelect;
 	std::weak_ptr<SceneNode> _grabbedNode;
 	sf::Vector2f _grabOffset{};
 	bool _dragging = false;

@@ -1,12 +1,12 @@
 #pragma once
 
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Editor/EditorNodePick.h"
 #include "Engine/Editor/Tools/IEditorTool.h"
 
 #include <SFML/Graphics/Rect.hpp>
 #include <SFML/System/Vector2.hpp>
 
-#include <functional>
 #include <memory>
 #include <optional>
 #include <unordered_set>
@@ -16,7 +16,7 @@
 class SelectTool final : public IEditorTool
 {
 public:
-	using SelectCallback = std::function<void(std::shared_ptr<SceneNode>)>;
+	using SelectCallback = EditorNodePick::SelectCallback;
 
 	explicit SelectTool(SelectCallback onSelect);
 

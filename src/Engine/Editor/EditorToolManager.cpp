@@ -25,9 +25,9 @@ EditorToolManager::EditorToolManager() {
 	_tools.emplace_back("Select", std::make_unique<SelectTool>(setHierarchySelection));
 	_tools.emplace_back("Pull", std::make_unique<PullTool>());
 	_tools.emplace_back("Move", std::make_unique<MoveTool>(setHierarchySelection));
-	_tools.emplace_back("Polygon", std::make_unique<PolygonTool>());
-	_tools.emplace_back("Rectangle", std::make_unique<RectangleTool>());
-	_tools.emplace_back("Circle", std::make_unique<CircleTool>());
+	_tools.emplace_back("Polygon", std::make_unique<PolygonTool>(setHierarchySelection));
+	_tools.emplace_back("Rectangle", std::make_unique<RectangleTool>(setHierarchySelection));
+	_tools.emplace_back("Circle", std::make_unique<CircleTool>(setHierarchySelection));
 }
 
 std::optional<int> EditorToolManager::TryToolIndexFromDigitKey(const sf::Keyboard::Key key) {
