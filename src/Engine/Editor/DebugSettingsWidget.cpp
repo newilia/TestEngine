@@ -2,8 +2,8 @@
 
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/MainContext.h"
-#include "Engine/Core/Utils.h"
 #include "Engine/Editor/Editor.h"
+#include "Engine/Editor/ImGuiUtils.h"
 #include "Engine/Render/SceneLighting.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 
@@ -51,7 +51,7 @@ namespace Engine {
 			}
 
 			ImGui::SameLine();
-			ImGui::SetNextItemWidth(Utils::GetRemainingWidth());
+			ImGui::SetNextItemWidth(ImGuiUtils::GetRemainingWidth());
 
 			float speedMul = mainContext.GetSimSpeedMultiplier();
 			if (ImGui::DragFloat(
@@ -89,7 +89,7 @@ namespace Engine {
 				physicsProc->SetGravityEnabled(gravOn);
 			}
 			ImGui::SameLine();
-			ImGui::SetNextItemWidth(Utils::GetRemainingWidth());
+			ImGui::SetNextItemWidth(ImGuiUtils::GetRemainingWidth());
 
 			sf::Vector2f g = physicsProc->GetGravity();
 			float gxy[2] = {g.x, g.y};
@@ -253,7 +253,7 @@ namespace Engine {
 				sceneLighting.SetDistanceRangeScale(1.0f);
 			}
 			ImGui::SameLine();
-			ImGui::SetNextItemWidth(Utils::GetRemainingWidth());
+			ImGui::SetNextItemWidth(ImGuiUtils::GetRemainingWidth());
 			float distanceScale = sceneLighting.GetDistanceRangeScale();
 			if (ImGui::SliderFloat("Light distance scale", &distanceScale, 0.1f, 3.f, "%.2f")) {
 				sceneLighting.SetDistanceRangeScale(distanceScale);
@@ -263,7 +263,7 @@ namespace Engine {
 				sceneLighting.SetGlobalIntensityScale(1.0f);
 			}
 			ImGui::SameLine();
-			ImGui::SetNextItemWidth(Utils::GetRemainingWidth());
+			ImGui::SetNextItemWidth(ImGuiUtils::GetRemainingWidth());
 			float intensityScale = sceneLighting.GetGlobalIntensityScale();
 			if (ImGui::SliderFloat("Light intensity scale", &intensityScale, 0.1f, 3.f, "%.2f")) {
 				sceneLighting.SetGlobalIntensityScale(intensityScale);

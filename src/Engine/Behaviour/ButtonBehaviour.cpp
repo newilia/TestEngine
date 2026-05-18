@@ -3,7 +3,7 @@
 #include "ButtonBehaviour.generated.hpp"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Core/Utils.h"
+#include "Engine/Core/SfmlWindowUtils.h"
 #include "Engine/Visual/Visual.h"
 
 #include <SFML/Window/Mouse.hpp>

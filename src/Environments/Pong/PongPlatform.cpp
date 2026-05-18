@@ -1,7 +1,7 @@
 #include "PongPlatform.h"
 
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
-#include "Engine/Core/Utils.h"
+#include "Engine/Core/SceneNodeUtils.h"
 #include "Engine/Visual/RectangleShapeVisual.h"
 #include "PongPlayfield.h"
 

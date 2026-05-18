@@ -2,7 +2,8 @@
 
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Core/Utils.h"
+#include "Engine/Core/SceneNodeUtils.h"
+#include "Engine/Core/SfmlWindowUtils.h"
 #include "PongPlatform.h"
 #include "UserPlatformControllerBehaviour.generated.hpp"
 

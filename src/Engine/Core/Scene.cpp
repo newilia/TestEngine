@@ -3,8 +3,9 @@
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Core/EntityOnNode.h"
 #include "Engine/Core/MainContext.h"
+#include "Engine/Core/SceneNodeUtils.h"
+#include "Engine/Core/SfmlWindowUtils.h"
 #include "Engine/Core/Transform.h"
-#include "Engine/Core/Utils.h"
 #include "Engine/Sorting/SortingStrategy.h"
 #include "Engine/Visual/Visual.h"
 

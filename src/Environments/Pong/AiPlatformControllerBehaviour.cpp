@@ -3,7 +3,7 @@
 #include "AiPlatformControllerBehaviour.generated.hpp"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Core/Utils.h"
+#include "Engine/Core/SceneNodeUtils.h"
 #include "Engine/Visual/CircleShapeVisual.h"
 #include "PongPlatform.h"
 

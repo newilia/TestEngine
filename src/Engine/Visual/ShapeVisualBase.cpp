@@ -1,7 +1,7 @@
 #include "Engine/Visual/ShapeVisualBase.h"
 
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Core/Utils.h"
+#include "Engine/Core/ShapeHitTestUtils.h"
 #include "Engine/Visual/ShapeLightingDraw.h"
 #include "ShapeVisualBase.generated.hpp"
 

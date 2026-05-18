@@ -2,8 +2,10 @@
 
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/MainContext.h"
+#include "Engine/Core/MathUtils.h"
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Core/Utils.h"
+#include "Engine/Core/SceneNodeUtils.h"
+#include "Engine/Core/SfmlWindowUtils.h"
 #include "Engine/Editor/Editor.h"
 #include "Engine/Visual/ConvexShapeVisual.h"
 

@@ -1,7 +1,7 @@
 #include "Engine/Visual/SpriteVisual.h"
 
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Core/Utils.h"
+#include "Engine/Core/ShapeHitTestUtils.h"
 #include "SpriteVisual.generated.hpp"
 
 #include <SFML/Graphics/Sprite.hpp>

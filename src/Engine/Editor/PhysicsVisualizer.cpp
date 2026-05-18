@@ -1,8 +1,9 @@
 #include "Engine/Editor/PhysicsVisualizer.h"
 
 #include "Engine/Core/MainContext.h"
+#include "Engine/Core/MathUtils.h"
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Core/Utils.h"
+#include "Engine/Core/SceneNodeUtils.h"
 #include "Engine/Simulation/AttractionField.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "Engine/Visual/VectorArrowShape.h"

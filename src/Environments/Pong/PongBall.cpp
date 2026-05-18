@@ -2,8 +2,8 @@
 
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
+#include "Engine/Core/MathUtils.h"
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Core/Utils.h"
 #include "Engine/Visual/CircleShapeVisual.h"
 
 #include <SFML/Graphics/CircleShape.hpp>

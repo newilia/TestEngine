@@ -2,7 +2,7 @@
 
 #include "Engine/Behaviour/PointLightBehaviour.h"
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Core/Utils.h"
+#include "Engine/Core/SceneNodeUtils.h"
 
 #include <algorithm>
 #include <cmath>

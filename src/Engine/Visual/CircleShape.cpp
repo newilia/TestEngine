@@ -1,9 +1,8 @@
 #include "Engine/Visual/CircleShape.h"
 
-#include "Engine/Core/Utils.h"
+#include "Engine/Core/MathUtils.h"
 
 #include <SFML/Graphics/RenderTarget.hpp>
-
 #include <SFML/System/Angle.hpp>
 
 namespace {
