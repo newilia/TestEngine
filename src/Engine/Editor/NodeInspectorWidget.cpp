@@ -510,19 +510,65 @@ namespace {
 		return fingerprint;
 	}
 
-	void RefreshMergeStateForFingerprint(
-	    Engine::NodeInspectorMergeState& mergeState, const std::vector<std::shared_ptr<SceneNode>>& validNodes) {
-		auto nextFingerprint = BuildSortedSelectionFingerprint(validNodes);
-		if (nextFingerprint == mergeState.fingerprint) {
-			return;
+	std::string BuildEntityCompositionFingerprint(const std::vector<const SceneNode*>& sortedNodes) {
+		std::string fingerprint;
+		fingerprint.reserve(sortedNodes.size() * 32U);
+		for (const SceneNode* node : sortedNodes) {
+			if (!node) {
+				continue;
+			}
+			fingerprint.push_back('|');
+			if (const auto visual = node->GetVisual()) {
+				fingerprint.append("v:");
+				fingerprint.append(typeid(*visual).name());
+			}
+			else {
+				fingerprint.append("v:0");
+			}
+			if (const auto sorting = node->GetSortingStrategy()) {
+				fingerprint.append(";s:");
+				fingerprint.append(typeid(*sorting).name());
+			}
+			else {
+				fingerprint.append(";s:0");
+			}
+			fingerprint.append(";b:");
+			std::vector<std::string> behaviourTypes;
+			for (const auto& behaviour : node->GetBehaviours()) {
+				if (behaviour) {
+					behaviourTypes.emplace_back(typeid(*behaviour).name());
+				}
+			}
+			std::sort(behaviourTypes.begin(), behaviourTypes.end());
+			for (const std::string& behaviourType : behaviourTypes) {
+				fingerprint.append(behaviourType);
+				fingerprint.push_back(',');
+			}
 		}
-		mergeState.fingerprint = std::move(nextFingerprint);
+		return fingerprint;
+	}
+
+	void ResetMergeCaches(
+	    Engine::NodeInspectorMergeState& mergeState, const std::vector<std::shared_ptr<SceneNode>>& validNodes) {
 		mergeState.sceneNodeMerged.reset();
 		mergeState.transformMerged.reset();
 		mergeState.sortingMerged.reset();
 		mergeState.visualMerged.reset();
 		mergeState.behaviourMerged.clear();
 		mergeState.commonBehaviourTitles = FindCommonBehaviourTypes(validNodes);
+	}
+
+	void RefreshMergeStateForFingerprint(
+	    Engine::NodeInspectorMergeState& mergeState, const std::vector<std::shared_ptr<SceneNode>>& validNodes) {
+		const auto nextSelectionFingerprint = BuildSortedSelectionFingerprint(validNodes);
+		const std::string nextEntityFingerprint = BuildEntityCompositionFingerprint(nextSelectionFingerprint);
+		if (nextSelectionFingerprint == mergeState.fingerprint &&
+		    nextEntityFingerprint == mergeState.entityCompositionFingerprint) {
+			return;
+		}
+		mergeState.fingerprint = nextSelectionFingerprint;
+		mergeState.entityCompositionFingerprint = nextEntityFingerprint;
+		ResetMergeCaches(mergeState, validNodes);
 	}
 
 	struct MultiEntityDeleteContext

@@ -17,6 +17,8 @@ namespace Engine {
 	struct NodeInspectorMergeState
 	{
 		std::vector<const SceneNode*> fingerprint;
+		/// Entity types on selected nodes (visual / sorting / behaviours); invalidates merge caches when it changes.
+		std::string entityCompositionFingerprint;
 		std::optional<PropertyTree> sceneNodeMerged;
 		std::optional<PropertyTree> transformMerged;
 		std::optional<PropertyTree> sortingMerged;
