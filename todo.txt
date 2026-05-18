@@ -1,11 +1,4 @@
-персистентность редактора
-
-! загрузка/сохранение сцены
-
 куча todos в коде
-
-поревьюить инициализацию нод и сущностей
-динамический AddChild не вызывает NotifyLifecycleInitRecursive — поведения (в т.ч. PhysicsBodyBehaviour) не получают OnInit, тело не регистрируется в PhysicsProcessor; после добавления узла в активную сцену нужно явно вызывать NotifyLifecycleInitRecursive на поддереве (или централизовать это в AddChild/Scene)
 
 пересмотреть неймспейсы Editor, Engine, App, Common (common.h), Utils
 
@@ -19,11 +12,7 @@
 
 кастомные инспекторы для типов
 
-переделать наследников ShapeVisual на шаблон?
-
 isEnabledLocal, isVisibleLocal
-
-клонирование нод
 
 эффект свечения
 
@@ -32,10 +21,6 @@ isEnabledLocal, isVisibleLocal
 propery animator
 
 -интеграция box2d
-
-баг: PointLightBehaviour, ShapeLightReceiver не клонируются при copy-paste ноды
-
-отдельные группы на притяжение (притяжение без коллизий)
 
 отображать в нод инспекторе полупрозрачным заголовком список сущностей, которые есть не на всех нодах, для их редактирования
 
