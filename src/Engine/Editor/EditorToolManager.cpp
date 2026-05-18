@@ -2,9 +2,11 @@
 
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Editor/Editor.h"
+#include "Engine/Editor/Tools/CircleTool.h"
 #include "Engine/Editor/Tools/MoveTool.h"
 #include "Engine/Editor/Tools/PolygonTool.h"
 #include "Engine/Editor/Tools/PullTool.h"
+#include "Engine/Editor/Tools/RectangleTool.h"
 #include "Engine/Editor/Tools/SelectTool.h"
 #include "Engine/Editor/Tools/TapTool.h"
 
@@ -24,6 +26,8 @@ EditorToolManager::EditorToolManager() {
 	_tools.emplace_back("Pull", std::make_unique<PullTool>());
 	_tools.emplace_back("Move", std::make_unique<MoveTool>(setHierarchySelection));
 	_tools.emplace_back("Polygon", std::make_unique<PolygonTool>());
+	_tools.emplace_back("Rectangle", std::make_unique<RectangleTool>());
+	_tools.emplace_back("Circle", std::make_unique<CircleTool>());
 }
 
 std::optional<int> EditorToolManager::TryToolIndexFromDigitKey(const sf::Keyboard::Key key) {
