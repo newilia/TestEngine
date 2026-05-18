@@ -38,6 +38,12 @@ namespace {
 } // namespace
 
 void PhysicsProcessor::RegisterBody(shared_ptr<PhysicsBodyBehaviour> body) {
+	auto it = std::find_if(_bodies.begin(), _bodies.end(), [body](const std::weak_ptr<PhysicsBodyBehaviour>& w) {
+		return w.lock().get() == body.get();
+	});
+	if (it != _bodies.end()) {
+		return;
+	}
 	_bodies.emplace_back(body);
 }
 

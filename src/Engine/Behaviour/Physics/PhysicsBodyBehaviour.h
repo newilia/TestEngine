@@ -34,6 +34,8 @@ public:
 public:
 	void OnInit() override;
 	void OnDeinit() override;
+	void OnAttached() override;
+	void OnDetached() override;
 	void OnEnabled(bool isEnabled) override;
 
 	const sf::Shape* GetColliderShape() const;
@@ -94,6 +96,7 @@ private:
 	/// @property(tooltip="Bodies with common groups will trigger overlap signal, but won't interact in a physical way")
 	GroupSet _overlapGroups;
 
+private:
 	mutable Signal<const IntersectionDetails&> _onCollideSignal;
 	mutable Signal<const IntersectionDetails&> _onOverlapSignal;
 
@@ -104,8 +107,6 @@ private:
 		Rectangle,
 		PolygonRough
 	};
-
-	static float MinCollisionInertia(float mass);
 
 	const sf::Shape* _collisionCacheShapePtr = nullptr;
 	bool _collisionGeomCacheOk = false;
@@ -121,6 +122,7 @@ private:
 	mutable float _cachedInertiaMass = 0.f;
 	mutable float _cachedInertiaShapeToWorldMatrix[16]{};
 
-	[[nodiscard]] bool InertiaWorldCacheMatches(float mass, const sf::Transform& shapeToWorld) const;
+	static float MinCollisionInertia(float mass);
+	bool InertiaWorldCacheMatches(float mass, const sf::Transform& shapeToWorld) const;
 	void StoreInertiaWorldCache(float mass, const sf::Transform& shapeToWorld, float inertiaWorld) const;
 };

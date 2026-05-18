@@ -55,6 +55,7 @@ public:
 	void SetSceneObjectId(Engine::SceneObjectId id);
 
 	// Hierarchy
+	bool IsInited() const;
 	shared_ptr<SceneNode> GetParent() const;
 	const std::vector<shared_ptr<SceneNode>>& GetChildren() const;
 	void AddChild(const std::shared_ptr<SceneNode>& child);
@@ -143,7 +144,7 @@ private:
 	shared_ptr<Visual> _visual;
 	shared_ptr<RelativeSortingStrategy> _sortingStrategy;
 	std::vector<shared_ptr<Behaviour>> _behaviours;
-	bool _wasNodeLifecycleInited = false;
+	bool _isNodeLifecycleInited = false;
 	Engine::SceneObjectId _sceneObjectId = Engine::kInvalidSceneObjectId;
 	weak_ptr<Scene> _owningScene;
 };
