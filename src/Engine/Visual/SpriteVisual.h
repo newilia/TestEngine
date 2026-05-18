@@ -47,5 +47,5 @@ public:
 
 private:
 	std::string _texturePath;
-	std::shared_ptr<sf::Sprite> _sprite;
+	std::unique_ptr<sf::Sprite> _sprite;
 };
