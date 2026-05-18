@@ -44,6 +44,7 @@ namespace Engine {
 		/// Stable keys (entity slot + type title) — survives selection changes; see `InspectorSectionKey` in `.cpp`.
 		mutable std::unordered_set<std::string> _expandedInspectorSections{};
 		mutable char _addComponentFilter[128]{};
+		mutable bool _addComponentComboWasOpen{};
 	};
 
 } // namespace Engine
