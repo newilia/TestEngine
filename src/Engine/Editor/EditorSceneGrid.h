@@ -28,10 +28,10 @@ namespace Engine {
 		bool& SnapEnabledMutable();
 
 		int GetSize() const;
-		void SetSize(int size);
+		int& SizeMutable();
 
 		int GetBasis() const;
-		void SetBasis(int basis);
+		int& BasisMutable();
 
 		sf::Vector2f SnapWorldPoint(sf::Vector2f world) const;
 

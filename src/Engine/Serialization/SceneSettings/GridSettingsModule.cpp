@@ -2,6 +2,8 @@
 #include "Engine/Editor/EditorSceneGrid.h"
 #include "Engine/Serialization/SceneSettings/ISceneSettingsModule.h"
 
+#include <algorithm>
+
 namespace Engine::Serialization {
 	namespace {
 
@@ -37,10 +39,12 @@ namespace Engine::Serialization {
 					grid.VisibleMutable() = attr.as_bool();
 				}
 				if (const pugi::xml_attribute attr = node.attribute(kSizeAttr)) {
-					grid.SetSize(attr.as_int());
+					grid.SizeMutable() =
+					    std::clamp(attr.as_int(), EditorSceneGrid::kMinSize, EditorSceneGrid::kMaxSize);
 				}
 				if (const pugi::xml_attribute attr = node.attribute(kBasisAttr)) {
-					grid.SetBasis(attr.as_int());
+					grid.BasisMutable() =
+					    std::clamp(attr.as_int(), EditorSceneGrid::kMinBasis, EditorSceneGrid::kMaxBasis);
 				}
 				if (const pugi::xml_attribute attr = node.attribute(kSnapAttr)) {
 					grid.SnapEnabledMutable() = attr.as_bool();
