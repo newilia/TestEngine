@@ -175,6 +175,9 @@ namespace Engine {
 		if (!_snapToGrid) {
 			return world;
 		}
+		if (!_isVisible) {
+			return world;
+		}
 		float pixelsPerWorld = 0.f;
 		if (const auto window = MainContext::GetInstance().GetMainWindow()) {
 			pixelsPerWorld = ComputePixelsPerWorld(*window, window->getView());
