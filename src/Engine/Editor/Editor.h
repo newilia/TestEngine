@@ -74,6 +74,8 @@ namespace Engine {
 		bool CutEntity(const std::shared_ptr<EntityOnNode>& entity, EntitySlot slot);
 		bool DeleteSelectedNodes();
 		bool DeleteNode(const std::shared_ptr<SceneNode>& node);
+		bool MoveNodesInHierarchy(const std::vector<std::shared_ptr<SceneNode>>& nodes,
+		    const std::shared_ptr<SceneNode>& newParent, std::size_t newIndex);
 		bool DeleteEntity(const std::shared_ptr<EntityOnNode>& entity, EntitySlot slot);
 		bool DeleteEntitiesFromNodes(const std::vector<std::shared_ptr<SceneNode>>& nodes, EntitySlot slot,
 		    std::optional<std::type_index> behaviourType = std::nullopt);

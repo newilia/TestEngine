@@ -15,6 +15,8 @@
 #include "Engine/Editor/Commands/DeleteEntityBatchCommand.h"
 #include "Engine/Editor/Commands/DeleteEntityCommand.h"
 #include "Engine/Editor/Commands/DeleteNodeCommand.h"
+#include "Engine/Editor/Commands/EditorSceneHelpers.h"
+#include "Engine/Editor/Commands/MoveNodesInHierarchyCommand.h"
 #include "Engine/Editor/Commands/PasteEntityCommand.h"
 #include "Engine/Editor/Commands/PasteNodeCommand.h"
 #include "Engine/Editor/EditorVisualTheme.h"
@@ -402,6 +404,46 @@ namespace Engine {
 			ClearNodeSelection();
 		}
 		return executed;
+	}
+
+	bool Editor::MoveNodesInHierarchy(const std::vector<std::shared_ptr<SceneNode>>& nodes,
+	    const std::shared_ptr<SceneNode>& newParent, std::size_t newIndex) {
+		if (!newParent || nodes.empty()) {
+			return false;
+		}
+
+		std::vector<EditorCommands::MoveNodesInHierarchyCommand::Entry> entries;
+		entries.reserve(nodes.size());
+		for (const auto& node : nodes) {
+			if (!node || !node->GetParent()) {
+				return false;
+			}
+			if (EditorCommands::IsNodeInSubtree(newParent, node)) {
+				return false;
+			}
+			const auto parent = node->GetParent();
+			const auto& children = parent->GetChildren();
+			const auto it = std::find(children.begin(), children.end(), node);
+			if (it == children.end()) {
+				return false;
+			}
+			entries.push_back({node, parent, static_cast<std::size_t>(std::distance(children.begin(), it))});
+		}
+
+		bool isNoOp = true;
+		for (std::size_t i = 0; i < entries.size(); ++i) {
+			const auto oldParent = entries[i].oldParent.lock();
+			if (!oldParent || oldParent != newParent || entries[i].oldIndex != newIndex + i) {
+				isNoOp = false;
+				break;
+			}
+		}
+		if (isNoOp) {
+			return false;
+		}
+
+		return _history.Execute(
+		    std::make_unique<EditorCommands::MoveNodesInHierarchyCommand>(std::move(entries), newParent, newIndex));
 	}
 
 	bool Editor::DeleteEntity(const std::shared_ptr<EntityOnNode>& entity, EntitySlot slot) {
@@ -944,15 +986,7 @@ namespace Engine {
 
 	bool Editor::IsNodeInSubtree(
 	    const std::shared_ptr<SceneNode>& candidate, const std::shared_ptr<SceneNode>& treeRoot) {
-		if (!treeRoot || !candidate) {
-			return false;
-		}
-		for (auto cur = candidate; cur; cur = cur->GetParent()) {
-			if (cur == treeRoot) {
-				return true;
-			}
-		}
-		return false;
+		return EditorCommands::IsNodeInSubtree(candidate, treeRoot);
 	}
 
 	std::optional<sf::FloatRect> Editor::TryGetHierarchySelectionBounds(const SceneNode& node) {

@@ -1,12 +1,19 @@
 #include "Engine/Editor/SceneHierarchyWidget.h"
 
 #include "Engine/Core/MainContext.h"
+#include "Engine/Editor/Commands/EditorSceneHelpers.h"
 #include "Engine/Editor/Editor.h"
 
 #include <imgui.h>
+#include <imgui_internal.h>
 
 #include <algorithm>
 #include <unordered_set>
+#include <utility>
+
+namespace {
+	constexpr const char* kHierarchyNodeDragPayloadType = "TE_SCENE_HIERARCHY_NODE";
+} // namespace
 
 namespace Engine {
 	std::shared_ptr<SceneNode> SceneHierarchyWidget::GetSelectedNode() const {
@@ -202,6 +209,130 @@ namespace Engine {
 		}
 	}
 
+	std::vector<std::shared_ptr<SceneNode>> SceneHierarchyWidget::ResolveDraggedNodes(SceneNode& source) const {
+		std::vector<std::shared_ptr<SceneNode>> treeOrder;
+		if (const auto scene = MainContext::GetInstance().GetScene()) {
+			if (const auto root = scene->GetRoot()) {
+				BuildTreeOrder(*root, treeOrder);
+			}
+		}
+
+		std::vector<std::shared_ptr<SceneNode>> result;
+		if (IsNodeSelected(source)) {
+			std::unordered_set<const SceneNode*> selectedSet;
+			for (const auto& selected : GetSelectedNodes()) {
+				if (selected) {
+					selectedSet.insert(selected.get());
+				}
+			}
+			for (const auto& ordered : treeOrder) {
+				if (ordered && ordered->GetParent() != nullptr && selectedSet.contains(ordered.get())) {
+					result.push_back(ordered);
+				}
+			}
+		}
+		else if (source.GetParent() != nullptr) {
+			result.push_back(source.shared_from_this());
+		}
+		return result;
+	}
+
+	SceneHierarchyWidget::HierarchyDropHint SceneHierarchyWidget::ReadDropHintFromItem() {
+		const ImRect rect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+		const float height = rect.GetHeight();
+		const float y = ImGui::GetMousePos().y;
+		if (height <= 0.f) {
+			return HierarchyDropHint::Into;
+		}
+		const float topBand = rect.Min.y + height * 0.25f;
+		const float bottomBand = rect.Max.y - height * 0.25f;
+		if (y < topBand) {
+			return HierarchyDropHint::Before;
+		}
+		if (y > bottomBand) {
+			return HierarchyDropHint::After;
+		}
+		return HierarchyDropHint::Into;
+	}
+
+	void SceneHierarchyWidget::DrawDropHintIndicator(const HierarchyDropHint hint) {
+		const ImRect rect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+		ImDrawList* const drawList = ImGui::GetForegroundDrawList();
+		const ImU32 color = ImGui::GetColorU32(ImGuiCol_DragDropTarget);
+		if (hint == HierarchyDropHint::Before) {
+			drawList->AddLine(ImVec2(rect.Min.x, rect.Min.y), ImVec2(rect.Max.x, rect.Min.y), color, 2.f);
+		}
+		else if (hint == HierarchyDropHint::After) {
+			drawList->AddLine(ImVec2(rect.Min.x, rect.Max.y), ImVec2(rect.Max.x, rect.Max.y), color, 2.f);
+		}
+	}
+
+	void SceneHierarchyWidget::DrawDropIntoHighlightForItem() {
+		const ImRect itemRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+		ImDrawList* const drawList = ImGui::GetForegroundDrawList();
+		const ImU32 fillColor = ImGui::GetColorU32(ImGuiCol_DragDropTarget, 0.35f);
+		const ImU32 borderColor = ImGui::GetColorU32(ImGuiCol_DragDropTarget);
+		drawList->AddRectFilled(itemRect.Min, itemRect.Max, fillColor);
+		drawList->AddRect(itemRect.Min, itemRect.Max, borderColor, 0.f, 0, 2.f);
+	}
+
+	std::optional<std::pair<std::shared_ptr<SceneNode>, std::size_t>> SceneHierarchyWidget::TryResolveDropTarget(
+	    const HierarchyDropHint hint, SceneNode& target, const std::vector<std::shared_ptr<SceneNode>>& draggedNodes) {
+		if (draggedNodes.empty()) {
+			return std::nullopt;
+		}
+
+		const auto targetPtr = target.shared_from_this();
+		for (const auto& dragged : draggedNodes) {
+			if (!dragged) {
+				return std::nullopt;
+			}
+			if (dragged.get() == &target || EditorCommands::IsNodeInSubtree(targetPtr, dragged)) {
+				return std::nullopt;
+			}
+		}
+
+		switch (hint) {
+		case HierarchyDropHint::Before: {
+			const auto parent = target.GetParent();
+			if (!parent) {
+				return std::nullopt;
+			}
+			const auto& children = parent->GetChildren();
+			const auto it = std::find(children.begin(), children.end(), targetPtr);
+			if (it == children.end()) {
+				return std::nullopt;
+			}
+			return std::pair{parent, static_cast<std::size_t>(std::distance(children.begin(), it))};
+		}
+		case HierarchyDropHint::After: {
+			const auto parent = target.GetParent();
+			if (!parent) {
+				return std::nullopt;
+			}
+			const auto& children = parent->GetChildren();
+			const auto it = std::find(children.begin(), children.end(), targetPtr);
+			if (it == children.end()) {
+				return std::nullopt;
+			}
+			return std::pair{parent, static_cast<std::size_t>(std::distance(children.begin(), it)) + 1};
+		}
+		case HierarchyDropHint::Into:
+			return std::pair{targetPtr, target.GetChildren().size()};
+		}
+		return std::nullopt;
+	}
+
+	void SceneHierarchyWidget::HandleHierarchyDrop(SceneNode& target, SceneNode& dragSource) {
+		const auto draggedNodes = ResolveDraggedNodes(dragSource);
+		const auto hint = ReadDropHintFromItem();
+		const auto dropTarget = TryResolveDropTarget(hint, target, draggedNodes);
+		if (!dropTarget) {
+			return;
+		}
+		(void)Editor::GetInstance().MoveNodesInHierarchy(draggedNodes, dropTarget->first, dropTarget->second);
+	}
+
 	void SceneHierarchyWidget::DrawNode(SceneNode& node, const char* emptyNamePlaceholder, int depth) {
 		const std::string& name = node.GetName();
 		const char* displayCStr = name.empty() ? emptyNamePlaceholder : name.c_str();
@@ -225,22 +356,72 @@ namespace Engine {
 		}
 
 		const bool isOpen = ImGui::TreeNodeEx("##hierarchy_node", nodeFlags, "%s", displayCStr);
-		if (ImGui::IsItemClicked()) {
-			auto clickedNode = node.shared_from_this();
-			if (ImGui::GetIO().KeyShift) {
-				std::vector<std::shared_ptr<SceneNode>> treeOrder;
-				auto scene = Engine::MainContext::GetInstance().GetScene();
-				auto root = scene ? scene->GetRoot() : nullptr;
-				if (root) {
-					BuildTreeOrder(*root, treeOrder);
-				}
-				SelectRangeTo(std::move(clickedNode), treeOrder);
-			}
-			else if (ImGui::GetIO().KeyCtrl) {
-				ToggleSelection(std::move(clickedNode));
+
+		const bool canDrag = node.GetParent() != nullptr;
+		if (canDrag && ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
+			SceneNode* const dragSource = &node;
+			ImGui::SetDragDropPayload(kHierarchyNodeDragPayloadType, &dragSource, sizeof(dragSource));
+			const auto draggedNodes = ResolveDraggedNodes(node);
+			if (draggedNodes.size() > 1) {
+				ImGui::TextUnformatted("Move nodes");
+				ImGui::Text("%zu nodes", draggedNodes.size());
 			}
 			else {
-				Select(std::move(clickedNode));
+				ImGui::Text("Move %s", displayCStr);
+			}
+			ImGui::EndDragDropSource();
+		}
+
+		if (ImGui::BeginDragDropTarget()) {
+			constexpr ImGuiDragDropFlags acceptFlags =
+			    ImGuiDragDropFlags_AcceptBeforeDelivery | ImGuiDragDropFlags_AcceptNoDrawDefaultRect;
+			if (const ImGuiPayload* const payload =
+			        ImGui::AcceptDragDropPayload(kHierarchyNodeDragPayloadType, acceptFlags)) {
+				if (payload->DataSize == sizeof(SceneNode*)) {
+					auto* const dragSource = *static_cast<SceneNode* const*>(payload->Data);
+					if (dragSource != nullptr) {
+						const auto hint = ReadDropHintFromItem();
+						const auto draggedNodes = ResolveDraggedNodes(*dragSource);
+						if (TryResolveDropTarget(hint, node, draggedNodes)) {
+							if (hint == HierarchyDropHint::Into) {
+								DrawDropIntoHighlightForItem();
+							}
+							else {
+								DrawDropHintIndicator(hint);
+							}
+						}
+						if (payload->IsDelivery()) {
+							HandleHierarchyDrop(node, *dragSource);
+						}
+					}
+				}
+			}
+			ImGui::EndDragDropTarget();
+		}
+
+		if (ImGui::IsItemClicked()) {
+			const ImGuiIO& io = ImGui::GetIO();
+			constexpr float kClickDragThresholdSqr = 4.f;
+			if (io.MouseDragMaxDistanceSqr[0] <= kClickDragThresholdSqr) {
+				auto clickedNode = node.shared_from_this();
+				if (io.KeyShift) {
+					std::vector<std::shared_ptr<SceneNode>> treeOrder;
+					auto scene = Engine::MainContext::GetInstance().GetScene();
+					auto root = scene ? scene->GetRoot() : nullptr;
+					if (root) {
+						BuildTreeOrder(*root, treeOrder);
+					}
+					SelectRangeTo(std::move(clickedNode), treeOrder);
+				}
+				else if (io.KeyCtrl) {
+					ToggleSelection(std::move(clickedNode));
+				}
+				else if (!isSelected) {
+					Select(std::move(clickedNode));
+				}
+				else {
+					_selectionAnchor = clickedNode;
+				}
 			}
 		}
 
