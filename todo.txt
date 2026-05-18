@@ -26,3 +26,9 @@ propery animator
 
 move tool multiselect, синхронное перемещение нескольких нод
 
+! пофиксить баги с загрузкой
+
+@valuesProvider(allowCustom, allowEmpty)
+
+добавить texture в Shapes
+
