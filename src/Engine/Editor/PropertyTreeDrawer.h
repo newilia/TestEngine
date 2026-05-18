@@ -2,6 +2,7 @@
 
 #include "Engine/Core/PropertyTree.h"
 
+#include <array>
 #include <functional>
 #include <memory>
 
@@ -30,6 +31,7 @@ namespace Engine {
 
 	private:
 		void DrawNode(const PropertyNode& node, PropertyTreeDrawOptions drawOptions) const;
+		mutable std::array<char, 128> _valuesProviderComboFilter{};
 	};
 
 } // namespace Engine

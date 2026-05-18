@@ -16,12 +16,14 @@
 
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <variant>
 #include <vector>
 
@@ -109,6 +111,68 @@ namespace Engine {
 				v = std::min(v, static_cast<int>(*meta.maxElementCount));
 			}
 			return v;
+		}
+
+		bool AsciiContainsCaseInsensitive(std::string_view haystack, std::string_view needle) {
+			if (needle.empty()) {
+				return true;
+			}
+			if (needle.size() > haystack.size()) {
+				return false;
+			}
+			const auto lower = [](unsigned char c) {
+				return static_cast<char>(std::tolower(c));
+			};
+			for (std::size_t i = 0; i + needle.size() <= haystack.size(); ++i) {
+				bool match = true;
+				for (std::size_t j = 0; j < needle.size(); ++j) {
+					if (lower(static_cast<unsigned char>(haystack[i + j])) !=
+					    lower(static_cast<unsigned char>(needle[j]))) {
+						match = false;
+						break;
+					}
+				}
+				if (match) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		bool DrawFilteredValuesProviderCombo(std::array<char, 128>& filter, const char* preview, int& selectedIndex,
+		    const std::vector<const char*>& labels) {
+			if (!ImGui::BeginCombo("##v", preview)) {
+				return false;
+			}
+			if (ImGui::IsWindowAppearing()) {
+				ImGui::SetKeyboardFocusHere();
+			}
+			ImGui::SetNextItemWidth(-FLT_MIN);
+			(void)ImGui::InputTextWithHint("##values_provider_filter", "Filter...", filter.data(), filter.size());
+			int visibleCount = 0;
+			bool changed = false;
+			for (int i = 0; i < static_cast<int>(labels.size()); ++i) {
+				if (!AsciiContainsCaseInsensitive(labels[static_cast<std::size_t>(i)], filter.data())) {
+					continue;
+				}
+				++visibleCount;
+				const bool isSelected = (selectedIndex == i);
+				if (ImGui::Selectable(labels[static_cast<std::size_t>(i)], isSelected)) {
+					selectedIndex = i;
+					changed = true;
+				}
+				if (isSelected) {
+					ImGui::SetItemDefaultFocus();
+				}
+			}
+			if (visibleCount == 0) {
+				ImGui::TextDisabled("No matches");
+			}
+			ImGui::EndCombo();
+			if (changed || ImGui::IsItemDeactivated()) {
+				filter[0] = '\0';
+			}
+			return changed;
 		}
 
 		void MarkLeafEditedIfMixed(const PropertyNode& node, const PropertyTreeDrawOptions& options) {
@@ -411,7 +475,8 @@ namespace Engine {
 					}
 					else {
 						PushMixedFlagIfNeeded(n.meta);
-						if (ImGui::Combo("##v", &idx, labels.data(), static_cast<int>(labels.size()))) {
+						if (DrawFilteredValuesProviderCombo(
+						        _valuesProviderComboFilter, labels[static_cast<std::size_t>(idx)], idx, labels)) {
 							a->set(storage[static_cast<std::size_t>(idx)]);
 							MarkLeafEditedIfMixed(n, drawOptions);
 						}
@@ -475,7 +540,8 @@ namespace Engine {
 					}
 					else {
 						PushMixedFlagIfNeeded(n.meta);
-						if (ImGui::Combo("##v", &idx, labels.data(), static_cast<int>(labels.size()))) {
+						if (DrawFilteredValuesProviderCombo(
+						        _valuesProviderComboFilter, labels[static_cast<std::size_t>(idx)], idx, labels)) {
 							a->set(storage[static_cast<std::size_t>(idx)]);
 							MarkLeafEditedIfMixed(n, drawOptions);
 						}
@@ -539,7 +605,8 @@ namespace Engine {
 					}
 					else {
 						PushMixedFlagIfNeeded(n.meta);
-						if (ImGui::Combo("##v", &idx, labels.data(), static_cast<int>(labels.size()))) {
+						if (DrawFilteredValuesProviderCombo(
+						        _valuesProviderComboFilter, labels[static_cast<std::size_t>(idx)], idx, labels)) {
 							a->set(storage[static_cast<std::size_t>(idx)]);
 							MarkLeafEditedIfMixed(n, drawOptions);
 						}
@@ -610,7 +677,8 @@ namespace Engine {
 					}
 					else {
 						PushMixedFlagIfNeeded(n.meta);
-						if (ImGui::Combo("##v", &idx, labels.data(), static_cast<int>(labels.size()))) {
+						if (DrawFilteredValuesProviderCombo(
+						        _valuesProviderComboFilter, labels[static_cast<std::size_t>(idx)], idx, labels)) {
 							a->set(storage[static_cast<std::size_t>(idx)]);
 							MarkLeafEditedIfMixed(n, drawOptions);
 						}
@@ -680,7 +748,8 @@ namespace Engine {
 						}
 						else {
 							PushMixedFlagIfNeeded(n.meta);
-							if (ImGui::Combo("##v", &idx, labels.data(), static_cast<int>(labels.size()))) {
+							if (DrawFilteredValuesProviderCombo(
+							        _valuesProviderComboFilter, labels[static_cast<std::size_t>(idx)], idx, labels)) {
 								a->set(storage[static_cast<std::size_t>(idx)]);
 								MarkLeafEditedIfMixed(n, drawOptions);
 							}
