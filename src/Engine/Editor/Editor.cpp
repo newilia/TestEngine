@@ -9,6 +9,7 @@
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/SceneNodeUtils.h"
 #include "Engine/Core/SfmlWindowUtils.h"
+#include "Engine/Editor/Commands/AddEmptyNodeCommand.h"
 #include "Engine/Editor/Commands/AddSceneEntityBatchCommand.h"
 #include "Engine/Editor/Commands/CutEntityCommand.h"
 #include "Engine/Editor/Commands/CutNodeCommand.h"
@@ -421,6 +422,43 @@ namespace Engine {
 			DeleteNode(node);
 		}
 		return true;
+	}
+
+	bool Editor::AddEmptyChildNode(const std::shared_ptr<SceneNode>& parent) {
+		if (!parent) {
+			return false;
+		}
+		auto node = SceneNode::Create();
+		const std::size_t index = parent->GetChildren().size();
+		const bool executed =
+		    _history.Execute(std::make_unique<EditorCommands::AddEmptyNodeCommand>(parent, index, node));
+		if (executed) {
+			SetSelectedNode(node);
+		}
+		return executed;
+	}
+
+	bool Editor::AddEmptySiblingNode(const std::shared_ptr<SceneNode>& sibling) {
+		if (!sibling) {
+			return false;
+		}
+		const auto parent = sibling->GetParent();
+		if (!parent) {
+			return false;
+		}
+		const auto& children = parent->GetChildren();
+		const auto it = std::find(children.begin(), children.end(), sibling);
+		if (it == children.end()) {
+			return false;
+		}
+		auto node = SceneNode::Create();
+		const std::size_t index = static_cast<std::size_t>(std::distance(children.begin(), it)) + 1;
+		const bool executed =
+		    _history.Execute(std::make_unique<EditorCommands::AddEmptyNodeCommand>(parent, index, node));
+		if (executed) {
+			SetSelectedNode(node);
+		}
+		return executed;
 	}
 
 	bool Editor::DeleteNode(const std::shared_ptr<SceneNode>& node) {
