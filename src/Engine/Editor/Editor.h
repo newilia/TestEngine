@@ -99,6 +99,7 @@ namespace Engine {
 
 		void DrawLayout();
 		void DrawSaveDocumentKindModal();
+		bool NewScene();
 		bool LoadScene();
 		bool SaveScene();
 		bool SaveSceneAs();

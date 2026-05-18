@@ -25,6 +25,7 @@
 #include "Engine/Editor/NativeFileDialog.h"
 #include "Engine/Serialization/SceneDocumentSerializer.h"
 #include "Engine/Serialization/SceneEntityRegistry.h"
+#include "Engine/Serialization/SceneSettings/SceneSettingsRegistry.h"
 #include "Engine/Sorting/SortingStrategy.h"
 #include "Engine/Visual/Visual.h"
 
@@ -172,6 +173,9 @@ namespace Engine {
 
 		if (ImGui::BeginMainMenuBar()) {
 			if (ImGui::BeginMenu("File")) {
+				if (ImGui::MenuItem("New", "Ctrl+N")) {
+					(void)NewScene();
+				}
 				if (ImGui::MenuItem("Open", "Ctrl+O")) {
 					(void)LoadScene();
 				}
@@ -734,6 +738,10 @@ namespace Engine {
 				(void)SaveSceneAs();
 				return;
 			}
+			if (e.control && !e.shift && e.code == sf::Keyboard::Key::N) {
+				(void)NewScene();
+				return;
+			}
 			if (e.control && !e.shift && e.code == sf::Keyboard::Key::O) {
 				(void)LoadScene();
 				return;
@@ -972,6 +980,16 @@ namespace Engine {
 			ShowSerializationErrorDialog("Save prefab", saveResult);
 			return false;
 		}
+		return true;
+	}
+
+	bool Editor::NewScene() {
+		Serialization::SceneSettingsRegistry::GetInstance().ApplyAllDefaults();
+		const auto scene = std::make_shared<Scene>();
+		MainContext::GetInstance().SetScene(scene);
+		ClearNodeSelection();
+		_history = EditorHistory{};
+		SetCurrentDocument(std::nullopt, Serialization::SceneDocumentKind::Scene);
 		return true;
 	}
 
