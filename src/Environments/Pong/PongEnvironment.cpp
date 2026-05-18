@@ -239,8 +239,8 @@ void PongEnvironment::AddAiPlatform(Scene* scene) {
 	constexpr float velFactor = 50.f;
 	const sf::Vector2f maxSpeed = {3000.f, 1000.f};
 
-	aiBehaviour->_velLimit = maxSpeed;
-	aiBehaviour->_speedFactor = velFactor;
+	aiBehaviour->SetVelLimit(maxSpeed);
+	aiBehaviour->SetSpeedFactor(velFactor);
 	aiBehaviour->SetObservePeriod(sf::milliseconds(10));
 	aiBehaviour->SetReactionDelay(sf::milliseconds(100));
 
