@@ -948,7 +948,8 @@ namespace Engine {
 		if (addableCount == 0) {
 			ImGui::BeginDisabled();
 		}
-		if (ImGui::BeginCombo("##add_scene_entity_combo", preview)) {
+		const bool comboOpen = ImGui::BeginCombo("##add_scene_entity_combo", preview);
+		if (comboOpen) {
 			if (ImGui::IsWindowAppearing()) {
 				ImGui::SetKeyboardFocusHere();
 			}
@@ -973,6 +974,10 @@ namespace Engine {
 			}
 			ImGui::EndCombo();
 		}
+		if (_addComponentComboWasOpen && !comboOpen) {
+			_addComponentFilter[0] = '\0';
+		}
+		_addComponentComboWasOpen = comboOpen;
 		if (addableCount == 0) {
 			ImGui::EndDisabled();
 		}
