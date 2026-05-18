@@ -21,6 +21,7 @@
 #include "Engine/Editor/Commands/PasteNodeCommand.h"
 #include "Engine/Editor/EditorVisualTheme.h"
 #include "Engine/Editor/ImGui/Themes.h"
+#include "Engine/Editor/ImGuiUtils.h"
 #include "Engine/Editor/NativeFileDialog.h"
 #include "Engine/Serialization/SceneDocumentSerializer.h"
 #include "Engine/Serialization/SceneEntityRegistry.h"
@@ -1017,7 +1018,7 @@ namespace Engine {
 
 	void Editor::OnMouseWheelScrolled(const sf::Event::MouseWheelScrolled& e) {
 		if (e.wheel == sf::Mouse::Wheel::Vertical) {
-			if (!ImGui::GetIO().WantCaptureMouse) {
+			if (ImGuiUtils::ShouldAllowCameraWheelZoom()) {
 				auto& mainContext = MainContext::GetInstance();
 				if (auto* window = mainContext.GetMainWindow()) {
 					const auto zoomFactor = 1.f - e.delta * 0.15f;
