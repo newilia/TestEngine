@@ -1,6 +1,7 @@
 #include "Engine/Editor/Tools/CircleTool.h"
 
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
+#include "Engine/Core/ColorUtils.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/MathUtils.h"
 #include "Engine/Core/SceneNode.h"
@@ -62,6 +63,11 @@ void CircleTool::FinalizeStroke() {
 	node->SetName("Circle");
 	auto visual = std::make_shared<CircleShapeVisual>();
 	visual->SetRadius(radius);
+	const Utils::HsvShapeColors colors = Utils::RandomHsvShapeColors();
+	visual->SetFillColor(colors.fill);
+	visual->SetOutlineColor(colors.outline);
+	visual->SetOutlineThickness(-1.f);
+	visual->SetSectorColor(colors.outline);
 	node->SetVisual(std::move(visual));
 	Utils::SetLocalPosToWorld(node, _startWorld);
 	if (_isAttachPhysicsBody) {
