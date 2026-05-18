@@ -11,6 +11,7 @@
 #include "Engine/Editor/Commands/AddSceneEntityBatchCommand.h"
 #include "Engine/Editor/Commands/CutEntityCommand.h"
 #include "Engine/Editor/Commands/CutNodeCommand.h"
+#include "Engine/Editor/Commands/DeleteEntityBatchCommand.h"
 #include "Engine/Editor/Commands/DeleteEntityCommand.h"
 #include "Engine/Editor/Commands/DeleteNodeCommand.h"
 #include "Engine/Editor/Commands/PasteEntityCommand.h"
@@ -37,6 +38,7 @@
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <typeindex>
 #include <unordered_set>
 #include <vector>
 
@@ -76,6 +78,28 @@ namespace {
 			return std::nullopt;
 		}
 		return std::nullopt;
+	}
+
+	[[nodiscard]] std::shared_ptr<EntityOnNode> FindDeletableEntityOnNode(const std::shared_ptr<SceneNode>& node,
+	    Engine::EntitySlot slot, const std::optional<std::type_index>& behaviourType) {
+		if (!node || slot == Engine::EntitySlot::Transform) {
+			return nullptr;
+		}
+		if (slot == Engine::EntitySlot::Visual) {
+			return std::static_pointer_cast<EntityOnNode>(node->GetVisual());
+		}
+		if (slot == Engine::EntitySlot::SortingStrategy) {
+			return std::static_pointer_cast<EntityOnNode>(node->GetSortingStrategy());
+		}
+		if (slot != Engine::EntitySlot::Behaviour || !behaviourType) {
+			return nullptr;
+		}
+		for (const auto& behaviour : node->GetBehaviours()) {
+			if (behaviour && std::type_index(typeid(*behaviour)) == *behaviourType) {
+				return behaviour;
+			}
+		}
+		return nullptr;
 	}
 } // namespace
 
@@ -387,6 +411,36 @@ namespace Engine {
 			return false;
 		}
 		return _history.Execute(std::make_unique<EditorCommands::DeleteEntityCommand>(node, entity, slot));
+	}
+
+	bool Editor::DeleteEntitiesFromNodes(const std::vector<std::shared_ptr<SceneNode>>& nodes, EntitySlot slot,
+	    std::optional<std::type_index> behaviourType) {
+		if (slot == EntitySlot::Transform) {
+			return false;
+		}
+		if (slot == EntitySlot::Behaviour && !behaviourType) {
+			return false;
+		}
+		std::vector<EditorCommands::DeleteEntityBatchCommand::Entry> entries;
+		entries.reserve(nodes.size());
+		for (const auto& node : nodes) {
+			if (!node) {
+				continue;
+			}
+			const auto entity = FindDeletableEntityOnNode(node, slot, behaviourType);
+			if (!entity) {
+				return false;
+			}
+			EditorCommands::DeleteEntityBatchCommand::Entry entry;
+			entry.node = node;
+			entry.entity = entity;
+			entry.slot = slot;
+			entries.push_back(std::move(entry));
+		}
+		if (entries.empty()) {
+			return false;
+		}
+		return _history.Execute(std::make_unique<EditorCommands::DeleteEntityBatchCommand>(std::move(entries)));
 	}
 
 	bool Editor::CopyEntity(const std::shared_ptr<EntityOnNode>& entity, EntitySlot slot) {

@@ -515,16 +515,33 @@ namespace {
 		mergeState.commonBehaviourTitles = FindCommonBehaviourTypes(validNodes);
 	}
 
+	struct MultiEntityDeleteContext
+	{
+		Engine::EntitySlot slot = Engine::EntitySlot::Behaviour;
+		const std::vector<std::shared_ptr<SceneNode>>* nodes = nullptr;
+		std::optional<std::type_index> behaviourType;
+	};
+
 	void DrawMergedProviderBlockCached(Engine::EditorVisualTheme::InspectorSectionHeaderStyle sectionStyle,
 	    const char* title, const std::vector<Engine::IPropertiesProvider*>& inspectables,
 	    const Engine::PropertyTreeDrawer& drawer, std::optional<Engine::PropertyTree>& mergedCache,
-	    std::function<void()> onPropertyEdited = nullptr) {
+	    std::function<void()> onPropertyEdited = nullptr, const MultiEntityDeleteContext* deleteContext = nullptr) {
 		if (inspectables.empty()) {
 			return;
 		}
 		Engine::EditorVisualTheme::PushInspectorSectionHeaderColors(sectionStyle);
 		const bool open = ImGui::CollapsingHeader(title);
 		Engine::EditorVisualTheme::PopInspectorSectionHeaderColors();
+		if (deleteContext && deleteContext->nodes && !deleteContext->nodes->empty() &&
+		    deleteContext->slot != Engine::EntitySlot::Transform) {
+			if (ImGui::BeginPopupContextItem("inspector_reflected_methods", ImGuiPopupFlags_MouseButtonRight)) {
+				if (ImGui::MenuItem("Delete")) {
+					(void)Engine::Editor::GetInstance().DeleteEntitiesFromNodes(
+					    *deleteContext->nodes, deleteContext->slot, deleteContext->behaviourType);
+				}
+				ImGui::EndPopup();
+			}
+		}
 		if (!open) {
 			return;
 		}
@@ -713,8 +730,10 @@ namespace Engine {
 				    return std::static_pointer_cast<EntityOnNode>(node->GetSortingStrategy());
 			    },
 			    "Sorting strategy");
+			const MultiEntityDeleteContext deleteContext{EntitySlot::SortingStrategy, &validNodes, std::nullopt};
 			DrawMergedProviderBlockCached(EditorVisualTheme::InspectorSectionHeaderStyle::SortingStrategy,
-			    sortingTitle.c_str(), sortingProviders, _propertyDrawer, _mergeState.sortingMerged);
+			    sortingTitle.c_str(), sortingProviders, _propertyDrawer, _mergeState.sortingMerged, nullptr,
+			    &deleteContext);
 		}
 
 		bool hasCommonVisual = true;
@@ -735,8 +754,9 @@ namespace Engine {
 				    return std::static_pointer_cast<EntityOnNode>(node->GetVisual());
 			    },
 			    "Visual");
+			const MultiEntityDeleteContext deleteContext{EntitySlot::Visual, &validNodes, std::nullopt};
 			DrawMergedProviderBlockCached(EditorVisualTheme::InspectorSectionHeaderStyle::Visual, visualTitle.c_str(),
-			    visualProviders, _propertyDrawer, _mergeState.visualMerged);
+			    visualProviders, _propertyDrawer, _mergeState.visualMerged, nullptr, &deleteContext);
 		}
 
 		const auto& commonBehaviours = _mergeState.commonBehaviourTitles;
@@ -767,8 +787,9 @@ namespace Engine {
 				continue;
 			}
 			ImGui::PushID(static_cast<int>(type.hash_code() & static_cast<std::size_t>(0x7fffffffU)));
+			const MultiEntityDeleteContext deleteContext{EntitySlot::Behaviour, &validNodes, type};
 			DrawMergedProviderBlockCached(EditorVisualTheme::InspectorSectionHeaderStyle::Behaviour, title.c_str(),
-			    behaviourProviders, _propertyDrawer, _mergeState.behaviourMerged[type]);
+			    behaviourProviders, _propertyDrawer, _mergeState.behaviourMerged[type], nullptr, &deleteContext);
 			ImGui::PopID();
 		}
 	}

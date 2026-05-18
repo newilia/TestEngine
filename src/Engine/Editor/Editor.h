@@ -22,7 +22,9 @@
 
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <string_view>
+#include <typeindex>
 #include <unordered_set>
 #include <vector>
 
@@ -72,6 +74,8 @@ namespace Engine {
 		bool DeleteSelectedNodes();
 		bool DeleteNode(const std::shared_ptr<SceneNode>& node);
 		bool DeleteEntity(const std::shared_ptr<EntityOnNode>& entity, EntitySlot slot);
+		bool DeleteEntitiesFromNodes(const std::vector<std::shared_ptr<SceneNode>>& nodes, EntitySlot slot,
+		    std::optional<std::type_index> behaviourType = std::nullopt);
 		bool CanPasteEntityToSelectedNode() const;
 		bool AddSceneEntityFromRegistry(const std::vector<std::shared_ptr<SceneNode>>& nodes, std::string_view typeId);
 
