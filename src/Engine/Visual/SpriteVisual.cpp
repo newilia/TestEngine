@@ -1,10 +1,14 @@
 #include "Engine/Visual/SpriteVisual.h"
 
+#include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/ShapeHitTestUtils.h"
+#include "Engine/Core/TextureManager.h"
 #include "SpriteVisual.generated.hpp"
 
 #include <SFML/Graphics/Sprite.hpp>
+
+#include <filesystem>
 
 const sf::Sprite* SpriteVisual::GetSprite() const {
 	return _sprite.get();
@@ -42,6 +46,29 @@ sf::FloatRect SpriteVisual::GetGlobalBounds() const {
 
 void SpriteVisual::SetTexture(const sf::Texture& texture) {
 	_sprite = std::make_shared<sf::Sprite>(texture);
+}
+
+const std::string& SpriteVisual::GetTexturePath() const {
+	return _texturePath;
+}
+
+void SpriteVisual::SetTexturePath(std::string path) {
+	_texturePath = std::move(path);
+	_sprite.reset();
+
+	if (_texturePath.empty()) {
+		return;
+	}
+
+	auto tm = Engine::MainContext::GetInstance().GetTextureManager();
+	if (!tm) {
+		return;
+	}
+
+	const std::shared_ptr<sf::Texture> texture = tm->LoadTexture(std::filesystem::path(_texturePath));
+	if (texture) {
+		SetTexture(*texture);
+	}
 }
 
 void SpriteVisual::SetOrigin(const sf::Vector2f& origin) {

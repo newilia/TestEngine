@@ -35,13 +35,7 @@ namespace {
 		return s;
 	}
 
-} // namespace
-
-namespace Editor::ValuesProviders {
-
-	std::vector<std::string> GetBackgroundTextures() {
-		const fs::path root = Engine::ContentRoot();
-		const fs::path dir = root / "resources" / "textures" / "backgrounds";
+	std::vector<std::string> CollectRepoRelativeImagePaths(const fs::path& repoRoot, const fs::path& dir) {
 		std::error_code ec;
 		if (!fs::exists(dir, ec) || !fs::is_directory(dir, ec)) {
 			return {};
@@ -55,7 +49,7 @@ namespace Editor::ValuesProviders {
 			if (!HasImageExtension(it->path())) {
 				continue;
 			}
-			std::string rel = RepoRelativeLower(root, it->path());
+			std::string rel = RepoRelativeLower(repoRoot, it->path());
 			if (!rel.empty()) {
 				out.push_back(std::move(rel));
 			}
@@ -63,6 +57,20 @@ namespace Editor::ValuesProviders {
 		std::sort(out.begin(), out.end());
 		out.erase(std::unique(out.begin(), out.end()), out.end());
 		return out;
+	}
+
+} // namespace
+
+namespace Editor::ValuesProviders {
+
+	std::vector<std::string> GetBackgroundTextures() {
+		const fs::path root = Engine::ContentRoot();
+		return CollectRepoRelativeImagePaths(root, root / "resources" / "textures" / "backgrounds");
+	}
+
+	std::vector<std::string> GetTextures() {
+		const fs::path root = Engine::ContentRoot();
+		return CollectRepoRelativeImagePaths(root, root / "resources" / "textures");
 	}
 
 } // namespace Editor::ValuesProviders

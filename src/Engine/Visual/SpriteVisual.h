@@ -4,6 +4,7 @@
 #include "Engine/Visual/Visual.h"
 
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace sf {
@@ -34,10 +35,17 @@ public:
 
 public:
 	/// @getter
+	/// @valuesProvider(GetTextures)
+	const std::string& GetTexturePath() const;
+	/// @setter
+	void SetTexturePath(std::string path);
+
+	/// @getter
 	sf::Vector2f GetSize() const;
 	/// @setter
 	void SetSize(const sf::Vector2f& size);
 
 private:
+	std::string _texturePath;
 	std::shared_ptr<sf::Sprite> _sprite;
 };
