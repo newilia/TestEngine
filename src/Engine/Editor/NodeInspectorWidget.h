@@ -8,6 +8,7 @@
 #include <string>
 #include <typeindex>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace Engine {
@@ -38,6 +39,8 @@ namespace Engine {
 
 		PropertyTreeDrawer _propertyDrawer{};
 		mutable NodeInspectorMergeState _mergeState{};
+		/// Stable keys (entity slot + type title) — survives selection changes; see `InspectorSectionKey` in `.cpp`.
+		mutable std::unordered_set<std::string> _expandedInspectorSections{};
 	};
 
 } // namespace Engine
