@@ -113,3 +113,10 @@ void EditorToolManager::DrawActiveToolParametersUi() {
 	}
 	_tools[_activeToolIndex].second->DrawToolParametersUi();
 }
+
+std::optional<std::string> EditorToolManager::TryGetActiveToolCursorOverlayText() const {
+	if (_activeToolIndex < 0 || _activeToolIndex >= GetToolCount() || !_tools[_activeToolIndex].second) {
+		return std::nullopt;
+	}
+	return _tools[_activeToolIndex].second->TryGetCursorOverlayText();
+}

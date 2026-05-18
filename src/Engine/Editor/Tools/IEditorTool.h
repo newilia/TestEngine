@@ -3,6 +3,9 @@
 #include <SFML/System/Time.hpp>
 #include <SFML/Window/Event.hpp>
 
+#include <optional>
+#include <string>
+
 namespace sf {
 	class RenderWindow;
 }
@@ -24,4 +27,9 @@ public:
 
 	/// Optional ImGui block in the editor tools "Parameters" section while this tool is active.
 	virtual void DrawToolParametersUi() {}
+
+	/// Optional extra line for the cursor world overlay (e.g. shape size while drawing).
+	[[nodiscard]] virtual std::optional<std::string> TryGetCursorOverlayText() const {
+		return std::nullopt;
+	}
 };

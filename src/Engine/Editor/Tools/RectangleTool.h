@@ -5,6 +5,9 @@
 
 #include <SFML/System/Vector2.hpp>
 
+#include <optional>
+#include <string>
+
 namespace sf {
 	class RenderWindow;
 }
@@ -18,6 +21,7 @@ public:
 	bool ProcessEvent(const sf::Event& event) override;
 	void DrawOverlay(sf::RenderWindow& window) override;
 	void DrawToolParametersUi() override;
+	[[nodiscard]] std::optional<std::string> TryGetCursorOverlayText() const override;
 
 private:
 	void BeginStroke(const sf::Vector2f& world);

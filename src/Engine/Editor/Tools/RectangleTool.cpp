@@ -12,9 +12,11 @@
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/Mouse.hpp>
 
+#include <fmt/format.h>
 #include <imgui.h>
 
 #include <algorithm>
+#include <cmath>
 
 namespace {
 
@@ -147,4 +149,13 @@ void RectangleTool::DrawOverlay(sf::RenderWindow& window) {
 void RectangleTool::DrawToolParametersUi() {
 	ImGui::TextUnformatted("Drag corner to corner");
 	ImGui::Checkbox("Attach physical body behaviour", &_isAttachPhysicsBody);
+}
+
+std::optional<std::string> RectangleTool::TryGetCursorOverlayText() const {
+	if (!_isDrawing) {
+		return std::nullopt;
+	}
+	const float width = std::abs(_cursorWorld.x - _startWorld.x);
+	const float height = std::abs(_cursorWorld.y - _startWorld.y);
+	return fmt::format("Size = {:.1f} x {:.1f}", width, height);
 }

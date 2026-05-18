@@ -288,13 +288,13 @@ namespace Engine {
 
 		const sf::Vector2f world = Utils::MapWindowPixelToWorld(window, pixel);
 		const ImVec2 anchor(static_cast<float>(pixel.x), static_cast<float>(pixel.y));
-		ImGui::SetNextWindowBgAlpha(0.16f);
+		ImGui::SetNextWindowBgAlpha(0.25f);
 		ImGui::SetNextWindowPos(ImVec2(anchor.x + 15.f, anchor.y + 12.f), ImGuiCond_Always);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(3.f, 1.f));
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 2.f);
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.9f, 0.92f, 0.38f));
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.9f, 0.92f, 0.5f));
 
 		constexpr ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize |
 		                                   ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoSavedSettings |
@@ -302,6 +302,9 @@ namespace Engine {
 		                                   ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus;
 
 		if (ImGui::Begin("##CursorWorldXY", nullptr, flags)) {
+			if (const std::optional<std::string> shapeText = _editorToolManager->TryGetActiveToolCursorOverlayText()) {
+				ImGui::TextUnformatted(shapeText->c_str());
+			}
 			ImGui::Text("%.1f  %.1f", world.x, world.y);
 		}
 		ImGui::End();
