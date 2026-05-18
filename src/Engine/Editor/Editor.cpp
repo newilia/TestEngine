@@ -19,8 +19,8 @@
 #include "Engine/Editor/EditorVisualTheme.h"
 #include "Engine/Editor/ImGui/Themes.h"
 #include "Engine/Editor/NativeFileDialog.h"
+#include "Engine/Serialization/SceneDocumentSerializer.h"
 #include "Engine/Serialization/SceneEntityRegistry.h"
-#include "Engine/Serialization/SceneSerializer.h"
 #include "Engine/Sorting/SortingStrategy.h"
 #include "Engine/Visual/Visual.h"
 
@@ -177,6 +177,7 @@ namespace Engine {
 
 		ImGui::DockSpaceOverViewport(dockspaceId, viewport, ImGuiDockNodeFlags_PassthruCentralNode);
 		TryApplyDefaultEditorDockLayout(dockspaceId, ImGui::GetWindowSize());
+		DrawSaveDocumentKindModal();
 
 		if (ImGui::Begin(kSceneWindowTitle, nullptr, ImGuiWindowFlags_None)) {
 			_sceneHierarchyWidget.Draw(Engine::MainContext::GetInstance().GetScene());
@@ -698,32 +699,93 @@ namespace Engine {
 		}
 	}
 
-	EditorDialogs::SceneFileDialogOptions Editor::MakeSceneFileDialogOptions() const {
-		EditorDialogs::SceneFileDialogOptions opts;
-#ifdef _WIN32
-		if (const sf::RenderWindow* window = MainContext::GetInstance().GetMainWindow()) {
-			opts.parentHwnd = static_cast<HWND>(window->getNativeHandle());
-		}
-#endif
-		opts.initialDirectory = DefaultScenePrefabsDirectory();
-		if (_currentScenePath) {
-			opts.suggestedFileName = *_currentScenePath;
-			opts.initialDirectory = _currentScenePath->parent_path();
-		}
-		else {
-			opts.suggestedFileName = DefaultScenePrefabAbsolutePath();
-		}
-		return opts;
+	const char* Editor::DocumentKindLabel() const {
+		return _documentKind == Serialization::SceneDocumentKind::Prefab ? "Prefab" : "Scene";
 	}
 
-	void Editor::SetCurrentScenePath(std::optional<std::filesystem::path> path) {
+	void Editor::SetCurrentDocument(std::optional<std::filesystem::path> path, Serialization::SceneDocumentKind kind) {
+		_documentKind = kind;
+		_documentKindChosen = true;
 		if (path) {
 			_currentScenePath = ResolveContentPath(*path);
 		}
 		else {
 			_currentScenePath.reset();
 		}
-		MainContext::GetInstance().UpdateMainWindowTitle(_currentScenePath);
+		MainContext::GetInstance().UpdateMainWindowTitle(_currentScenePath, _documentKind);
+	}
+
+	EditorDialogs::SceneFileDialogOptions Editor::MakeSceneFileDialogOptions(
+	    Serialization::SceneDocumentKind kind) const {
+		EditorDialogs::SceneFileDialogOptions opts;
+#ifdef _WIN32
+		if (const sf::RenderWindow* window = MainContext::GetInstance().GetMainWindow()) {
+			opts.parentHwnd = static_cast<HWND>(window->getNativeHandle());
+		}
+#endif
+		if (_currentScenePath && kind == _documentKind) {
+			opts.suggestedFileName = *_currentScenePath;
+			opts.initialDirectory = _currentScenePath->parent_path();
+		}
+		else if (kind == Serialization::SceneDocumentKind::Prefab) {
+			opts.initialDirectory = DefaultScenePrefabsDirectory();
+			opts.suggestedFileName = DefaultScenePrefabAbsolutePath();
+		}
+		else {
+			opts.initialDirectory = DefaultScenesDirectory();
+			opts.suggestedFileName = DefaultSceneAbsolutePath();
+		}
+		return opts;
+	}
+
+	void Editor::DrawSaveDocumentKindModal() {
+		if (!_showSaveDocumentKindModal) {
+			return;
+		}
+		if (!ImGui::IsPopupOpen("Save document kind", ImGuiPopupFlags_None)) {
+			ImGui::OpenPopup("Save document kind");
+		}
+		ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+		if (ImGui::BeginPopupModal(
+		        "Save document kind", &_showSaveDocumentKindModal, ImGuiWindowFlags_AlwaysAutoResize)) {
+			ImGui::TextUnformatted("Choose how to save this document:");
+			ImGui::RadioButton("Scene (hierarchy + world settings)", &_saveKindModalSelection, 0);
+			ImGui::RadioButton("Prefab (hierarchy only)", &_saveKindModalSelection, 1);
+			if (ImGui::Button("OK", ImVec2(120.f, 0.f))) {
+				_documentKind = _saveKindModalSelection == 1 ? Serialization::SceneDocumentKind::Prefab
+				                                             : Serialization::SceneDocumentKind::Scene;
+				_documentKindChosen = true;
+				_showSaveDocumentKindModal = false;
+				ImGui::CloseCurrentPopup();
+				if (_pendingSaveAs || !_currentScenePath) {
+					(void)SaveSceneAs();
+				}
+				else {
+					(void)SaveScene();
+				}
+				_pendingSaveAs = false;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel", ImVec2(120.f, 0.f))) {
+				_showSaveDocumentKindModal = false;
+				_pendingSaveAs = false;
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::EndPopup();
+		}
+	}
+
+	bool Editor::BeginSaveFlow(bool saveAs) {
+		if (_documentKindChosen && (_currentScenePath || saveAs)) {
+			return true;
+		}
+		if (!_documentKindChosen) {
+			_pendingSaveAs = saveAs;
+			_saveKindModalSelection = _documentKind == Serialization::SceneDocumentKind::Prefab ? 1 : 0;
+			_showSaveDocumentKindModal = true;
+			return false;
+		}
+		return true;
 	}
 
 	void Editor::ShowSerializationErrorDialog(
@@ -759,6 +821,9 @@ namespace Engine {
 	}
 
 	bool Editor::SaveScene() {
+		if (!BeginSaveFlow(false)) {
+			return false;
+		}
 		if (!_currentScenePath) {
 			return SaveSceneAs();
 		}
@@ -766,46 +831,76 @@ namespace Engine {
 		if (!scene) {
 			return false;
 		}
-		const auto saveResult = Serialization::SceneSerializer::SaveSceneToFile(*scene, *_currentScenePath);
+		const Serialization::SerializationResult saveResult =
+		    _documentKind == Serialization::SceneDocumentKind::Prefab
+		        ? Serialization::SceneDocumentSerializer::SavePrefabDocument(*scene->GetRoot(), *_currentScenePath)
+		        : Serialization::SceneDocumentSerializer::SaveSceneDocument(*scene, *_currentScenePath);
 		if (!saveResult.isSuccess) {
-			ShowSerializationErrorDialog("Save scene", saveResult);
+			ShowSerializationErrorDialog(fmt::format("Save {}", DocumentKindLabel()), saveResult);
 			return false;
 		}
 		return true;
 	}
 
 	bool Editor::SaveSceneAs() {
+		if (!BeginSaveFlow(true)) {
+			return false;
+		}
 		const auto scene = MainContext::GetInstance().GetScene();
 		if (!scene) {
 			return false;
 		}
-		const auto path = EditorDialogs::PickSceneXmlSave(MakeSceneFileDialogOptions());
+		const auto path = EditorDialogs::PickSceneXmlSave(MakeSceneFileDialogOptions(_documentKind));
 		if (!path) {
 			return false;
 		}
-		const auto saveResult = Serialization::SceneSerializer::SaveSceneToFile(*scene, *path);
+		const Serialization::SerializationResult saveResult =
+		    _documentKind == Serialization::SceneDocumentKind::Prefab
+		        ? Serialization::SceneDocumentSerializer::SavePrefabDocument(*scene->GetRoot(), *path)
+		        : Serialization::SceneDocumentSerializer::SaveSceneDocument(*scene, *path);
 		if (!saveResult.isSuccess) {
-			ShowSerializationErrorDialog("Save scene", saveResult);
+			ShowSerializationErrorDialog(fmt::format("Save {}", DocumentKindLabel()), saveResult);
 			return false;
 		}
-		SetCurrentScenePath(*path);
+		SetCurrentDocument(*path, _documentKind);
+		return true;
+	}
+
+	bool Editor::SaveNodeAsPrefab(const std::shared_ptr<SceneNode>& node) {
+		if (!node) {
+			return false;
+		}
+		EditorDialogs::SceneFileDialogOptions opts =
+		    MakeSceneFileDialogOptions(Serialization::SceneDocumentKind::Prefab);
+		const auto path = EditorDialogs::PickSceneXmlSave(opts);
+		if (!path) {
+			return false;
+		}
+		const Serialization::SerializationResult saveResult =
+		    Serialization::SceneDocumentSerializer::SavePrefabDocument(*node, *path);
+		if (!saveResult.isSuccess) {
+			ShowSerializationErrorDialog("Save prefab", saveResult);
+			return false;
+		}
 		return true;
 	}
 
 	bool Editor::LoadScene() {
-		const auto path = EditorDialogs::PickSceneXmlOpen(MakeSceneFileDialogOptions());
+		const auto path = EditorDialogs::PickSceneXmlOpen(
+		    MakeSceneFileDialogOptions(_documentKindChosen ? _documentKind : Serialization::SceneDocumentKind::Scene));
 		if (!path) {
 			return false;
 		}
-		auto [loadedScene, loadResult] = Serialization::SceneSerializer::LoadSceneFromFile(*path);
-		if (!loadResult.isSuccess || !loadedScene) {
-			ShowSerializationErrorDialog("Load scene", loadResult);
+		Serialization::SceneDocumentLoadResult loaded =
+		    Serialization::SceneDocumentSerializer::LoadDocumentFromFile(*path);
+		if (!loaded.result.isSuccess || !loaded.scene) {
+			ShowSerializationErrorDialog("Load document", loaded.result);
 			return false;
 		}
-		MainContext::GetInstance().SetScene(loadedScene);
+		MainContext::GetInstance().SetScene(loaded.scene);
 		ClearNodeSelection();
 		_history = EditorHistory{};
-		SetCurrentScenePath(*path);
+		SetCurrentDocument(*path, loaded.kind);
 		return true;
 	}
 

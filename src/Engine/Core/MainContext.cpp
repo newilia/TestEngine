@@ -4,6 +4,7 @@
 #include "Engine/Core/FontManager.h"
 #include "Engine/Core/TextureManager.h"
 #include "Engine/Core/Utils.h"
+#include "Engine/Serialization/SceneDocumentSerializer.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 
 #include <fmt/format.h>
@@ -181,13 +182,25 @@ namespace Engine {
 		return _mainWindow;
 	}
 
-	void MainContext::UpdateMainWindowTitle(const std::optional<std::filesystem::path>& sceneFilePath) {
+	void MainContext::UpdateMainWindowTitle(const std::optional<std::filesystem::path>& documentFilePath,
+	    std::optional<Serialization::SceneDocumentKind> documentKind) {
 		if (!_mainWindow) {
 			return;
 		}
-		const std::string composed =
-		    sceneFilePath ? fmt::format("{} - {}", _mainWindowBaseTitleUtf8, sceneFilePath->generic_string())
-		                  : _mainWindowBaseTitleUtf8;
+		std::string composed = _mainWindowBaseTitleUtf8;
+		if (documentKind) {
+			const char* kindLabel = *documentKind == Serialization::SceneDocumentKind::Prefab ? "Prefab" : "Scene";
+			if (documentFilePath) {
+				composed = fmt::format(
+				    "{} - [{}] {}", _mainWindowBaseTitleUtf8, kindLabel, documentFilePath->generic_string());
+			}
+			else {
+				composed = fmt::format("{} - [{}]", _mainWindowBaseTitleUtf8, kindLabel);
+			}
+		}
+		else if (documentFilePath) {
+			composed = fmt::format("{} - {}", _mainWindowBaseTitleUtf8, documentFilePath->generic_string());
+		}
 		_mainWindow->setTitle(sf::String::fromUtf8(composed.begin(), composed.end()));
 	}
 

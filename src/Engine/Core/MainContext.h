@@ -13,6 +13,10 @@ class PhysicsProcessor;
 class FontManager;
 class TextureManager;
 
+namespace Engine::Serialization {
+	enum class SceneDocumentKind;
+}
+
 namespace Engine {
 	class EventsDispatcher;
 
@@ -38,7 +42,8 @@ namespace Engine {
 
 		sf::RenderWindow* GetMainWindow() const;
 
-		void UpdateMainWindowTitle(const std::optional<std::filesystem::path>& sceneFilePath);
+		void UpdateMainWindowTitle(const std::optional<std::filesystem::path>& documentFilePath,
+		    std::optional<Serialization::SceneDocumentKind> documentKind);
 
 		float GetSimSpeedMultiplier() const;
 		void SetSimSpeedMultiplier(float val);
