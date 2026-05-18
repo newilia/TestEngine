@@ -3,8 +3,11 @@
 #include "Engine/Core/Scene.h"
 
 #include <memory>
+#include <optional>
 #include <unordered_map>
 #include <vector>
+
+class SceneNode;
 
 namespace Engine {
 
@@ -26,12 +29,27 @@ namespace Engine {
 		void Draw(const std::shared_ptr<Scene>& scene);
 
 	private:
+		enum class HierarchyDropHint
+		{
+			Before,
+			Into,
+			After
+		};
+
 		void PruneExpiredSelection();
 		bool ContainsNode(const SceneNode& node) const;
 		void DrawNode(SceneNode& node, const char* emptyNamePlaceholder, int depth);
 		void BuildTreeOrder(SceneNode& node, std::vector<std::shared_ptr<SceneNode>>& treeOrder) const;
 		void RemoveFromSelectionOrder(const SceneNode& node);
 		void RebuildSelectionMapFromOrder();
+
+		[[nodiscard]] std::vector<std::shared_ptr<SceneNode>> ResolveDraggedNodes(SceneNode& source) const;
+		[[nodiscard]] static HierarchyDropHint ReadDropHintFromItem();
+		static void DrawDropHintIndicator(HierarchyDropHint hint);
+		static void DrawDropIntoHighlightForItem();
+		[[nodiscard]] static std::optional<std::pair<std::shared_ptr<SceneNode>, std::size_t>> TryResolveDropTarget(
+		    HierarchyDropHint hint, SceneNode& target, const std::vector<std::shared_ptr<SceneNode>>& draggedNodes);
+		void HandleHierarchyDrop(SceneNode& target, SceneNode& dragSource);
 
 		std::vector<std::weak_ptr<SceneNode>> _selectionOrder;
 		std::unordered_map<const SceneNode*, std::weak_ptr<SceneNode>> _selectionByRawPtr;

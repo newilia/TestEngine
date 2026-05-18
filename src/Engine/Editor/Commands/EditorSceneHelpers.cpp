@@ -22,4 +22,16 @@ namespace Engine::EditorCommands {
 		return current.get() == activeRoot.get();
 	}
 
+	bool IsNodeInSubtree(const std::shared_ptr<SceneNode>& candidate, const std::shared_ptr<SceneNode>& treeRoot) {
+		if (!treeRoot || !candidate) {
+			return false;
+		}
+		for (auto cur = candidate; cur; cur = cur->GetParent()) {
+			if (cur == treeRoot) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 } // namespace Engine::EditorCommands
