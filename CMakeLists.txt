@@ -98,6 +98,8 @@ target_include_directories(
 		${CMAKE_CURRENT_SOURCE_DIR}/src/Codegen
 )
 
+target_precompile_headers(TestEngine PRIVATE <pch.h>)
+
 set(TE_GLOBALS_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/src/TestEngineGlobals.h")
 if(MSVC)
 	target_compile_options(TestEngine PRIVATE "/FI\"${TE_GLOBALS_HEADER}\"")
