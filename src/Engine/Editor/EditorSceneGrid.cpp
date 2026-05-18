@@ -138,12 +138,12 @@ namespace Engine {
 		return _basis;
 	}
 
-	void EditorSceneGrid::SetSize(int size) {
-		_size = std::clamp(size, kMinSize, kMaxSize);
+	int& EditorSceneGrid::SizeMutable() {
+		return _size;
 	}
 
-	void EditorSceneGrid::SetBasis(int basis) {
-		_basis = std::clamp(basis, kMinBasis, kMaxBasis);
+	int& EditorSceneGrid::BasisMutable() {
+		return _basis;
 	}
 
 	float EditorSceneGrid::GetFinestStep() const {

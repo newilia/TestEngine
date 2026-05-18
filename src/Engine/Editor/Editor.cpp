@@ -187,18 +187,13 @@ namespace Engine {
 				ImGui::MenuItem("Show Grid", "Ctrl+G", &grid.VisibleMutable());
 				ImGui::MenuItem("Snap to Grid", "Ctrl+Shift+G", &grid.SnapEnabledMutable());
 				ImGui::Separator();
-				int gridSize = grid.GetSize();
-				int gridBasis = grid.GetBasis();
 				constexpr float kSliderWidth = 180.f;
 				ImGui::SetNextItemWidth(kSliderWidth);
-				if (ImGui::SliderInt("Grid Size", &gridSize, EditorSceneGrid::kMinSize, EditorSceneGrid::kMaxSize)) {
-					grid.SetSize(gridSize);
-				}
+				ImGui::SliderInt(
+				    "Grid Size", &grid.SizeMutable(), EditorSceneGrid::kMinSize, EditorSceneGrid::kMaxSize);
 				ImGui::SetNextItemWidth(kSliderWidth);
-				if (ImGui::SliderInt(
-				        "Grid Basis", &gridBasis, EditorSceneGrid::kMinBasis, EditorSceneGrid::kMaxBasis)) {
-					grid.SetBasis(gridBasis);
-				}
+				ImGui::SliderInt(
+				    "Grid Basis", &grid.BasisMutable(), EditorSceneGrid::kMinBasis, EditorSceneGrid::kMaxBasis);
 				ImGui::EndMenu();
 			}
 			ImGui::EndMainMenuBar();
