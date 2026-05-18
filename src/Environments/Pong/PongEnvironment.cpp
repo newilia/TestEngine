@@ -214,8 +214,8 @@ void PongEnvironment::AddUserPlatform(Scene* scene) {
 
 	auto userBehaviour = std::make_shared<UserPlatformControllerBehaviour>();
 	platformNode->AddBehaviour(userBehaviour);
-	userBehaviour->_velLimit = maxSpeed;
-	userBehaviour->_speedFactor = velFactor;
+	userBehaviour->SetVelLimit(maxSpeed);
+	userBehaviour->SetSpeedFactor(velFactor);
 
 	scene->GetRoot()->AddChild(platformNode);
 

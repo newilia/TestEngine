@@ -10,6 +10,22 @@ void UserPlatformControllerBehaviour::SetMovementBounds(std::weak_ptr<SceneNode>
 	_movementBounds = std::move(movementRegionRect);
 }
 
+float UserPlatformControllerBehaviour::GetSpeedFactor() const {
+	return _speedFactor;
+}
+
+void UserPlatformControllerBehaviour::SetSpeedFactor(float speedFactor) {
+	_speedFactor = speedFactor;
+}
+
+sf::Vector2f UserPlatformControllerBehaviour::GetVelLimit() const {
+	return _velLimit;
+}
+
+void UserPlatformControllerBehaviour::SetVelLimit(sf::Vector2f velLimit) {
+	_velLimit = velLimit;
+}
+
 void UserPlatformControllerBehaviour::OnInit() {
 	ResyncSpawnFromNode();
 	EventHandlerBehaviourBase::OnInit();
