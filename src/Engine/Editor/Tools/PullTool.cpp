@@ -20,7 +20,7 @@ namespace {
 	constexpr float kBasePullStrength = 100000.f;
 } // namespace
 
-PullTool::PullTool(SelectTool::SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
+PullTool::PullTool(EditorNodePick::SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
 
 void PullTool::SetPullForceScale(float v) {
 	_pullForceScale = v;

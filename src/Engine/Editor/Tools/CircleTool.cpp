@@ -8,6 +8,7 @@
 #include "Engine/Core/SceneNodeUtils.h"
 #include "Engine/Core/SfmlWindowUtils.h"
 #include "Engine/Editor/Editor.h"
+#include "Engine/Editor/EditorNodePick.h"
 #include "Engine/Visual/CircleShapeVisual.h"
 
 #include <SFML/Graphics/RenderWindow.hpp>
@@ -35,7 +36,7 @@ namespace {
 
 } // namespace
 
-CircleTool::CircleTool(SelectTool::SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
+CircleTool::CircleTool(EditorNodePick::SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
 
 void CircleTool::BeginStroke(const sf::Vector2f& world) {
 	_isDrawing = true;
@@ -85,19 +86,6 @@ void CircleTool::EndStroke() {
 }
 
 bool CircleTool::ProcessEvent(const sf::Event& event) {
-	if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
-		if (pressed->button == sf::Mouse::Button::Left) {
-			BeginStroke(ToWorldPixel(pressed->position));
-			return true;
-		}
-	}
-	if (const auto* touch = event.getIf<sf::Event::TouchBegan>()) {
-		if (touch->finger == 0) {
-			BeginStroke(ToWorldPixel(touch->position));
-			return true;
-		}
-	}
-
 	if (_isDrawing) {
 		if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
 			_cursorWorld = SnapWorld(ToWorldPixel(moved->position));
@@ -125,7 +113,14 @@ bool CircleTool::ProcessEvent(const sf::Event& event) {
 		}
 	}
 
-	return false;
+	return _strokeGate.ProcessEvent(
+	    event,
+	    [this](const sf::Vector2f world, const sf::Vector2i /*pixel*/) {
+		    BeginStroke(world);
+	    },
+	    [this](const sf::Vector2f world, const sf::Vector2i /*pixel*/, const bool isCtrlPressed) {
+		    EditorNodePick::ApplyHierarchyPickAtWorld(world, isCtrlPressed, _onSelect);
+	    });
 }
 
 void CircleTool::DrawOverlay(sf::RenderWindow& window) {
@@ -143,6 +138,7 @@ void CircleTool::DrawOverlay(sf::RenderWindow& window) {
 }
 
 void CircleTool::DrawToolParametersUi() {
+	ImGui::TextUnformatted("Click selects; drag draws. Ctrl+click toggles.");
 	ImGui::TextUnformatted("Drag center to edge");
 	ImGui::Checkbox("Attach physical body behaviour", &_isAttachPhysicsBody);
 }

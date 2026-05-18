@@ -2,13 +2,12 @@
 
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/Scene.h"
-#include "Engine/Core/SfmlWindowUtils.h"
 #include "Engine/Editor/Editor.h"
+#include "Engine/Editor/EditorNodePick.h"
 
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
-#include <SFML/Window/Keyboard.hpp>
 #include <SFML/Window/Mouse.hpp>
 
 #include <imgui.h>
@@ -18,33 +17,16 @@
 SelectTool::SelectTool(SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
 
 bool SelectTool::ProcessEvent(const sf::Event& event) {
-	auto applyPick = [this](const sf::Vector2f& worldPoint, const bool isCtrlPressed) -> bool {
-		auto scene = Engine::MainContext::GetInstance().GetScene();
-		auto picked = scene ? scene->FindTopMostNodeAtPoint(worldPoint) : nullptr;
-		if (isCtrlPressed && picked) {
-			Engine::Editor::GetInstance().ToggleSelectedNode(std::move(picked));
-		}
-		else {
-			_onSelect(std::move(picked));
-		}
-		return true;
-	};
-
-	auto* window = Engine::MainContext::GetInstance().GetMainWindow();
-	if (!window) {
+	if (!Engine::MainContext::GetInstance().GetMainWindow()) {
 		return false;
 	}
-
-	auto toWorld = [window](const sf::Vector2i pixel) {
-		return Utils::MapWindowPixelToWorld(*window, pixel);
-	};
 
 	if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
 		if (pressed->button == sf::Mouse::Button::Left) {
 			_mousePressed = true;
 			_isMarqueeSelecting = false;
 			_dragStartPixel = pressed->position;
-			_dragStartWorld = toWorld(pressed->position);
+			_dragStartWorld = EditorNodePick::MapWindowPixelToWorld(pressed->position);
 			_dragCurrentWorld = _dragStartWorld;
 			_marqueeMode =
 			    (pressed->position.x >= _dragStartPixel.x) ? MarqueeMode::kIntersects : MarqueeMode::kContains;
@@ -70,14 +52,13 @@ bool SelectTool::ProcessEvent(const sf::Event& event) {
 			if (dragDistance2 >= kDragThresholdPx2) {
 				_isMarqueeSelecting = true;
 			}
-			_dragCurrentWorld = toWorld(moved->position);
+			_dragCurrentWorld = EditorNodePick::MapWindowPixelToWorld(moved->position);
 			_marqueeMode = (moved->position.x >= _dragStartPixel.x) ? MarqueeMode::kIntersects : MarqueeMode::kContains;
 			if (_isMarqueeSelecting) {
 				const Scene::RectSelectionMode mode = (_marqueeMode == MarqueeMode::kContains)
 				                                          ? Scene::RectSelectionMode::kContains
 				                                          : Scene::RectSelectionMode::kIntersects;
-				const bool isCtrlPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LControl) ||
-				                           sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RControl);
+				const bool isCtrlPressed = EditorNodePick::IsMultiSelectModifierPressed();
 				const bool marqueeStateUnchanged =
 				    _lastLiveMarqueeEmitPixel && _lastLiveMarqueeEmitCtrl && _lastLiveMarqueeEmitMode &&
 				    *_lastLiveMarqueeEmitPixel == moved->position && *_lastLiveMarqueeEmitCtrl == isCtrlPressed &&
@@ -97,8 +78,7 @@ bool SelectTool::ProcessEvent(const sf::Event& event) {
 	}
 	if (const auto* released = event.getIf<sf::Event::MouseButtonReleased>()) {
 		if (released->button == sf::Mouse::Button::Left && _mousePressed) {
-			const bool isCtrlPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LControl) ||
-			                           sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RControl);
+			const bool isCtrlPressed = EditorNodePick::IsMultiSelectModifierPressed();
 			if (_isMarqueeSelecting) {
 				auto scene = Engine::MainContext::GetInstance().GetScene();
 				if (scene) {
@@ -111,7 +91,8 @@ bool SelectTool::ProcessEvent(const sf::Event& event) {
 				}
 			}
 			else {
-				(void)applyPick(toWorld(released->position), isCtrlPressed);
+				EditorNodePick::ApplyHierarchyPickAtWorld(
+				    EditorNodePick::MapWindowPixelToWorld(released->position), isCtrlPressed, _onSelect);
 			}
 
 			_mousePressed = false;
@@ -126,7 +107,9 @@ bool SelectTool::ProcessEvent(const sf::Event& event) {
 	}
 	if (const auto* touch = event.getIf<sf::Event::TouchBegan>()) {
 		if (touch->finger == 0) {
-			return applyPick(toWorld(touch->position), false);
+			EditorNodePick::ApplyHierarchyPickAtWorld(
+			    EditorNodePick::MapWindowPixelToWorld(touch->position), false, _onSelect);
+			return true;
 		}
 	}
 	return false;

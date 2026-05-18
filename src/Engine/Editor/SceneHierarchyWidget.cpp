@@ -94,11 +94,7 @@ namespace Engine {
 
 	void SceneHierarchyWidget::Select(std::shared_ptr<SceneNode> node) {
 		PruneExpiredSelection();
-		const SceneNode* const prevPtr = GetSelectedNode().get();
-		const SceneNode* const nextPtr = node.get();
-		if (prevPtr != nextPtr) {
-			_scrollSelectionIntoViewPending = (nextPtr != nullptr);
-		}
+		_scrollSelectionIntoViewPending = (node != nullptr);
 		_selectionOrder.clear();
 		_selectionByRawPtr.clear();
 		if (node) {
@@ -110,6 +106,24 @@ namespace Engine {
 		else {
 			_selectionAnchor.reset();
 		}
+	}
+
+	bool SceneHierarchyWidget::IsOnPathToRevealSelectionTarget(const SceneNode& node) const {
+		if (IsNodeSelected(node)) {
+			return true;
+		}
+		for (const auto& weakNode : _selectionOrder) {
+			const auto selected = weakNode.lock();
+			if (!selected) {
+				continue;
+			}
+			for (auto ancestor = selected->GetParent(); ancestor != nullptr; ancestor = ancestor->GetParent()) {
+				if (ancestor.get() == &node) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	void SceneHierarchyWidget::ToggleSelection(std::shared_ptr<SceneNode> node) {
@@ -353,6 +367,10 @@ namespace Engine {
 		}
 		else {
 			nodeFlags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet;
+		}
+
+		if (_scrollSelectionIntoViewPending && hasChildren && IsOnPathToRevealSelectionTarget(node)) {
+			ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 		}
 
 		const bool isOpen = ImGui::TreeNodeEx("##hierarchy_node", nodeFlags, "%s", displayCStr);

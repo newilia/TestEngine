@@ -1,7 +1,8 @@
 #pragma once
 
+#include "Engine/Editor/EditorNodePick.h"
+#include "Engine/Editor/EditorShapeStrokeGate.h"
 #include "Engine/Editor/Tools/IEditorTool.h"
-#include "Engine/Editor/Tools/SelectTool.h"
 
 #include <SFML/System/Vector2.hpp>
 
@@ -16,7 +17,7 @@ namespace sf {
 class CircleTool final : public IEditorTool
 {
 public:
-	explicit CircleTool(SelectTool::SelectCallback onSelect = nullptr);
+	explicit CircleTool(EditorNodePick::SelectCallback onSelect = nullptr);
 
 	bool ProcessEvent(const sf::Event& event) override;
 	void DrawOverlay(sf::RenderWindow& window) override;
@@ -28,7 +29,8 @@ private:
 	void EndStroke();
 	void FinalizeStroke();
 
-	SelectTool::SelectCallback _onSelect;
+	EditorNodePick::SelectCallback _onSelect;
+	EditorShapeStrokeGate _strokeGate;
 	bool _isDrawing = false;
 	sf::Vector2f _startWorld{};
 	sf::Vector2f _cursorWorld{};

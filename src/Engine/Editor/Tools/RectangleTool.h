@@ -1,7 +1,8 @@
 #pragma once
 
+#include "Engine/Editor/EditorNodePick.h"
+#include "Engine/Editor/EditorShapeStrokeGate.h"
 #include "Engine/Editor/Tools/IEditorTool.h"
-#include "Engine/Editor/Tools/SelectTool.h"
 
 #include <SFML/System/Vector2.hpp>
 
@@ -12,11 +13,11 @@ namespace sf {
 	class RenderWindow;
 }
 
-/// LMB / primary touch drag: corner to opposite corner, creates a RectangleShapeVisual on a new child node.
+/// LMB / primary touch drag: corner to corner, creates a RectangleShapeVisual on a new child node.
 class RectangleTool final : public IEditorTool
 {
 public:
-	explicit RectangleTool(SelectTool::SelectCallback onSelect = nullptr);
+	explicit RectangleTool(EditorNodePick::SelectCallback onSelect = nullptr);
 
 	bool ProcessEvent(const sf::Event& event) override;
 	void DrawOverlay(sf::RenderWindow& window) override;
@@ -28,7 +29,8 @@ private:
 	void EndStroke();
 	void FinalizeStroke();
 
-	SelectTool::SelectCallback _onSelect;
+	EditorNodePick::SelectCallback _onSelect;
+	EditorShapeStrokeGate _strokeGate;
 	bool _isDrawing = false;
 	sf::Vector2f _startWorld{};
 	sf::Vector2f _cursorWorld{};

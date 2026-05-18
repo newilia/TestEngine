@@ -8,6 +8,7 @@
 #include "Engine/Core/SceneNodeUtils.h"
 #include "Engine/Core/SfmlWindowUtils.h"
 #include "Engine/Editor/Editor.h"
+#include "Engine/Editor/EditorNodePick.h"
 #include "Engine/Visual/ConvexShapeVisual.h"
 
 #include <SFML/Graphics/RenderWindow.hpp>
@@ -36,7 +37,7 @@ namespace {
 
 } // namespace
 
-PolygonTool::PolygonTool(SelectTool::SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
+PolygonTool::PolygonTool(EditorNodePick::SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
 
 void PolygonTool::BeginStroke(const sf::Vector2f& world, const sf::Vector2i& pixel) {
 	_isDrawing = true;
@@ -123,19 +124,6 @@ void PolygonTool::EndStroke() {
 }
 
 bool PolygonTool::ProcessEvent(const sf::Event& event) {
-	if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
-		if (pressed->button == sf::Mouse::Button::Left) {
-			BeginStroke(ToWorldPixel(pressed->position), pressed->position);
-			return true;
-		}
-	}
-	if (const auto* touch = event.getIf<sf::Event::TouchBegan>()) {
-		if (touch->finger == 0) {
-			BeginStroke(ToWorldPixel(touch->position), touch->position);
-			return true;
-		}
-	}
-
 	if (_isDrawing) {
 		if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
 			_cursorWorld = SnapWorld(ToWorldPixel(moved->position));
@@ -163,7 +151,14 @@ bool PolygonTool::ProcessEvent(const sf::Event& event) {
 		}
 	}
 
-	return false;
+	return _strokeGate.ProcessEvent(
+	    event,
+	    [this](const sf::Vector2f world, const sf::Vector2i pixel) {
+		    BeginStroke(world, pixel);
+	    },
+	    [this](const sf::Vector2f world, const sf::Vector2i /*pixel*/, const bool isCtrlPressed) {
+		    EditorNodePick::ApplyHierarchyPickAtWorld(world, isCtrlPressed, _onSelect);
+	    });
 }
 
 void PolygonTool::DrawOverlay(sf::RenderWindow& window) {
@@ -189,6 +184,7 @@ void PolygonTool::DrawOverlay(sf::RenderWindow& window) {
 }
 
 void PolygonTool::DrawToolParametersUi() {
+	ImGui::TextUnformatted("Click selects; drag draws. Ctrl+click toggles.");
 	ImGui::TextUnformatted("Draw a convex shape");
 	ImGui::Checkbox("Attach physical body behaviour", &_isAttachPhysicsBody);
 }
