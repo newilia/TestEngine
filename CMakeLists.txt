@@ -57,6 +57,9 @@ endif()
 
 add_executable(TestEngine WIN32 ${ENGINE_SOURCES} ${ENGINE_HEADERS} ${ENGINE_CODEGEN})
 
+# No C++20 modules; avoids MSVC basename collisions on *.module.json (e.g. Environments/*/Env.cpp).
+set_target_properties(TestEngine PROPERTIES CXX_SCAN_FOR_MODULES OFF)
+
 if(ENGINE_HEADERS)
 	set_source_files_properties(${ENGINE_HEADERS} PROPERTIES HEADER_FILE_ONLY TRUE)
 endif()
