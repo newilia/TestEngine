@@ -29,6 +29,10 @@ namespace {
 		return {};
 	}
 
+	sf::Vector2f SnapWorld(sf::Vector2f world) {
+		return Engine::Editor::GetInstance().GetEditorSceneGrid().SnapWorldPoint(world);
+	}
+
 } // namespace
 
 PolygonTool::PolygonTool(SelectTool::SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
@@ -36,9 +40,10 @@ PolygonTool::PolygonTool(SelectTool::SelectCallback onSelect) : _onSelect(std::m
 void PolygonTool::BeginStroke(const sf::Vector2f& world, const sf::Vector2i& pixel) {
 	_isDrawing = true;
 	_worldSamples.clear();
-	_worldSamples.push_back(world);
+	const sf::Vector2f snapped = SnapWorld(world);
+	_worldSamples.push_back(snapped);
 	_lastSamplePixel = pixel;
-	_cursorWorld = world;
+	_cursorWorld = snapped;
 }
 
 void PolygonTool::TryAppendSample(const sf::Vector2i& pixel, const sf::Vector2f& world) {
@@ -48,7 +53,7 @@ void PolygonTool::TryAppendSample(const sf::Vector2i& pixel, const sf::Vector2f&
 	const sf::Vector2f delta(
 	    static_cast<float>(pixel.x - _lastSamplePixel->x), static_cast<float>(pixel.y - _lastSamplePixel->y));
 	if (Utils::Length(delta) >= kMinSampleSpacingPx) {
-		_worldSamples.push_back(world);
+		_worldSamples.push_back(SnapWorld(world));
 		_lastSamplePixel = pixel;
 	}
 }
@@ -128,13 +133,13 @@ bool PolygonTool::ProcessEvent(const sf::Event& event) {
 
 	if (_isDrawing) {
 		if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
-			_cursorWorld = ToWorldPixel(moved->position);
+			_cursorWorld = SnapWorld(ToWorldPixel(moved->position));
 			TryAppendSample(moved->position, _cursorWorld);
 			return true;
 		}
 		if (const auto* tm = event.getIf<sf::Event::TouchMoved>()) {
 			if (tm->finger == 0) {
-				_cursorWorld = ToWorldPixel(tm->position);
+				_cursorWorld = SnapWorld(ToWorldPixel(tm->position));
 				TryAppendSample(tm->position, _cursorWorld);
 				return true;
 			}

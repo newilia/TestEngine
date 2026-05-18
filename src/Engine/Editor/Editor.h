@@ -4,6 +4,7 @@
 #include "Engine/Core/Singleton.h"
 #include "Engine/Editor/DebugSettingsWidget.h"
 #include "Engine/Editor/EditorHistory.h"
+#include "Engine/Editor/EditorSceneGrid.h"
 #include "Engine/Editor/EditorToolManager.h"
 #include "Engine/Editor/EditorToolsWidget.h"
 #include "Engine/Editor/GameBackgroundWidget.h"
@@ -44,6 +45,7 @@ namespace Engine {
 		void SetIsOpen(bool isOpen);
 		bool IsOpen() const;
 		void OnUpdate(const sf::Time dt);
+		void DrawSceneGrid(sf::RenderWindow& window);
 		void Draw(sf::RenderWindow& window);
 		void OnEvent(const sf::Event& event);
 		void OnResize(const sf::Event::Resized& e);
@@ -89,6 +91,9 @@ namespace Engine {
 		PhysicsVisualizer& GetPhysicsVisualizer();
 		const PhysicsVisualizer& GetPhysicsVisualizer() const;
 
+		EditorSceneGrid& GetEditorSceneGrid();
+		const EditorSceneGrid& GetEditorSceneGrid() const;
+
 	private:
 		Editor();
 
@@ -133,6 +138,7 @@ namespace Engine {
 		EditorHistory _history{};
 		SceneClipboard _clipboard{};
 		PhysicsVisualizer _physicsVisualizer{};
+		EditorSceneGrid _editorSceneGrid{};
 		std::optional<std::filesystem::path> _currentScenePath;
 		Serialization::SceneDocumentKind _documentKind = Serialization::SceneDocumentKind::Scene;
 		bool _documentKindChosen = false;

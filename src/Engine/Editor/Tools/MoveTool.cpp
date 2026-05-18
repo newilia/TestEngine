@@ -5,6 +5,7 @@
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/SceneNodeUtils.h"
 #include "Engine/Core/SfmlWindowUtils.h"
+#include "Engine/Editor/Editor.h"
 
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/Mouse.hpp>
@@ -64,7 +65,9 @@ bool MoveTool::ProcessEvent(const sf::Event& event) {
 		if (!node) {
 			return;
 		}
-		Utils::SetLocalPosToWorld(node, pos + _grabOffset);
+		const sf::Vector2f snapped =
+		    Engine::Editor::GetInstance().GetEditorSceneGrid().SnapWorldPoint(pos + _grabOffset);
+		Utils::SetLocalPosToWorld(node, snapped);
 		if (auto rb = node->FindBehaviour<PhysicsBodyBehaviour>()) {
 			ZeroMotion(rb.get());
 		}

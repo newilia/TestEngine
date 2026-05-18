@@ -27,14 +27,18 @@ namespace {
 		return {};
 	}
 
+	sf::Vector2f SnapWorld(sf::Vector2f world) {
+		return Engine::Editor::GetInstance().GetEditorSceneGrid().SnapWorldPoint(world);
+	}
+
 } // namespace
 
 CircleTool::CircleTool(SelectTool::SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
 
 void CircleTool::BeginStroke(const sf::Vector2f& world) {
 	_isDrawing = true;
-	_startWorld = world;
-	_cursorWorld = world;
+	_startWorld = SnapWorld(world);
+	_cursorWorld = _startWorld;
 }
 
 void CircleTool::FinalizeStroke() {
@@ -89,25 +93,25 @@ bool CircleTool::ProcessEvent(const sf::Event& event) {
 
 	if (_isDrawing) {
 		if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
-			_cursorWorld = ToWorldPixel(moved->position);
+			_cursorWorld = SnapWorld(ToWorldPixel(moved->position));
 			return true;
 		}
 		if (const auto* tm = event.getIf<sf::Event::TouchMoved>()) {
 			if (tm->finger == 0) {
-				_cursorWorld = ToWorldPixel(tm->position);
+				_cursorWorld = SnapWorld(ToWorldPixel(tm->position));
 				return true;
 			}
 		}
 		if (const auto* released = event.getIf<sf::Event::MouseButtonReleased>()) {
 			if (released->button == sf::Mouse::Button::Left) {
-				_cursorWorld = ToWorldPixel(released->position);
+				_cursorWorld = SnapWorld(ToWorldPixel(released->position));
 				EndStroke();
 				return true;
 			}
 		}
 		if (const auto* ended = event.getIf<sf::Event::TouchEnded>()) {
 			if (ended->finger == 0) {
-				_cursorWorld = ToWorldPixel(ended->position);
+				_cursorWorld = SnapWorld(ToWorldPixel(ended->position));
 				EndStroke();
 				return true;
 			}
