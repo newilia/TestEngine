@@ -5,6 +5,7 @@
 #include "Engine/Render/SceneLighting.h"
 #include "Engine/Visual/ShapeVisualBase.h"
 
+#include <SFML/Graphics/BlendMode.hpp>
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/Glsl.hpp>
@@ -47,7 +48,6 @@ namespace Engine {
 		const std::string kUEaseCirc{"u_ease_circ"};
 		const std::string kUDiffusion{"u_diffusion"};
 		const std::string kULightingStrength{"u_lighting_strength"};
-		const std::string kUBlendMode{"u_blend_mode"};
 
 		struct CameraUniformState
 		{
@@ -61,6 +61,16 @@ namespace Engine {
 
 		CameraUniformState s_camUniforms{};
 		bool s_haveCamUniforms = false;
+
+		const sf::BlendMode& LightingBlendModeForPass() {
+			if (SceneLighting::GetInstance().GetBlendMode() == LightingBlendMode::Screen) {
+				static const sf::BlendMode screenBlend(sf::BlendMode::Factor::One,
+				    sf::BlendMode::Factor::OneMinusSrcColor, sf::BlendMode::Equation::Add, sf::BlendMode::Factor::One,
+				    sf::BlendMode::Factor::OneMinusSrcAlpha, sf::BlendMode::Equation::Add);
+				return screenBlend;
+			}
+			return sf::BlendAdd;
+		}
 
 		sf::Shader* GetShapeLightingShader() {
 			static sf::Shader shader;
@@ -120,26 +130,26 @@ namespace Engine {
 
 	} // namespace
 
-	bool TryDrawShapeWithLighting(const ShapeVisualBase& visual, sf::RenderTarget& target, sf::RenderStates states) {
+	void DrawShapeLightingPass(const ShapeVisualBase& visual, sf::RenderTarget& target, sf::RenderStates states) {
 		if (!SceneLighting::GetInstance().IsEnabled()) {
-			return false;
+			return;
 		}
 
 		const auto node = visual.GetNode();
 		if (!node) {
-			return false;
+			return;
 		}
 		const auto recv = node->FindBehaviour<ShapeLightReceiverBehaviour>();
 		if (!recv || !recv->IsReceiverLightingEnabled()) {
-			return false;
+			return;
 		}
 		sf::Shader* shader = GetShapeLightingShader();
 		if (!shader) {
-			return false;
+			return;
 		}
 		const sf::Shape* shape = visual.GetBaseShape();
 		if (!shape) {
-			return false;
+			return;
 		}
 
 		thread_local std::vector<GpuPointLight> tlsLights;
@@ -150,7 +160,7 @@ namespace Engine {
 		}
 
 		const sf::FloatRect worldBounds = node->GetWorldTransform().transformRect(visual.GetGlobalBounds());
-		SceneLighting::GetInstance().SelectLightsForBounds(worldBounds, tlsLights, kMaxLights);
+		SceneLighting::GetInstance().SelectLightsForBounds(worldBounds, node.get(), tlsLights, kMaxLights);
 
 		// Match SFML draw: states.transform * shape.getTransform() (see Utils::IsWorldPointInsideOfShape).
 		const sf::Transform worldFromShapeLocal = states.transform * shape->getTransform();
@@ -235,16 +245,9 @@ namespace Engine {
 		shader->setUniform(kUDiffusion, recv->GetDiffusion());
 		shader->setUniform(kULightingStrength, recv->GetLightingStrength());
 
-		static int s_lastBlendMode = -1;
-		const int blendMode = static_cast<int>(SceneLighting::GetInstance().GetBlendMode());
-		if (blendMode != s_lastBlendMode) {
-			shader->setUniform(kUBlendMode, blendMode);
-			s_lastBlendMode = blendMode;
-		}
-
 		states.shader = shader;
+		states.blendMode = LightingBlendModeForPass();
 		target.draw(*shape, states);
-		return true;
 	}
 
 } // namespace Engine

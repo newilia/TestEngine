@@ -128,12 +128,13 @@ namespace Engine {
 			light.color = sf::Glsl::Vec3(static_cast<float>(c.r) / 255.f * intensity,
 			    static_cast<float>(c.g) / 255.f * intensity, static_cast<float>(c.b) / 255.f * intensity);
 			light.radius = std::max(pl->GetRadius() * _distanceRangeScale, 1.f);
+			light.sourceNode = node.get();
 			_lights.push_back(light);
 		}
 	}
 
-	void SceneLighting::SelectLightsForBounds(
-	    const sf::FloatRect& receiverBounds, std::vector<GpuPointLight>& out, std::size_t maxLights) const {
+	void SceneLighting::SelectLightsForBounds(const sf::FloatRect& receiverBounds, const SceneNode* excludeLightsOnNode,
+	    std::vector<GpuPointLight>& out, std::size_t maxLights) const {
 		out.clear();
 		if (!_enabled) {
 			return;
@@ -149,6 +150,9 @@ namespace Engine {
 		_selectScratch.reserve(_lights.size());
 		for (std::size_t i = 0; i < _lights.size(); ++i) {
 			const GpuPointLight& light = _lights[i];
+			if (excludeLightsOnNode && light.sourceNode == excludeLightsOnNode) {
+				continue;
+			}
 			const float radius = std::max(light.radius, 1.f);
 			const float cutoff = radius * kCullRadiusMul;
 			const float dsqToEdges = DistSqPointToRect(light.position, receiverBounds);

@@ -1,20 +1,16 @@
 #include "Engine/Visual/CircleShapeVisual.h"
 
 #include "CircleShapeVisual.generated.hpp"
-#include "Engine/Core/Utils.h"
 
 #include <algorithm>
 #include <cstddef>
 
 namespace {
 	constexpr int kMinCirclePoints = 3;
-	constexpr int kDefaultCirclePoints = 64;
 	constexpr int kMaxCirclePoints = 512;
 } // namespace
 
-CircleShapeVisual::CircleShapeVisual() {
-	_circle.setPointCount(kDefaultCirclePoints);
-}
+CircleShapeVisual::CircleShapeVisual() = default;
 
 const sf::Shape* CircleShapeVisual::GetBaseShape() const {
 	return &_circle;
@@ -26,41 +22,6 @@ float CircleShapeVisual::GetRadius() const {
 
 void CircleShapeVisual::SetRadius(float radius) {
 	_circle.setRadius(radius);
-	_circle.setOrigin({radius, radius});
-	_isSectorDirty = true;
-}
-
-void CircleShapeVisual::Draw(sf::RenderTarget& target, sf::RenderStates states) const {
-	ShapeVisualBase::Draw(target, states);
-
-	if (_drawSector) {
-		if (_isSectorDirty) {
-			RebuildSectorVertices();
-		}
-		sf::RenderStates sectorStates = states;
-		sectorStates.transform.translate(_circle.getPosition());
-		target.draw(_sectorVertices, sectorStates);
-	}
-}
-
-void CircleShapeVisual::RebuildSectorVertices() const {
-	constexpr int kSectorPoints = 10;
-	constexpr sf::Angle kAngleStep = sf::degrees(30) / (kSectorPoints - 1);
-	const float radius = GetRadius();
-
-	_sectorVertices.setPrimitiveType(sf::PrimitiveType::TriangleFan);
-	_sectorVertices.resize(kSectorPoints + 2);
-	_sectorVertices[0].position = {0.f, 0.f};
-	_sectorVertices[0].color = _sectorColor;
-	_sectorVertices[kSectorPoints + 1].position = {0.f, 0.f};
-	_sectorVertices[kSectorPoints + 1].color = _sectorColor;
-
-	for (int i = 0; i < kSectorPoints; i++) {
-		const sf::Angle angle = kAngleStep * i;
-		_sectorVertices[i + 1].position = Utils::Rotate(sf::Vector2f(0, radius), angle.asRadians());
-		_sectorVertices[i + 1].color = _sectorColor;
-	}
-	_isSectorDirty = false;
 }
 
 int CircleShapeVisual::GetPointCount() const {
@@ -73,18 +34,17 @@ void CircleShapeVisual::SetPointCount(int count) {
 }
 
 bool CircleShapeVisual::GetDrawSector() const {
-	return _drawSector;
+	return _circle.GetDrawSector();
 }
 
 void CircleShapeVisual::SetDrawSector(bool drawSector) {
-	_drawSector = drawSector;
+	_circle.SetDrawSector(drawSector);
 }
 
 sf::Color CircleShapeVisual::GetSectorColor() const {
-	return _sectorColor;
+	return _circle.GetSectorColor();
 }
 
 void CircleShapeVisual::SetSectorColor(sf::Color color) {
-	_sectorColor = color;
-	_isSectorDirty = true;
+	_circle.SetSectorColor(color);
 }
