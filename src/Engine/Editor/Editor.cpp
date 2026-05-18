@@ -191,6 +191,8 @@ namespace Engine {
 				EditorSceneGrid& grid = _editorSceneGrid;
 				ImGui::MenuItem("Show Grid", "Ctrl+G", &grid.VisibleMutable());
 				ImGui::MenuItem("Snap to Grid", "Ctrl+Shift+G", &grid.SnapEnabledMutable());
+				ImGui::MenuItem("Draw selection", nullptr, &DrawSelectionEnabledMutable());
+				ImGui::MenuItem("Draw descendants selection", nullptr, &DrawDescendantsSelectionEnabledMutable());
 				ImGui::Separator();
 				constexpr float kSliderWidth = 180.f;
 				ImGui::SetNextItemWidth(kSliderWidth);
@@ -679,8 +681,24 @@ namespace Engine {
 		return _editorSceneGrid;
 	}
 
+	bool Editor::IsDrawSelectionEnabled() const {
+		return _isDrawSelectionEnabled;
+	}
+
+	bool& Editor::DrawSelectionEnabledMutable() {
+		return _isDrawSelectionEnabled;
+	}
+
+	bool Editor::IsDrawDescendantsSelectionEnabled() const {
+		return _isDrawDescendantsSelectionEnabled;
+	}
+
+	bool& Editor::DrawDescendantsSelectionEnabledMutable() {
+		return _isDrawDescendantsSelectionEnabled;
+	}
+
 	void Editor::DrawViewportSelectionOverlay(sf::RenderWindow& window) {
-		if (!_isOpen) {
+		if (!_isOpen || (!IsDrawSelectionEnabled() && !IsDrawDescendantsSelectionEnabled())) {
 			return;
 		}
 		const auto selectedNodes = GetSelectedNodes();
@@ -706,24 +724,32 @@ namespace Engine {
 			if (!selected || !selected->IsEnabled() || !selected->IsVisible()) {
 				continue;
 			}
-			GatherDescendantHierarchySelectionOutlines(
-			    *selected, selectionSet, descendantLines, descendantFallbackMarkers);
-			GatherPrimaryHierarchySelectionOutline(*selected, primaryLines, primaryFallbackMarkers);
+			if (IsDrawDescendantsSelectionEnabled()) {
+				GatherDescendantHierarchySelectionOutlines(
+				    *selected, selectionSet, descendantLines, descendantFallbackMarkers);
+			}
+			if (IsDrawSelectionEnabled()) {
+				GatherPrimaryHierarchySelectionOutline(*selected, primaryLines, primaryFallbackMarkers);
+			}
 		}
 
 		sf::RenderStates worldOnly{};
-		if (descendantLines.getVertexCount() > 0) {
-			window.draw(descendantLines, worldOnly);
-		}
-		for (const auto& marker : descendantFallbackMarkers) {
-			window.draw(marker, worldOnly);
+		if (IsDrawDescendantsSelectionEnabled()) {
+			if (descendantLines.getVertexCount() > 0) {
+				window.draw(descendantLines, worldOnly);
+			}
+			for (const auto& marker : descendantFallbackMarkers) {
+				window.draw(marker, worldOnly);
+			}
 		}
 
-		if (primaryLines.getVertexCount() > 0) {
-			window.draw(primaryLines, worldOnly);
-		}
-		for (const auto& marker : primaryFallbackMarkers) {
-			window.draw(marker, worldOnly);
+		if (IsDrawSelectionEnabled()) {
+			if (primaryLines.getVertexCount() > 0) {
+				window.draw(primaryLines, worldOnly);
+			}
+			for (const auto& marker : primaryFallbackMarkers) {
+				window.draw(marker, worldOnly);
+			}
 		}
 	}
 
