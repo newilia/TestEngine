@@ -15,11 +15,13 @@
 #include <imgui.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <cstdint>
 #include <functional>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <typeindex>
 #include <unordered_map>
 #include <unordered_set>
@@ -27,6 +29,33 @@
 #include <vector>
 
 namespace {
+
+	bool AsciiContainsCaseInsensitive(std::string_view haystack, std::string_view needle) {
+		if (needle.empty()) {
+			return true;
+		}
+		if (needle.size() > haystack.size()) {
+			return false;
+		}
+		const auto lower = [](unsigned char c) {
+			return static_cast<char>(std::tolower(c));
+		};
+		for (size_t i = 0; i + needle.size() <= haystack.size(); ++i) {
+			bool match = true;
+			for (size_t j = 0; j < needle.size(); ++j) {
+				if (lower(static_cast<unsigned char>(haystack[i + j])) !=
+				    lower(static_cast<unsigned char>(needle[j]))) {
+					match = false;
+					break;
+				}
+			}
+			if (match) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	struct PropertyNodeKey
 	{
 		std::string id;
@@ -920,13 +949,27 @@ namespace Engine {
 			ImGui::BeginDisabled();
 		}
 		if (ImGui::BeginCombo("##add_scene_entity_combo", preview)) {
+			if (ImGui::IsWindowAppearing()) {
+				ImGui::SetKeyboardFocusHere();
+			}
+			(void)ImGui::InputTextWithHint(
+			    "##add_scene_entity_filter", "Filter...", _addComponentFilter, sizeof(_addComponentFilter));
+			ImGui::Separator();
+			int visibleCount = 0;
 			for (const Serialization::SceneEntityRegistration& registration : registry.GetAll()) {
 				if (!IsSceneEntityRegistrationAddable(registration, validNodes)) {
 					continue;
 				}
+				if (!AsciiContainsCaseInsensitive(registration.typeId, _addComponentFilter)) {
+					continue;
+				}
+				++visibleCount;
 				if (ImGui::Selectable(registration.typeId.c_str())) {
 					(void)Editor::GetInstance().AddSceneEntityFromRegistry(validNodes, registration.typeId);
 				}
+			}
+			if (visibleCount == 0 && addableCount > 0) {
+				ImGui::TextDisabled("No matching components");
 			}
 			ImGui::EndCombo();
 		}
