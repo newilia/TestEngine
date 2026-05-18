@@ -1,5 +1,5 @@
 {
-	"testEngine.launch.envArg": "--env=ballgame1",
+	"testEngine.launch.envArg": "--env=test",
 	"cmake.options.statusBarVisibility": "hidden",
 	"cmake.options.advanced": {
 		"variant": {
