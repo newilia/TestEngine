@@ -30,6 +30,7 @@ public:
 	bool ProcessEvent(const sf::Event& event);
 	void DrawActiveToolParametersUi();
 	bool TryActivateToolViaDigitKey(sf::Keyboard::Key key);
+	[[nodiscard]] std::optional<std::string> TryGetActiveToolCursorOverlayText() const;
 
 private:
 	static std::optional<int> TryToolIndexFromDigitKey(sf::Keyboard::Key key);

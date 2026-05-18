@@ -13,6 +13,7 @@
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/Mouse.hpp>
 
+#include <fmt/format.h>
 #include <imgui.h>
 
 namespace {
@@ -138,4 +139,12 @@ void CircleTool::DrawOverlay(sf::RenderWindow& window) {
 void CircleTool::DrawToolParametersUi() {
 	ImGui::TextUnformatted("Drag center to edge");
 	ImGui::Checkbox("Attach physical body behaviour", &_isAttachPhysicsBody);
+}
+
+std::optional<std::string> CircleTool::TryGetCursorOverlayText() const {
+	if (!_isDrawing) {
+		return std::nullopt;
+	}
+	const float radius = Utils::Length(_cursorWorld - _startWorld);
+	return fmt::format("Radius = {:.1f}", radius);
 }
