@@ -10,7 +10,6 @@ namespace sf {
 	class CircleShape;
 }
 
-// todo remove
 class PongBall : public std::enable_shared_from_this<PongBall>
 {
 public:
