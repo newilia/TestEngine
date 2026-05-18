@@ -372,16 +372,25 @@ namespace {
 		if (trees.empty()) {
 			return merged;
 		}
-		std::vector<const Engine::PropertyNode*> roots;
-		roots.reserve(trees.size());
+		const std::size_t rootCount = trees.front().roots.size();
+		if (rootCount == 0) {
+			return merged;
+		}
 		for (const auto& tree : trees) {
-			if (tree.roots.empty()) {
+			if (tree.roots.size() != rootCount) {
 				return merged;
 			}
-			roots.push_back(&tree.roots.front());
 		}
-		if (auto mergedRoot = TryBuildMergedNode(roots)) {
-			merged.roots.push_back(std::move(*mergedRoot));
+		merged.roots.reserve(rootCount);
+		for (std::size_t rootIndex = 0; rootIndex < rootCount; ++rootIndex) {
+			std::vector<const Engine::PropertyNode*> rootsAtIndex;
+			rootsAtIndex.reserve(trees.size());
+			for (const auto& tree : trees) {
+				rootsAtIndex.push_back(&tree.roots[rootIndex]);
+			}
+			if (auto mergedRoot = TryBuildMergedNode(rootsAtIndex)) {
+				merged.roots.push_back(std::move(*mergedRoot));
+			}
 		}
 		return merged;
 	}
