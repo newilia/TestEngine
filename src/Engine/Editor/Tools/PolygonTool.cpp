@@ -1,6 +1,7 @@
 #include "Engine/Editor/Tools/PolygonTool.h"
 
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
+#include "Engine/Core/ColorUtils.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/MathUtils.h"
 #include "Engine/Core/SceneNode.h"
@@ -99,6 +100,10 @@ void PolygonTool::FinalizeStroke() {
 	node->SetName("Polygon");
 	auto visual = std::make_shared<ConvexShapeVisual>();
 	visual->SetPoints(localPts);
+	const Utils::HsvShapeColors colors = Utils::RandomHsvShapeColors();
+	visual->SetFillColor(colors.fill);
+	visual->SetOutlineColor(colors.outline);
+	visual->SetOutlineThickness(-1.f);
 	node->SetVisual(std::move(visual));
 	Utils::SetLocalPosToWorld(node, centerWorld);
 	if (_isAttachPhysicsBody) {

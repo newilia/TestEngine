@@ -1,6 +1,7 @@
 #include "Engine/Editor/Tools/RectangleTool.h"
 
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
+#include "Engine/Core/ColorUtils.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/SceneNodeUtils.h"
@@ -70,6 +71,10 @@ void RectangleTool::FinalizeStroke() {
 	auto visual = std::make_shared<RectangleShapeVisual>();
 	visual->SetSize(size);
 	visual->SetOrigin(size * 0.5f);
+	const Utils::HsvShapeColors colors = Utils::RandomHsvShapeColors();
+	visual->SetFillColor(colors.fill);
+	visual->SetOutlineColor(colors.outline);
+	visual->SetOutlineThickness(-1.f);
 	node->SetVisual(std::move(visual));
 	Utils::SetLocalPosToWorld(node, centerWorld);
 	if (_isAttachPhysicsBody) {
