@@ -1,0 +1,137 @@
+#include "Engine/Editor/Tools/CircleTool.h"
+
+#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
+#include "Engine/Core/MainContext.h"
+#include "Engine/Core/MathUtils.h"
+#include "Engine/Core/SceneNode.h"
+#include "Engine/Core/SceneNodeUtils.h"
+#include "Engine/Core/SfmlWindowUtils.h"
+#include "Engine/Editor/Editor.h"
+#include "Engine/Visual/CircleShapeVisual.h"
+
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Window/Event.hpp>
+#include <SFML/Window/Mouse.hpp>
+
+#include <imgui.h>
+
+namespace {
+
+	constexpr float kMinWorldSize = 1.f;
+	constexpr float kOverlayLineThickness = 3.f;
+
+	sf::Vector2f ToWorldPixel(sf::Vector2i pixel) {
+		if (auto* mainWindow = Engine::MainContext::GetInstance().GetMainWindow()) {
+			return Utils::MapWindowPixelToWorld(*mainWindow, pixel);
+		}
+		return {};
+	}
+
+} // namespace
+
+CircleTool::CircleTool(SelectTool::SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
+
+void CircleTool::BeginStroke(const sf::Vector2f& world) {
+	_isDrawing = true;
+	_startWorld = world;
+	_cursorWorld = world;
+}
+
+void CircleTool::FinalizeStroke() {
+	const float radius = Utils::Length(_cursorWorld - _startWorld);
+	if (radius < kMinWorldSize) {
+		return;
+	}
+
+	auto parent = Engine::Editor::GetInstance().GetSelectedNode();
+	if (!parent) {
+		if (const auto scene = Engine::MainContext::GetInstance().GetScene()) {
+			parent = scene->GetRoot();
+		}
+	}
+	if (!parent) {
+		return;
+	}
+
+	auto node = SceneNode::Create();
+	node->SetName("Circle");
+	auto visual = std::make_shared<CircleShapeVisual>();
+	visual->SetRadius(radius);
+	node->SetVisual(std::move(visual));
+	Utils::SetLocalPosToWorld(node, _startWorld);
+	if (_isAttachPhysicsBody) {
+		node->RequireBehaviour<PhysicsBodyBehaviour>();
+	}
+	parent->AddChild(node);
+}
+
+void CircleTool::EndStroke() {
+	if (!_isDrawing) {
+		return;
+	}
+	_isDrawing = false;
+	FinalizeStroke();
+}
+
+bool CircleTool::ProcessEvent(const sf::Event& event) {
+	if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
+		if (pressed->button == sf::Mouse::Button::Left) {
+			BeginStroke(ToWorldPixel(pressed->position));
+			return true;
+		}
+	}
+	if (const auto* touch = event.getIf<sf::Event::TouchBegan>()) {
+		if (touch->finger == 0) {
+			BeginStroke(ToWorldPixel(touch->position));
+			return true;
+		}
+	}
+
+	if (_isDrawing) {
+		if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
+			_cursorWorld = ToWorldPixel(moved->position);
+			return true;
+		}
+		if (const auto* tm = event.getIf<sf::Event::TouchMoved>()) {
+			if (tm->finger == 0) {
+				_cursorWorld = ToWorldPixel(tm->position);
+				return true;
+			}
+		}
+		if (const auto* released = event.getIf<sf::Event::MouseButtonReleased>()) {
+			if (released->button == sf::Mouse::Button::Left) {
+				_cursorWorld = ToWorldPixel(released->position);
+				EndStroke();
+				return true;
+			}
+		}
+		if (const auto* ended = event.getIf<sf::Event::TouchEnded>()) {
+			if (ended->finger == 0) {
+				_cursorWorld = ToWorldPixel(ended->position);
+				EndStroke();
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+void CircleTool::DrawOverlay(sf::RenderWindow& window) {
+	if (!_isDrawing) {
+		return;
+	}
+
+	const sf::Vector2i centerPx = Utils::MapWorldToWindowPixel(window, _startWorld);
+	const sf::Vector2i edgePx = Utils::MapWorldToWindowPixel(window, _cursorWorld);
+	const sf::Vector2f delta(static_cast<float>(edgePx.x - centerPx.x), static_cast<float>(edgePx.y - centerPx.y));
+	const float radiusPx = Utils::Length(delta);
+
+	ImGui::GetForegroundDrawList()->AddCircle(ImVec2(static_cast<float>(centerPx.x), static_cast<float>(centerPx.y)),
+	    radiusPx, IM_COL32(255, 255, 255, 255), 0, kOverlayLineThickness);
+}
+
+void CircleTool::DrawToolParametersUi() {
+	ImGui::TextUnformatted("Drag center to edge");
+	ImGui::Checkbox("Attach physical body behaviour", &_isAttachPhysicsBody);
+}
