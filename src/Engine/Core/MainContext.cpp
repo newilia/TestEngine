@@ -253,6 +253,38 @@ namespace Engine {
 		}
 	}
 
+	std::optional<sf::Vector2f> MainContext::GetMainCameraCenter() const {
+		if (const sf::RenderWindow* window = GetMainWindow()) {
+			return window->getView().getCenter();
+		}
+		return std::nullopt;
+	}
+
+	std::optional<sf::Vector2f> MainContext::GetMainCameraViewSize() const {
+		if (const sf::RenderWindow* window = GetMainWindow()) {
+			return window->getView().getSize();
+		}
+		return std::nullopt;
+	}
+
+	void MainContext::SetMainCameraView(sf::Vector2f center, sf::Vector2f viewSize) {
+		if (auto window = GetMainWindow()) {
+			const sf::View previous = window->getView();
+			sf::View view(center, viewSize);
+			view.setRotation(previous.getRotation());
+			view.setViewport(previous.getViewport());
+			view.setScissor(previous.getScissor());
+			window->setView(view);
+		}
+	}
+
+	void MainContext::ResetMainCameraViewToDefault() {
+		if (const auto window = GetMainWindow()) {
+			const sf::Vector2u pixelSize = window->getSize();
+			SetMainCameraView({0.f, 0.f}, {static_cast<float>(pixelSize.x), static_cast<float>(pixelSize.y)});
+		}
+	}
+
 	void MainContext::OnMainWindowResized(const sf::Vector2u& newPixelSize) {
 		if (!_mainWindow || newPixelSize.x == 0u || newPixelSize.y == 0u) {
 			return;
