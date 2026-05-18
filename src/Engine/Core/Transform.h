@@ -29,7 +29,7 @@ public:
 
 	/// @getter
 	sf::Angle GetRotation() const;
-	/// @setter
+	/// @setter(dragSpeed=0.1f)
 	void SetRotation(sf::Angle angle);
 
 	/// @getter

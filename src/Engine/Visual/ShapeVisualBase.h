@@ -34,7 +34,7 @@ public:
 	void SetOutlineColor(const sf::Color& color);
 	/// @getter
 	float GetOutlineThickness() const;
-	/// @setter
+	/// @setter(dragSpeed=0.01f)
 	void SetOutlineThickness(float thickness);
 	/// @getter
 	sf::Vector2f GetPosition() const;
@@ -42,11 +42,11 @@ public:
 	void SetPosition(const sf::Vector2f& position);
 	/// @getter
 	sf::Angle GetRotation() const;
-	/// @setter
+	/// @setter(dragSpeed=0.1f)
 	void SetRotation(sf::Angle angle);
 	/// @getter
 	sf::Vector2f GetScale() const;
-	/// @setter
+	/// @setter(dragSpeed=0.01f)
 	void SetScale(const sf::Vector2f& scale);
 	/// @getter
 	sf::Vector2f GetOrigin() const;
