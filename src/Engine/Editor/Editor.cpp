@@ -147,6 +147,13 @@ namespace Engine {
 		_editorToolManager->OnUpdate(dt);
 	}
 
+	void Editor::DrawSceneGrid(sf::RenderWindow& window) {
+		if (!_isOpen) {
+			return;
+		}
+		_editorSceneGrid.Draw(window);
+	}
+
 	void Editor::Draw(sf::RenderWindow& window) {
 		if (!_isOpen) {
 			return;
@@ -172,6 +179,25 @@ namespace Engine {
 				}
 				if (ImGui::MenuItem("Save As…", "Ctrl+Shift+S")) {
 					(void)SaveSceneAs();
+				}
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("View")) {
+				EditorSceneGrid& grid = _editorSceneGrid;
+				ImGui::MenuItem("Show Grid", "Ctrl+G", &grid.VisibleMutable());
+				ImGui::MenuItem("Snap to Grid", "Ctrl+Shift+G", &grid.SnapEnabledMutable());
+				ImGui::Separator();
+				int gridSize = grid.GetSize();
+				int gridBasis = grid.GetBasis();
+				constexpr float kSliderWidth = 180.f;
+				ImGui::SetNextItemWidth(kSliderWidth);
+				if (ImGui::SliderInt("Grid Size", &gridSize, EditorSceneGrid::kMinSize, EditorSceneGrid::kMaxSize)) {
+					grid.SetSize(gridSize);
+				}
+				ImGui::SetNextItemWidth(kSliderWidth);
+				if (ImGui::SliderInt(
+				        "Grid Basis", &gridBasis, EditorSceneGrid::kMinBasis, EditorSceneGrid::kMaxBasis)) {
+					grid.SetBasis(gridBasis);
 				}
 				ImGui::EndMenu();
 			}
@@ -605,6 +631,14 @@ namespace Engine {
 		return _physicsVisualizer;
 	}
 
+	EditorSceneGrid& Editor::GetEditorSceneGrid() {
+		return _editorSceneGrid;
+	}
+
+	const EditorSceneGrid& Editor::GetEditorSceneGrid() const {
+		return _editorSceneGrid;
+	}
+
 	void Editor::DrawViewportSelectionOverlay(sf::RenderWindow& window) {
 		if (!_isOpen) {
 			return;
@@ -703,6 +737,14 @@ namespace Engine {
 			}
 			if (e.control && !e.shift && e.code == sf::Keyboard::Key::O) {
 				(void)LoadScene();
+				return;
+			}
+			if (_isOpen && e.control && !e.shift && e.code == sf::Keyboard::Key::G) {
+				_editorSceneGrid.VisibleMutable() = !_editorSceneGrid.IsVisible();
+				return;
+			}
+			if (_isOpen && e.control && e.shift && e.code == sf::Keyboard::Key::G) {
+				_editorSceneGrid.SnapEnabledMutable() = !_editorSceneGrid.IsSnapEnabled();
 				return;
 			}
 			if (e.control && !e.shift && e.code == sf::Keyboard::Key::Z) {

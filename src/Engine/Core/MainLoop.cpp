@@ -181,7 +181,9 @@ namespace Engine {
 
 		PresentMainWindowScene(*window, scene);
 
-		Engine::Editor::GetInstance().Draw(*window);
+		Engine::Editor& editor = Engine::Editor::GetInstance();
+		editor.DrawSceneGrid(*window);
+		editor.Draw(*window);
 
 		ImGui::SFML::Render(*window);
 		window->display();
