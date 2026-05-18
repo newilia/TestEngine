@@ -428,6 +428,20 @@ namespace Engine {
 		if (ImGui::BeginPopupContextItem("hierarchy_node_ctx", ImGuiPopupFlags_MouseButtonRight)) {
 			auto nodePtr = node.shared_from_this();
 			Editor& editor = Editor::GetInstance();
+			if (ImGui::MenuItem("Add child")) {
+				(void)editor.AddEmptyChildNode(nodePtr);
+			}
+			const bool canAddSibling = nodePtr->GetParent() != nullptr;
+			if (!canAddSibling) {
+				ImGui::BeginDisabled();
+			}
+			if (ImGui::MenuItem("Add sibling")) {
+				(void)editor.AddEmptySiblingNode(nodePtr);
+			}
+			if (!canAddSibling) {
+				ImGui::EndDisabled();
+			}
+			ImGui::Separator();
 			if (ImGui::MenuItem("Focus")) {
 				MainContext::GetInstance().FocusCameraOnNode(nodePtr);
 			}
