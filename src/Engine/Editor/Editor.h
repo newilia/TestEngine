@@ -12,6 +12,7 @@
 #include "Engine/Editor/PhysicsVisualizer.h"
 #include "Engine/Editor/SceneClipboard.h"
 #include "Engine/Editor/SceneHierarchyWidget.h"
+#include "Engine/Serialization/SceneDocumentSerializer.h"
 #include "Engine/Serialization/SerializationResult.h"
 
 #include <SFML/System/Vector2.hpp>
@@ -78,6 +79,7 @@ namespace Engine {
 		    std::optional<std::type_index> behaviourType = std::nullopt);
 		bool CanPasteEntityToSelectedNode() const;
 		bool AddSceneEntityFromRegistry(const std::vector<std::shared_ptr<SceneNode>>& nodes, std::string_view typeId);
+		bool SaveNodeAsPrefab(const std::shared_ptr<SceneNode>& node);
 
 		EditorToolManager& GetEditorToolManager();
 		const EditorToolManager& GetEditorToolManager() const;
@@ -89,13 +91,17 @@ namespace Engine {
 		Editor();
 
 		void DrawLayout();
+		void DrawSaveDocumentKindModal();
 		bool LoadScene();
 		bool SaveScene();
 		bool SaveSceneAs();
-		[[nodiscard]] EditorDialogs::SceneFileDialogOptions MakeSceneFileDialogOptions() const;
+		bool BeginSaveFlow(bool saveAs);
+		[[nodiscard]] EditorDialogs::SceneFileDialogOptions MakeSceneFileDialogOptions(
+		    Serialization::SceneDocumentKind kind) const;
 		void ShowSerializationErrorDialog(
 		    std::string_view title, const Serialization::SerializationResult& result) const;
-		void SetCurrentScenePath(std::optional<std::filesystem::path> path);
+		void SetCurrentDocument(std::optional<std::filesystem::path> path, Serialization::SceneDocumentKind kind);
+		[[nodiscard]] const char* DocumentKindLabel() const;
 		void TryApplyDefaultEditorDockLayout(ImGuiID dockspaceId, const ImVec2& dockspaceSize) const;
 		void DrawCursorWorldCoordsOverlay(sf::RenderWindow& window);
 		void DrawViewportSelectionOverlay(sf::RenderWindow& window);
@@ -126,6 +132,11 @@ namespace Engine {
 		SceneClipboard _clipboard{};
 		PhysicsVisualizer _physicsVisualizer{};
 		std::optional<std::filesystem::path> _currentScenePath;
+		Serialization::SceneDocumentKind _documentKind = Serialization::SceneDocumentKind::Scene;
+		bool _documentKindChosen = false;
+		bool _showSaveDocumentKindModal = false;
+		bool _pendingSaveAs = false;
+		int _saveKindModalSelection = 0;
 	};
 
 } // namespace Engine

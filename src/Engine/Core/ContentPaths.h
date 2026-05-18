@@ -5,7 +5,8 @@
 
 namespace Engine {
 
-	inline constexpr std::string_view kDefaultScenePrefabRelative = "assets\\prefabs\\CurrentScene.xml";
+	inline constexpr std::string_view kDefaultScenePrefabRelative = "assets\\prefabs\\Untitled.xml";
+	inline constexpr std::string_view kDefaultSceneRelative = "assets\\scenes\\Untitled.xml";
 
 	/// Asset and content paths are relative to the process working directory (repo root when launched from IDE/CMake).
 	[[nodiscard]] inline std::filesystem::path ContentRoot() {
@@ -29,6 +30,18 @@ namespace Engine {
 
 	[[nodiscard]] inline std::filesystem::path DefaultScenePrefabsDirectory() {
 		return DefaultScenePrefabAbsolutePath().parent_path();
+	}
+
+	[[nodiscard]] inline std::filesystem::path DefaultSceneRelativePath() {
+		return std::filesystem::path{kDefaultSceneRelative};
+	}
+
+	[[nodiscard]] inline std::filesystem::path DefaultSceneAbsolutePath() {
+		return ResolveContentPath(DefaultSceneRelativePath());
+	}
+
+	[[nodiscard]] inline std::filesystem::path DefaultScenesDirectory() {
+		return DefaultSceneAbsolutePath().parent_path();
 	}
 
 } // namespace Engine

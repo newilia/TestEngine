@@ -277,6 +277,10 @@ namespace Engine {
 			if (!canPaste) {
 				ImGui::EndDisabled();
 			}
+			ImGui::Separator();
+			if (ImGui::MenuItem("Save as prefab…")) {
+				(void)editor.SaveNodeAsPrefab(nodePtr);
+			}
 			ImGui::EndPopup();
 		}
 		if (isSelected && _scrollSelectionIntoViewPending) {
