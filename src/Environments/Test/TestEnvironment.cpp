@@ -62,7 +62,7 @@ std::shared_ptr<Scene> TestEnvironment::BuildScene() {
 	auto scene = make_shared<Scene>();
 	auto container = SceneNode::Create();
 	container->SetName("container");
-	Engine::MainContext::GetInstance().FocusCameraOnNode(container);
+	Engine::MainContext::GetInstance().FocusCameraOnNode(container, /*smooth=*/false);
 	scene->GetRoot()->AddChild(container);
 
 	constexpr sf::Vector2f boxSize{600, 600};
