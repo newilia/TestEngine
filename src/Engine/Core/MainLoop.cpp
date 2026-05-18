@@ -18,6 +18,25 @@
 
 namespace Engine {
 
+	void MainLoop::SyncImGuiSfmlWindowFocus(sf::Window& window) {
+		if (!MainContext::GetInstance().IsImGuiInitialized()) {
+			return;
+		}
+
+		const bool hasFocus = window.hasFocus();
+		if (hasFocus == _imguiSfmlWindowHadFocus) {
+			return;
+		}
+
+		_imguiSfmlWindowHadFocus = hasFocus;
+		if (hasFocus) {
+			ImGui::SFML::ProcessEvent(window, sf::Event::FocusGained{});
+		}
+		else {
+			ImGui::SFML::ProcessEvent(window, sf::Event::FocusLost{});
+		}
+	}
+
 	void MainLoop::Run() {
 		sf::Clock mainLoopClock;
 		MainContext& mainContext = Engine::MainContext::GetInstance();
@@ -48,7 +67,9 @@ namespace Engine {
 			return false;
 		}
 
-		bool isImGuiInitialized = mainContext.IsImGuiInitialized();
+		if (mainContext.IsImGuiInitialized()) {
+			SyncImGuiSfmlWindowFocus(*window);
+		}
 
 		while (const auto& ev = window->pollEvent()) {
 			if (!Verify(ev)) {
@@ -92,7 +113,14 @@ namespace Engine {
 		const auto& window = mainContext.GetMainWindow();
 
 		if (isImGuiInitialized) {
+			SyncImGuiSfmlWindowFocus(*window);
 			ImGui::SFML::ProcessEvent(*window, event);
+			if (event.is<sf::Event::FocusGained>()) {
+				_imguiSfmlWindowHadFocus = true;
+			}
+			else if (event.is<sf::Event::FocusLost>()) {
+				_imguiSfmlWindowHadFocus = false;
+			}
 		}
 
 		if (const auto* resized = event.getIf<sf::Event::Resized>()) {
@@ -146,6 +174,9 @@ namespace Engine {
 		auto dt = mainContext.GetFrameDt();
 
 		window->clear();
+		if (mainContext.IsImGuiInitialized()) {
+			SyncImGuiSfmlWindowFocus(*window);
+		}
 		ImGui::SFML::Update(*window, dt);
 		scene->NotifyPresentRec(dt);
 
