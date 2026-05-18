@@ -5,6 +5,7 @@
 namespace Engine::Serialization {
 
 	[[nodiscard]] const ISceneSettingsModule& GetSimulationSettingsModule();
+	[[nodiscard]] const ISceneSettingsModule& GetViewSettingsModule();
 	[[nodiscard]] const ISceneSettingsModule& GetPhysicsSettingsModule();
 	[[nodiscard]] const ISceneSettingsModule& GetLightingSettingsModule();
 	[[nodiscard]] const ISceneSettingsModule& GetVisualizationSettingsModule();

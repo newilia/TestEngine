@@ -14,8 +14,9 @@ namespace Engine::Serialization {
 	SceneSettingsRegistry::SceneSettingsRegistry() = default;
 
 	void SceneSettingsRegistry::SaveAll(pugi::xml_node settingsParent, SerializationResult& result) const {
-		const std::array<const ISceneSettingsModule*, 5> modules = {
+		const std::array<const ISceneSettingsModule*, 6> modules = {
 		    &GetSimulationSettingsModule(),
+		    &GetViewSettingsModule(),
 		    &GetPhysicsSettingsModule(),
 		    &GetLightingSettingsModule(),
 		    &GetVisualizationSettingsModule(),
@@ -27,8 +28,9 @@ namespace Engine::Serialization {
 	}
 
 	void SceneSettingsRegistry::LoadAll(const pugi::xml_node& settingsParent, SerializationResult& result) const {
-		const std::array<const ISceneSettingsModule*, 5> modules = {
+		const std::array<const ISceneSettingsModule*, 6> modules = {
 		    &GetSimulationSettingsModule(),
+		    &GetViewSettingsModule(),
 		    &GetPhysicsSettingsModule(),
 		    &GetLightingSettingsModule(),
 		    &GetVisualizationSettingsModule(),
@@ -40,8 +42,9 @@ namespace Engine::Serialization {
 	}
 
 	void SceneSettingsRegistry::ApplyAllDefaults() const {
-		const std::array<const ISceneSettingsModule*, 5> modules = {
+		const std::array<const ISceneSettingsModule*, 6> modules = {
 		    &GetSimulationSettingsModule(),
+		    &GetViewSettingsModule(),
 		    &GetPhysicsSettingsModule(),
 		    &GetLightingSettingsModule(),
 		    &GetVisualizationSettingsModule(),
