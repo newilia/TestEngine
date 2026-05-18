@@ -31,7 +31,7 @@ namespace {
 
 PolygonTool::PolygonTool(SelectTool::SelectCallback onSelect) : _onSelect(std::move(onSelect)) {}
 
-void PolygonTool::beginStroke(const sf::Vector2f& world, const sf::Vector2i& pixel) {
+void PolygonTool::BeginStroke(const sf::Vector2f& world, const sf::Vector2i& pixel) {
 	_isDrawing = true;
 	_worldSamples.clear();
 	_worldSamples.push_back(world);
@@ -39,7 +39,7 @@ void PolygonTool::beginStroke(const sf::Vector2f& world, const sf::Vector2i& pix
 	_cursorWorld = world;
 }
 
-void PolygonTool::tryAppendSample(const sf::Vector2i& pixel, const sf::Vector2f& world) {
+void PolygonTool::TryAppendSample(const sf::Vector2i& pixel, const sf::Vector2f& world) {
 	if (!_lastSamplePixel) {
 		return;
 	}
@@ -51,7 +51,7 @@ void PolygonTool::tryAppendSample(const sf::Vector2i& pixel, const sf::Vector2f&
 	}
 }
 
-void PolygonTool::finalizeStroke() {
+void PolygonTool::FinalizeStroke() {
 	if (_worldSamples.size() < 3) {
 		return;
 	}
@@ -93,31 +93,19 @@ void PolygonTool::finalizeStroke() {
 	auto visual = std::make_shared<ConvexShapeVisual>();
 	visual->SetPoints(localPts);
 	node->SetVisual(std::move(visual));
-	parent->AddChild(node);
 	Utils::SetLocalPosToWorld(node, centerWorld);
 	if (_isAttachPhysicsBody) {
 		auto body = node->RequireBehaviour<PhysicsBodyBehaviour>();
 	}
-	/* TODO remove when behaviours init after node attach is fixed */
-	{
-		auto active = Engine::MainContext::GetInstance().GetScene();
-		shared_ptr<SceneNode> root = parent;
-		while (auto p = root->GetParent()) {
-			root = std::move(p);
-		}
-		const auto activeRoot = active ? active->GetRoot() : nullptr;
-		if (activeRoot && root == activeRoot) {
-			node->NotifyLifecycleInitRecursive();
-		}
-	}
+	parent->AddChild(node);
 }
 
-void PolygonTool::endStroke() {
+void PolygonTool::EndStroke() {
 	if (!_isDrawing) {
 		return;
 	}
 	_isDrawing = false;
-	finalizeStroke();
+	FinalizeStroke();
 	_worldSamples.clear();
 	_lastSamplePixel.reset();
 }
@@ -125,13 +113,13 @@ void PolygonTool::endStroke() {
 bool PolygonTool::ProcessEvent(const sf::Event& event) {
 	if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
 		if (pressed->button == sf::Mouse::Button::Left) {
-			beginStroke(ToWorldPixel(pressed->position), pressed->position);
+			BeginStroke(ToWorldPixel(pressed->position), pressed->position);
 			return true;
 		}
 	}
 	if (const auto* touch = event.getIf<sf::Event::TouchBegan>()) {
 		if (touch->finger == 0) {
-			beginStroke(ToWorldPixel(touch->position), touch->position);
+			BeginStroke(ToWorldPixel(touch->position), touch->position);
 			return true;
 		}
 	}
@@ -139,25 +127,25 @@ bool PolygonTool::ProcessEvent(const sf::Event& event) {
 	if (_isDrawing) {
 		if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
 			_cursorWorld = ToWorldPixel(moved->position);
-			tryAppendSample(moved->position, _cursorWorld);
+			TryAppendSample(moved->position, _cursorWorld);
 			return true;
 		}
 		if (const auto* tm = event.getIf<sf::Event::TouchMoved>()) {
 			if (tm->finger == 0) {
 				_cursorWorld = ToWorldPixel(tm->position);
-				tryAppendSample(tm->position, _cursorWorld);
+				TryAppendSample(tm->position, _cursorWorld);
 				return true;
 			}
 		}
 		if (const auto* released = event.getIf<sf::Event::MouseButtonReleased>()) {
 			if (released->button == sf::Mouse::Button::Left) {
-				endStroke();
+				EndStroke();
 				return true;
 			}
 		}
 		if (const auto* ended = event.getIf<sf::Event::TouchEnded>()) {
 			if (ended->finger == 0) {
-				endStroke();
+				EndStroke();
 				return true;
 			}
 		}

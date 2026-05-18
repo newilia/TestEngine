@@ -30,6 +30,10 @@ void SceneNode::SetSceneObjectId(Engine::SceneObjectId id) {
 	_sceneObjectId = id;
 }
 
+bool SceneNode::IsInited() const {
+	return _isNodeLifecycleInited;
+}
+
 shared_ptr<SceneNode> SceneNode::GetParent() const {
 	return _parent.lock();
 }
@@ -362,10 +366,10 @@ void SceneNode::NotifyActiveSceneObjectIndexDirty() const {
 }
 
 void SceneNode::NotifyLifecycleInitRecursive() {
-	if (_wasNodeLifecycleInited) {
+	if (_isNodeLifecycleInited) {
 		return;
 	}
-	_wasNodeLifecycleInited = true;
+	_isNodeLifecycleInited = true;
 
 	for (auto& c : _children) {
 		c->NotifyLifecycleInitRecursive();
@@ -380,10 +384,10 @@ void SceneNode::NotifyLifecycleInitRecursive() {
 }
 
 void SceneNode::NotifyLifecycleDeinitRecursive() {
-	if (!_wasNodeLifecycleInited) {
+	if (!_isNodeLifecycleInited) {
 		return;
 	}
-	_wasNodeLifecycleInited = false;
+	_isNodeLifecycleInited = false;
 
 	IterateBehavioursSafely([&](shared_ptr<Behaviour> b) {
 		if (b->_wasInited) {

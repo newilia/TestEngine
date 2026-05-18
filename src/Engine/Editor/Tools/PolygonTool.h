@@ -23,10 +23,10 @@ public:
 	void DrawToolParametersUi() override;
 
 private:
-	void beginStroke(const sf::Vector2f& world, const sf::Vector2i& pixel);
-	void endStroke();
-	void tryAppendSample(const sf::Vector2i& pixel, const sf::Vector2f& world);
-	void finalizeStroke();
+	void BeginStroke(const sf::Vector2f& world, const sf::Vector2i& pixel);
+	void EndStroke();
+	void TryAppendSample(const sf::Vector2i& pixel, const sf::Vector2f& world);
+	void FinalizeStroke();
 
 	SelectTool::SelectCallback _onSelect;
 	bool _isDrawing = false;
