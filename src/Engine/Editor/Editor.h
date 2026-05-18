@@ -96,6 +96,12 @@ namespace Engine {
 		EditorSceneGrid& GetEditorSceneGrid();
 		const EditorSceneGrid& GetEditorSceneGrid() const;
 
+		bool IsDrawSelectionEnabled() const;
+		bool& DrawSelectionEnabledMutable();
+
+		bool IsDrawDescendantsSelectionEnabled() const;
+		bool& DrawDescendantsSelectionEnabledMutable();
+
 	private:
 		Editor();
 
@@ -130,6 +136,8 @@ namespace Engine {
 		    const SceneNode& node, sf::VertexArray& lineOutlines, std::vector<sf::CircleShape>& fallbackMarkers);
 
 		bool _isOpen = true;
+		bool _isDrawSelectionEnabled = true;
+		bool _isDrawDescendantsSelectionEnabled = true;
 		mutable bool _isLayoutFinished = false;
 		std::optional<sf::Vector2i> _cameraMoveMouseOriginPos; // nullopt when not moving
 		SceneHierarchyWidget _sceneHierarchyWidget{};
