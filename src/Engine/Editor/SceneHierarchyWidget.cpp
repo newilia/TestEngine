@@ -1,7 +1,6 @@
 #include "Engine/Editor/SceneHierarchyWidget.h"
 
 #include "Engine/Core/MainContext.h"
-#include "Engine/Core/Utils.h"
 #include "Engine/Editor/Editor.h"
 
 #include <imgui.h>

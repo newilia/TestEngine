@@ -3,8 +3,8 @@
 #include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Core/SceneNodeUtils.h"
 #include "Engine/Core/Transform.h"
-#include "Engine/Core/Utils.h"
 #include "GameControllerBehaviour.generated.hpp"
 
 #include <cmath>

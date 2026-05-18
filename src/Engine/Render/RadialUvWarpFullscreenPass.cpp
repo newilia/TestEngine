@@ -3,7 +3,7 @@
 #include "Engine/Behaviour/RadialUvWarpBehaviour.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Core/Utils.h"
+#include "Engine/Core/SceneNodeUtils.h"
 
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics/Texture.hpp>

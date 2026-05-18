@@ -2,7 +2,7 @@
 
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/Scene.h"
-#include "Engine/Core/Utils.h"
+#include "Engine/Core/SfmlWindowUtils.h"
 #include "Engine/Editor/Editor.h"
 
 #include <SFML/Graphics/RectangleShape.hpp>

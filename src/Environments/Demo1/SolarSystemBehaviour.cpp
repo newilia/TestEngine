@@ -5,7 +5,6 @@
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Transform.h"
-#include "Engine/Core/Utils.h"
 #include "Engine/Simulation/AttractionField.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "Engine/Visual/CircleShapeVisual.h"

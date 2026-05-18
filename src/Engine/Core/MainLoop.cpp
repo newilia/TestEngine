@@ -3,7 +3,6 @@
 #include "Engine/Core/EventsDispatcher.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/PeriodicTaskExecutor.h"
-#include "Engine/Core/Utils.h"
 #include "Engine/Editor/Editor.h"
 #include "Engine/Render/ViewportFullscreenEffect.h"
 #include "Engine/Simulation/PhysicsProcessor.h"

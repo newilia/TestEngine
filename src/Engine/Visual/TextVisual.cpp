@@ -3,7 +3,7 @@
 #include "Engine/Core/FontManager.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Core/Utils.h"
+#include "Engine/Core/ShapeHitTestUtils.h"
 #include "TextVisual.generated.hpp"
 
 #include <SFML/Graphics/Text.hpp>

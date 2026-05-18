@@ -3,9 +3,10 @@
 #include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
 #include "Engine/Behaviour/Physics/IntersectionDetails.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
+#include "Engine/Core/MathUtils.h"
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Core/SceneNodeUtils.h"
 #include "Engine/Core/Transform.h"
-#include "Engine/Core/Utils.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/System/Angle.hpp>

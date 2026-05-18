@@ -1,6 +1,6 @@
 #include "VectorArrowShape.h"
 
-#include "Engine/Core/Utils.h"
+#include "Engine/Core/MathUtils.h"
 
 VectorArrowShape::VectorArrowShape(const sf::Vector2f& start, const sf::Vector2f& end, const sf::Color& fillColor)
     : _start(start), _end(end) {
