@@ -732,7 +732,12 @@ namespace Engine {
 						std::vector<const char*> labels;
 						labels.reserve(storage.size());
 						for (const std::string& row : storage) {
-							labels.push_back(row.c_str());
+							if (row.empty()) {
+								labels.push_back("##empty");
+							}
+							else {
+								labels.push_back(row.c_str());
+							}
 						}
 						int idx = 0;
 						for (std::size_t i = 0; i < storage.size(); ++i) {
