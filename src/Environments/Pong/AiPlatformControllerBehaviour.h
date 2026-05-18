@@ -30,19 +30,14 @@ public:
 	void ClearPendingObservations();
 	void SetMovementBounds(std::weak_ptr<SceneNode> movementRegionRect);
 
-	/* TODO incapsulation */
-	/// @property(minValue=0.f, maxValue=100000.f, tooltip="Scales velocity toward target position.")
-	float _speedFactor = 50.f;
-	/// @property(tooltip="Max velocity components (pixels/sec style scale).")
-	sf::Vector2f _velLimit = {3000.f, 1000.f};
-	/// @property(minValue=0.f, tooltip="Seconds before reacting to an observed ball state.")
-	float _reactionDelaySeconds = 0.1f;
-	/// @property(minValue=0.f, tooltip="Seconds between ball observations.")
-	float _observePeriodSeconds = 0.01f;
-	/// @property(minValue=0.f, maxValue=1.f)
-	float _aggression = 0.5f;
-	/// @property(minValue=0.f, tooltip="Seconds between aggression rerolls.")
-	float _aggressionChangePeriodSeconds = 1.f;
+	/// @getter(minValue=0.f, maxValue=100000.f, tooltip="Scales velocity toward target position.")
+	float GetSpeedFactor() const;
+	/// @setter
+	void SetSpeedFactor(float speedFactor);
+	/// @getter(tooltip="Max velocity components (pixels/sec style scale).")
+	sf::Vector2f GetVelLimit() const;
+	/// @setter
+	void SetVelLimit(sf::Vector2f velLimit);
 
 private:
 	void ObserveState();
@@ -61,7 +56,7 @@ private:
 		ExternalState state;
 	};
 
-	sf::Vector2f _defaultPos{}; // TODO what is this
+	sf::Vector2f _defaultPos{};
 	sf::Vector2f _targetPos{};
 
 	std::weak_ptr<SceneNode> _opponentPlatform;
@@ -72,4 +67,15 @@ private:
 	ExternalState _curExState{};
 	ExternalState _prevExState{};
 	sf::Clock _aggressionChangeTimer;
+
+	float _speedFactor = 50.f;
+	sf::Vector2f _velLimit = {3000.f, 1000.f};
+	/// @property(minValue=0.f, tooltip="Seconds before reacting to an observed ball state.")
+	float _reactionDelaySeconds = 0.1f;
+	/// @property(minValue=0.f, tooltip="Seconds between ball observations.")
+	float _observePeriodSeconds = 0.01f;
+	/// @property(minValue=0.f, maxValue=1.f)
+	float _aggression = 0.5f;
+	/// @property(minValue=0.f, tooltip="Seconds between aggression rerolls.")
+	float _aggressionChangePeriodSeconds = 1.f;
 };

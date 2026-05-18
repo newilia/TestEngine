@@ -16,6 +16,22 @@ void AiPlatformControllerBehaviour::SetMovementBounds(std::weak_ptr<SceneNode> m
 	_movementBounds = std::move(movementRegionRect);
 }
 
+float AiPlatformControllerBehaviour::GetSpeedFactor() const {
+	return _speedFactor;
+}
+
+void AiPlatformControllerBehaviour::SetSpeedFactor(float speedFactor) {
+	_speedFactor = speedFactor;
+}
+
+sf::Vector2f AiPlatformControllerBehaviour::GetVelLimit() const {
+	return _velLimit;
+}
+
+void AiPlatformControllerBehaviour::SetVelLimit(sf::Vector2f velLimit) {
+	_velLimit = velLimit;
+}
+
 void AiPlatformControllerBehaviour::OnInit() {
 	Behaviour::OnInit();
 	ResyncSpawnFromNode();
