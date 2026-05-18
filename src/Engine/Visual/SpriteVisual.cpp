@@ -45,7 +45,7 @@ sf::FloatRect SpriteVisual::GetGlobalBounds() const {
 }
 
 void SpriteVisual::SetTexture(const sf::Texture& texture) {
-	_sprite = std::make_shared<sf::Sprite>(texture);
+	_sprite = std::make_unique<sf::Sprite>(texture);
 }
 
 const std::string& SpriteVisual::GetTexturePath() const {
