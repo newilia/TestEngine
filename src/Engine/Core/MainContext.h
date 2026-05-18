@@ -1,5 +1,6 @@
 #pragma once
 #include "Engine/Background/GameBackgroundContext.h"
+#include "Engine/Core/CameraViewAnimator.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/Singleton.h"
 
@@ -69,9 +70,9 @@ namespace Engine {
 		float GetCurrentTickRate() const;
 
 		void MoveCamera(const sf::Vector2i& delta);
-		void ZoomCamera(float zoomFactor, std::optional<sf::Vector2i> focusPixel = std::nullopt);
-		void FocusCameraOnNode(const std::shared_ptr<SceneNode>& node);
-		void FocusCameraOnWorldPoint(const sf::Vector2f& worldPoint);
+		void ZoomCamera(float zoomFactor, std::optional<sf::Vector2i> focusPixel = std::nullopt, bool smooth = true);
+		void FocusCameraOnNode(const std::shared_ptr<SceneNode>& node, bool smooth = true);
+		void FocusCameraOnWorldPoint(const sf::Vector2f& worldPoint, bool smooth = true);
 
 		std::optional<sf::Vector2f> GetMainCameraCenter() const;
 		std::optional<sf::Vector2f> GetMainCameraViewSize() const;
@@ -106,5 +107,6 @@ namespace Engine {
 		sf::Vector2u _mainWindowPixelSizeForView{};
 		bool _haveMainWindowPixelSizeForView = false;
 		std::string _mainWindowBaseTitleUtf8;
+		CameraViewAnimator _cameraViewAnimator;
 	};
 } // namespace Engine

@@ -1023,8 +1023,11 @@ namespace Engine {
 	void Editor::OnMouseWheelScrolled(const sf::Event::MouseWheelScrolled& e) {
 		if (e.wheel == sf::Mouse::Wheel::Vertical) {
 			if (!ImGui::GetIO().WantCaptureMouse) {
-				auto zoomFactor = 1 - e.delta * 0.15f;
-				MainContext::GetInstance().ZoomCamera(zoomFactor, e.position);
+				auto& mainContext = MainContext::GetInstance();
+				if (auto* window = mainContext.GetMainWindow()) {
+					const auto zoomFactor = 1.f - e.delta * 0.15f;
+					mainContext.ZoomCamera(zoomFactor, sf::Mouse::getPosition(*window));
+				}
 			}
 		}
 	}

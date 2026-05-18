@@ -148,9 +148,8 @@ namespace Engine {
 	void MainContext::OnStartPresentFrame() {
 		_frameTime = _frameClock.getElapsedTime();
 		_frameClock.restart();
-		const float dtSec = _frameTime.asSeconds();
-		if (dtSec > 0.f) {
-			const float instantaneous = 1.f / dtSec;
+		if (auto* window = GetMainWindow()) {
+			_cameraViewAnimator.Update(*window, _frameTime.asSeconds());
 		}
 	}
 
@@ -222,11 +221,19 @@ namespace Engine {
 			    perPxX * static_cast<float>(screenDelta.x) + perPxY * static_cast<float>(screenDelta.y);
 			view.move(worldDelta);
 			window->setView(view);
+			if (_cameraViewAnimator.IsAnimating()) {
+				_cameraViewAnimator.OffsetTargetCenter(worldDelta);
+			}
 		}
 	}
 
-	void MainContext::ZoomCamera(float zoomFactor, std::optional<sf::Vector2i> focusPixel) {
-		if (auto window = GetMainWindow()) {
+	void MainContext::ZoomCamera(float zoomFactor, std::optional<sf::Vector2i> focusPixel, bool smooth) {
+		if (auto* window = GetMainWindow()) {
+			if (smooth) {
+				_cameraViewAnimator.RequestZoom(*window, zoomFactor, focusPixel);
+				return;
+			}
+			_cameraViewAnimator.Cancel();
 			auto view = window->getView();
 			if (focusPixel) {
 				const sf::Vector2f worldBefore = window->mapPixelToCoords(*focusPixel, view);
@@ -241,12 +248,17 @@ namespace Engine {
 		}
 	}
 
-	void MainContext::FocusCameraOnNode(const std::shared_ptr<SceneNode>& node) {
-		FocusCameraOnWorldPoint(Utils::GetNodeCameraFocusWorldPoint(node));
+	void MainContext::FocusCameraOnNode(const std::shared_ptr<SceneNode>& node, bool smooth) {
+		FocusCameraOnWorldPoint(Utils::GetNodeCameraFocusWorldPoint(node), smooth);
 	}
 
-	void MainContext::FocusCameraOnWorldPoint(const sf::Vector2f& worldPoint) {
-		if (auto window = GetMainWindow()) {
+	void MainContext::FocusCameraOnWorldPoint(const sf::Vector2f& worldPoint, bool smooth) {
+		if (auto* window = GetMainWindow()) {
+			if (smooth) {
+				_cameraViewAnimator.RequestFocusCenter(*window, worldPoint);
+				return;
+			}
+			_cameraViewAnimator.Cancel();
 			auto view = window->getView();
 			view.setCenter(worldPoint);
 			window->setView(view);
@@ -268,6 +280,7 @@ namespace Engine {
 	}
 
 	void MainContext::SetMainCameraView(sf::Vector2f center, sf::Vector2f viewSize) {
+		_cameraViewAnimator.Cancel();
 		if (auto window = GetMainWindow()) {
 			const sf::View previous = window->getView();
 			sf::View view(center, viewSize);
@@ -306,6 +319,13 @@ namespace Engine {
 		adjusted.setViewport(view.getViewport());
 		adjusted.setScissor(view.getScissor());
 		_mainWindow->setView(adjusted);
+
+		if (_haveMainWindowPixelSizeForView && _mainWindowPixelSizeForView.x != 0u &&
+		    _mainWindowPixelSizeForView.y != 0u) {
+			const float sx = static_cast<float>(newPixelSize.x) / static_cast<float>(_mainWindowPixelSizeForView.x);
+			const float sy = static_cast<float>(newPixelSize.y) / static_cast<float>(_mainWindowPixelSizeForView.y);
+			_cameraViewAnimator.ScaleTargets({sx, sy});
+		}
 
 		_mainWindowPixelSizeForView = newPixelSize;
 		_haveMainWindowPixelSizeForView = true;
