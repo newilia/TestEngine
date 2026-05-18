@@ -112,8 +112,11 @@ void ClampPongPlatformDesiredCenter(sf::Vector2f& center, bool isBottomPlayer,
 	if (!body) {
 		return;
 	}
-	const sf::FloatRect bb =
-	    platformNode->GetWorldTransform().transformRect(body->GetColliderShape()->getGlobalBounds());
+	auto colliderShape = body->GetColliderShape();
+	if (!colliderShape) {
+		return;
+	}
+	const sf::FloatRect bb = platformNode->GetWorldTransform().transformRect(colliderShape->getGlobalBounds());
 
 	if (auto boundsNode = movementBounds.lock()) {
 		const sf::FloatRect region = GetRectangleNodeWorldAabb(*boundsNode);
