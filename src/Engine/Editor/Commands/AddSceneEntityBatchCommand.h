@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Engine/Core/EntityOnNode.h"
+#include "Engine/Core/EntitySlot.h"
 #include "Engine/Editor/EditorHistory.h"
-#include "Engine/Editor/SceneCloneUtils.h"
 
 #include <memory>
 #include <vector>

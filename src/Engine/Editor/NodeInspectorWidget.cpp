@@ -2,13 +2,13 @@
 
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Core/EntityOnNode.h"
+#include "Engine/Core/EntitySlot.h"
 #include "Engine/Core/IPropertiesProvider.h"
 #include "Engine/Core/PropertyTree.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Transform.h"
 #include "Engine/Editor/Editor.h"
 #include "Engine/Editor/EditorVisualTheme.h"
-#include "Engine/Editor/SceneCloneUtils.h"
 #include "Engine/Serialization/SceneEntityRegistry.h"
 
 #include <fmt/format.h>

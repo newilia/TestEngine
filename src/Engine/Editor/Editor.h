@@ -86,6 +86,7 @@ namespace Engine {
 		bool CanPasteEntityToSelectedNode() const;
 		bool AddSceneEntityFromRegistry(const std::vector<std::shared_ptr<SceneNode>>& nodes, std::string_view typeId);
 		bool SaveNodeAsPrefab(const std::shared_ptr<SceneNode>& node);
+		bool InstantiatePrefab();
 
 		EditorToolManager& GetEditorToolManager();
 		const EditorToolManager& GetEditorToolManager() const;
@@ -111,6 +112,7 @@ namespace Engine {
 		bool LoadScene();
 		bool LoadScene(const std::filesystem::path& path);
 		bool ReloadScene();
+		bool InstantiatePrefab(const std::filesystem::path& path);
 		bool SaveScene();
 		bool SaveSceneAs();
 		bool BeginSaveFlow(bool saveAs);

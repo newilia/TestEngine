@@ -23,6 +23,7 @@
 #include "Engine/Editor/EditorVisualTheme.h"
 #include "Engine/Editor/ImGui/Themes.h"
 #include "Engine/Editor/NativeFileDialog.h"
+#include "Engine/Serialization/PrefabSerializer.h"
 #include "Engine/Serialization/SceneDocumentSerializer.h"
 #include "Engine/Serialization/SceneEntityRegistry.h"
 #include "Engine/Serialization/SceneSettings/SceneSettingsRegistry.h"
@@ -187,6 +188,10 @@ namespace Engine {
 				}
 				if (ImGui::MenuItem("Reload from disk", "Ctrl+R", false, _currentScenePath.has_value())) {
 					(void)ReloadScene();
+				}
+				ImGui::Separator();
+				if (ImGui::MenuItem("Instantiate prefab…")) {
+					(void)InstantiatePrefab();
 				}
 				ImGui::EndMenu();
 			}
@@ -1050,6 +1055,39 @@ namespace Engine {
 			return false;
 		}
 		return true;
+	}
+
+	bool Editor::InstantiatePrefab() {
+		const auto path =
+		    EditorDialogs::PickSceneXmlOpen(MakeSceneFileDialogOptions(Serialization::SceneDocumentKind::Prefab));
+		if (!path) {
+			return false;
+		}
+		return InstantiatePrefab(*path);
+	}
+
+	bool Editor::InstantiatePrefab(const std::filesystem::path& path) {
+		const Serialization::PrefabInstantiateResult loaded =
+		    Serialization::PrefabSerializer::InstantiateFromFile(path);
+		if (!loaded.result.isSuccess || !loaded.instance) {
+			ShowSerializationErrorDialog("Instantiate prefab", loaded.result);
+			return false;
+		}
+		std::shared_ptr<SceneNode> parent = GetSelectedNode();
+		if (!parent) {
+			if (const auto scene = MainContext::GetInstance().GetScene()) {
+				parent = scene->GetRoot();
+			}
+		}
+		if (!parent) {
+			return false;
+		}
+		const auto instance = loaded.instance;
+		const bool executed = _history.Execute(std::make_unique<EditorCommands::PasteNodeCommand>(parent, instance));
+		if (executed) {
+			SetSelectedNode(instance);
+		}
+		return executed;
 	}
 
 	bool Editor::NewScene() {

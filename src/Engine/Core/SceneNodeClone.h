@@ -5,21 +5,10 @@
 
 #include <memory>
 
-class Behaviour;
-class RelativeSortingStrategy;
 class SceneNode;
 class Transform;
-class Visual;
 
 namespace Engine {
-
-	enum class EntitySlot
-	{
-		Transform,
-		Visual,
-		SortingStrategy,
-		Behaviour,
-	};
 
 	std::shared_ptr<EntityOnNode> CloneEntity(const std::shared_ptr<EntityOnNode>& source);
 	std::shared_ptr<Transform> CloneTransform(const Transform& source);
