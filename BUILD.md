@@ -2,18 +2,20 @@
 
 **Требования:** Windows, MSVC (Visual Studio или Build Tools с C++), **Python 3** (интерпретатор нужен CMake на этапе `find_package`), CMake 3.28+ (см. `cmake_minimum_required` в `CMakeLists.txt`).
 
-Вся работа из **корня репозитория** (рядом с `CMakeLists.txt`). Каталог **сборки — `build`**, **не** запускайте `cmake` прямо в исходниках (иначе появится `CMakeCache.txt` в корне).
+Вся работа из **корня репозитория** (рядом с `CMakeLists.txt`). Основной каталог сборки — **`build`** (генератор **Visual Studio**, MSBuild). **Не** запускайте `cmake` прямо в исходниках.
 
 ## Скрипты (рекомендуется)
 
 | Скрипт | Действие |
 |--------|----------|
-| `__gen_solution.cmd` | `cmake -S . -B build -A x64`, при успехе пытается открыть `build\TestEngine.slnx` (если есть; иначе в `build` смотрите `TestEngine.slnx` — откройте вручную) |
+| `_cmake.cmd` | `cmake -S . -B build -A x64` |
+| `_cmake_gen_and_open.cmd` | то же + открыть `build\TestEngine.slnx` |
+| `_cmake_ninja.cmd` | `build-ninja/` + Ninja (только `compile_commands.json` для clangd) |
 | `_build_release.cmd` / `_build_debug.cmd` | `cmake --build build` с `Release` или `Debug` |
-| `_run_release.cmd` / `_run_debug.cmd` | Запуск `TestEngine.exe` с **рабочим каталогом = корень репо**; аргументы для exe (например `--env=pong`) задавайте вручную при запуске или в настройках отладки VS |
-| `__clean.cmd` | Полностью **удаляет** каталог `build` (если есть) |
+| `_run_release.cmd` / `_run_debug.cmd` | Запуск exe; **рабочий каталог = корень репо** |
+| `__clean.cmd` | Удаляет `build`, `build-ninja`, `.vs`, `src/Codegen` |
 
-Параллельная сборка, например: `_build_release.cmd -j 8` (аргументы передаются в `cmake --build`).
+Параллельная сборка: `_build_release.cmd -j 8`.
 
 ## Вручную (CMake в PATH)
 
@@ -22,13 +24,11 @@ cmake -S . -B build -A x64
 cmake --build build --config Release
 ```
 
-Первый шаг: генератор (часто Visual Studio). Если `cmake` не находит Visual Studio, укажите `-G` сами, см. `cmake --help` (Generators). Для Visual Studio / Ninja **Multi-Config** тип (Release/Debug) задаётся **при сборке** (`--config`), а не одним `CMAKE_BUILD_TYPE` в чистом виде.
-
 **Где exe:** `build/bin/Release/TestEngine.exe` и `build/bin/Debug/TestEngine.exe`.
 
-## Демо-среда (`--env=`)
+Если в `build` остался генератор Ninja — `__clean.cmd`, затем `_cmake.cmd`.
 
-По умолчанию запускается **Test**. Чтобы выбрать среду без правки кода:
+## Демо-среда (`--env=`)
 
 - `--env=test` — [`TestEnvironment`](src/Environments/Test/TestEnvironment.h)
 - `--env=pong` — [`PongEnvironment`](src/Environments/Pong/PongEnvironment.h)
@@ -39,22 +39,19 @@ cmake --build build --config Release
 build\bin\Debug\TestEngine.exe --env=pong
 ```
 
-В Visual Studio: **TestEngine** → свойства → **Debugging** → **Command Arguments**, например `--env=pong`.
-
-При сборке с макросом `_CONSOLE` те же флаги передаются через `main(argc, argv)`.
+В Visual Studio: откройте **`build\TestEngine.slnx`** (через `_cmake_gen_and_open.cmd`) или solution из VS; **TestEngine** → Debugging → Command Arguments. Рабочая папка при отладке: **`VS_DEBUGGER_WORKING_DIRECTORY`** = корень репо (`CMakeLists.txt`).
 
 ## clangd и `compile_commands.json`
 
-В [`CMakeLists.txt`](CMakeLists.txt) задано `CMAKE_EXPORT_COMPILE_COMMANDS`: для генераторов **Ninja** и **Makefile** CMake кладёт `compile_commands.json` в каталог сборки. Для типичного генератора **Visual Studio** (`-A x64`) CMake этот файл **не** записывает — ограничение CMake.
-
-В [`.vscode/settings.json`](.vscode/settings.json) для расширения clangd указано `--compile-commands-dir=${workspaceFolder}/build`. Если файла нет, либо переключите конфигурацию на Ninja в отдельный каталог (нужен [Ninja](https://ninja-build.org/) в PATH), например:
+Visual Studio **не** пишет `compile_commands.json` в `build/`. Для Cursor/clangd — отдельный каталог **`build-ninja`**:
 
 ```bash
-cmake -S . -B build-ninja -G Ninja -DCMAKE_BUILD_TYPE=Debug
-cmake --build build-ninja
+_cmake_ninja.cmd
 ```
 
-и смените путь в настройках на `${workspaceFolder}/build-ninja`, либо пользуйтесь встроенной интеграцией C++ (CMake Tools / MSVC) без clangd.
+Перезапуск языкового сервера: **clangd: Restart language server**. В [`.vscode/settings.json`](.vscode/settings.json): `--compile-commands-dir=${workspaceFolder}/build-ninja`.
+
+После крупных изменений CMake/новых `.cpp` — снова `_cmake_ninja.cmd` (полная сборка Ninja не обязательна, достаточно configure).
 
 ## Codegen (дерево свойств)
 
@@ -71,13 +68,16 @@ cmake --build build-ninja
 
 Полный лог по каждому заголовку: `python tools/property_codegen.py --root . --verbose` (в CMake по умолчанию без `--verbose`, в конце — сводка).
 
-Список `src/**/*.cpp` и заголовков подхватывается при следующей сборке или конфигурации: в `CMakeLists.txt` для них задан `CONFIGURE_DEPENDS` (перезапуск configure при изменении дерева файлов).
+Список `src/**/*.cpp` подхватывается при следующей сборке/configure: в `CMakeLists.txt` задан `CONFIGURE_DEPENDS` на glob исходников.
+
+При сборке с макросом `_CONSOLE` флаги `--env=…` передаются через `main(argc, argv)`.
 
 ## Visual Studio
 
-- В корневом `CMakeLists.txt` задано **`VS_STARTUP_PROJECT` = `TestEngine`** — при открытии сгенерированного solution **элементом запуска** по умолчанию должна быть эта цель, а не `ALL_BUILD`. При необходимости выберите `TestEngine` вручную в списке запуска. Рабочая папка при отладке из VS — **корень репозитория** (`VS_DEBUGGER_WORKING_DIRECTORY`).
+- **`_cmake_gen_and_open.cmd`** — solution в `build/`, F5 на **TestEngine**.
+- **Open Folder** с CMake без solution: по умолчанию снова **`-A x64`** в `build/`; не подмешивайте Ninja в `build`, если нужен `.slnx`.
 
 ## Очистка
 
-- Полный сброс: `__clean.cmd` (или вручную удалить `build`, затем снова `__gen_solution.cmd`). Если `build` занят (часто VS) — сначала закройте IDE.
-- Без удаления каталога, только `clean` от CMake: `cmake --build build --config Release --target clean` (нужен уже сгенерированный `build`).
+- Полный сброс: `__clean.cmd`, затем `_cmake.cmd` и при необходимости `_cmake_ninja.cmd`.
+- Только clean: `cmake --build build --config Release --target clean`.

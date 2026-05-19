@@ -7,7 +7,7 @@ alwaysApply: true
 
 ## Build
 
-Use the **`build`** directory only for configure and compile (`cmake -S . -B build …`, `cmake --build build …`). Do not use other build trees (`out/vs18`, ad-hoc folders) unless the user explicitly asks.
+Use the **`build`** directory for configure and compile (`cmake -S . -B build …`, `cmake --build build …`). **`build-ninja/`** is only for `_cmake_ninja.cmd` (clangd `compile_commands.json`), not for running the app. Do not use other build trees (`out/vs18`, ad-hoc folders) unless the user explicitly asks.
 
 ## Build smoke test
 

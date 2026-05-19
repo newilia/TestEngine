@@ -44,6 +44,24 @@
 			"problemMatcher": []
 		},
 		{
+			"label": "CMake: configure (clangd / Ninja)",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/c",
+				"call \"${workspaceFolder}/_cmake_ninja.cmd\""
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": "build",
+			"presentation": {
+				"reveal": "silent",
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
 			"label": "Kill TestEngine (if running)",
 			"type": "process",
 			"command": "true",
