@@ -287,7 +287,7 @@ std::vector<shared_ptr<SceneNode>> SceneNode::FindChildren(const std::string& id
 
 void SceneNode::AddBehaviour(shared_ptr<Behaviour> behaviour) {
 	behaviour->AttachTo(shared_from_this());
-	_behaviours.push_back(std::move(behaviour));
+	_behaviours.push_back(behaviour);
 	NotifyActiveSceneObjectIndexDirty();
 	if (_isNodeLifecycleInited) {
 		behaviour->OnInit();
