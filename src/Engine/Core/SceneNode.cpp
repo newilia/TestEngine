@@ -288,8 +288,10 @@ std::vector<shared_ptr<SceneNode>> SceneNode::FindChildren(const std::string& id
 void SceneNode::AddBehaviour(shared_ptr<Behaviour> behaviour) {
 	behaviour->AttachTo(shared_from_this());
 	_behaviours.push_back(std::move(behaviour));
-	_behaviours.back()->OnAttached();
 	NotifyActiveSceneObjectIndexDirty();
+	if (_isNodeLifecycleInited) {
+		behaviour->OnInit();
+	}
 }
 
 void SceneNode::RemoveBehaviour(Behaviour* behaviour) {
@@ -406,7 +408,6 @@ void SceneNode::DetachBehaviourForRemove(const shared_ptr<Behaviour>& b) {
 		b->OnDeinit();
 		b->_wasInited = false;
 	}
-	b->OnDetached();
 }
 
 void SceneNode::FindNodesAtPoint(
