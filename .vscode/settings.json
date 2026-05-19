@@ -28,7 +28,7 @@
 		"editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
 	},
 	"clangd.arguments": [
-		"--compile-commands-dir=${workspaceFolder}/build"
+		"--compile-commands-dir=${workspaceFolder}/build-ninja"
 	],
 	"clangd.fallbackFlags": [
 		"-std=c++20",
@@ -48,6 +48,7 @@
 		"${workspaceFolder}/src/TestEngineGlobals.h"
 	],
 	"files.exclude": {
-		"**/build": true
+		"**/build": true,
+		"**/build-ninja": true
 	}
 }
