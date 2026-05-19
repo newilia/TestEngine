@@ -30,10 +30,8 @@ class Behaviour : public EntityOnNode
 public:
 	~Behaviour() override = default;
 
-	virtual void OnAttached();
 	virtual void OnInit();
 	virtual void OnDeinit();
-	virtual void OnDetached();
 	virtual void OnEnabled(bool isEnabled);
 	virtual void OnVisible(bool isVisible);
 	virtual void OnUpdate(const sf::Time& dt);

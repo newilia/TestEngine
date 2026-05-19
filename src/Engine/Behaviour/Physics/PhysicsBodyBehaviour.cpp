@@ -107,23 +107,6 @@ void PhysicsBodyBehaviour::OnDeinit() {
 	}
 }
 
-void PhysicsBodyBehaviour::OnAttached() {
-	Behaviour::OnAttached();
-	if (GetNode()->IsInited()) {
-		if (auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
-			ph->RegisterBody(shared_from_this());
-		}
-	}
-}
-
-void PhysicsBodyBehaviour::OnDetached() {
-	Behaviour::OnDetached();
-
-	if (auto ph = Engine::MainContext::GetInstance().GetPhysicsProcessor()) {
-		ph->UnregisterBody(this);
-	}
-}
-
 void PhysicsBodyBehaviour::OnEnabled(bool isEnabled) {
 	_collisionGeomCacheOk = false;
 	_collisionCacheShapePtr = nullptr;

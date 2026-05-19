@@ -34,8 +34,6 @@ public:
 public:
 	void OnInit() override;
 	void OnDeinit() override;
-	void OnAttached() override;
-	void OnDetached() override;
 	void OnEnabled(bool isEnabled) override;
 
 	const sf::Shape* GetColliderShape() const;
