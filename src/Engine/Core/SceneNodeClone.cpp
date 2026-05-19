@@ -1,7 +1,6 @@
-#include "Engine/Editor/SceneCloneUtils.h"
+#include "Engine/Core/SceneNodeClone.h"
 
 #include "Engine/Behaviour/Behaviour.h"
-#include "Engine/Core/IPropertiesProvider.h"
 #include "Engine/Core/PropertyNode.h"
 #include "Engine/Core/PropertyTree.h"
 #include "Engine/Core/SceneNode.h"

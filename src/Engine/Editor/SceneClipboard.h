@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Engine/Editor/SceneCloneUtils.h"
+#include "Engine/Core/EntitySlot.h"
+#include "Engine/Core/SceneNodeClone.h"
 
 #include <memory>
 #include <variant>

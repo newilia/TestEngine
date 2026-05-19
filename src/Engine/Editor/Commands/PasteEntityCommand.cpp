@@ -2,6 +2,7 @@
 
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Core/SceneNodeClone.h"
 #include "Engine/Core/Transform.h"
 #include "Engine/Editor/Commands/EditorSceneHelpers.h"
 #include "Engine/Sorting/SortingStrategy.h"
