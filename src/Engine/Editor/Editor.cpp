@@ -185,6 +185,9 @@ namespace Engine {
 				if (ImGui::MenuItem("Save As…", "Ctrl+Shift+S")) {
 					(void)SaveSceneAs();
 				}
+				if (ImGui::MenuItem("Reload from disk", "Ctrl+R", false, _currentScenePath.has_value())) {
+					(void)ReloadScene();
+				}
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("View")) {
@@ -754,7 +757,6 @@ namespace Engine {
 	}
 
 	void Editor::OnEvent(const sf::Event& event) {
-		/* TODO event.visit() ? */
 		if (const auto* e = event.getIf<sf::Event::Resized>()) {
 			OnResize(*e);
 			return;
@@ -807,6 +809,10 @@ namespace Engine {
 			}
 			if (e.control && !e.shift && e.code == sf::Keyboard::Key::O) {
 				(void)LoadScene();
+				return;
+			}
+			if (e.control && !e.shift && e.code == sf::Keyboard::Key::R) {
+				(void)ReloadScene();
 				return;
 			}
 			if (_isOpen && e.control && !e.shift && e.code == sf::Keyboard::Key::G) {
@@ -1062,8 +1068,15 @@ namespace Engine {
 		if (!path) {
 			return false;
 		}
+		return LoadScene(*path);
+	}
+
+	bool Editor::LoadScene(const std::filesystem::path& path) {
+		if (!std::filesystem::exists(path)) {
+			return false;
+		}
 		Serialization::SceneDocumentLoadResult loaded =
-		    Serialization::SceneDocumentSerializer::LoadDocumentFromFile(*path);
+		    Serialization::SceneDocumentSerializer::LoadDocumentFromFile(path);
 		if (!loaded.result.isSuccess || !loaded.scene) {
 			ShowSerializationErrorDialog("Load document", loaded.result);
 			return false;
@@ -1071,8 +1084,15 @@ namespace Engine {
 		MainContext::GetInstance().SetScene(loaded.scene);
 		ClearNodeSelection();
 		_history = EditorHistory{};
-		SetCurrentDocument(*path, loaded.kind);
+		SetCurrentDocument(path, loaded.kind);
 		return true;
+	}
+
+	bool Editor::ReloadScene() {
+		if (!_currentScenePath) {
+			return false;
+		}
+		return LoadScene(*_currentScenePath);
 	}
 
 	void Editor::OnKeyRelease(const sf::Event::KeyReleased& /*e*/) {}
