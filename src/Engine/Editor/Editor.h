@@ -109,6 +109,8 @@ namespace Engine {
 		void DrawSaveDocumentKindModal();
 		bool NewScene();
 		bool LoadScene();
+		bool LoadScene(const std::filesystem::path& path);
+		bool ReloadScene();
 		bool SaveScene();
 		bool SaveSceneAs();
 		bool BeginSaveFlow(bool saveAs);

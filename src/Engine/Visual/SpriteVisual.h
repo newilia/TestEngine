@@ -29,7 +29,6 @@ public:
 	void SetOrigin(const sf::Vector2f& origin);
 	sf::Vector2f GetOrigin() const;
 
-public:
 	const sf::Sprite* GetSprite() const;
 	void SetTexture(const sf::Texture& texture);
 
