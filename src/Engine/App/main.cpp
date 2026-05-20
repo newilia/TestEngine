@@ -1,8 +1,6 @@
-#include "Engine/Core/EventsDispatcher.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/MainLoop.h"
-#include "Engine/Core/PeriodicTaskExecutor.h"
-#include "Engine/Editor/Editor.h"
+#include "Engine/Core/SfmlWindowUtils.h"
 #include "Environments/BallGame1/Env.h"
 #include "Environments/Demo1/Env.h"
 #include "Environments/EnvironmentBase.h"
@@ -40,7 +38,7 @@ namespace {
 		return true;
 	}
 
-	[[nodiscard]] AppEnvironmentKind ParseEnvFromArgv(int argc, char** argv) {
+	std::optional<AppEnvironmentKind> ParseEnvFromArgv(int argc, char** argv) {
 		constexpr std::string_view prefix = "--env=";
 		for (int i = 1; i < argc; ++i) {
 			std::string_view arg(argv[i]);
@@ -60,10 +58,10 @@ namespace {
 				}
 			}
 		}
-		return AppEnvironmentKind::Test;
+		return std::nullopt;
 	}
 
-	[[nodiscard]] AppEnvironmentKind ParseEnvFromCmdLine(std::string_view fullLine) {
+	std::optional<AppEnvironmentKind> ParseEnvFromCmdLine(std::string_view fullLine) {
 		constexpr std::string_view key = "--env=";
 		size_t pos = 0;
 		while (pos < fullLine.size()) {
@@ -91,11 +89,14 @@ namespace {
 			}
 			pos = valEnd;
 		}
-		return AppEnvironmentKind::Test;
+		return std::nullopt;
 	}
 
-	std::shared_ptr<EnvironmentBase> CreateEnvironment(AppEnvironmentKind kind) {
-		switch (kind) {
+	std::shared_ptr<EnvironmentBase> CreateEnvironment(std::optional<AppEnvironmentKind> kind) {
+		if (!kind) {
+			return nullptr;
+		}
+		switch (*kind) {
 		case AppEnvironmentKind::Test:
 			return std::make_shared<TestEnvironment>();
 		case AppEnvironmentKind::Pong:
@@ -127,10 +128,18 @@ int WINAPI WinMain(
 	auto envKind = ParseEnvFromCmdLine(lpCmdLine ? std::string_view(lpCmdLine) : std::string_view{});
 	auto env = CreateEnvironment(envKind);
 #endif
-	if (!env) {
-		exit(EXIT_FAILURE);
+	if (env) {
+		env->Setup();
 	}
-	env->Setup();
+	else {
+		auto& mainContext = Engine::MainContext::GetInstance();
+		const auto mainWindow = mainContext.CreateMainWindow(sf::VideoMode({1920, 1080}), "New scene");
+		if (!mainWindow) {
+			std::exit(EXIT_FAILURE);
+		}
+		Utils::MaximizeWindow(*mainWindow);
+		mainContext.SetScene(std::make_shared<Scene>());
+	}
 
 	Engine::MainContext::GetInstance().Init();
 
