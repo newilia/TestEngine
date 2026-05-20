@@ -133,7 +133,7 @@ int WINAPI WinMain(
 	}
 	else {
 		auto& mainContext = Engine::MainContext::GetInstance();
-		const auto mainWindow = mainContext.CreateMainWindow(sf::VideoMode({1920, 1080}), "New scene");
+		const auto mainWindow = mainContext.CreateMainWindow(sf::VideoMode({1920, 1080}), "Test Engine");
 		if (!mainWindow) {
 			std::exit(EXIT_FAILURE);
 		}

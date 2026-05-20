@@ -27,9 +27,9 @@ void GameBackgroundContext::SetPlainColorBackground(const sf::Color& color) {
 	_background = std::move(bg);
 }
 
-void GameBackgroundContext::SetParallaxTextureBackground(const std::filesystem::path& texturePath, float opacity,
-    float scaleWithCamera, float moveWithCamera, float defaultScale) {
+void GameBackgroundContext::SetParallaxTextureBackground(
+    const std::filesystem::path& texturePath, float opacity, float staticity, float defaultScale) {
 	auto bg = std::make_unique<ParallaxTextureGameBackground>();
-	bg->Configure(texturePath.string(), opacity, scaleWithCamera, moveWithCamera, defaultScale);
+	bg->Configure(texturePath.string(), opacity, staticity, defaultScale);
 	_background = std::move(bg);
 }

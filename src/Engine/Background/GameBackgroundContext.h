@@ -24,8 +24,8 @@ public:
 
 	void SetPlainColorBackground(const sf::Color& color);
 
-	void SetParallaxTextureBackground(const std::filesystem::path& texturePath, float opacity, float scaleWithCamera,
-	    float moveWithCamera, float defaultScale);
+	void SetParallaxTextureBackground(
+	    const std::filesystem::path& texturePath, float opacity, float staticity, float defaultScale);
 
 private:
 	std::unique_ptr<IGameBackground> _background;

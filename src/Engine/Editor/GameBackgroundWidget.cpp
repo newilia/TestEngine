@@ -38,7 +38,7 @@ namespace Engine {
 				ctx->SetPlainColorBackground(sf::Color(32, 32, 48));
 			}
 			else if (selected == 2 && currentItem != 2) {
-				ctx->SetParallaxTextureBackground({}, 1.f, 0.f, 0.35f, 256.f);
+				ctx->SetParallaxTextureBackground({}, 1.f, 0.f, 1920.f);
 			}
 		}
 
