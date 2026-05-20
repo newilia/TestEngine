@@ -34,7 +34,7 @@ Types that participate in **scene XML** (`SceneSerializer` / `PropertyTreeSerial
 
 ### Which types are registered (v1 heuristics)
 
-Scanner picks classes from headers under **`src/`** (excluding **`Codegen/`**) that pass **`should_register_scene_entity`** in **`tools/property_codegen.py`**: e.g. **`Transform`**, **`RelativeSortingStrategy`**, concrete types under **`Engine/Visual/`** (not the abstract **`Visual`** base, not **`ShapeVisualBase`**), **`Engine/Behaviour/`** (any depth), **`Environments/<EnvName>/`**. Excluded: **`SceneNode`**, **`Engine/Background/`**, and any type the script lists explicitly (see **`TicTacToeBehaviour`** — no default ctor).
+Scanner picks classes from headers under **`src/`** (excluding **`Codegen/`**) that pass **`should_register_scene_entity`** in **`tools/property_codegen.py`**: e.g. **`Transform`**, concrete types under **`Engine/Sorting/`** (not the abstract **`SortingStrategy`** base), concrete types under **`Engine/Visual/`** (not the abstract **`Visual`** base, not **`ShapeVisualBase`**), **`Engine/Behaviour/`** (any depth), **`Environments/<EnvName>/`**. Excluded: **`SceneNode`**, **`Engine/Background/`**, and any type the script lists explicitly (see **`TicTacToeBehaviour`** — no default ctor).
 
 ### Stable `typeId` strings
 

@@ -26,11 +26,11 @@ namespace Engine::EditorCommands {
 				continue;
 			}
 			if (entry.slot == Engine::EntitySlot::SortingStrategy) {
-				entry.removedSorting = std::dynamic_pointer_cast<RelativeSortingStrategy>(entity);
+				entry.removedSorting = std::dynamic_pointer_cast<SortingStrategy>(entity);
 				if (!node->GetSortingStrategy() || node->GetSortingStrategy().get() != entry.removedSorting.get()) {
 					return false;
 				}
-				node->SetSortingStrategy(std::shared_ptr<RelativeSortingStrategy>{});
+				node->SetSortingStrategy(std::shared_ptr<SortingStrategy>{});
 				continue;
 			}
 			auto behaviour = std::dynamic_pointer_cast<Behaviour>(entity);

@@ -102,7 +102,7 @@ void SceneNode::CopyLocalTransformFrom(const Transform& source) {
 	MarkWorldTransformSubtreeDirty();
 }
 
-shared_ptr<RelativeSortingStrategy> SceneNode::GetSortingStrategy() const {
+shared_ptr<SortingStrategy> SceneNode::GetSortingStrategy() const {
 	return _sortingStrategy;
 }
 
@@ -202,7 +202,7 @@ void SceneNode::SetVisual(shared_ptr<Visual>&& visual) {
 	NotifyActiveSceneObjectIndexDirty();
 }
 
-void SceneNode::SetSortingStrategy(const shared_ptr<RelativeSortingStrategy>& sorting) {
+void SceneNode::SetSortingStrategy(const shared_ptr<SortingStrategy>& sorting) {
 	_sortingStrategy = sorting;
 	if (_sortingStrategy) {
 		_sortingStrategy->AttachTo(shared_from_this());

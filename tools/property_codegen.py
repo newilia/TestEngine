@@ -2815,7 +2815,9 @@ def should_register_scene_entity(rel_src: str, c: ClassSpec) -> bool:
         return False
     if rel_src == "Engine/Core/Transform.h" and n == "Transform":
         return False
-    if rel_src == "Engine/Sorting/SortingStrategy.h" and n == "RelativeSortingStrategy":
+    if rel_src.startswith("Engine/Sorting/"):
+        if n == "SortingStrategy":
+            return False
         return True
     if rel_src.startswith("Engine/Visual/"):
         return True
@@ -2840,7 +2842,7 @@ def scene_entity_kind_cpp(rel_src: str, class_name: str) -> str:
     """C++ enumerator name for Engine::Serialization::SceneEntityKind."""
     if class_name == "Transform" and rel_src == "Engine/Core/Transform.h":
         return "Transform"
-    if class_name == "RelativeSortingStrategy":
+    if rel_src.startswith("Engine/Sorting/"):
         return "SortingStrategy"
     if rel_src.startswith("Engine/Visual/"):
         return "Visual"
