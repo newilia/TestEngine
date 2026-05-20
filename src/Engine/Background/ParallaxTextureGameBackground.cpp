@@ -17,9 +17,9 @@
 void ParallaxTextureGameBackground::Configure(
     const std::string& texturePath, float opacity, float staticity, float defaultScale) {
 	SetTexturePath(texturePath);
-	_opacity = opacity;
-	_staticity = staticity;
-	_defaultScale = defaultScale;
+	SetOpacity(opacity);
+	SetStaticity(staticity);
+	SetDefaultScale(defaultScale);
 	_haveReferenceView = false;
 }
 
@@ -50,6 +50,33 @@ void ParallaxTextureGameBackground::SetTexturePath(std::string path) {
 	_geometryDirty = true;
 }
 
+float ParallaxTextureGameBackground::GetOpacity() const {
+	return _opacity;
+}
+
+void ParallaxTextureGameBackground::SetOpacity(float opacity) {
+	_opacity = std::clamp(opacity, 0.f, 1.f);
+	_geometryDirty = true;
+}
+
+float ParallaxTextureGameBackground::GetDefaultScale() const {
+	return _defaultScale;
+}
+
+void ParallaxTextureGameBackground::SetDefaultScale(float defaultScale) {
+	_defaultScale = std::max(128.f, defaultScale);
+	_geometryDirty = true;
+}
+
+float ParallaxTextureGameBackground::GetStaticity() const {
+	return _staticity;
+}
+
+void ParallaxTextureGameBackground::SetStaticity(float staticity) {
+	_staticity = staticity;
+	_geometryDirty = true;
+}
+
 namespace {
 	constexpr float kMinTile = 1e-3f;
 
@@ -63,12 +90,21 @@ namespace {
 
 void ParallaxTextureGameBackground::Update(const sf::RenderWindow& window, sf::Time /*dt*/) {
 	const sf::View view = window.getView();
-	const float vw = view.getSize().x;
+	const sf::Vector2f center = view.getCenter();
+	const sf::Vector2f size = view.getSize();
+	const float vw = size.x;
 	if (vw > kMinTile && !_haveReferenceView) {
 		_referenceViewWidth = vw;
 		_haveReferenceView = true;
+		_geometryDirty = true;
 	}
-	_geometryDirty = true;
+
+	if (!_hasCachedBuildState || center != _cachedViewCenter || size != _cachedViewSize) {
+		_geometryDirty = true;
+		_hasCachedBuildState = true;
+		_cachedViewCenter = center;
+		_cachedViewSize = size;
+	}
 }
 
 void ParallaxTextureGameBackground::RebuildVertices(const sf::RenderTarget& target) const {

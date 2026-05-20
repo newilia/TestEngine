@@ -32,23 +32,36 @@ public:
 	/// @setter
 	void SetTexturePath(std::string path);
 
+	/// @getter(minValue=0.f, maxValue=1.f, dragSpeed=0.005f)
+	float GetOpacity() const;
+	/// @setter
+	void SetOpacity(float opacity);
+	/// @getter(minValue=128f, maxValue=1.e6f, dragSpeed=4.f)
+	float GetDefaultScale() const;
+	/// @setter
+	void SetDefaultScale(float defaultScale);
+	/// @getter(minValue=0.f, maxValue=1.f, dragSpeed=0.005f)
+	float GetStaticity() const;
+	/// @setter
+	void SetStaticity(float staticity);
+
 private:
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 	void RebuildVertices(const sf::RenderTarget& target) const;
 
 private:
 	std::string _texturePath;
-	/// @property(minValue=0.f, maxValue=1.f, dragSpeed=0.005f)
 	float _opacity = 1.f;
-	/// @property(minValue=128f, maxValue=1.e6f, dragSpeed=4.f)
 	float _defaultScale = 256.f;
-	/// @property(minValue=0.f, maxValue=1.f, dragSpeed=0.005f)
 	float _staticity = 0.f;
 
 private:
 	std::shared_ptr<sf::Texture> _texture;
 	bool _haveReferenceView = false;
 	float _referenceViewWidth = 1.f;
+	bool _hasCachedBuildState = false;
+	sf::Vector2f _cachedViewCenter{};
+	sf::Vector2f _cachedViewSize{};
 	mutable sf::VertexArray _vertices{sf::PrimitiveType::Triangles};
 	mutable bool _geometryDirty = true;
 };
