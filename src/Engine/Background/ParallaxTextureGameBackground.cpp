@@ -15,11 +15,10 @@
 #include <filesystem>
 
 void ParallaxTextureGameBackground::Configure(
-    const std::string& texturePath, float opacity, float scaleWithCamera, float moveWithCamera, float defaultScale) {
+    const std::string& texturePath, float opacity, float staticity, float defaultScale) {
 	SetTexturePath(texturePath);
 	_opacity = opacity;
-	_scaleWithCamera = scaleWithCamera;
-	_moveWithCamera = moveWithCamera;
+	_staticity = staticity;
 	_defaultScale = defaultScale;
 	_haveReferenceView = false;
 }
@@ -52,7 +51,6 @@ void ParallaxTextureGameBackground::SetTexturePath(std::string path) {
 }
 
 namespace {
-
 	constexpr float kMinTile = 1e-3f;
 
 	float StablePow(float base, float exp) {
@@ -61,7 +59,6 @@ namespace {
 		}
 		return std::pow(base, exp);
 	}
-
 } // namespace
 
 void ParallaxTextureGameBackground::Update(const sf::RenderWindow& window, sf::Time /*dt*/) {
@@ -97,9 +94,8 @@ void ParallaxTextureGameBackground::RebuildVertices(const sf::RenderTarget& targ
 		zoomRatio = 1.f;
 	}
 
-	const float scaleCam = std::clamp(_scaleWithCamera, -2.f, 2.f);
-	const float moveCam = std::clamp(_moveWithCamera, -2.f, 2.f);
-	const float opacity = std::clamp(_opacity, 0.f, 1.f);
+	const float scaleCam = -_staticity;
+	const float moveCam = _staticity;
 
 	const float worldTileW = std::max(kMinTile, _defaultScale * StablePow(zoomRatio, scaleCam));
 	const float aspect = texH / texW;
@@ -116,7 +112,7 @@ void ParallaxTextureGameBackground::RebuildVertices(const sf::RenderTarget& targ
 	const float minY = center.y - halfH - margin;
 	const float maxY = center.y + halfH + margin;
 
-	const std::uint8_t alpha = static_cast<std::uint8_t>(opacity * 255.f);
+	const std::uint8_t alpha = static_cast<std::uint8_t>(_opacity * 255.f);
 	const sf::Color vertColor(255, 255, 255, alpha);
 
 	auto addQuad = [&](float x0, float y0, float x1, float y1) {

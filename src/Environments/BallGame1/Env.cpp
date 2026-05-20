@@ -2,18 +2,14 @@
 
 #include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
-#include "Engine/Behaviour/RadialUvWarpBehaviour.h"
 #include "Engine/Core/EventHandlerBase.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/SfmlWindowUtils.h"
-#include "Engine/Core/TextureManager.h"
-#include "Engine/Core/Transform.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "Engine/Visual/CircleShapeVisual.h"
 #include "Engine/Visual/RectangleShapeVisual.h"
-#include "Engine/Visual/SpriteVisual.h"
 #include "Engine/Visual/VectorArrowVisual.h"
 #include "GameControllerBehaviour.h"
 #include "GunControllerBehaviour.h"
@@ -38,7 +34,7 @@ namespace BallGame1 {
 
 		auto backgroundCtx = mainContext.GetGameBackgroundContext();
 		backgroundCtx->SetParallaxTextureBackground(
-		    "resources/textures/backgrounds/plain_starfield_1.png", 1.f, 0.f, 0.15f, 3440);
+		    "resources/textures/backgrounds/plain_starfield_1.png", 1.f, 0.f, 3440);
 	}
 
 	void Env::OnEvent(const sf::Event& event) {

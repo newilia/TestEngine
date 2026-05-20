@@ -78,7 +78,7 @@ namespace Engine::Serialization {
 				}
 
 				if (std::string_view{type} == kTypeParallaxTexture) {
-					ctx->SetParallaxTextureBackground({}, 1.f, 0.f, 0.35f, 256.f);
+					ctx->SetParallaxTextureBackground({}, 1.f, 0.f, 256.f);
 					if (auto* parallax = dynamic_cast<ParallaxTextureGameBackground*>(ctx->GetBackground())) {
 						if (const pugi::xml_node propertiesNode = node.child(kPropertiesElement)) {
 							result.Merge(PropertyTreeSerializer::LoadProvider(*parallax, propertiesNode));

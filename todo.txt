@@ -42,5 +42,3 @@ Resize tool
 
 bbox rework
 
-Parallax background scale with camera/move with camera values tuning
-
