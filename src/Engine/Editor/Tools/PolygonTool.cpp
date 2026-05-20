@@ -1,15 +1,11 @@
 #include "Engine/Editor/Tools/PolygonTool.h"
 
-#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/ColorUtils.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/MathUtils.h"
-#include "Engine/Core/SceneNode.h"
-#include "Engine/Core/SceneNodeUtils.h"
 #include "Engine/Core/SfmlWindowUtils.h"
 #include "Engine/Editor/Editor.h"
 #include "Engine/Editor/EditorNodePick.h"
-#include "Engine/Visual/ConvexShapeVisual.h"
 
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
@@ -97,20 +93,9 @@ void PolygonTool::FinalizeStroke() {
 		return;
 	}
 
-	auto node = SceneNode::Create();
-	node->SetName("Polygon");
-	auto visual = std::make_shared<ConvexShapeVisual>();
-	visual->SetPoints(localPts);
 	const Utils::HsvShapeColors colors = Utils::RandomHsvShapeColors();
-	visual->SetFillColor(colors.fill);
-	visual->SetOutlineColor(colors.outline);
-	visual->SetOutlineThickness(-1.f);
-	node->SetVisual(std::move(visual));
-	Utils::SetLocalPosToWorld(node, centerWorld);
-	if (_isAttachPhysicsBody) {
-		auto body = node->RequireBehaviour<PhysicsBodyBehaviour>();
-	}
-	(void)Engine::Editor::GetInstance().AddChildNode(parent, node);
+	(void)Engine::Editor::GetInstance().AddPolygonShape(
+	    parent, centerWorld, std::move(localPts), _isAttachPhysicsBody, colors);
 }
 
 void PolygonTool::EndStroke() {

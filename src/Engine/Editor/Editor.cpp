@@ -9,7 +9,10 @@
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/SceneNodeUtils.h"
 #include "Engine/Core/SfmlWindowUtils.h"
+#include "Engine/Editor/Commands/AddCircleShapeNodeCommand.h"
 #include "Engine/Editor/Commands/AddEmptyNodeCommand.h"
+#include "Engine/Editor/Commands/AddPolygonShapeNodeCommand.h"
+#include "Engine/Editor/Commands/AddRectangleShapeNodeCommand.h"
 #include "Engine/Editor/Commands/AddSceneEntityBatchCommand.h"
 #include "Engine/Editor/Commands/CutEntityCommand.h"
 #include "Engine/Editor/Commands/CutNodeCommand.h"
@@ -438,14 +441,8 @@ namespace Engine {
 		if (!parent) {
 			return false;
 		}
-		auto node = SceneNode::Create();
 		const std::size_t index = parent->GetChildren().size();
-		const bool executed =
-		    _history.Execute(std::make_unique<EditorCommands::AddEmptyNodeCommand>(parent, index, node));
-		if (executed) {
-			SetSelectedNode(node);
-		}
-		return executed;
+		return _history.Execute(std::make_unique<EditorCommands::AddEmptyNodeCommand>(parent, index));
 	}
 
 	bool Editor::AddEmptySiblingNode(const std::shared_ptr<SceneNode>& sibling) {
@@ -461,27 +458,38 @@ namespace Engine {
 		if (it == children.end()) {
 			return false;
 		}
-		auto node = SceneNode::Create();
 		const std::size_t index = static_cast<std::size_t>(std::distance(children.begin(), it)) + 1;
-		const bool executed =
-		    _history.Execute(std::make_unique<EditorCommands::AddEmptyNodeCommand>(parent, index, node));
-		if (executed) {
-			SetSelectedNode(node);
-		}
-		return executed;
+		return _history.Execute(std::make_unique<EditorCommands::AddEmptyNodeCommand>(parent, index));
 	}
 
-	bool Editor::AddChildNode(const std::shared_ptr<SceneNode>& parent, const std::shared_ptr<SceneNode>& node) {
-		if (!parent || !node) {
+	bool Editor::AddRectangleShape(const std::shared_ptr<SceneNode>& parent, const sf::Vector2f centerWorld,
+	    const sf::Vector2f size, const bool attachPhysics, const Utils::HsvShapeColors colors) {
+		if (!parent) {
 			return false;
 		}
 		const std::size_t index = parent->GetChildren().size();
-		const bool executed =
-		    _history.Execute(std::make_unique<EditorCommands::AddEmptyNodeCommand>(parent, index, node));
-		if (executed) {
-			SetSelectedNode(node);
+		return _history.Execute(std::make_unique<EditorCommands::AddRectangleShapeNodeCommand>(
+		    parent, index, centerWorld, size, attachPhysics, colors));
+	}
+
+	bool Editor::AddCircleShape(const std::shared_ptr<SceneNode>& parent, const sf::Vector2f centerWorld,
+	    const float radius, const bool attachPhysics, const Utils::HsvShapeColors colors) {
+		if (!parent) {
+			return false;
 		}
-		return executed;
+		const std::size_t index = parent->GetChildren().size();
+		return _history.Execute(std::make_unique<EditorCommands::AddCircleShapeNodeCommand>(
+		    parent, index, centerWorld, radius, attachPhysics, colors));
+	}
+
+	bool Editor::AddPolygonShape(const std::shared_ptr<SceneNode>& parent, const sf::Vector2f centerWorld,
+	    std::vector<sf::Vector2f> localPoints, const bool attachPhysics, const Utils::HsvShapeColors colors) {
+		if (!parent || localPoints.size() < 3) {
+			return false;
+		}
+		const std::size_t index = parent->GetChildren().size();
+		return _history.Execute(std::make_unique<EditorCommands::AddPolygonShapeNodeCommand>(
+		    parent, index, centerWorld, std::move(localPoints), attachPhysics, colors));
 	}
 
 	bool Editor::CommitNodeWorldPosition(const std::shared_ptr<SceneNode>& node, sf::Vector2f previousWorldPos) {

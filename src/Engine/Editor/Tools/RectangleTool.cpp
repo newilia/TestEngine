@@ -1,14 +1,10 @@
 #include "Engine/Editor/Tools/RectangleTool.h"
 
-#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/ColorUtils.h"
 #include "Engine/Core/MainContext.h"
-#include "Engine/Core/SceneNode.h"
-#include "Engine/Core/SceneNodeUtils.h"
 #include "Engine/Core/SfmlWindowUtils.h"
 #include "Engine/Editor/Editor.h"
 #include "Engine/Editor/EditorNodePick.h"
-#include "Engine/Visual/RectangleShapeVisual.h"
 
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
@@ -67,21 +63,8 @@ void RectangleTool::FinalizeStroke() {
 		return;
 	}
 
-	auto node = SceneNode::Create();
-	node->SetName("Rectangle");
-	auto visual = std::make_shared<RectangleShapeVisual>();
-	visual->SetSize(size);
-	visual->SetOrigin(size * 0.5f);
 	const Utils::HsvShapeColors colors = Utils::RandomHsvShapeColors();
-	visual->SetFillColor(colors.fill);
-	visual->SetOutlineColor(colors.outline);
-	visual->SetOutlineThickness(-1.f);
-	node->SetVisual(std::move(visual));
-	Utils::SetLocalPosToWorld(node, centerWorld);
-	if (_isAttachPhysicsBody) {
-		node->RequireBehaviour<PhysicsBodyBehaviour>();
-	}
-	(void)Engine::Editor::GetInstance().AddChildNode(parent, node);
+	(void)Engine::Editor::GetInstance().AddRectangleShape(parent, centerWorld, size, _isAttachPhysicsBody, colors);
 }
 
 void RectangleTool::EndStroke() {
