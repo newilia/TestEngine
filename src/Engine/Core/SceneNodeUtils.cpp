@@ -72,10 +72,10 @@ namespace Utils {
 			    int la = 0;
 			    int lb = 0;
 			    if (auto sa = a->GetSortingStrategy()) {
-				    la = sa->GetPriority();
+				    la = sa->GetSortKey();
 			    }
 			    if (auto sb = b->GetSortingStrategy()) {
-				    lb = sb->GetPriority();
+				    lb = sb->GetSortKey();
 			    }
 			    return la < lb;
 		    });

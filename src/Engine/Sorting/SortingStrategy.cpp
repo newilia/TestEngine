@@ -2,6 +2,10 @@
 
 #include "SortingStrategy.generated.hpp"
 
+int RelativeSortingStrategy::GetSortKey() const {
+	return _priority;
+}
+
 int RelativeSortingStrategy::GetPriority() const {
 	return _priority;
 }

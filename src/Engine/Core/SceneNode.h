@@ -90,8 +90,10 @@ public:
 	shared_ptr<T> RequireVisual();
 	template <typename TVisual>
 	shared_ptr<TVisual> GetVisual() const;
-	shared_ptr<RelativeSortingStrategy> GetSortingStrategy() const;
-	void SetSortingStrategy(const shared_ptr<RelativeSortingStrategy>& sorting);
+	shared_ptr<SortingStrategy> GetSortingStrategy() const;
+	void SetSortingStrategy(const shared_ptr<SortingStrategy>& sorting);
+	template <typename TSorting>
+	shared_ptr<TSorting> GetSortingStrategy() const;
 
 	// Behaviours
 	const std::vector<shared_ptr<Behaviour>>& GetBehaviours() const;
@@ -143,7 +145,7 @@ private:
 	mutable bool _worldTransformDirty = true;
 	mutable sf::Transform _cachedWorldTransform{};
 	shared_ptr<Visual> _visual;
-	shared_ptr<RelativeSortingStrategy> _sortingStrategy;
+	shared_ptr<SortingStrategy> _sortingStrategy;
 	std::vector<shared_ptr<Behaviour>> _behaviours;
 	bool _isNodeLifecycleInited = false;
 	Engine::SceneObjectId _sceneObjectId = Engine::kInvalidSceneObjectId;
@@ -155,6 +157,16 @@ shared_ptr<TVisual> SceneNode::GetVisual() const {
 	static_assert(std::is_base_of_v<Visual, TVisual>, "GetVisual<T> is only for Visual types");
 	if (auto v = std::dynamic_pointer_cast<TVisual>(_visual)) {
 		return v;
+	}
+	return nullptr;
+}
+
+template <typename TSorting>
+shared_ptr<TSorting> SceneNode::GetSortingStrategy() const {
+	static_assert(
+	    std::is_base_of_v<SortingStrategy, TSorting>, "GetSortingStrategy<T> is only for SortingStrategy types");
+	if (auto s = std::dynamic_pointer_cast<TSorting>(_sortingStrategy)) {
+		return s;
 	}
 	return nullptr;
 }

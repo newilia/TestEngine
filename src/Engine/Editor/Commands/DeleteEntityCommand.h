@@ -7,7 +7,7 @@
 
 class Behaviour;
 class EntityOnNode;
-class RelativeSortingStrategy;
+class SortingStrategy;
 class SceneNode;
 class Visual;
 
@@ -27,7 +27,7 @@ namespace Engine::EditorCommands {
 		std::weak_ptr<EntityOnNode> _entity;
 		Engine::EntitySlot _slot = Engine::EntitySlot::Behaviour;
 		std::shared_ptr<Visual> _removedVisual;
-		std::shared_ptr<RelativeSortingStrategy> _removedSorting;
+		std::shared_ptr<SortingStrategy> _removedSorting;
 		std::shared_ptr<Behaviour> _removedBehaviour;
 	};
 

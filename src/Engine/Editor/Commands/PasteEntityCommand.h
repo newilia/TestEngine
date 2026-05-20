@@ -7,7 +7,7 @@
 #include <memory>
 
 class Behaviour;
-class RelativeSortingStrategy;
+class SortingStrategy;
 class SceneNode;
 class Transform;
 class Visual;
@@ -30,7 +30,7 @@ namespace Engine::EditorCommands {
 		Engine::EntitySlot _slot = Engine::EntitySlot::Behaviour;
 		std::shared_ptr<Transform> _previousTransformState;
 		std::shared_ptr<Visual> _previousVisual;
-		std::shared_ptr<RelativeSortingStrategy> _previousSorting;
+		std::shared_ptr<SortingStrategy> _previousSorting;
 		std::shared_ptr<Behaviour> _replacedBehaviour;
 	};
 

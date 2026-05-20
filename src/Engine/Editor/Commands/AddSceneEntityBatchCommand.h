@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 
-class RelativeSortingStrategy;
+class SortingStrategy;
 class SceneNode;
 class Visual;
 
@@ -22,7 +22,7 @@ namespace Engine::EditorCommands {
 			std::shared_ptr<EntityOnNode> entity;
 			Engine::EntitySlot slot = Engine::EntitySlot::Behaviour;
 			std::shared_ptr<Visual> previousVisual;
-			std::shared_ptr<RelativeSortingStrategy> previousSorting;
+			std::shared_ptr<SortingStrategy> previousSorting;
 		};
 
 		explicit AddSceneEntityBatchCommand(std::vector<Entry> entries);

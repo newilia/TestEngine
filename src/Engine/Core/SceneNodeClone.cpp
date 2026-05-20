@@ -297,8 +297,7 @@ namespace Engine {
 		if (auto visualClone = std::dynamic_pointer_cast<Visual>(CloneEntity(source->GetVisual()))) {
 			clone->SetVisual(std::move(visualClone));
 		}
-		if (auto sortingClone =
-		        std::dynamic_pointer_cast<RelativeSortingStrategy>(CloneEntity(source->GetSortingStrategy()))) {
+		if (auto sortingClone = std::dynamic_pointer_cast<SortingStrategy>(CloneEntity(source->GetSortingStrategy()))) {
 			clone->SetSortingStrategy(sortingClone);
 		}
 		for (const auto& behaviour : source->GetBehaviours()) {

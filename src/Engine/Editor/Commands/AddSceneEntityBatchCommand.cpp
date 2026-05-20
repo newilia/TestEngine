@@ -27,7 +27,7 @@ namespace Engine::EditorCommands {
 			}
 			if (entry.slot == Engine::EntitySlot::SortingStrategy) {
 				entry.previousSorting = node->GetSortingStrategy();
-				auto sortingEntity = std::dynamic_pointer_cast<RelativeSortingStrategy>(entry.entity);
+				auto sortingEntity = std::dynamic_pointer_cast<SortingStrategy>(entry.entity);
 				if (!sortingEntity) {
 					return false;
 				}

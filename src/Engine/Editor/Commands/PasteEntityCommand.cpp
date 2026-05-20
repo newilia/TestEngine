@@ -51,7 +51,7 @@ namespace Engine::EditorCommands {
 			if (!_previousSorting) {
 				_previousSorting = node->GetSortingStrategy();
 			}
-			auto sortingEntity = std::dynamic_pointer_cast<RelativeSortingStrategy>(_entity);
+			auto sortingEntity = std::dynamic_pointer_cast<SortingStrategy>(_entity);
 			if (!sortingEntity) {
 				return false;
 			}

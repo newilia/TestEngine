@@ -157,7 +157,7 @@ namespace Engine::Serialization {
 				if (!created) {
 					result.AddError(kSortingElement, "Unknown sorting strategy type id: " + sortingTypeId);
 				}
-				else if (auto sorting = std::dynamic_pointer_cast<RelativeSortingStrategy>(created)) {
+				else if (auto sorting = std::dynamic_pointer_cast<SortingStrategy>(created)) {
 					if (const pugi::xml_attribute oidAttr = sortingNode.attribute(kObjectIdAttr)) {
 						sorting->SetSceneObjectId(static_cast<Engine::SceneObjectId>(oidAttr.as_uint()));
 					}

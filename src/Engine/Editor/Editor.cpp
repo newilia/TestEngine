@@ -688,7 +688,7 @@ namespace Engine {
 				}
 			}
 			else if (*slot == EntitySlot::SortingStrategy) {
-				if (!std::dynamic_pointer_cast<RelativeSortingStrategy>(entity)) {
+				if (!std::dynamic_pointer_cast<SortingStrategy>(entity)) {
 					return false;
 				}
 			}
