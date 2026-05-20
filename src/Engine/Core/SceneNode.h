@@ -34,8 +34,9 @@ class SceneNode final : public enable_shared_from_this<SceneNode>,
 
 public:
 	SceneNode() = default;
+	~SceneNode() = default;
+
 	[[nodiscard]] static std::shared_ptr<SceneNode> Create();
-	virtual ~SceneNode() = default;
 
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 	void Update(const sf::Time& dt) override;
