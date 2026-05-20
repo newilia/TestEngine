@@ -20,6 +20,7 @@
 #include "Engine/Editor/Commands/MoveNodesInHierarchyCommand.h"
 #include "Engine/Editor/Commands/PasteEntityCommand.h"
 #include "Engine/Editor/Commands/PasteNodeCommand.h"
+#include "Engine/Editor/Commands/SetNodeWorldPositionCommand.h"
 #include "Engine/Editor/EditorVisualTheme.h"
 #include "Engine/Editor/ImGui/Themes.h"
 #include "Engine/Editor/NativeFileDialog.h"
@@ -468,6 +469,33 @@ namespace Engine {
 			SetSelectedNode(node);
 		}
 		return executed;
+	}
+
+	bool Editor::AddChildNode(const std::shared_ptr<SceneNode>& parent, const std::shared_ptr<SceneNode>& node) {
+		if (!parent || !node) {
+			return false;
+		}
+		const std::size_t index = parent->GetChildren().size();
+		const bool executed =
+		    _history.Execute(std::make_unique<EditorCommands::AddEmptyNodeCommand>(parent, index, node));
+		if (executed) {
+			SetSelectedNode(node);
+		}
+		return executed;
+	}
+
+	bool Editor::CommitNodeWorldPosition(const std::shared_ptr<SceneNode>& node, sf::Vector2f previousWorldPos) {
+		if (!node) {
+			return false;
+		}
+		const sf::Vector2f newWorldPos = Utils::GetWorldPos(node);
+		const sf::Vector2f delta = newWorldPos - previousWorldPos;
+		constexpr float kEpsilon = 0.001f;
+		if (delta.x * delta.x + delta.y * delta.y < kEpsilon * kEpsilon) {
+			return false;
+		}
+		return _history.Execute(
+		    std::make_unique<EditorCommands::SetNodeWorldPositionCommand>(node, previousWorldPos, newWorldPos));
 	}
 
 	bool Editor::DeleteNode(const std::shared_ptr<SceneNode>& node) {

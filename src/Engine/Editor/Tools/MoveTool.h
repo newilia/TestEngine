@@ -6,6 +6,7 @@
 #include <SFML/System/Vector2.hpp>
 
 #include <memory>
+#include <optional>
 
 class SceneNode;
 
@@ -24,4 +25,5 @@ private:
 	sf::Vector2f _grabOffset{};
 	bool _dragging = false;
 	bool _wasBodyFixed = false;
+	std::optional<sf::Vector2f> _dragStartWorldPos;
 };

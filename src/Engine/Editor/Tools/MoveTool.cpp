@@ -40,6 +40,7 @@ bool MoveTool::ProcessEvent(const sf::Event& event) {
 		if (!picked) {
 			_dragging = false;
 			_grabbedNode.reset();
+			_dragStartWorldPos.reset();
 			if (_onSelect) {
 				_onSelect(nullptr);
 			}
@@ -51,6 +52,7 @@ bool MoveTool::ProcessEvent(const sf::Event& event) {
 		const sf::Vector2f nodePos = Utils::GetWorldPos(picked);
 		_grabOffset = nodePos - pos;
 		_grabbedNode = picked;
+		_dragStartWorldPos = nodePos;
 		_dragging = true;
 		if (auto rb = picked->FindBehaviour<PhysicsBodyBehaviour>()) {
 			ZeroMotion(rb.get());
@@ -76,11 +78,15 @@ bool MoveTool::ProcessEvent(const sf::Event& event) {
 	auto release = [this]() {
 		_dragging = false;
 		if (auto node = _grabbedNode.lock()) {
+			if (_dragStartWorldPos) {
+				(void)Engine::Editor::GetInstance().CommitNodeWorldPosition(node, *_dragStartWorldPos);
+			}
 			if (auto rb = node->FindBehaviour<PhysicsBodyBehaviour>()) {
 				rb->SetFixed(_wasBodyFixed);
 			}
 		}
 		_grabbedNode.reset();
+		_dragStartWorldPos.reset();
 	};
 
 	if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
