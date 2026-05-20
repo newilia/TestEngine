@@ -1,15 +1,11 @@
 #include "Engine/Editor/Tools/CircleTool.h"
 
-#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/ColorUtils.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/MathUtils.h"
-#include "Engine/Core/SceneNode.h"
-#include "Engine/Core/SceneNodeUtils.h"
 #include "Engine/Core/SfmlWindowUtils.h"
 #include "Engine/Editor/Editor.h"
 #include "Engine/Editor/EditorNodePick.h"
-#include "Engine/Visual/CircleShapeVisual.h"
 
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
@@ -60,21 +56,8 @@ void CircleTool::FinalizeStroke() {
 		return;
 	}
 
-	auto node = SceneNode::Create();
-	node->SetName("Circle");
-	auto visual = std::make_shared<CircleShapeVisual>();
-	visual->SetRadius(radius);
 	const Utils::HsvShapeColors colors = Utils::RandomHsvShapeColors();
-	visual->SetFillColor(colors.fill);
-	visual->SetOutlineColor(colors.outline);
-	visual->SetOutlineThickness(-1.f);
-	visual->SetSectorColor(colors.outline);
-	node->SetVisual(std::move(visual));
-	Utils::SetLocalPosToWorld(node, _startWorld);
-	if (_isAttachPhysicsBody) {
-		node->RequireBehaviour<PhysicsBodyBehaviour>();
-	}
-	(void)Engine::Editor::GetInstance().AddChildNode(parent, node);
+	(void)Engine::Editor::GetInstance().AddCircleShape(parent, _startWorld, radius, _isAttachPhysicsBody, colors);
 }
 
 void CircleTool::EndStroke() {

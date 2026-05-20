@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/Core/ColorUtils.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Singleton.h"
 #include "Engine/Editor/DebugSettingsWidget.h"
@@ -77,7 +78,12 @@ namespace Engine {
 		bool DeleteSelectedNodes();
 		bool AddEmptyChildNode(const std::shared_ptr<SceneNode>& parent);
 		bool AddEmptySiblingNode(const std::shared_ptr<SceneNode>& sibling);
-		bool AddChildNode(const std::shared_ptr<SceneNode>& parent, const std::shared_ptr<SceneNode>& node);
+		bool AddRectangleShape(const std::shared_ptr<SceneNode>& parent, sf::Vector2f centerWorld, sf::Vector2f size,
+		    bool attachPhysics, Utils::HsvShapeColors colors);
+		bool AddCircleShape(const std::shared_ptr<SceneNode>& parent, sf::Vector2f centerWorld, float radius,
+		    bool attachPhysics, Utils::HsvShapeColors colors);
+		bool AddPolygonShape(const std::shared_ptr<SceneNode>& parent, sf::Vector2f centerWorld,
+		    std::vector<sf::Vector2f> localPoints, bool attachPhysics, Utils::HsvShapeColors colors);
 		bool CommitNodeWorldPosition(const std::shared_ptr<SceneNode>& node, sf::Vector2f previousWorldPos);
 		bool DeleteNode(const std::shared_ptr<SceneNode>& node);
 		bool MoveNodesInHierarchy(const std::vector<std::shared_ptr<SceneNode>>& nodes,
