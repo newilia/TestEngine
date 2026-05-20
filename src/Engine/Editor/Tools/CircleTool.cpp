@@ -74,7 +74,7 @@ void CircleTool::FinalizeStroke() {
 	if (_isAttachPhysicsBody) {
 		node->RequireBehaviour<PhysicsBodyBehaviour>();
 	}
-	parent->AddChild(node);
+	(void)Engine::Editor::GetInstance().AddChildNode(parent, node);
 }
 
 void CircleTool::EndStroke() {

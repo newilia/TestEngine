@@ -110,7 +110,7 @@ void PolygonTool::FinalizeStroke() {
 	if (_isAttachPhysicsBody) {
 		auto body = node->RequireBehaviour<PhysicsBodyBehaviour>();
 	}
-	parent->AddChild(node);
+	(void)Engine::Editor::GetInstance().AddChildNode(parent, node);
 }
 
 void PolygonTool::EndStroke() {

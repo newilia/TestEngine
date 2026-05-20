@@ -77,6 +77,8 @@ namespace Engine {
 		bool DeleteSelectedNodes();
 		bool AddEmptyChildNode(const std::shared_ptr<SceneNode>& parent);
 		bool AddEmptySiblingNode(const std::shared_ptr<SceneNode>& sibling);
+		bool AddChildNode(const std::shared_ptr<SceneNode>& parent, const std::shared_ptr<SceneNode>& node);
+		bool CommitNodeWorldPosition(const std::shared_ptr<SceneNode>& node, sf::Vector2f previousWorldPos);
 		bool DeleteNode(const std::shared_ptr<SceneNode>& node);
 		bool MoveNodesInHierarchy(const std::vector<std::shared_ptr<SceneNode>>& nodes,
 		    const std::shared_ptr<SceneNode>& newParent, std::size_t newIndex);
