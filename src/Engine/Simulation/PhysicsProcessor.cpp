@@ -208,6 +208,9 @@ void PhysicsProcessor::DetactAndResolveCollisions() {
 			if (!body1 || !body2) {
 				continue;
 			}
+			if (body1->IsFixed() && body2->IsFixed()) {
+				continue;
+			}
 			if (auto intersection = DetectIntersection(node1, node2, body1, body2)) {
 				if ((body1->GetCollisionGroups() & body2->GetCollisionGroups()).any()) {
 					if (!body1->IsFixed() || !body2->IsFixed()) {
