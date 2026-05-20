@@ -276,8 +276,8 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectPolygonPolygonInterse
 	auto node1 = body1->GetNode().get();
 	auto node2 = body2->GetNode().get();
 
-	std::vector<sf::Vector2f> edges_i_p;
-	edges_i_p.reserve(2);
+	std::vector<sf::Vector2f> intersectionPoints;
+	intersectionPoints.reserve(2);
 
 	const auto pointsCount1 = shape1->getPointCount();
 	const auto pointsCount2 = shape2->getPointCount();
@@ -292,27 +292,22 @@ std::optional<IntersectionDetails> PhysicsProcessor::DetectPolygonPolygonInterse
 			    Utils::GetShapePointWorldPos(shape2, node2, (j + 1) % pointsCount2)};
 
 			if (auto i_point = FindSegmentsIntersectionPoint(edge1, edge2)) {
-				edges_i_p.emplace_back(i_point->p1);
+				intersectionPoints.emplace_back(i_point->p1);
 				if (i_point->p2) {
-					edges_i_p.emplace_back(*i_point->p2);
+					intersectionPoints.emplace_back(*i_point->p2);
 				}
 			}
 		}
 	}
 
-	if (edges_i_p.size() == 0) {
+	if (intersectionPoints.size() <= 1) {
 		return std::nullopt;
 	}
-
-	if (edges_i_p.size() == 1) {
-		result.intersection.start = *edges_i_p.begin();
-		result.intersection.end = *edges_i_p.begin();
-	}
 	else {
-		result.intersection.start = *edges_i_p.begin();
-		result.intersection.end = *edges_i_p.rbegin();
+		result.intersection.start = *intersectionPoints.begin();
+		result.intersection.end = *intersectionPoints.rbegin();
 	}
-
+	assert(result.intersection.start != result.intersection.end);
 	return result;
 }
 
@@ -592,7 +587,7 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 	}
 
 	/* displacement */
-	const sf::Vector2f collisionPoint = collision.intersection.start;
+	const sf::Vector2f collisionPoint = (collision.intersection.start + collision.intersection.end) * 0.5f;
 	auto getPenetrationDepth = [collisionPoint](
 	                               sf::Shape const* shape, SceneNode const* node, const sf::Vector2f& bodyNormal) {
 		auto* bodyBeh = node->FindBehaviour<PhysicsBodyBehaviour>().get();
@@ -609,8 +604,10 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 		// direction bodyNormal hits a vertex (same as max over tessellation points).
 		float result = 0.f;
 		for (size_t i = 0; i < shape->getPointCount(); ++i) {
-			const auto penetrationVec = Utils::GetShapePointWorldPos(shape, node, i) - collisionPoint;
-			result = std::max(result, Utils::ScalarProjection(penetrationVec, bodyNormal));
+			const auto p = Utils::GetShapePointWorldPos(shape, node, i);
+			const auto penetrationVec = p - collisionPoint;
+			auto depth = Utils::ScalarProjection(penetrationVec, bodyNormal);
+			result = std::max(result, depth);
 		}
 		return result;
 	};

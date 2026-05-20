@@ -23,7 +23,7 @@ alwaysApply: false
 
 ## `[[nodiscard]]`
 
-Use only when ignoring the return risks **bugs, leaks, or broken invariants** (ownership handles, required status, protocol steps). Avoid on benign getters or debug helpers. Do not change generated `src/Codegen/*_gen.hpp` attributes unless codegen does.
+**Default:** do not mark APIs with `[[nodiscard]]`. **Exception:** use it only when ignoring the return value can **break a correctness invariant** — the API’s contract effectively requires the caller to use the result to keep state valid (same class of mistake as calling `std::remove_if` and never erasing from the returned iterator to the original end). Not for benign getters, optional checks, or debug helpers. Do not change generated `src/Codegen/*_gen.hpp` attributes unless codegen does.
 
 ## Free functions in `.cpp` files
 
