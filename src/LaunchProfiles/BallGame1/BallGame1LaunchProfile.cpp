@@ -1,4 +1,4 @@
-#include "Env.h"
+#include "BallGame1LaunchProfile.h"
 
 #include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
@@ -18,7 +18,7 @@
 #include <memory>
 
 namespace BallGame1 {
-	void Env::Setup() {
+	void BallGame1LaunchProfile::Setup() {
 		auto& mainContext = Engine::MainContext::GetInstance();
 		const auto mainWindow =
 		    mainContext.CreateMainWindow(sf::VideoMode::getFullscreenModes()[0], "Ball Game prototype");
@@ -37,7 +37,7 @@ namespace BallGame1 {
 		    "resources/textures/backgrounds/plain_starfield_1.png", 1.f, 0.f, 3440);
 	}
 
-	void Env::OnEvent(const sf::Event& event) {
+	void BallGame1LaunchProfile::OnEvent(const sf::Event& event) {
 		if (auto e = event.getIf<sf::Event::KeyPressed>()) {
 			auto& mainContext = Engine::MainContext::GetInstance();
 			if (e->code == sf::Keyboard::Key::R) {
@@ -49,7 +49,7 @@ namespace BallGame1 {
 		}
 	}
 
-	std::shared_ptr<Scene> Env::BuildScene() {
+	std::shared_ptr<Scene> BallGame1LaunchProfile::BuildScene() {
 		auto scene = make_shared<Scene>();
 
 		auto rootNode = SceneNode::Create();
@@ -84,7 +84,7 @@ namespace BallGame1 {
 
 	/* stuff for game scene */
 
-	std::shared_ptr<SceneNode> Env::CreateFieldNode() {
+	std::shared_ptr<SceneNode> BallGame1LaunchProfile::CreateFieldNode() {
 		const auto wallThickness = 100;
 		const auto wallRestitution = 0.2f;
 
@@ -122,7 +122,7 @@ namespace BallGame1 {
 		return fieldNode;
 	}
 
-	std::shared_ptr<SceneNode> Env::CreateGunNode() {
+	std::shared_ptr<SceneNode> BallGame1LaunchProfile::CreateGunNode() {
 		auto& mainContext = Engine::MainContext::GetInstance();
 		auto node = SceneNode::Create();
 		node->SetLocalPosition({0, _fieldSize.y * 0.5f});
@@ -149,13 +149,13 @@ namespace BallGame1 {
 		return node;
 	}
 
-	std::shared_ptr<SceneNode> Env::CreateScoreNode() {
+	std::shared_ptr<SceneNode> BallGame1LaunchProfile::CreateScoreNode() {
 		auto node = SceneNode::Create();
 		node->SetName("Score");
 		return node;
 	}
 
-	std::shared_ptr<SceneNode> Env::CreateBallNode() {
+	std::shared_ptr<SceneNode> BallGame1LaunchProfile::CreateBallNode() {
 		constexpr float mass = 500.0f;
 		constexpr float restitution = 0.7f;
 		constexpr float radius = 20.0f;

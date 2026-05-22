@@ -2,17 +2,17 @@
 #include "Engine/Core/EventHandlerBase.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/SubscriptionsHolderBase.h"
-#include "Environments/EnvironmentBase.h"
+#include "LaunchProfiles/LaunchProfileBase.h"
 
 #include <memory>
 
 class SceneNode;
 class TextVisual;
 
-class PongEnvironment : public EnvironmentBase, public Engine::EventHandlerBase, public SubscriptionsHolderBase
+class PongLaunchProfile : public LaunchProfileBase, public Engine::EventHandlerBase, public SubscriptionsHolderBase
 {
 public:
-	~PongEnvironment() override;
+	~PongLaunchProfile() override;
 	void Setup() override;
 	void OnEvent(const sf::Event& event) override;
 

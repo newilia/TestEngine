@@ -1,4 +1,4 @@
-#include "Env.h"
+#include "Demo1LaunchProfile.h"
 
 #include "BallpitGame.h"
 #include "Engine/Core/MainContext.h"
@@ -16,7 +16,7 @@
 #include <memory>
 
 namespace Demo1 {
-	void Env::Setup() {
+	void Demo1LaunchProfile::Setup() {
 		auto& mainContext = Engine::MainContext::GetInstance();
 		const auto mainWindow = mainContext.CreateMainWindow(sf::VideoMode::getFullscreenModes()[0], "Demo1");
 		if (!mainWindow) {
@@ -30,7 +30,7 @@ namespace Demo1 {
 		EventHandlerBase::SubscribeForEvents();
 	}
 
-	void Env::OnEvent(const sf::Event& event) {
+	void Demo1LaunchProfile::OnEvent(const sf::Event& event) {
 		auto& mainContext = Engine::MainContext::GetInstance();
 
 		if (auto e = event.getIf<sf::Event::KeyPressed>()) {
@@ -59,7 +59,7 @@ namespace Demo1 {
 		return node;
 	}
 
-	shared_ptr<Scene> Env::BuildScene() {
+	shared_ptr<Scene> Demo1LaunchProfile::BuildScene() {
 		auto scene = make_shared<Scene>();
 		{
 			auto background = CreateBackgroundNode();

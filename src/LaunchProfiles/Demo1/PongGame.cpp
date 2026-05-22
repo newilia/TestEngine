@@ -14,10 +14,10 @@
 #include "Engine/Visual/ConvexShapeVisual.h"
 #include "Engine/Visual/RectangleShapeVisual.h"
 #include "Engine/Visual/TextVisual.h"
-#include "Environments/Pong/AiPlatformControllerBehaviour.h"
-#include "Environments/Pong/PongBall.h"
-#include "Environments/Pong/PongPlayfield.h"
-#include "Environments/Pong/UserPlatformControllerBehaviour.h"
+#include "LaunchProfiles/Pong/AiPlatformControllerBehaviour.h"
+#include "LaunchProfiles/Pong/PongBall.h"
+#include "LaunchProfiles/Pong/PongPlayfield.h"
+#include "LaunchProfiles/Pong/UserPlatformControllerBehaviour.h"
 
 #include <fmt/format.h>
 

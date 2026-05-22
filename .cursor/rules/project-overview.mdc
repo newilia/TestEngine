@@ -21,7 +21,7 @@ alwaysApply: true
 | **`Engine/Visual/`** | Rendering |
 | **`Engine/Editor/`** | ImGui editor (hierarchy, inspector, property tree) |
 | **`Engine/Simulation/`** | Simulation glue (e.g. physics) |
-| **`Environments/<Name>/`** | Demos (**`Test`**, **`Pong`**); `--env=test` / `--env=pong` |
+| **`LaunchProfiles/<Name>/`** | Launch profiles: **`Editor`** (default), demos (**`Test`**, **`Pong`**, …); `--env=test` / `--env=pong` |
 | **`Codegen/`** | Generated `*_gen.hpp`, per-header `*.generated.hpp`, and **`SceneEntityRegistry.generated.cpp`** (scene XML type registry) — **do not edit**; see [`property-codegen.mdc`](property-codegen.mdc) |
 
 New `src/**/*.cpp` files are picked up on the next configure/build (`CONFIGURE_DEPENDS` glob in CMake).

@@ -17,7 +17,7 @@
 			"request": "launch",
 			"program": "${workspaceFolder}/build/bin/Debug/TestEngine.exe",
 			"args": [
-				"${config:testEngine.launch.envArg}"
+				"${config:testEngine.launch.profileArg}"
 			],
 			"cwd": "${workspaceFolder}",
 			"preLaunchTask": "Prelaunch Debug",
@@ -31,7 +31,7 @@
 			"request": "launch",
 			"program": "${workspaceFolder}/build/bin/Release/TestEngine.exe",
 			"args": [
-				"${config:testEngine.launch.envArg}"
+				"${config:testEngine.launch.profileArg}"
 			],
 			"cwd": "${workspaceFolder}",
 			"preLaunchTask": "Prelaunch Release",
