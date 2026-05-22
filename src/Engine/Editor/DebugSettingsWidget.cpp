@@ -163,7 +163,7 @@ namespace Engine {
 					viz.SetAttractionFieldSpacingPx(fSpacing);
 				}
 				float fArrow = viz.GetAttractionFieldArrowScale();
-				if (ImGui::SliderFloat("Field arrow scale", &fArrow, 1e-3f, 4.f, "%.3f")) {
+				if (ImGui::SliderFloat("Field arrow scale", &fArrow, 1e-3f, 10.f, "%.3f")) {
 					viz.SetAttractionFieldArrowScale(fArrow);
 				}
 				float softCap = viz.GetAttractionFieldArrowLengthSoftCap();

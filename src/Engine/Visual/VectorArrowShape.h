@@ -1,6 +1,5 @@
 #pragma once
 
-#include "SFML/Graphics.hpp"
 #include "SFML/Graphics/Shape.hpp"
 
 class VectorArrowShape : public sf::Shape
@@ -13,8 +12,6 @@ public:
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 	sf::Vector2f getPoint(std::size_t index) const override;
 	std::size_t getPointCount() const override;
-
-	//sf::FloatRect GetLocalBounds() const;
 
 	void SetStartPos(const sf::Vector2f& start);
 	void SetEndPos(const sf::Vector2f& end);
