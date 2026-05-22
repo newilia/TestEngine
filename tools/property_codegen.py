@@ -2823,7 +2823,7 @@ def should_register_scene_entity(rel_src: str, c: ClassSpec) -> bool:
         return True
     if rel_src.startswith("Engine/Behaviour/"):
         return True
-    if rel_src.startswith("Environments/"):
+    if rel_src.startswith("LaunchProfiles/"):
         return True
     return False
 
@@ -2833,7 +2833,7 @@ def scene_entity_type_id(rel_src: str, class_name: str) -> str:
     parts = rel_src.split("/")
     if parts and parts[0] == "Engine":
         return f"Engine.{class_name}"
-    if len(parts) >= 2 and parts[0] == "Environments":
+    if len(parts) >= 2 and parts[0] == "LaunchProfiles":
         return f"{parts[1]}.{class_name}"
     return class_name
 

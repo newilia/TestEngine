@@ -1,5 +1,5 @@
 {
-	"testEngine.launch.envArg": "--env=",
+	"testEngine.launch.profileArg": "--profile=demo1",
 	"cmake.options.statusBarVisibility": "hidden",
 	"cmake.options.advanced": {
 		"variant": {

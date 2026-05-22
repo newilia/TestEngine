@@ -1,11 +1,11 @@
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/MainLoop.h"
-#include "Engine/Core/SfmlWindowUtils.h"
-#include "Environments/BallGame1/Env.h"
-#include "Environments/Demo1/Env.h"
-#include "Environments/EnvironmentBase.h"
-#include "Environments/Pong/PongEnvironment.h"
-#include "Environments/Test/TestEnvironment.h"
+#include "LaunchProfiles/BallGame1/BallGame1LaunchProfile.h"
+#include "LaunchProfiles/Demo1/Demo1LaunchProfile.h"
+#include "LaunchProfiles/Editor/EditorProfile.h"
+#include "LaunchProfiles/LaunchProfileBase.h"
+#include "LaunchProfiles/Pong/PongLaunchProfile.h"
+#include "LaunchProfiles/Test/TestLaunchProfile.h"
 
 #include <SFML/Graphics.hpp>
 
@@ -18,8 +18,9 @@
 
 namespace {
 
-	enum class AppEnvironmentKind
+	enum class LaunchProfileKind
 	{
+		Editor,
 		Test,
 		Pong,
 		Demo1,
@@ -38,31 +39,34 @@ namespace {
 		return true;
 	}
 
-	std::optional<AppEnvironmentKind> ParseEnvFromArgv(int argc, char** argv) {
-		constexpr std::string_view prefix = "--env=";
+	std::optional<LaunchProfileKind> ParseLaunchProfileFromArgv(int argc, char** argv) {
+		constexpr std::string_view prefix = "--profile=";
 		for (int i = 1; i < argc; ++i) {
 			std::string_view arg(argv[i]);
 			if (arg.size() >= prefix.size() && arg.substr(0, prefix.size()) == prefix) {
 				const std::string_view value = arg.substr(prefix.size());
+				if (EqualsIgnoreCaseAscii(value, "editor")) {
+					return LaunchProfileKind::Editor;
+				}
 				if (EqualsIgnoreCaseAscii(value, "pong")) {
-					return AppEnvironmentKind::Pong;
+					return LaunchProfileKind::Pong;
 				}
 				if (EqualsIgnoreCaseAscii(value, "test")) {
-					return AppEnvironmentKind::Test;
+					return LaunchProfileKind::Test;
 				}
 				if (EqualsIgnoreCaseAscii(value, "demo1")) {
-					return AppEnvironmentKind::Demo1;
+					return LaunchProfileKind::Demo1;
 				}
 				if (EqualsIgnoreCaseAscii(value, "ballgame1")) {
-					return AppEnvironmentKind::BallGame1;
+					return LaunchProfileKind::BallGame1;
 				}
 			}
 		}
 		return std::nullopt;
 	}
 
-	std::optional<AppEnvironmentKind> ParseEnvFromCmdLine(std::string_view fullLine) {
-		constexpr std::string_view key = "--env=";
+	std::optional<LaunchProfileKind> ParseLaunchProfileFromCmdLine(std::string_view fullLine) {
+		constexpr std::string_view key = "--profile=";
 		size_t pos = 0;
 		while (pos < fullLine.size()) {
 			const size_t found = fullLine.find(key, pos);
@@ -75,39 +79,46 @@ namespace {
 				++valEnd;
 			}
 			const std::string_view value = fullLine.substr(valStart, valEnd - valStart);
+			if (EqualsIgnoreCaseAscii(value, "editor")) {
+				return LaunchProfileKind::Editor;
+			}
 			if (EqualsIgnoreCaseAscii(value, "pong")) {
-				return AppEnvironmentKind::Pong;
+				return LaunchProfileKind::Pong;
 			}
 			if (EqualsIgnoreCaseAscii(value, "test")) {
-				return AppEnvironmentKind::Test;
+				return LaunchProfileKind::Test;
 			}
 			if (EqualsIgnoreCaseAscii(value, "demo1")) {
-				return AppEnvironmentKind::Demo1;
+				return LaunchProfileKind::Demo1;
 			}
 			if (EqualsIgnoreCaseAscii(value, "ballgame1")) {
-				return AppEnvironmentKind::BallGame1;
+				return LaunchProfileKind::BallGame1;
 			}
 			pos = valEnd;
 		}
 		return std::nullopt;
 	}
 
-	std::shared_ptr<EnvironmentBase> CreateEnvironment(std::optional<AppEnvironmentKind> kind) {
-		if (!kind) {
-			return nullptr;
-		}
-		switch (*kind) {
-		case AppEnvironmentKind::Test:
-			return std::make_shared<TestEnvironment>();
-		case AppEnvironmentKind::Pong:
-			return std::make_shared<PongEnvironment>();
-		case AppEnvironmentKind::Demo1:
-			return std::make_shared<Demo1::Env>();
-		case AppEnvironmentKind::BallGame1:
-			return std::make_shared<BallGame1::Env>();
+	std::shared_ptr<LaunchProfileBase> CreateLaunchProfile(LaunchProfileKind kind) {
+		switch (kind) {
+		case LaunchProfileKind::Editor:
+			return std::make_shared<EditorProfile>();
+		case LaunchProfileKind::Test:
+			return std::make_shared<TestLaunchProfile>();
+		case LaunchProfileKind::Pong:
+			return std::make_shared<PongLaunchProfile>();
+		case LaunchProfileKind::Demo1:
+			return std::make_shared<Demo1::Demo1LaunchProfile>();
+		case LaunchProfileKind::BallGame1:
+			return std::make_shared<BallGame1::BallGame1LaunchProfile>();
 		default:
 			return nullptr;
 		}
+	}
+
+	std::shared_ptr<LaunchProfileBase> ResolveLaunchProfile(std::optional<LaunchProfileKind> kindFromArgs) {
+		const LaunchProfileKind kind = kindFromArgs.value_or(LaunchProfileKind::Editor);
+		return CreateLaunchProfile(kind);
 	}
 } // namespace
 
@@ -122,24 +133,14 @@ int WINAPI WinMain(
 	_set_error_mode(_OUT_TO_MSGBOX);
 
 #ifdef _CONSOLE
-	auto envKind = ParseEnvFromArgv(argc, argv);
-	auto env = CreateEnvironment(envKind);
+	const auto profileKind = ParseLaunchProfileFromArgv(argc, argv);
 #else
-	auto envKind = ParseEnvFromCmdLine(lpCmdLine ? std::string_view(lpCmdLine) : std::string_view{});
-	auto env = CreateEnvironment(envKind);
+	const auto profileKind =
+	    ParseLaunchProfileFromCmdLine(lpCmdLine ? std::string_view(lpCmdLine) : std::string_view{});
 #endif
-	if (env) {
-		env->Setup();
-	}
-	else {
-		auto& mainContext = Engine::MainContext::GetInstance();
-		const auto mainWindow = mainContext.CreateMainWindow(sf::VideoMode({1920, 1080}), "Test Engine");
-		if (!mainWindow) {
-			std::exit(EXIT_FAILURE);
-		}
-		Utils::MaximizeWindow(*mainWindow);
-		mainContext.SetScene(std::make_shared<Scene>());
-	}
+
+	const auto profile = ResolveLaunchProfile(profileKind);
+	profile->Setup();
 
 	Engine::MainContext::GetInstance().Init();
 

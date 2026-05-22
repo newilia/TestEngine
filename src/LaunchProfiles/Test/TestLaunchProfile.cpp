@@ -1,4 +1,4 @@
-#include "TestEnvironment.h"
+#include "TestLaunchProfile.h"
 
 #include "Engine/Behaviour/Physics/AttractiveBehaviour.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
@@ -20,7 +20,7 @@
 using std::make_shared;
 using std::shared_ptr;
 
-void TestEnvironment::Setup() {
+void TestLaunchProfile::Setup() {
 	auto& mainContext = Engine::MainContext::GetInstance();
 	const auto mainWindow = mainContext.CreateMainWindow(sf::VideoMode({1920, 1080}), "Test scene");
 	if (!mainWindow) {
@@ -35,7 +35,7 @@ void TestEnvironment::Setup() {
 	EventHandlerBase::SubscribeForEvents();
 }
 
-void TestEnvironment::OnEvent(const sf::Event& event) {
+void TestLaunchProfile::OnEvent(const sf::Event& event) {
 	auto mainContext = &Engine::MainContext::GetInstance();
 
 	if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
@@ -58,7 +58,7 @@ void TestEnvironment::OnEvent(const sf::Event& event) {
 	}
 }
 
-std::shared_ptr<Scene> TestEnvironment::BuildScene() {
+std::shared_ptr<Scene> TestLaunchProfile::BuildScene() {
 	auto scene = make_shared<Scene>();
 	auto container = SceneNode::Create();
 	container->SetName("container");

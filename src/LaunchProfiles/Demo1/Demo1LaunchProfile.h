@@ -2,14 +2,14 @@
 
 #include "Engine/Core/EventHandlerBase.h"
 #include "Engine/Core/Scene.h"
-#include "Environments/EnvironmentBase.h"
+#include "LaunchProfiles/LaunchProfileBase.h"
 
 namespace Demo1 {
 
-	class Env : public EnvironmentBase, public Engine::EventHandlerBase
+	class Demo1LaunchProfile : public LaunchProfileBase, public Engine::EventHandlerBase
 	{
 	public:
-		~Env() override = default;
+		~Demo1LaunchProfile() override = default;
 		void Setup() override;
 		void OnEvent(const sf::Event& event) override;
 

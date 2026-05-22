@@ -1,4 +1,4 @@
-#include "PongEnvironment.h"
+#include "PongLaunchProfile.h"
 
 #include "AiPlatformControllerBehaviour.h"
 #include "Engine/Behaviour/Physics/IntersectionDetails.h"
@@ -56,9 +56,9 @@ namespace {
 
 constexpr int kPongScoreFontSize = 140;
 
-PongEnvironment::~PongEnvironment() = default;
+PongLaunchProfile::~PongLaunchProfile() = default;
 
-void PongEnvironment::Setup() {
+void PongLaunchProfile::Setup() {
 	auto& mainContext = Engine::MainContext::GetInstance();
 	auto videoMode = sf::VideoMode::getDesktopMode();
 	mainContext.CreateMainWindow(videoMode, "Pong");
@@ -69,7 +69,7 @@ void PongEnvironment::Setup() {
 	SubscribeForEvents();
 }
 
-void PongEnvironment::OnEvent(const sf::Event& event) {
+void PongLaunchProfile::OnEvent(const sf::Event& event) {
 	if (auto e = event.getIf<sf::Event::KeyPressed>()) {
 		auto& mainContext = Engine::MainContext::GetInstance();
 		if (e->code == sf::Keyboard::Key::R) {
@@ -81,7 +81,7 @@ void PongEnvironment::OnEvent(const sf::Event& event) {
 	}
 }
 
-void PongEnvironment::AddBall(Scene* scene, float radius) {
+void PongLaunchProfile::AddBall(Scene* scene, float radius) {
 	constexpr float pointsCountConstant = 3.f;
 	constexpr float speedDampingFactor = 0.1f;
 	const sf::Color color(40, 170, 255, 200);
@@ -122,7 +122,7 @@ void PongEnvironment::AddBall(Scene* scene, float radius) {
 	sBall = ball;
 }
 
-shared_ptr<SceneNode> PongEnvironment::CreateDefaultPlatform(
+shared_ptr<SceneNode> PongLaunchProfile::CreateDefaultPlatform(
     sf::Vector2f size, sf::Vector2f pos, float rotationDeg, sf::Color color) const {
 	auto node = SceneNode::Create();
 	node->SetName("Platform");
@@ -153,7 +153,7 @@ shared_ptr<SceneNode> PongEnvironment::CreateDefaultPlatform(
 	return node;
 }
 
-void PongEnvironment::AddWalls(Scene* scene) {
+void PongLaunchProfile::AddWalls(Scene* scene) {
 	const auto field = GetPongPlayfieldRect();
 	const sf::Vector2f o = field.position;
 	const sf::Vector2f sz = field.size;
@@ -203,7 +203,7 @@ void PongEnvironment::AddWalls(Scene* scene) {
 	}
 }
 
-void PongEnvironment::AddUserPlatform(Scene* scene) {
+void PongLaunchProfile::AddUserPlatform(Scene* scene) {
 	const sf::Vector2f size(500.f, 70.f);
 	const sf::Vector2f pos = InitialUserPlatformPosition();
 	const sf::Color color(220, 220, 20);
@@ -224,7 +224,7 @@ void PongEnvironment::AddUserPlatform(Scene* scene) {
 	sUserPlatform = platformNode;
 }
 
-void PongEnvironment::AddAiPlatform(Scene* scene) {
+void PongLaunchProfile::AddAiPlatform(Scene* scene) {
 	const sf::Vector2f size(500.f, 70.f);
 	const sf::Vector2f pos = InitialAiPlatformPosition();
 	const sf::Color color(220, 220, 20);
@@ -249,7 +249,7 @@ void PongEnvironment::AddAiPlatform(Scene* scene) {
 	sAiPlatform = platformNode;
 }
 
-void PongEnvironment::AddScoreboard(Scene* scene) {
+void PongLaunchProfile::AddScoreboard(Scene* scene) {
 	auto* font = Engine::MainContext::GetInstance().GetFontManager()->GetDefaultFont();
 	if (!font) {
 		return;
@@ -278,7 +278,7 @@ void PongEnvironment::AddScoreboard(Scene* scene) {
 	scene->GetRoot()->AddChild(std::move(node));
 }
 
-void PongEnvironment::UpdateScoreText() {
+void PongLaunchProfile::UpdateScoreText() {
 	if (!_scoreText || !_scoreboardNode) {
 		return;
 	}
@@ -289,7 +289,7 @@ void PongEnvironment::UpdateScoreText() {
 	Utils::SetLocalPosToWorld(_scoreboardNode, GetPongPlayfieldRect().getCenter());
 }
 
-std::shared_ptr<Scene> PongEnvironment::BuildScene() {
+std::shared_ptr<Scene> PongLaunchProfile::BuildScene() {
 	ClearPongPlayfieldRectOverride();
 	auto scene = make_shared<Scene>();
 
@@ -301,19 +301,19 @@ std::shared_ptr<Scene> PongEnvironment::BuildScene() {
 	return scene;
 }
 
-void PongEnvironment::OnLose() {
+void PongLaunchProfile::OnLose() {
 	++_aiScore;
 	UpdateScoreText();
 	ResetRound();
 }
 
-void PongEnvironment::OnWin() {
+void PongLaunchProfile::OnWin() {
 	++_userScore;
 	UpdateScoreText();
 	ResetRound();
 }
 
-void PongEnvironment::ResetRound() {
+void PongLaunchProfile::ResetRound() {
 	if (!sBall || !sUserPlatform || !sAiPlatform) {
 		return;
 	}

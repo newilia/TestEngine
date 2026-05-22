@@ -28,10 +28,12 @@ cmake --build build --config Release
 
 Если в `build` остался генератор Ninja — `__clean.cmd`, затем `_cmake.cmd`.
 
-## Демо-среда (`--env=`)
+## Профили запуска (`--env=`)
 
-- `--env=test` — [`TestEnvironment`](src/Environments/Test/TestEnvironment.h)
-- `--env=pong` — [`PongEnvironment`](src/Environments/Pong/PongEnvironment.h)
+- по умолчанию (без аргумента) — [`EditorProfile`](src/LaunchProfiles/Editor/EditorProfile.h)
+- `--env=editor` — то же
+- `--env=test` — [`TestLaunchProfile`](src/LaunchProfiles/Test/TestLaunchProfile.h)
+- `--env=pong` — [`PongLaunchProfile`](src/LaunchProfiles/Pong/PongLaunchProfile.h)
 
 Пример:
 

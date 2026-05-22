@@ -2,7 +2,9 @@
 
 #include "Engine/Core/EventHandlerBase.h"
 #include "Engine/Core/Scene.h"
-#include "Environments/EnvironmentBase.h"
+#include "LaunchProfiles/LaunchProfileBase.h"
+
+#include <SFML/System/Vector2.hpp>
 
 #include <memory>
 
@@ -10,9 +12,10 @@ class SceneNode;
 
 namespace BallGame1 {
 
-	class Env : public EnvironmentBase, public Engine::EventHandlerBase
+	class BallGame1LaunchProfile : public LaunchProfileBase, public Engine::EventHandlerBase
 	{
 	public:
+		~BallGame1LaunchProfile() override = default;
 		void Setup() override;
 		void OnEvent(const sf::Event& event) override;
 
@@ -23,7 +26,6 @@ namespace BallGame1 {
 		std::shared_ptr<SceneNode> CreateScoreNode();
 		std::shared_ptr<SceneNode> CreateBallNode();
 
-	private:
 		const sf::Vector2f _fieldSize{1000, 1000};
 	};
 
