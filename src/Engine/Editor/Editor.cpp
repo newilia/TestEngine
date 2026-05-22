@@ -24,6 +24,7 @@
 #include "Engine/Editor/Commands/PasteEntityCommand.h"
 #include "Engine/Editor/Commands/PasteNodeCommand.h"
 #include "Engine/Editor/Commands/SetNodeWorldPositionCommand.h"
+#include "Engine/Editor/EditorPreferences.h"
 #include "Engine/Editor/EditorVisualTheme.h"
 #include "Engine/Editor/ImGui/Themes.h"
 #include "Engine/Editor/NativeFileDialog.h"
@@ -115,7 +116,7 @@ namespace {
 
 namespace Engine {
 
-	Editor::Editor() {
+	void Editor::Init() {
 		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 		::Editor::Themes::SetupImGuiDraculaStyle();
@@ -123,7 +124,6 @@ namespace Engine {
 		style.TreeLinesFlags = ImGuiTreeNodeFlags_DrawLinesFull;
 		style.TreeLinesSize = 2.0f;
 
-		MainContext::GetInstance().GetFontManager()->GetDefaultFont();
 		ImFontAtlas& atlas = *ImGui::GetIO().Fonts;
 		ImFontConfig config;
 		config.OversampleH = 2.0f;
@@ -192,6 +192,12 @@ namespace Engine {
 				}
 				if (ImGui::MenuItem("Reload from disk", "Ctrl+R", false, _currentScenePath.has_value())) {
 					(void)ReloadScene();
+				}
+				ImGui::Separator();
+				EditorPreferences& editorPreferences = EditorPreferences::GetInstance();
+				if (ImGui::MenuItem(
+				        "Load last scene on startup", nullptr, &editorPreferences.LoadLastSceneOnStartupMutable())) {
+					editorPreferences.Save();
 				}
 				ImGui::Separator();
 				if (ImGui::MenuItem("Instantiate prefab…")) {
@@ -914,6 +920,11 @@ namespace Engine {
 		else {
 			_currentScenePath.reset();
 		}
+		if (kind == Serialization::SceneDocumentKind::Scene && _currentScenePath) {
+			EditorPreferences& editorPreferences = EditorPreferences::GetInstance();
+			editorPreferences.SetLastScenePath(*_currentScenePath);
+			editorPreferences.Save();
+		}
 		MainContext::GetInstance().UpdateMainWindowTitle(_currentScenePath, _documentKind);
 	}
 
@@ -1143,6 +1154,18 @@ namespace Engine {
 			return false;
 		}
 		return LoadScene(*path);
+	}
+
+	bool Editor::TryLoadLastSceneOnStartup() {
+		const EditorPreferences& editorPreferences = EditorPreferences::GetInstance();
+		if (!editorPreferences.IsLoadLastSceneOnStartup()) {
+			return false;
+		}
+		const std::optional<std::filesystem::path> lastScenePath = editorPreferences.GetLastScenePath();
+		if (!lastScenePath) {
+			return false;
+		}
+		return LoadScene(ResolveContentPath(*lastScenePath));
 	}
 
 	bool Editor::LoadScene(const std::filesystem::path& path) {

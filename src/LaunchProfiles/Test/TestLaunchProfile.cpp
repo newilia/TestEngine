@@ -9,6 +9,7 @@
 #include "Engine/Core/SceneNodeUtils.h"
 #include "Engine/Core/SfmlWindowUtils.h"
 #include "Engine/Core/Transform.h"
+#include "Engine/Editor/Editor.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "Engine/Visual/CircleShapeVisual.h"
 #include "Engine/Visual/RectangleShapeVisual.h"
@@ -26,6 +27,10 @@ void TestLaunchProfile::Setup() {
 	if (!mainWindow) {
 		std::exit(EXIT_FAILURE);
 	}
+
+	mainContext.Init();
+
+	Engine::Editor::GetInstance().Init();
 	Utils::MaximizeWindow(*mainWindow);
 
 	mainContext.GetPhysicsProcessor()->SetGravityEnabled(true);

@@ -7,8 +7,32 @@ namespace Engine::Serialization {
 		constexpr const char kElementName[] = "View";
 		constexpr const char kCenterXAttr[] = "centerX";
 		constexpr const char kCenterYAttr[] = "centerY";
-		constexpr const char kSizeXAttr[] = "sizeX";
-		constexpr const char kSizeYAttr[] = "sizeY";
+		constexpr const char kScaleAttr[] = "scale";
+		constexpr const char kLegacySizeXAttr[] = "sizeX";
+		constexpr const char kLegacySizeYAttr[] = "sizeY";
+
+		[[nodiscard]] std::optional<float> ReadViewScaleFromNode(const pugi::xml_node& node) {
+			const pugi::xml_attribute scaleAttr = node.attribute(kScaleAttr);
+			if (scaleAttr) {
+				return scaleAttr.as_float();
+			}
+			const pugi::xml_attribute sizeXAttr = node.attribute(kLegacySizeXAttr);
+			const pugi::xml_attribute sizeYAttr = node.attribute(kLegacySizeYAttr);
+			if (!sizeXAttr || !sizeYAttr) {
+				return std::nullopt;
+			}
+			const sf::RenderWindow* window = MainContext::GetInstance().GetMainWindow();
+			if (!window) {
+				return std::nullopt;
+			}
+			const sf::Vector2u pixelSize = window->getSize();
+			if (pixelSize.x == 0u || pixelSize.y == 0u) {
+				return std::nullopt;
+			}
+			const float w = static_cast<float>(pixelSize.x);
+			const float h = static_cast<float>(pixelSize.y);
+			return (sizeXAttr.as_float() / w + sizeYAttr.as_float() / h) * 0.5f;
+		}
 
 		class ViewSettingsModule final : public ISceneSettingsModule
 		{
@@ -20,15 +44,14 @@ namespace Engine::Serialization {
 			void Save(pugi::xml_node settingsParent, SerializationResult& /*result*/) const override {
 				const MainContext& ctx = MainContext::GetInstance();
 				const std::optional<sf::Vector2f> center = ctx.GetMainCameraCenter();
-				const std::optional<sf::Vector2f> viewSize = ctx.GetMainCameraViewSize();
-				if (!center || !viewSize) {
+				const std::optional<float> scale = ctx.GetMainCameraViewScale();
+				if (!center || !scale) {
 					return;
 				}
 				pugi::xml_node node = settingsParent.append_child(kElementName);
 				node.append_attribute(kCenterXAttr).set_value(center->x);
 				node.append_attribute(kCenterYAttr).set_value(center->y);
-				node.append_attribute(kSizeXAttr).set_value(viewSize->x);
-				node.append_attribute(kSizeYAttr).set_value(viewSize->y);
+				node.append_attribute(kScaleAttr).set_value(*scale);
 			}
 
 			void Load(const pugi::xml_node& settingsParent, SerializationResult& /*result*/) const override {
@@ -38,13 +61,14 @@ namespace Engine::Serialization {
 				}
 				const pugi::xml_attribute centerXAttr = node.attribute(kCenterXAttr);
 				const pugi::xml_attribute centerYAttr = node.attribute(kCenterYAttr);
-				const pugi::xml_attribute sizeXAttr = node.attribute(kSizeXAttr);
-				const pugi::xml_attribute sizeYAttr = node.attribute(kSizeYAttr);
-				if (!centerXAttr || !centerYAttr || !sizeXAttr || !sizeYAttr) {
+				if (!centerXAttr || !centerYAttr) {
 					return;
 				}
-				MainContext::GetInstance().SetMainCameraView(
-				    {centerXAttr.as_float(), centerYAttr.as_float()}, {sizeXAttr.as_float(), sizeYAttr.as_float()});
+				const std::optional<float> scale = ReadViewScaleFromNode(node);
+				if (!scale) {
+					return;
+				}
+				MainContext::GetInstance().SetMainCameraView({centerXAttr.as_float(), centerYAttr.as_float()}, *scale);
 			}
 
 			void ApplyDefaults() const override {

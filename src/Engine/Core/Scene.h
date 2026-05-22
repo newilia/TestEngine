@@ -24,6 +24,7 @@ public:
 
 	Scene();
 	~Scene() override = default;
+	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 	void Update(const sf::Time& dt) override;
 	void OnEvent(const sf::Event& event) override;
 
@@ -45,7 +46,6 @@ public:
 	std::shared_ptr<EntityOnNode> FindEntityByObjectId(Engine::SceneObjectId id) const;
 
 private:
-	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 	void WireGraphOwningScene();
 
 	std::shared_ptr<SceneNode> _root;

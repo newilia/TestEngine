@@ -75,8 +75,8 @@ namespace Engine {
 		void FocusCameraOnWorldPoint(const sf::Vector2f& worldPoint, bool smooth = true);
 
 		std::optional<sf::Vector2f> GetMainCameraCenter() const;
-		std::optional<sf::Vector2f> GetMainCameraViewSize() const;
-		void SetMainCameraView(sf::Vector2f center, sf::Vector2f viewSize);
+		std::optional<float> GetMainCameraViewScale() const;
+		void SetMainCameraView(sf::Vector2f center, float scale);
 		void ResetMainCameraViewToDefault();
 
 		void OnMainWindowResized(const sf::Vector2u& newPixelSize);

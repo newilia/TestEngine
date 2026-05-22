@@ -30,6 +30,13 @@ namespace {
 } // namespace
 
 namespace Engine {
+	MainContext::MainContext() {
+		_eventsDispatcher = make_shared<EventsDispatcher>();
+		_physicsProcessor = make_shared<PhysicsProcessor>();
+		_fontManager = make_shared<FontManager>();
+		_textureManager = make_shared<TextureManager>();
+		_gameBackgroundContext = make_shared<GameBackgroundContext>();
+	}
 
 	shared_ptr<Scene> MainContext::GetScene() const {
 		return _scene;
@@ -86,14 +93,6 @@ namespace Engine {
 
 	bool MainContext::IsVerticalSyncEnabled() const {
 		return _verticalSyncEnabled;
-	}
-
-	MainContext::MainContext() {
-		_eventsDispatcher = make_shared<EventsDispatcher>();
-		_physicsProcessor = make_shared<PhysicsProcessor>();
-		_fontManager = make_shared<FontManager>();
-		_textureManager = make_shared<TextureManager>();
-		_gameBackgroundContext = make_shared<GameBackgroundContext>();
 	}
 
 	void MainContext::SetScene(const shared_ptr<Scene>& scene) {
@@ -272,18 +271,31 @@ namespace Engine {
 		return std::nullopt;
 	}
 
-	std::optional<sf::Vector2f> MainContext::GetMainCameraViewSize() const {
+	std::optional<float> MainContext::GetMainCameraViewScale() const {
 		if (const sf::RenderWindow* window = GetMainWindow()) {
-			return window->getView().getSize();
+			const sf::Vector2f viewSize = window->getView().getSize();
+			const sf::Vector2u pixelSize = window->getSize();
+			if (pixelSize.x == 0u || pixelSize.y == 0u) {
+				return std::nullopt;
+			}
+			const float w = static_cast<float>(pixelSize.x);
+			const float h = static_cast<float>(pixelSize.y);
+			return (viewSize.x / w + viewSize.y / h) * 0.5f;
 		}
 		return std::nullopt;
 	}
 
-	void MainContext::SetMainCameraView(sf::Vector2f center, sf::Vector2f viewSize) {
+	void MainContext::SetMainCameraView(sf::Vector2f center, float scale) {
 		_cameraViewAnimator.Cancel();
 		if (auto window = GetMainWindow()) {
+			const sf::Vector2u pixelSize = window->getSize();
+			if (pixelSize.x == 0u || pixelSize.y == 0u) {
+				return;
+			}
+			const float w = static_cast<float>(pixelSize.x);
+			const float h = static_cast<float>(pixelSize.y);
 			const sf::View previous = window->getView();
-			sf::View view(center, viewSize);
+			sf::View view(center, {w * scale, h * scale});
 			view.setRotation(previous.getRotation());
 			view.setViewport(previous.getViewport());
 			view.setScissor(previous.getScissor());
@@ -292,10 +304,7 @@ namespace Engine {
 	}
 
 	void MainContext::ResetMainCameraViewToDefault() {
-		if (const auto window = GetMainWindow()) {
-			const sf::Vector2u pixelSize = window->getSize();
-			SetMainCameraView({0.f, 0.f}, {static_cast<float>(pixelSize.x), static_cast<float>(pixelSize.y)});
-		}
+		SetMainCameraView({0.f, 0.f}, 1.f);
 	}
 
 	void MainContext::OnMainWindowResized(const sf::Vector2u& newPixelSize) {

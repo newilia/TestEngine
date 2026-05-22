@@ -10,6 +10,7 @@
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/SceneNodeUtils.h"
 #include "Engine/Core/SfmlWindowUtils.h"
+#include "Engine/Editor/Editor.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "Engine/Sorting/SortingStrategy.h"
 #include "Engine/Visual/CircleShapeVisual.h"
@@ -60,8 +61,12 @@ PongLaunchProfile::~PongLaunchProfile() = default;
 
 void PongLaunchProfile::Setup() {
 	auto& mainContext = Engine::MainContext::GetInstance();
+
 	auto videoMode = sf::VideoMode::getDesktopMode();
 	mainContext.CreateMainWindow(videoMode, "Pong");
+	mainContext.Init();
+
+	Engine::Editor::GetInstance().Init();
 	mainContext.GetMainWindow()->setMouseCursorVisible(false);
 	mainContext.GetPhysicsProcessor()->SetGravityEnabled(false);
 	mainContext.SetScene(BuildScene());
