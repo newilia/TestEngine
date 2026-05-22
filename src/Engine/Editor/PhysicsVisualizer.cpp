@@ -18,8 +18,8 @@ namespace {
 
 	constexpr float kMinArrowLengthSq = 1e-1f;
 	constexpr float kVelocityInternalScale = 0.1f;
-	constexpr float kAccelInternalScale = 0.001f;
-	constexpr float kFieldInternalScale = 0.00025f;
+	constexpr float kForceInternalScale = 0.05f;
+	constexpr float kFieldInternalScale = 0.1f;
 	constexpr float kMinFieldSpacingPx = 8.f;
 	constexpr float kSqrt3Half = 0.8660254037844386f;
 	constexpr std::size_t kMaxFieldSamples = 16384;
@@ -57,6 +57,28 @@ namespace {
 		const float b = std::clamp(compressBlend, 0.f, 1.f);
 		const float saturated = softCapWorld * len / (len + softCapWorld);
 		return std::lerp(len, saturated, b);
+	}
+
+	float WorldUnitsPerPixel(const sf::RenderWindow& window, const sf::View& view) {
+		const sf::Vector2f viewSize = view.getSize();
+		if (viewSize.x <= 0.f || viewSize.y <= 0.f) {
+			return 0.f;
+		}
+		const sf::Vector2u windowSize = window.getSize();
+		if (windowSize.x == 0 || windowSize.y == 0) {
+			return 0.f;
+		}
+		const float pxPerWorldX = static_cast<float>(windowSize.x) / viewSize.x;
+		const float pxPerWorldY = static_cast<float>(windowSize.y) / viewSize.y;
+		const float pixelsPerWorld = std::min(pxPerWorldX, pxPerWorldY);
+		return pixelsPerWorld > 0.f ? (1.f / pixelsPerWorld) : 0.f;
+	}
+
+	sf::Transform ScreenSpaceArrowTransform(const sf::Vector2f& anchorWorld, float worldPerPixel) {
+		sf::Transform transform;
+		transform.translate(anchorWorld);
+		transform.scale({worldPerPixel, worldPerPixel});
+		return transform;
 	}
 
 	std::size_t EstimateGridSampleCount(unsigned w, unsigned h, float stepPx, Engine::FieldGridLayout layout) {
@@ -112,7 +134,7 @@ namespace Engine {
 				}
 				if (_isForceVisible) {
 					const sf::Vector2f delta =
-					    proc->EvaluateExternalForces(body.get()) * _forceScale * kAccelInternalScale;
+					    proc->EvaluateExternalForces(body.get()) * _forceScale * kForceInternalScale;
 					if (delta.lengthSquared() >= kMinArrowLengthSq) {
 						VectorArrowShape arrow(origin, origin + delta, _forceColor);
 						arrow.draw(window, sf::RenderStates::Default);
@@ -146,6 +168,11 @@ namespace Engine {
 			est = EstimateGridSampleCount(w, h, stepPx, _fieldGridLayout);
 		}
 
+		const float worldPerPixel = WorldUnitsPerPixel(window, view);
+		if (worldPerPixel <= 0.f) {
+			return;
+		}
+
 		const auto emitFieldArrow = [&](float px, float py) {
 			const sf::Vector2i pix{static_cast<int>(std::lround(px)), static_cast<int>(std::lround(py))};
 			if (pix.x < 0 || pix.y < 0 || static_cast<unsigned>(pix.x) >= w || static_cast<unsigned>(pix.y) >= h) {
@@ -167,8 +194,14 @@ namespace Engine {
 			const float flen = f.length();
 			const sf::Color col =
 			    FieldPaletteColor(flen, _fieldPaletteSpan, _fieldPaletteWeak, _fieldPaletteMid, _fieldPaletteStrong);
-			VectorArrowShape arrow(world, world + delta, col);
-			arrow.draw(window, sf::RenderStates::Default);
+			const sf::Vector2i tipPix = window.mapCoordsToPixel(world + delta, view);
+			const sf::Vector2i originPix = window.mapCoordsToPixel(world, view);
+			const sf::Vector2f deltaPx{
+			    static_cast<float>(tipPix.x - originPix.x), static_cast<float>(tipPix.y - originPix.y)};
+			VectorArrowShape arrow(sf::Vector2f{}, deltaPx, col);
+			arrow.SetArrowHeadSize(std::clamp(flen * 0.1f, 5.f, 20.f));
+
+			arrow.draw(window, sf::RenderStates(ScreenSpaceArrowTransform(world, worldPerPixel)));
 		};
 
 		if (_fieldGridLayout == FieldGridLayout::Square) {

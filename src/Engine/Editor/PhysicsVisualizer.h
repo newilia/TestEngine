@@ -91,7 +91,7 @@ namespace Engine {
 		FieldGridLayout _fieldGridLayout = FieldGridLayout::Triangular;
 		float _fieldSpacingPx = 48.f;
 		float _fieldArrowScale = 0.5f;
-		float _fieldArrowLengthSoftCap = 100.f;
+		float _fieldArrowLengthSoftCap = 10.f;
 		float _fieldArrowLengthCompress = 1.f;
 		float _fieldPaletteSpan = 20000.f;
 		sf::Color _fieldPaletteWeak{100, 150, 255, 0};
