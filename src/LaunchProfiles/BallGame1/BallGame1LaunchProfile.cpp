@@ -7,6 +7,7 @@
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/SfmlWindowUtils.h"
+#include "Engine/Editor/Editor.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "Engine/Visual/CircleShapeVisual.h"
 #include "Engine/Visual/RectangleShapeVisual.h"
@@ -25,6 +26,9 @@ namespace BallGame1 {
 		if (!mainWindow) {
 			std::exit(EXIT_FAILURE);
 		}
+		mainContext.Init();
+		Engine::Editor::GetInstance().Init();
+
 		EventHandlerBase::SubscribeForEvents();
 		Utils::MaximizeWindow(*mainWindow);
 		mainContext.GetPhysicsProcessor()->SetGravity({0, 1000});

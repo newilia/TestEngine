@@ -6,6 +6,7 @@
 #include "Engine/Core/SfmlWindowUtils.h"
 #include "Engine/Core/TextureManager.h"
 #include "Engine/Core/Transform.h"
+#include "Engine/Editor/Editor.h"
 #include "Engine/Simulation/PhysicsProcessor.h"
 #include "Engine/Visual/SpriteVisual.h"
 #include "PongGame.h"
@@ -22,6 +23,8 @@ namespace Demo1 {
 		if (!mainWindow) {
 			std::exit(EXIT_FAILURE);
 		}
+		mainContext.Init();
+		Engine::Editor::GetInstance().Init();
 		Utils::MaximizeWindow(*mainWindow);
 		mainContext.GetPhysicsProcessor()->SetGravity({0, 1000});
 		mainContext.GetPhysicsProcessor()->SetGravityEnabled(true);

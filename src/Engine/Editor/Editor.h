@@ -42,6 +42,7 @@ namespace Engine {
 		friend class Singleton<Editor>;
 
 	public:
+		void Init();
 		void Toggle();
 		void SetIsOpen(bool isOpen);
 		bool IsOpen() const;
@@ -111,8 +112,10 @@ namespace Engine {
 		bool IsDrawDescendantsSelectionEnabled() const;
 		bool& DrawDescendantsSelectionEnabledMutable();
 
+		bool TryLoadLastSceneOnStartup();
+
 	private:
-		Editor();
+		Editor() = default;
 
 		void DrawLayout();
 		void DrawSaveDocumentKindModal();

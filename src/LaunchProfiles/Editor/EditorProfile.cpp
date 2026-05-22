@@ -1,8 +1,8 @@
 #include "EditorProfile.h"
 
 #include "Engine/Core/MainContext.h"
-#include "Engine/Core/Scene.h"
 #include "Engine/Core/SfmlWindowUtils.h"
+#include "Engine/Editor/Editor.h"
 
 #include <SFML/Graphics.hpp>
 
@@ -16,5 +16,11 @@ void EditorProfile::Setup() {
 		std::exit(EXIT_FAILURE);
 	}
 	Utils::MaximizeWindow(*mainWindow);
-	mainContext.SetScene(std::make_shared<Scene>());
+	mainContext.Init();
+
+	auto& editor = Engine::Editor::GetInstance();
+	editor.Init();
+	if (!editor.TryLoadLastSceneOnStartup()) {
+		mainContext.SetScene(std::make_shared<Scene>());
+	}
 }

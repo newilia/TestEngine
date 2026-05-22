@@ -142,8 +142,6 @@ int WINAPI WinMain(
 	const auto profile = ResolveLaunchProfile(profileKind);
 	profile->Setup();
 
-	Engine::MainContext::GetInstance().Init();
-
 	Engine::MainLoop mainLoop;
 	mainLoop.Run();
 
