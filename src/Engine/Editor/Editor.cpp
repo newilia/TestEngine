@@ -23,6 +23,7 @@
 #include "Engine/Editor/Commands/MoveNodesInHierarchyCommand.h"
 #include "Engine/Editor/Commands/PasteEntityCommand.h"
 #include "Engine/Editor/Commands/PasteNodeCommand.h"
+#include "Engine/Editor/Commands/RenameNodeCommand.h"
 #include "Engine/Editor/Commands/SetNodeWorldPositionCommand.h"
 #include "Engine/Editor/EditorPreferences.h"
 #include "Engine/Editor/EditorVisualTheme.h"
@@ -510,6 +511,17 @@ namespace Engine {
 		}
 		return _history.Execute(
 		    std::make_unique<EditorCommands::SetNodeWorldPositionCommand>(node, previousWorldPos, newWorldPos));
+	}
+
+	bool Editor::RenameNode(const std::shared_ptr<SceneNode>& node, std::string newName) {
+		if (!node) {
+			return false;
+		}
+		const std::string& oldName = node->GetName();
+		if (oldName == newName) {
+			return true;
+		}
+		return _history.Execute(std::make_unique<EditorCommands::RenameNodeCommand>(node, oldName, std::move(newName)));
 	}
 
 	bool Editor::DeleteNode(const std::shared_ptr<SceneNode>& node) {
