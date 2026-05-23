@@ -77,6 +77,18 @@ void TiledGameBackground::SetStaticity(float staticity) {
 	_geometryDirty = true;
 }
 
+sf::Vector2i TiledGameBackground::GetTextureOffset() const {
+	return _textureOffset;
+}
+
+void TiledGameBackground::SetTextureOffset(sf::Vector2i offset) {
+	if (_textureOffset == offset) {
+		return;
+	}
+	_textureOffset = offset;
+	_geometryDirty = true;
+}
+
 namespace {
 	constexpr float kMinTile = 1e-3f;
 
@@ -150,12 +162,14 @@ void TiledGameBackground::RebuildVertices(const sf::RenderTarget& target) const 
 
 	const std::uint8_t alpha = static_cast<std::uint8_t>(_opacity * 255.f);
 	const sf::Color vertColor(255, 255, 255, alpha);
+	const float texOffsetU = static_cast<float>(_textureOffset.x);
+	const float texOffsetV = static_cast<float>(_textureOffset.y);
 
 	auto addQuad = [&](float x0, float y0, float x1, float y1) {
-		const float u0 = ((x0 - scrollX) / worldTileW) * texW;
-		const float v0 = ((y0 - scrollY) / worldTileH) * texH;
-		const float u1 = ((x1 - scrollX) / worldTileW) * texW;
-		const float v1 = ((y1 - scrollY) / worldTileH) * texH;
+		const float u0 = ((x0 - scrollX) / worldTileW) * texW + texOffsetU;
+		const float v0 = ((y0 - scrollY) / worldTileH) * texH + texOffsetV;
+		const float u1 = ((x1 - scrollX) / worldTileW) * texW + texOffsetU;
+		const float v1 = ((y1 - scrollY) / worldTileH) * texH + texOffsetV;
 
 		sf::Vertex v[6];
 		v[0].position = {x0, y0};
