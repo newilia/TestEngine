@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Engine/Behaviour/Behaviour.h"
+#include "Engine/Core/EntityId.h"
 #include "Engine/Core/IPropertiesProvider.h"
 #include "Engine/Core/MetaClass.h"
-#include "Engine/Core/SceneObjectId.h"
 #include "Engine/Core/Transform.h"
 #include "Engine/Sorting/SortingStrategy.h"
 #include "Engine/Visual/Visual.h"
@@ -52,8 +52,8 @@ public:
 	bool IsVisible() const;
 	void SetVisible(bool isVisible);
 
-	Engine::SceneObjectId GetSceneObjectId() const;
-	void SetSceneObjectId(Engine::SceneObjectId id);
+	Engine::EntityId GetEntityId() const;
+	void SetEntityId(Engine::EntityId id);
 
 	// Hierarchy
 	bool IsInited() const;
@@ -126,7 +126,7 @@ private:
 	void DetachBehaviourForRemove(const shared_ptr<Behaviour>& b);
 	bool IsInActiveScene() const;
 	void PropagateOwningScene(const weak_ptr<Scene>& scene);
-	void NotifyActiveSceneObjectIndexDirty() const;
+	void NotifyActiveEntityIndexDirty() const;
 	// prevents UB if _behaviours is modified during iteration loop
 	void IterateBehavioursSafely(const std::function<void(shared_ptr<Behaviour>)>& func);
 
@@ -148,7 +148,7 @@ private:
 	shared_ptr<SortingStrategy> _sortingStrategy;
 	std::vector<shared_ptr<Behaviour>> _behaviours;
 	bool _isNodeLifecycleInited = false;
-	Engine::SceneObjectId _sceneObjectId = Engine::kInvalidSceneObjectId;
+	Engine::EntityId _entityId = Engine::kInvalidEntityId;
 	weak_ptr<Scene> _owningScene;
 };
 

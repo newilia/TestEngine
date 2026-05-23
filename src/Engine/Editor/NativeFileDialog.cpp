@@ -129,10 +129,10 @@ namespace Engine::EditorDialogs {
 		dialog->SetOptions(FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST | FOS_FILEMUSTEXIST);
 		SceneFileDialogOptions resolved = opts;
 		if (resolved.initialDirectory.empty()) {
-			resolved.initialDirectory = DefaultScenePrefabsDirectory();
+			resolved.initialDirectory = DefaultSceneObjectsDirectory();
 		}
 		if (resolved.suggestedFileName.empty()) {
-			resolved.suggestedFileName = DefaultScenePrefabAbsolutePath();
+			resolved.suggestedFileName = DefaultSceneObjectAbsolutePath();
 		}
 		ApplyCommonDialogOptions(*dialog, resolved);
 		const auto result = PickSceneXml(*dialog, opts.parentHwnd);
@@ -155,10 +155,10 @@ namespace Engine::EditorDialogs {
 		dialog->SetOptions(FOS_FORCEFILESYSTEM | FOS_OVERWRITEPROMPT);
 		SceneFileDialogOptions resolved = opts;
 		if (resolved.initialDirectory.empty()) {
-			resolved.initialDirectory = DefaultScenePrefabsDirectory();
+			resolved.initialDirectory = DefaultSceneObjectsDirectory();
 		}
 		if (resolved.suggestedFileName.empty()) {
-			resolved.suggestedFileName = DefaultScenePrefabRelativePath().filename();
+			resolved.suggestedFileName = DefaultSceneObjectRelativePath().filename();
 		}
 		ApplyCommonDialogOptions(*dialog, resolved);
 		const auto result = PickSceneXml(*dialog, opts.parentHwnd);

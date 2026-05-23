@@ -153,7 +153,7 @@ namespace Engine {
 			}
 		}
 		if (auto scene = mainContext.GetScene()) {
-			scene->FlushSceneObjectIndexIfDirty();
+			scene->FlushEntityIndexIfDirty();
 		}
 	}
 

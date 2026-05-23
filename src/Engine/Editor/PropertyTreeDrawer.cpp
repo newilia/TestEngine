@@ -201,9 +201,9 @@ namespace Engine {
 			if (predicate && !predicate(entity)) {
 				return;
 			}
-			const bool selected = (entity->GetSceneObjectId() == selectedId);
+			const bool selected = (entity->GetEntityId() == selectedId);
 			if (ImGui::Selectable(label, selected, ImGuiSelectableFlags_None)) {
-				access->set(entity->GetSceneObjectId());
+				access->set(entity->GetEntityId());
 				ImGui::CloseCurrentPopup();
 			}
 		}
@@ -224,11 +224,11 @@ namespace Engine {
 				    ImGui::PushID(node.get());
 				    const std::string& nm = node->GetName();
 				    const char* disp = nm.empty() ? "<unnamed>" : nm.c_str();
-				    const std::uint32_t nodeObjectId = node->GetSceneObjectId();
+				    const std::uint32_t nodeEntityId = node->GetEntityId();
 
 				    if (n.meta.sceneRefFilterKind == SceneRefFilterKind::SceneNode) {
 					    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-					    if (nodeObjectId == selectedId) {
+					    if (nodeEntityId == selectedId) {
 						    flags |= ImGuiTreeNodeFlags_Selected;
 					    }
 					    if (depth == 0) {
@@ -240,7 +240,7 @@ namespace Engine {
 					    }
 					    const bool open = ImGui::TreeNodeEx("##sn", flags, "%s", disp);
 					    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-						    access->set(nodeObjectId);
+						    access->set(nodeEntityId);
 						    ImGui::CloseCurrentPopup();
 					    }
 					    if (open) {
@@ -1048,7 +1048,7 @@ namespace Engine {
 				if (cur != 0) {
 					if (scene) {
 						if (n.meta.sceneRefFilterKind == SceneRefFilterKind::SceneNode) {
-							if (const auto target = scene->FindNodeByObjectId(cur)) {
+							if (const auto target = scene->FindNodeByEntityId(cur)) {
 								const std::string& nm = target->GetName();
 								summary = nm.empty() ? fmt::format("Node {}", cur) : nm;
 							}
@@ -1056,7 +1056,7 @@ namespace Engine {
 								summary = fmt::format("Missing {}", cur);
 							}
 						}
-						else if (const auto ent = scene->FindEntityByObjectId(cur)) {
+						else if (const auto ent = scene->FindEntityByEntityId(cur)) {
 							summary = fmt::format("{} [{}]", typeid(*ent).name(), cur);
 						}
 						else {

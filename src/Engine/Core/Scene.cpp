@@ -126,7 +126,7 @@ void Scene::Update(const sf::Time& dt) {
 
 void Scene::Init() {
 	WireGraphOwningScene();
-	RebuildObjectIndex();
+	RebuildEntityIndex();
 	EventHandlerBase::SubscribeForEvents();
 	if (_root) {
 		_root->NotifyLifecycleInitRecursive();
@@ -177,19 +177,19 @@ std::vector<std::shared_ptr<SceneNode>> Scene::FindNodesInRect(
 
 namespace {
 
-	Engine::SceneObjectId RandomNonZeroSceneObjectId() {
+	Engine::EntityId RandomNonZeroEntityId() {
 		thread_local std::mt19937 rng{std::random_device{}()};
 		std::uniform_int_distribution<std::uint32_t> dist(1u, (std::numeric_limits<std::uint32_t>::max)());
 		return dist(rng);
 	}
 
-	void EnsureUniqueSceneObjectId(Engine::SceneObjectId& id, std::unordered_set<std::uint32_t>& claimed) {
-		if (id != Engine::kInvalidSceneObjectId && !claimed.contains(id)) {
+	void EnsureUniqueEntityId(Engine::EntityId& id, std::unordered_set<std::uint32_t>& claimed) {
+		if (id != Engine::kInvalidEntityId && !claimed.contains(id)) {
 			claimed.insert(id);
 			return;
 		}
 		do {
-			id = RandomNonZeroSceneObjectId();
+			id = RandomNonZeroEntityId();
 		}
 		while (claimed.contains(id));
 		claimed.insert(id);
@@ -197,18 +197,18 @@ namespace {
 
 } // namespace
 
-void Scene::MarkSceneObjectIndexDirty() {
-	_sceneObjectIndexDirty = true;
+void Scene::MarkEntityIndexDirty() {
+	_entityIndexDirty = true;
 }
 
-void Scene::FlushSceneObjectIndexIfDirty() {
-	if (!_sceneObjectIndexDirty) {
+void Scene::FlushEntityIndexIfDirty() {
+	if (!_entityIndexDirty) {
 		return;
 	}
-	RebuildObjectIndex();
+	RebuildEntityIndex();
 }
 
-void Scene::RebuildObjectIndex() {
+void Scene::RebuildEntityIndex() {
 	std::unordered_set<std::uint32_t> claimed;
 	std::vector<std::pair<std::uint32_t, std::weak_ptr<SceneNode>>> nodeEntries;
 	std::vector<std::pair<std::uint32_t, std::weak_ptr<EntityOnNode>>> entityEntries;
@@ -219,30 +219,30 @@ void Scene::RebuildObjectIndex() {
 		if (!node) {
 			return;
 		}
-		Engine::SceneObjectId nid = node->GetSceneObjectId();
-		EnsureUniqueSceneObjectId(nid, claimed);
-		node->SetSceneObjectId(nid);
+		Engine::EntityId nid = node->GetEntityId();
+		EnsureUniqueEntityId(nid, claimed);
+		node->SetEntityId(nid);
 		nodeEntries.push_back({nid, node});
 
 		if (const auto visual = node->GetVisual()) {
-			Engine::SceneObjectId vid = visual->GetSceneObjectId();
-			EnsureUniqueSceneObjectId(vid, claimed);
-			visual->SetSceneObjectId(vid);
+			Engine::EntityId vid = visual->GetEntityId();
+			EnsureUniqueEntityId(vid, claimed);
+			visual->SetEntityId(vid);
 			entityEntries.push_back({vid, visual});
 		}
 		if (const auto sorting = node->GetSortingStrategy()) {
-			Engine::SceneObjectId sid = sorting->GetSceneObjectId();
-			EnsureUniqueSceneObjectId(sid, claimed);
-			sorting->SetSceneObjectId(sid);
+			Engine::EntityId sid = sorting->GetEntityId();
+			EnsureUniqueEntityId(sid, claimed);
+			sorting->SetEntityId(sid);
 			entityEntries.push_back({sid, sorting});
 		}
 		for (const auto& behaviour : node->GetBehaviours()) {
 			if (!behaviour) {
 				continue;
 			}
-			Engine::SceneObjectId bid = behaviour->GetSceneObjectId();
-			EnsureUniqueSceneObjectId(bid, claimed);
-			behaviour->SetSceneObjectId(bid);
+			Engine::EntityId bid = behaviour->GetEntityId();
+			EnsureUniqueEntityId(bid, claimed);
+			behaviour->SetEntityId(bid);
 			entityEntries.push_back({bid, behaviour});
 		}
 		for (const auto& child : node->GetChildren()) {
@@ -250,35 +250,35 @@ void Scene::RebuildObjectIndex() {
 		}
 	};
 
-	_nodesByObjectId.clear();
-	_entitiesByObjectId.clear();
+	_nodesByEntityId.clear();
+	_entitiesByEntityId.clear();
 	visit(_root);
 	for (const auto& [id, w] : nodeEntries) {
-		_nodesByObjectId[id] = w;
+		_nodesByEntityId[id] = w;
 	}
 	for (const auto& [id, w] : entityEntries) {
-		_entitiesByObjectId[id] = w;
+		_entitiesByEntityId[id] = w;
 	}
-	_sceneObjectIndexDirty = false;
+	_entityIndexDirty = false;
 }
 
-std::shared_ptr<SceneNode> Scene::FindNodeByObjectId(Engine::SceneObjectId id) const {
-	if (id == Engine::kInvalidSceneObjectId) {
+std::shared_ptr<SceneNode> Scene::FindNodeByEntityId(Engine::EntityId id) const {
+	if (id == Engine::kInvalidEntityId) {
 		return nullptr;
 	}
-	const auto it = _nodesByObjectId.find(id);
-	if (it == _nodesByObjectId.end()) {
+	const auto it = _nodesByEntityId.find(id);
+	if (it == _nodesByEntityId.end()) {
 		return nullptr;
 	}
 	return it->second.lock();
 }
 
-std::shared_ptr<EntityOnNode> Scene::FindEntityByObjectId(Engine::SceneObjectId id) const {
-	if (id == Engine::kInvalidSceneObjectId) {
+std::shared_ptr<EntityOnNode> Scene::FindEntityByEntityId(Engine::EntityId id) const {
+	if (id == Engine::kInvalidEntityId) {
 		return nullptr;
 	}
-	const auto it = _entitiesByObjectId.find(id);
-	if (it == _entitiesByObjectId.end()) {
+	const auto it = _entitiesByEntityId.find(id);
+	if (it == _entitiesByEntityId.end()) {
 		return nullptr;
 	}
 	return it->second.lock();

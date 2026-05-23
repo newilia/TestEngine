@@ -10,10 +10,10 @@ std::shared_ptr<SceneNode> EntityOnNode::GetNode() const {
 	return _node.lock();
 }
 
-Engine::SceneObjectId EntityOnNode::GetSceneObjectId() const {
-	return _sceneObjectId;
+Engine::EntityId EntityOnNode::GetEntityId() const {
+	return _entityId;
 }
 
-void EntityOnNode::SetSceneObjectId(Engine::SceneObjectId id) {
-	_sceneObjectId = id;
+void EntityOnNode::SetEntityId(Engine::EntityId id) {
+	_entityId = id;
 }

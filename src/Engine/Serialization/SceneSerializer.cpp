@@ -16,7 +16,7 @@ namespace Engine::Serialization {
 			return {nullptr, loaded.result};
 		}
 		if (loaded.kind != SceneDocumentKind::Scene) {
-			loaded.result.AddError(path.string(), "File is a Prefab document, not a Scene");
+			loaded.result.AddError(path.string(), "File is a SceneObject document, not a Scene");
 			return {nullptr, loaded.result};
 		}
 		return {std::move(loaded.scene), loaded.result};

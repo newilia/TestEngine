@@ -14,12 +14,12 @@ namespace Engine::Serialization {
 	namespace {
 
 		constexpr const char kSceneElement[] = "Scene";
-		constexpr const char kPrefabElement[] = "Prefab";
+		constexpr const char kSceneObjectElement[] = "SceneObject";
 		constexpr const char kSettingsElement[] = "Settings";
 		constexpr const char kNodeElement[] = "Node";
 		constexpr const char kVersionAttr[] = "version";
 		constexpr int kSceneVersion = 2;
-		constexpr int kPrefabVersion = 1;
+		constexpr int kSceneObjectVersion = 1;
 
 		SerializationResult EnsureParentDirectories(const std::filesystem::path& path) {
 			SerializationResult result;
@@ -52,7 +52,7 @@ namespace Engine::Serialization {
 			return result;
 		}
 
-		scene.RebuildObjectIndex();
+		scene.RebuildEntityIndex();
 		const auto sceneRoot = scene.GetRoot();
 		if (!sceneRoot) {
 			result.AddError(kSceneElement, "Scene root is null");
@@ -71,17 +71,17 @@ namespace Engine::Serialization {
 		return result;
 	}
 
-	SerializationResult SceneDocumentSerializer::SavePrefabDocument(
-	    const SceneNode& prefabRoot, const std::filesystem::path& path) {
+	SerializationResult SceneDocumentSerializer::SaveSceneObjectDocument(
+	    const SceneNode& sceneObjectRoot, const std::filesystem::path& path) {
 		SerializationResult result = EnsureParentDirectories(path);
 		if (!result.isSuccess) {
 			return result;
 		}
 
 		pugi::xml_document document;
-		pugi::xml_node prefabNode = document.append_child(kPrefabElement);
-		prefabNode.append_attribute(kVersionAttr).set_value(kPrefabVersion);
-		SceneNodeTreeSerializer::SaveNode(prefabRoot, prefabNode, result);
+		pugi::xml_node sceneObjectNode = document.append_child(kSceneObjectElement);
+		sceneObjectNode.append_attribute(kVersionAttr).set_value(kSceneObjectVersion);
+		SceneNodeTreeSerializer::SaveNode(sceneObjectRoot, sceneObjectNode, result);
 		SaveXmlDocument(document, path, result);
 		return result;
 	}
@@ -97,7 +97,7 @@ namespace Engine::Serialization {
 		}
 
 		const pugi::xml_node sceneElement = document.child(kSceneElement);
-		const pugi::xml_node prefabElement = document.child(kPrefabElement);
+		const pugi::xml_node sceneObjectElement = document.child(kSceneObjectElement);
 
 		if (sceneElement) {
 			loadResult.kind = SceneDocumentKind::Scene;
@@ -107,20 +107,20 @@ namespace Engine::Serialization {
 				}
 			}
 		}
-		else if (prefabElement) {
-			loadResult.kind = SceneDocumentKind::Prefab;
-			if (const pugi::xml_attribute versionAttr = prefabElement.attribute(kVersionAttr)) {
-				if (versionAttr.as_int() > kPrefabVersion) {
-					loadResult.result.AddWarning(kPrefabElement, "Prefab version is newer than supported");
+		else if (sceneObjectElement) {
+			loadResult.kind = SceneDocumentKind::SceneObject;
+			if (const pugi::xml_attribute versionAttr = sceneObjectElement.attribute(kVersionAttr)) {
+				if (versionAttr.as_int() > kSceneObjectVersion) {
+					loadResult.result.AddWarning(kSceneObjectElement, "SceneObject version is newer than supported");
 				}
 			}
 		}
 		else {
-			loadResult.result.AddError(path.string(), "XML root must be Scene or Prefab");
+			loadResult.result.AddError(path.string(), "XML root must be Scene or SceneObject");
 			return loadResult;
 		}
 
-		const pugi::xml_node documentRoot = sceneElement ? sceneElement : prefabElement;
+		const pugi::xml_node documentRoot = sceneElement ? sceneElement : sceneObjectElement;
 		const pugi::xml_node rootNode = documentRoot.child(kNodeElement);
 		if (!rootNode) {
 			loadResult.result.AddError(path.string(), "Document XML does not contain root Node");
@@ -149,7 +149,7 @@ namespace Engine::Serialization {
 			return loadResult;
 		}
 
-		loadResult.scene->RebuildObjectIndex();
+		loadResult.scene->RebuildEntityIndex();
 		return loadResult;
 	}
 

@@ -187,7 +187,8 @@ namespace Engine {
 		}
 		std::string composed = _mainWindowBaseTitleUtf8;
 		if (documentKind) {
-			const char* kindLabel = *documentKind == Serialization::SceneDocumentKind::Prefab ? "Prefab" : "Scene";
+			const char* kindLabel =
+			    *documentKind == Serialization::SceneDocumentKind::SceneObject ? "SceneObject" : "Scene";
 			if (documentFilePath) {
 				composed = fmt::format(
 				    "{} - [{}] {}", _mainWindowBaseTitleUtf8, kindLabel, documentFilePath->generic_string());

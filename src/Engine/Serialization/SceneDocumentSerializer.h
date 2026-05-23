@@ -10,10 +10,11 @@ class SceneNode;
 
 namespace Engine::Serialization {
 
+	/// Kind of on-disk scene XML document (full scene vs reusable subtree file).
 	enum class SceneDocumentKind
 	{
 		Scene,
-		Prefab
+		SceneObject
 	};
 
 	struct SceneDocumentLoadResult
@@ -27,7 +28,8 @@ namespace Engine::Serialization {
 	{
 	public:
 		static SerializationResult SaveSceneDocument(Scene& scene, const std::filesystem::path& path);
-		static SerializationResult SavePrefabDocument(const SceneNode& prefabRoot, const std::filesystem::path& path);
+		static SerializationResult SaveSceneObjectDocument(
+		    const SceneNode& sceneObjectRoot, const std::filesystem::path& path);
 		static SceneDocumentLoadResult LoadDocumentFromFile(const std::filesystem::path& path);
 	};
 

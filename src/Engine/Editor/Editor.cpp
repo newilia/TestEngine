@@ -29,9 +29,9 @@
 #include "Engine/Editor/EditorVisualTheme.h"
 #include "Engine/Editor/ImGui/Themes.h"
 #include "Engine/Editor/NativeFileDialog.h"
-#include "Engine/Serialization/PrefabSerializer.h"
 #include "Engine/Serialization/SceneDocumentSerializer.h"
 #include "Engine/Serialization/SceneEntityRegistry.h"
+#include "Engine/Serialization/SceneObjectSerializer.h"
 #include "Engine/Serialization/SceneSettings/SceneSettingsRegistry.h"
 #include "Engine/Sorting/SortingStrategy.h"
 #include "Engine/Visual/Visual.h"
@@ -201,8 +201,8 @@ namespace Engine {
 					editorPreferences.Save();
 				}
 				ImGui::Separator();
-				if (ImGui::MenuItem("Instantiate prefab…")) {
-					(void)InstantiatePrefab();
+				if (ImGui::MenuItem("Instantiate scene object…")) {
+					(void)InstantiateSceneObject();
 				}
 				ImGui::EndMenu();
 			}
@@ -920,7 +920,7 @@ namespace Engine {
 	}
 
 	const char* Editor::DocumentKindLabel() const {
-		return _documentKind == Serialization::SceneDocumentKind::Prefab ? "Prefab" : "Scene";
+		return _documentKind == Serialization::SceneDocumentKind::SceneObject ? "SceneObject" : "Scene";
 	}
 
 	void Editor::SetCurrentDocument(std::optional<std::filesystem::path> path, Serialization::SceneDocumentKind kind) {
@@ -952,9 +952,9 @@ namespace Engine {
 			opts.suggestedFileName = *_currentScenePath;
 			opts.initialDirectory = _currentScenePath->parent_path();
 		}
-		else if (kind == Serialization::SceneDocumentKind::Prefab) {
-			opts.initialDirectory = DefaultScenePrefabsDirectory();
-			opts.suggestedFileName = DefaultScenePrefabAbsolutePath();
+		else if (kind == Serialization::SceneDocumentKind::SceneObject) {
+			opts.initialDirectory = DefaultSceneObjectsDirectory();
+			opts.suggestedFileName = DefaultSceneObjectAbsolutePath();
 		}
 		else {
 			opts.initialDirectory = DefaultScenesDirectory();
@@ -975,12 +975,12 @@ namespace Engine {
 		        "Save document kind", &_showSaveDocumentKindModal, ImGuiWindowFlags_AlwaysAutoResize)) {
 			ImGui::TextUnformatted("Choose how to save this document:");
 			ImGui::RadioButton("Scene (hierarchy + world settings)", &_saveKindModalSelection, 0);
-			ImGui::RadioButton("Prefab (hierarchy only)", &_saveKindModalSelection, 1);
+			ImGui::RadioButton("Scene object (hierarchy only)", &_saveKindModalSelection, 1);
 			const bool confirm = ImGui::Button("OK", ImVec2(120.f, 0.f)) ||
 			                     (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
 			                         ImGui::IsKeyPressed(ImGuiKey_Enter, false));
 			if (confirm) {
-				_documentKind = _saveKindModalSelection == 1 ? Serialization::SceneDocumentKind::Prefab
+				_documentKind = _saveKindModalSelection == 1 ? Serialization::SceneDocumentKind::SceneObject
 				                                             : Serialization::SceneDocumentKind::Scene;
 				_documentKindChosen = true;
 				_showSaveDocumentKindModal = false;
@@ -1012,7 +1012,7 @@ namespace Engine {
 		}
 		if (!_documentKindChosen) {
 			_pendingSaveAs = saveAs;
-			_saveKindModalSelection = _documentKind == Serialization::SceneDocumentKind::Prefab ? 1 : 0;
+			_saveKindModalSelection = _documentKind == Serialization::SceneDocumentKind::SceneObject ? 1 : 0;
 			_showSaveDocumentKindModal = true;
 			return false;
 		}
@@ -1063,8 +1063,8 @@ namespace Engine {
 			return false;
 		}
 		const Serialization::SerializationResult saveResult =
-		    _documentKind == Serialization::SceneDocumentKind::Prefab
-		        ? Serialization::SceneDocumentSerializer::SavePrefabDocument(*scene->GetRoot(), *_currentScenePath)
+		    _documentKind == Serialization::SceneDocumentKind::SceneObject
+		        ? Serialization::SceneDocumentSerializer::SaveSceneObjectDocument(*scene->GetRoot(), *_currentScenePath)
 		        : Serialization::SceneDocumentSerializer::SaveSceneDocument(*scene, *_currentScenePath);
 		if (!saveResult.isSuccess) {
 			ShowSerializationErrorDialog(fmt::format("Save {}", DocumentKindLabel()), saveResult);
@@ -1086,8 +1086,8 @@ namespace Engine {
 			return false;
 		}
 		const Serialization::SerializationResult saveResult =
-		    _documentKind == Serialization::SceneDocumentKind::Prefab
-		        ? Serialization::SceneDocumentSerializer::SavePrefabDocument(*scene->GetRoot(), *path)
+		    _documentKind == Serialization::SceneDocumentKind::SceneObject
+		        ? Serialization::SceneDocumentSerializer::SaveSceneObjectDocument(*scene->GetRoot(), *path)
 		        : Serialization::SceneDocumentSerializer::SaveSceneDocument(*scene, *path);
 		if (!saveResult.isSuccess) {
 			ShowSerializationErrorDialog(fmt::format("Save {}", DocumentKindLabel()), saveResult);
@@ -1097,39 +1097,39 @@ namespace Engine {
 		return true;
 	}
 
-	bool Editor::SaveNodeAsPrefab(const std::shared_ptr<SceneNode>& node) {
+	bool Editor::SaveNodeAsSceneObject(const std::shared_ptr<SceneNode>& node) {
 		if (!node) {
 			return false;
 		}
 		EditorDialogs::SceneFileDialogOptions opts =
-		    MakeSceneFileDialogOptions(Serialization::SceneDocumentKind::Prefab);
+		    MakeSceneFileDialogOptions(Serialization::SceneDocumentKind::SceneObject);
 		const auto path = EditorDialogs::PickSceneXmlSave(opts);
 		if (!path) {
 			return false;
 		}
 		const Serialization::SerializationResult saveResult =
-		    Serialization::SceneDocumentSerializer::SavePrefabDocument(*node, *path);
+		    Serialization::SceneDocumentSerializer::SaveSceneObjectDocument(*node, *path);
 		if (!saveResult.isSuccess) {
-			ShowSerializationErrorDialog("Save prefab", saveResult);
+			ShowSerializationErrorDialog("Save scene object", saveResult);
 			return false;
 		}
 		return true;
 	}
 
-	bool Editor::InstantiatePrefab() {
+	bool Editor::InstantiateSceneObject() {
 		const auto path =
-		    EditorDialogs::PickSceneXmlOpen(MakeSceneFileDialogOptions(Serialization::SceneDocumentKind::Prefab));
+		    EditorDialogs::PickSceneXmlOpen(MakeSceneFileDialogOptions(Serialization::SceneDocumentKind::SceneObject));
 		if (!path) {
 			return false;
 		}
-		return InstantiatePrefab(*path);
+		return InstantiateSceneObject(*path);
 	}
 
-	bool Editor::InstantiatePrefab(const std::filesystem::path& path) {
-		const Serialization::PrefabInstantiateResult loaded =
-		    Serialization::PrefabSerializer::InstantiateFromFile(path);
+	bool Editor::InstantiateSceneObject(const std::filesystem::path& path) {
+		const Serialization::SceneObjectInstantiateResult loaded =
+		    Serialization::SceneObjectSerializer::InstantiateFromFile(path);
 		if (!loaded.result.isSuccess || !loaded.instance) {
-			ShowSerializationErrorDialog("Instantiate prefab", loaded.result);
+			ShowSerializationErrorDialog("Instantiate scene object", loaded.result);
 			return false;
 		}
 		std::shared_ptr<SceneNode> parent = GetSelectedNode();
