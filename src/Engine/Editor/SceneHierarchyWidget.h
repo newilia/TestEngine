@@ -2,6 +2,7 @@
 
 #include "Engine/Core/Scene.h"
 
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <unordered_map>
@@ -52,10 +53,21 @@ namespace Engine {
 		    HierarchyDropHint hint, SceneNode& target, const std::vector<std::shared_ptr<SceneNode>>& draggedNodes);
 		void HandleHierarchyDrop(SceneNode& target, SceneNode& dragSource);
 
+		[[nodiscard]] bool IsRenaming(const SceneNode& node) const;
+		void StartRenaming(SceneNode& node);
+		void CancelRenaming();
+		void CommitRenaming(SceneNode& node);
+
+		static constexpr std::size_t kRenameBufferSize = 256;
+
 		std::vector<std::weak_ptr<SceneNode>> _selectionOrder;
 		std::unordered_map<const SceneNode*, std::weak_ptr<SceneNode>> _selectionByRawPtr;
 		std::weak_ptr<SceneNode> _selectionAnchor;
 		bool _scrollSelectionIntoViewPending = false;
+		std::weak_ptr<SceneNode> _renamingNode;
+		std::vector<char> _renameEditBuffer;
+		bool _renameFocusNextFrame = false;
+		bool _renamePlaceCursorAtEnd = false;
 	};
 
 } // namespace Engine

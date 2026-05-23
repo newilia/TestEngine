@@ -8,11 +8,25 @@
 #include <imgui_internal.h>
 
 #include <algorithm>
+#include <cstring>
 #include <unordered_set>
 #include <utility>
 
 namespace {
 	constexpr const char* kHierarchyNodeDragPayloadType = "TE_SCENE_HIERARCHY_NODE";
+
+	int HierarchyRenameInputCallback(ImGuiInputTextCallbackData* data) {
+		if (data->EventFlag != ImGuiInputTextFlags_CallbackAlways) {
+			return 0;
+		}
+		auto* const placeCursorAtEnd = static_cast<bool*>(data->UserData);
+		if (placeCursorAtEnd && *placeCursorAtEnd) {
+			data->CursorPos = data->BufTextLen;
+			data->SelectionStart = data->SelectionEnd = data->BufTextLen;
+			*placeCursorAtEnd = false;
+		}
+		return 0;
+	}
 } // namespace
 
 namespace Engine {
@@ -83,6 +97,9 @@ namespace Engine {
 		if (_selectionAnchor.expired()) {
 			_selectionAnchor.reset();
 		}
+		if (_renamingNode.expired()) {
+			CancelRenaming();
+		}
 	}
 
 	void SceneHierarchyWidget::ClearSelection() {
@@ -90,6 +107,42 @@ namespace Engine {
 		_selectionByRawPtr.clear();
 		_selectionAnchor.reset();
 		_scrollSelectionIntoViewPending = false;
+		CancelRenaming();
+	}
+
+	bool SceneHierarchyWidget::IsRenaming(const SceneNode& node) const {
+		const auto renaming = _renamingNode.lock();
+		return renaming && renaming.get() == &node;
+	}
+
+	void SceneHierarchyWidget::StartRenaming(SceneNode& node) {
+		_renamingNode = node.shared_from_this();
+		_renameEditBuffer.assign(kRenameBufferSize, '\0');
+		const std::string& name = node.GetName();
+		const std::size_t copyLen = std::min(name.size(), kRenameBufferSize - 1);
+		if (copyLen > 0) {
+			std::memcpy(_renameEditBuffer.data(), name.data(), copyLen);
+		}
+		_renameFocusNextFrame = true;
+		_renamePlaceCursorAtEnd = true;
+	}
+
+	void SceneHierarchyWidget::CancelRenaming() {
+		_renamingNode.reset();
+		_renameEditBuffer.clear();
+		_renameFocusNextFrame = false;
+		_renamePlaceCursorAtEnd = false;
+	}
+
+	void SceneHierarchyWidget::CommitRenaming(SceneNode& node) {
+		const auto nodePtr = _renamingNode.lock();
+		if (!nodePtr || nodePtr.get() != &node) {
+			CancelRenaming();
+			return;
+		}
+		const std::string newName(_renameEditBuffer.data());
+		CancelRenaming();
+		(void)Editor::GetInstance().RenameNode(nodePtr, newName);
 	}
 
 	void SceneHierarchyWidget::Select(std::shared_ptr<SceneNode> node) {
@@ -352,11 +405,12 @@ namespace Engine {
 		const char* displayCStr = name.empty() ? emptyNamePlaceholder : name.c_str();
 		const bool hasChildren = !node.GetChildren().empty();
 		const bool isSelected = IsNodeSelected(node);
+		const bool isRenaming = IsRenaming(node);
 		void* const id = static_cast<void*>(std::addressof(node));
 
 		ImGui::PushID(id);
 
-		ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+		ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow;
 		if (isSelected) {
 			nodeFlags |= ImGuiTreeNodeFlags_Selected;
 		}
@@ -373,9 +427,32 @@ namespace Engine {
 			ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 		}
 
-		const bool isOpen = ImGui::TreeNodeEx("##hierarchy_node", nodeFlags, "%s", displayCStr);
+		const bool isOpen = isRenaming ? ImGui::TreeNodeEx("##hierarchy_node", nodeFlags, "")
+		                               : ImGui::TreeNodeEx("##hierarchy_node", nodeFlags, "%s", displayCStr);
 
-		const bool canDrag = node.GetParent() != nullptr;
+		if (isRenaming) {
+			ImGui::SameLine();
+			ImGui::SetNextItemWidth(-1.f);
+			if (_renameFocusNextFrame) {
+				ImGui::SetKeyboardFocusHere();
+				_renameFocusNextFrame = false;
+			}
+			const ImGuiInputTextFlags renameFlags =
+			    ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackAlways;
+			(void)ImGui::InputText("##hierarchy_rename", _renameEditBuffer.data(), _renameEditBuffer.size(),
+			    renameFlags, HierarchyRenameInputCallback, &_renamePlaceCursorAtEnd);
+			if (ImGui::IsKeyPressed(ImGuiKey_Escape, false)) {
+				CancelRenaming();
+			}
+			else if (ImGui::IsItemDeactivated()) {
+				CommitRenaming(node);
+			}
+		}
+		else if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+			StartRenaming(node);
+		}
+
+		const bool canDrag = node.GetParent() != nullptr && !isRenaming;
 		if (canDrag && ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
 			SceneNode* const dragSource = &node;
 			ImGui::SetDragDropPayload(kHierarchyNodeDragPayloadType, &dragSource, sizeof(dragSource));
@@ -417,7 +494,7 @@ namespace Engine {
 			ImGui::EndDragDropTarget();
 		}
 
-		if (ImGui::IsItemClicked()) {
+		if (!isRenaming && ImGui::IsItemClicked()) {
 			const ImGuiIO& io = ImGui::GetIO();
 			constexpr float kClickDragThresholdSqr = 4.f;
 			if (io.MouseDragMaxDistanceSqr[0] <= kClickDragThresholdSqr) {
@@ -446,6 +523,10 @@ namespace Engine {
 		if (ImGui::BeginPopupContextItem("hierarchy_node_ctx", ImGuiPopupFlags_MouseButtonRight)) {
 			auto nodePtr = node.shared_from_this();
 			Editor& editor = Editor::GetInstance();
+			if (ImGui::MenuItem("Rename")) {
+				StartRenaming(node);
+			}
+			ImGui::Separator();
 			if (ImGui::MenuItem("Add child")) {
 				(void)editor.AddEmptyChildNode(nodePtr);
 			}

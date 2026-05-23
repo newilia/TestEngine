@@ -86,6 +86,7 @@ namespace Engine {
 		bool AddPolygonShape(const std::shared_ptr<SceneNode>& parent, sf::Vector2f centerWorld,
 		    std::vector<sf::Vector2f> localPoints, bool attachPhysics, Utils::HsvShapeColors colors);
 		bool CommitNodeWorldPosition(const std::shared_ptr<SceneNode>& node, sf::Vector2f previousWorldPos);
+		bool RenameNode(const std::shared_ptr<SceneNode>& node, std::string newName);
 		bool DeleteNode(const std::shared_ptr<SceneNode>& node);
 		bool MoveNodesInHierarchy(const std::vector<std::shared_ptr<SceneNode>>& nodes,
 		    const std::shared_ptr<SceneNode>& newParent, std::size_t newIndex);
