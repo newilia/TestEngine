@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 19
+CACHE_VERSION = 20
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
@@ -206,6 +206,44 @@ def _is_rect_type(t: str) -> bool:
 
 def _rect_vec_type(rect_t: str) -> str:
     return _RECT_COMPONENT_VEC[rect_t]
+
+
+def _reject_rect_in_pair_types(ft: str, st: str, path: Path, line: int, col: int) -> None:
+    if _is_rect_type(ft) or _is_rect_type(st):
+        raise ParseError(
+            "std::pair does not support sf::IntRect/sf::FloatRect in v1 "
+            "(use a rect field, std::optional<sf::IntRect>, or @getter/@setter)",
+            path,
+            line,
+            col,
+        )
+
+
+def _rect_grid_add_body(mem: str, rect_t: str, var_name: str, commit_stmt: str, tab: str) -> str:
+    """Pick a rect not already in mem, then run commit_stmt (e.g. emplace/insert)."""
+    if rect_t == "sf::IntRect":
+        decl = f"sf::IntRect {var_name}" + "{{{{_ox, _oy}}, {{1, 1}}}};"
+    elif rect_t == "sf::FloatRect":
+        decl = (
+            f"sf::FloatRect {var_name}"
+            + "{{{{static_cast<float>(_ox), static_cast<float>(_oy)}}, {{1.f, 1.f}}}};"
+        )
+    else:
+        raise ValueError(f"unexpected rect type `{rect_t}`")
+    return (
+        f"{tab}{{\n"
+        f"{tab}\tbool _placed = false;\n"
+        f"{tab}\tfor (int _ox = 0; _ox < 1000 && !_placed; ++_ox) {{\n"
+        f"{tab}\t\tfor (int _oy = 0; _oy < 1000 && !_placed; ++_oy) {{\n"
+        f"{tab}\t\t\t{decl}\n"
+        f"{tab}\t\t\tif ({mem}.find({var_name}) == {mem}.end()) {{\n"
+        f"{tab}\t\t\t\t{commit_stmt}\n"
+        f"{tab}\t\t\t\t_placed = true;\n"
+        f"{tab}\t\t\t}}\n"
+        f"{tab}\t\t}}\n"
+        f"{tab}\t}}\n"
+        f"{tab}}}"
+    )
 
 
 @dataclass
@@ -977,6 +1015,7 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                             line_no,
                             1,
                         )
+                    _reject_rect_in_pair_types(ft, st, path, line_no, 1)
                     inner.setdefault("props", []).append(
                         PropSpec(
                             cpp_type=ft,
@@ -1710,7 +1749,7 @@ def _int32_param_cpp(t: str) -> str:
     return "std::int32_t" if t == "int" else t
 
 
-def _rect_component_get(acc: str, component: str, vec_t: str) -> str:
+def _rect_component_get(acc: str, component: str) -> str:
     return f"[this]() {{ return {acc}.{component}; }}"
 
 
@@ -1766,7 +1805,7 @@ def _rect_component_set_optional_getter(
     )
 
 
-def _rect_component_get_optional(storage: str, component: str, rect_t: str, vec_t: str) -> str:
+def _rect_component_get_optional(storage: str, component: str, rect_t: str) -> str:
     default = _default_cpp_value(rect_t)
     return (
         f"[this]() {{ const auto& _opt = {storage}; "
@@ -1777,7 +1816,6 @@ def _rect_component_get_optional(storage: str, component: str, rect_t: str, vec_
 def _emit_rect_children(
     out: list[str],
     rect_t: str,
-    readonly: bool,
     path: Path,
     line: int,
     col: int,
@@ -1790,17 +1828,23 @@ def _emit_rect_children(
 ) -> None:
     vec_t = _rect_vec_type(rect_t)
     leaf_meta = "Engine::PropertyMeta{}"
-    calls = [
-        (vec_t, "position", "Position", get_pos, set_pos),
-        (vec_t, "size", "Size", get_size, set_size),
-    ]
-    for vt, nid, label, g, s in calls:
-        if vt == "sf::Vector2f":
-            out.append(f'{indent}b.addVec2f("{nid}", "{label}", {g}, {s}, {leaf_meta});')
-        elif vt == "sf::Vector2i":
-            out.append(f'{indent}b.addVec2i("{nid}", "{label}", {g}, {s}, {leaf_meta});')
-        else:
-            raise ParseError(f"unsupported rect component type `{vt}`", path, line, col)
+    for nid, label, g, s in (
+        ("position", "Position", get_pos, set_pos),
+        ("size", "Size", get_size, set_size),
+    ):
+        _emit_scalar_leaf(
+            out,
+            vec_t,
+            nid,
+            label,
+            g,
+            s,
+            leaf_meta,
+            path,
+            line,
+            col,
+            indent=indent,
+        )
 
 
 def emit_rect_property(
@@ -1827,20 +1871,19 @@ def emit_rect_property(
                 p.col,
             )
         get_expr = f"this->{p.member}()"
-        get_pos = _rect_component_get(get_expr, "position", vec_t)
-        get_size = _rect_component_get(get_expr, "size", vec_t)
+        get_pos = _rect_component_get(get_expr, "position")
+        get_size = _rect_component_get(get_expr, "size")
         set_pos = _rect_component_set_getter(get_expr, sn, "position", rect_t, vec_t, readonly)
         set_size = _rect_component_set_getter(get_expr, sn, "size", rect_t, vec_t, readonly)
     else:
         mem = p.member
-        get_pos = _rect_component_get(mem, "position", vec_t)
-        get_size = _rect_component_get(mem, "size", vec_t)
+        get_pos = _rect_component_get(mem, "position")
+        get_size = _rect_component_get(mem, "size")
         set_pos = _rect_component_set_field(mem, "position", vec_t, readonly)
         set_size = _rect_component_set_field(mem, "size", vec_t, readonly)
     _emit_rect_children(
         out,
         rect_t,
-        readonly,
         path,
         p.line,
         p.col,
@@ -1863,31 +1906,40 @@ def _emit_scalar_leaf(
     path: Path,
     line: int,
     col: int,
+    *,
+    indent: str = "\t\t",
 ) -> None:
+    if _is_rect_type(t):
+        raise ParseError(
+            f"scalar leaf cannot emit whole `{t}` (use rect component helpers)",
+            path,
+            line,
+            col,
+        )
     if t == "float":
-        out.append(f'\t\tb.addFloat("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+        out.append(f'{indent}b.addFloat("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
     elif t == "double":
-        out.append(f'\t\tb.addDouble("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+        out.append(f'{indent}b.addDouble("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
     elif t == "bool":
-        out.append(f'\t\tb.addBool("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+        out.append(f'{indent}b.addBool("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
     elif t in ("int", "std::int32_t"):
-        out.append(f'\t\tb.addInt32("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+        out.append(f'{indent}b.addInt32("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
     elif t == "std::int64_t":
-        out.append(f'\t\tb.addInt64("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+        out.append(f'{indent}b.addInt64("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
     elif t == "std::string":
-        out.append(f'\t\tb.addString("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+        out.append(f'{indent}b.addString("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
     elif t == "sf::Vector2f":
-        out.append(f'\t\tb.addVec2f("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+        out.append(f'{indent}b.addVec2f("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
     elif t == "sf::Vector2i":
-        out.append(f'\t\tb.addVec2i("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+        out.append(f'{indent}b.addVec2i("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
     elif t == "sf::Vector2u":
-        out.append(f'\t\tb.addVec2u("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+        out.append(f'{indent}b.addVec2u("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
     elif t == "sf::Vector3f":
-        out.append(f'\t\tb.addVec3f("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+        out.append(f'{indent}b.addVec3f("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
     elif t == "sf::Color":
-        out.append(f'\t\tb.addColor("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+        out.append(f'{indent}b.addColor("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
     elif t == "sf::Angle":
-        out.append(f'\t\tb.addFloat("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
+        out.append(f'{indent}b.addFloat("{nid}", "{label_esc}", {get_l}, {set_l}, {meta});')
     else:
         raise ParseError(f"unsupported scalar type `{t}`", path, line, col)
 
@@ -2132,36 +2184,9 @@ def _map_add_pair_body(mem: str, kt: str, vt: str, path: Path, line: int, col: i
             f"{tab}\t}}\n"
             f"{tab}}}"
         )
-    if kt == "sf::IntRect":
-        return (
-            f"{tab}{{\n"
-            f"{tab}\tbool _placed = false;\n"
-            f"{tab}\tfor (int _ox = 0; _ox < 1000 && !_placed; ++_ox) {{\n"
-            f"{tab}\t\tfor (int _oy = 0; _oy < 1000 && !_placed; ++_oy) {{\n"
-            f"{tab}\t\t\tsf::IntRect _nk{{{{_ox, _oy}}, {{1, 1}}}};\n"
-            f"{tab}\t\t\tif ({mem}.find(_nk) == {mem}.end()) {{\n"
-            f"{tab}\t\t\t\t{_cpp_map_emplace(mem, kt, '_nk', dv)};\n"
-            f"{tab}\t\t\t\t_placed = true;\n"
-            f"{tab}\t\t\t}}\n"
-            f"{tab}\t\t}}\n"
-            f"{tab}\t}}\n"
-            f"{tab}}}"
-        )
-    if kt == "sf::FloatRect":
-        return (
-            f"{tab}{{\n"
-            f"{tab}\tbool _placed = false;\n"
-            f"{tab}\tfor (int _ox = 0; _ox < 1000 && !_placed; ++_ox) {{\n"
-            f"{tab}\t\tfor (int _oy = 0; _oy < 1000 && !_placed; ++_oy) {{\n"
-            f"{tab}\t\t\tsf::FloatRect _nk{{{{static_cast<float>(_ox), static_cast<float>(_oy)}}, {{1.f, 1.f}}}};\n"
-            f"{tab}\t\t\tif ({mem}.find(_nk) == {mem}.end()) {{\n"
-            f"{tab}\t\t\t\t{_cpp_map_emplace(mem, kt, '_nk', dv)};\n"
-            f"{tab}\t\t\t\t_placed = true;\n"
-            f"{tab}\t\t\t}}\n"
-            f"{tab}\t\t}}\n"
-            f"{tab}\t}}\n"
-            f"{tab}}}"
-        )
+    if _is_rect_type(kt):
+        commit = f"{_cpp_map_emplace(mem, kt, '_nk', dv)};"
+        return _rect_grid_add_body(mem, kt, "_nk", commit, tab)
     raise ParseError(f"map addPair: unsupported key type `{kt}`", path, line, col)
 
 
@@ -2309,36 +2334,9 @@ def _set_add_pair_body(mem: str, et: str, path: Path, line: int, col: int) -> st
             f"{tab}\t}}\n"
             f"{tab}}}"
         )
-    if et == "sf::IntRect":
-        return (
-            f"{tab}{{\n"
-            f"{tab}\tbool _placed = false;\n"
-            f"{tab}\tfor (int _ox = 0; _ox < 1000 && !_placed; ++_ox) {{\n"
-            f"{tab}\t\tfor (int _oy = 0; _oy < 1000 && !_placed; ++_oy) {{\n"
-            f"{tab}\t\t\tsf::IntRect _nv{{{{_ox, _oy}}, {{1, 1}}}};\n"
-            f"{tab}\t\t\tif ({mem}.find(_nv) == {mem}.end()) {{\n"
-            f"{tab}\t\t\t\t{_cpp_set_insert(mem, et, '_nv')};\n"
-            f"{tab}\t\t\t\t_placed = true;\n"
-            f"{tab}\t\t\t}}\n"
-            f"{tab}\t\t}}\n"
-            f"{tab}\t}}\n"
-            f"{tab}}}"
-        )
-    if et == "sf::FloatRect":
-        return (
-            f"{tab}{{\n"
-            f"{tab}\tbool _placed = false;\n"
-            f"{tab}\tfor (int _ox = 0; _ox < 1000 && !_placed; ++_ox) {{\n"
-            f"{tab}\t\tfor (int _oy = 0; _oy < 1000 && !_placed; ++_oy) {{\n"
-            f"{tab}\t\t\tsf::FloatRect _nv{{{{static_cast<float>(_ox), static_cast<float>(_oy)}}, {{1.f, 1.f}}}};\n"
-            f"{tab}\t\t\tif ({mem}.find(_nv) == {mem}.end()) {{\n"
-            f"{tab}\t\t\t\t{_cpp_set_insert(mem, et, '_nv')};\n"
-            f"{tab}\t\t\t\t_placed = true;\n"
-            f"{tab}\t\t\t}}\n"
-            f"{tab}\t\t}}\n"
-            f"{tab}\t}}\n"
-            f"{tab}}}"
-        )
+    if _is_rect_type(et):
+        commit = f"{_cpp_set_insert(mem, et, '_nv')};"
+        return _rect_grid_add_body(mem, et, "_nv", commit, tab)
     raise ParseError(f"set addPair: unsupported element type `{et}`", path, line, col)
 
 
@@ -2419,7 +2417,6 @@ def _emit_map_rect_side(
     _emit_rect_children(
         out,
         rect_t,
-        readonly,
         path,
         line,
         col,
@@ -2525,7 +2522,6 @@ def emit_assoc_set_property(
         _emit_rect_children(
             out,
             et,
-            readonly,
             path,
             p.line,
             p.col,
@@ -2616,6 +2612,7 @@ def emit_std_pair_property(
     if st is None:
         raise ParseError("internal: std::pair without second type", path, p.line, p.col)
     ft = p.cpp_type
+    _reject_rect_in_pair_types(ft, st, path, p.line, p.col)
     mem = p.member
     fid = member_to_field_id(p.member)
     label_esc = cpp_escape_string(default_label(p))
@@ -2761,28 +2758,24 @@ def emit_std_optional_property(
     s_has = _optional_has_value_set(p, storage, inner_t, readonly, setter_name)
     out.append(f'\t\tb.addBool("has_value", "Set", {g_has}, {s_has}, {leaf_meta});')
     if _is_rect_type(inner_t):
+        vec_t = _rect_vec_type(inner_t)
         if p.is_getter:
-            get_pos = _rect_component_get_optional(storage, "position", inner_t, _rect_vec_type(inner_t))
-            get_size = _rect_component_get_optional(storage, "size", inner_t, _rect_vec_type(inner_t))
+            get_pos = _rect_component_get_optional(storage, "position", inner_t)
+            get_size = _rect_component_get_optional(storage, "size", inner_t)
             set_pos = _rect_component_set_optional_getter(
-                storage, setter_name, "position", inner_t, _rect_vec_type(inner_t), readonly
+                storage, setter_name, "position", inner_t, vec_t, readonly
             )
             set_size = _rect_component_set_optional_getter(
-                storage, setter_name, "size", inner_t, _rect_vec_type(inner_t), readonly
+                storage, setter_name, "size", inner_t, vec_t, readonly
             )
         else:
-            get_pos = _rect_component_get_optional(storage, "position", inner_t, _rect_vec_type(inner_t))
-            get_size = _rect_component_get_optional(storage, "size", inner_t, _rect_vec_type(inner_t))
-            set_pos = _rect_component_set_optional_field(
-                storage, "position", inner_t, _rect_vec_type(inner_t), readonly
-            )
-            set_size = _rect_component_set_optional_field(
-                storage, "size", inner_t, _rect_vec_type(inner_t), readonly
-            )
+            get_pos = _rect_component_get_optional(storage, "position", inner_t)
+            get_size = _rect_component_get_optional(storage, "size", inner_t)
+            set_pos = _rect_component_set_optional_field(storage, "position", inner_t, vec_t, readonly)
+            set_size = _rect_component_set_optional_field(storage, "size", inner_t, vec_t, readonly)
         _emit_rect_children(
             out,
             inner_t,
-            readonly,
             path,
             p.line,
             p.col,
@@ -2916,7 +2909,6 @@ def emit_std_vector_property(
         _emit_rect_children(
             out,
             t,
-            readonly,
             path,
             p.line,
             p.col,
@@ -3591,6 +3583,35 @@ def file_signature(p: Path) -> dict[str, Any]:
     return {"mtime_ns": st.st_mtime_ns, "size": st.st_size}
 
 
+def run_rect_codegen_self_tests() -> int:
+    path = Path("self_test.h")
+    try:
+        _reject_rect_in_pair_types("sf::IntRect", "int", path, 1, 1)
+        print("[codegen] rect self-test: expected ParseError for pair+IntRect", file=sys.stderr)
+        return 1
+    except ParseError as e:
+        if "std::pair" not in str(e):
+            print(f"[codegen] rect self-test: unexpected error: {e}", file=sys.stderr)
+            return 1
+    try:
+        _reject_rect_in_pair_types("float", "int", path, 1, 1)
+    except ParseError as e:
+        print(f"[codegen] rect self-test: unexpected error for valid pair: {e}", file=sys.stderr)
+        return 1
+    if _rect_vec_type("sf::IntRect") != "sf::Vector2i":
+        print("[codegen] rect self-test: IntRect component type mismatch", file=sys.stderr)
+        return 1
+    if _rect_vec_type("sf::FloatRect") != "sf::Vector2f":
+        print("[codegen] rect self-test: FloatRect component type mismatch", file=sys.stderr)
+        return 1
+    body = _rect_grid_add_body("mem", "sf::IntRect", "_nk", "mem.emplace(_nk, dv);", "\t\t\t")
+    if "sf::IntRect _nk" not in body or "_placed" not in body:
+        print("[codegen] rect self-test: grid add body missing expected fragments", file=sys.stderr)
+        return 1
+    print("[codegen] rect type self-tests OK")
+    return 0
+
+
 def run_label_inference_self_tests() -> int:
     cases: list[tuple[tuple[str, bool, dict[str, Any]], str]] = [
         (("_thisIsAProperty", False, {}), "This is a property"),
@@ -3631,6 +3652,9 @@ def main() -> int:
     )
     args = ap.parse_args()
     if args.test_labels:
+        rc = run_rect_codegen_self_tests()
+        if rc != 0:
+            return rc
         return run_label_inference_self_tests()
     root: Path = args.root.resolve()
     src = root / "src"
