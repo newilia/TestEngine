@@ -37,8 +37,7 @@ namespace BallGame1 {
 		mainContext.SetScene(BuildScene());
 
 		auto backgroundCtx = mainContext.GetGameBackgroundContext();
-		backgroundCtx->SetParallaxTextureBackground(
-		    "resources/textures/backgrounds/plain_starfield_1.png", 1.f, 0.f, 3440);
+		backgroundCtx->SetTiledBackground("resources/textures/backgrounds/plain_starfield_1.png", 1.f, 0.f, 3440);
 	}
 
 	void BallGame1LaunchProfile::OnEvent(const sf::Event& event) {

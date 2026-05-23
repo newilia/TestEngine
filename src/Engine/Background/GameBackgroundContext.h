@@ -24,7 +24,7 @@ public:
 
 	void SetPlainColorBackground(const sf::Color& color);
 
-	void SetParallaxTextureBackground(
+	void SetTiledBackground(
 	    const std::filesystem::path& texturePath, float opacity, float staticity, float defaultScale);
 
 private:

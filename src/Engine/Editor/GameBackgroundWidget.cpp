@@ -1,7 +1,7 @@
 #include "Engine/Editor/GameBackgroundWidget.h"
 
-#include "Engine/Background/ParallaxTextureGameBackground.h"
 #include "Engine/Background/PlainColorGameBackground.h"
+#include "Engine/Background/TiledGameBackground.h"
 #include "Engine/Core/IPropertiesProvider.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/PropertyTree.h"
@@ -18,13 +18,13 @@ namespace Engine {
 			return;
 		}
 
-		const char* items[] = {"None", "Plain color", "Parallax texture"};
+		const char* items[] = {"None", "Plain color", "Tiled"};
 		int currentItem = 0;
 		if (auto* bg = ctx->GetBackground()) {
 			if (dynamic_cast<PlainColorGameBackground*>(bg) != nullptr) {
 				currentItem = 1;
 			}
-			else if (dynamic_cast<ParallaxTextureGameBackground*>(bg) != nullptr) {
+			else if (dynamic_cast<TiledGameBackground*>(bg) != nullptr) {
 				currentItem = 2;
 			}
 		}
@@ -38,7 +38,7 @@ namespace Engine {
 				ctx->SetPlainColorBackground(sf::Color(32, 32, 48));
 			}
 			else if (selected == 2 && currentItem != 2) {
-				ctx->SetParallaxTextureBackground({}, 1.f, 0.f, 1920.f);
+				ctx->SetTiledBackground({}, 1.f, 0.f, 1920.f);
 			}
 		}
 
