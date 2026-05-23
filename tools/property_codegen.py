@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 20
+CACHE_VERSION = 21
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
@@ -1749,6 +1749,100 @@ def _int32_param_cpp(t: str) -> str:
     return "std::int32_t" if t == "int" else t
 
 
+ScalarSetterMode = Literal["readonly", "assign", "call_setter", "vector_cow"]
+MovePolicy = Literal["none", "string_only", "move_by_value"]
+
+
+def _scalar_readonly_param_type(t: str) -> str:
+    if t == "sf::Angle":
+        return "float"
+    if t in ("int", "std::int32_t"):
+        return "std::int32_t"
+    return t
+
+
+def _scalar_set_param_type(t: str) -> str:
+    if t == "sf::Angle":
+        return "float"
+    if t in ("int", "std::int32_t"):
+        return "std::int32_t"
+    return t
+
+
+def _scalar_set_param_name(t: str) -> str:
+    return "c" if t == "sf::Color" else "v"
+
+
+def _scalar_assign_rhs(t: str, var: str, *, move_policy: MovePolicy) -> str:
+    if t == "int":
+        return f"static_cast<int>({var})"
+    if t == "sf::Angle":
+        return f"sf::degrees({var})"
+    if t == "std::string":
+        return f"std::move({var})"
+    if move_policy == "move_by_value" and t in _MOVE_BY_VALUE_TYPES:
+        return f"std::move({var})"
+    return var
+
+
+def _scalar_get_lambda(
+    t: str,
+    *,
+    capture: str,
+    read_expr: str,
+    call_syntax: bool | None = None,
+    prefix: str = "",
+) -> str:
+    if call_syntax is None:
+        call_syntax = t in ("int", "sf::Angle")
+    opener = f"{capture}() {{" if call_syntax else f"{capture} {{"
+    if t == "int":
+        return f"{opener} {prefix}return static_cast<std::int32_t>({read_expr}); }}"
+    if t == "sf::Angle":
+        return f"{opener} {prefix}return {read_expr}.asDegrees(); }}"
+    return f"{opener} {prefix}return {read_expr}; }}"
+
+
+def _scalar_set_lambda(
+    t: str,
+    *,
+    mode: ScalarSetterMode,
+    capture: str,
+    move_policy: MovePolicy = "none",
+    assign_lhs: str = "",
+    assign_prefix: str = "",
+    setter_name: str = "",
+    vec_access: str = "",
+    vec_index: str = "",
+    param_name: str | None = None,
+) -> str:
+    if mode == "readonly":
+        pk = _scalar_readonly_param_type(t)
+        return f"{capture}({pk}) {{}}"
+    pt = _scalar_set_param_type(t)
+    pn = param_name if param_name is not None else _scalar_set_param_name(t)
+    if mode == "assign":
+        rhs = _scalar_assign_rhs(t, pn, move_policy=move_policy)
+        return f"{capture}({pt} {pn}) {{ {assign_prefix}{assign_lhs} = {rhs}; }}"
+    if mode == "call_setter":
+        arg = _scalar_assign_rhs(t, pn, move_policy=move_policy)
+        return f"{capture}({pt} {pn}) {{ this->{setter_name}({arg}); }}"
+    if mode == "vector_cow":
+        if t == "int":
+            elem = f"static_cast<int>({pn})"
+        elif t == "sf::Angle":
+            elem = f"sf::degrees({pn})"
+        elif t == "std::string":
+            elem = f"std::move({pn})"
+        else:
+            elem = pn
+        return (
+            f"{capture}({pt} {pn}) {{ auto _pv = {vec_access}; "
+            f"_pv[{vec_index}] = {elem}; this->{setter_name}(std::move(_pv)); }}"
+        )
+    raise ValueError(f"unknown ScalarSetterMode {mode!r}")
+
+
 def _rect_component_get(acc: str, component: str) -> str:
     return f"[this]() {{ return {acc}.{component}; }}"
 
@@ -1946,31 +2040,18 @@ def _emit_scalar_leaf(
 
 def _map_key_get(mem: str, idx: str, kt: str) -> str:
     adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
-    if kt == "int":
-        return f"[this, {idx}]() {{ {adv}return static_cast<std::int32_t>(_it->first); }}"
-    if kt == "sf::Angle":
-        return f"[this, {idx}]() {{ {adv}return _it->first.asDegrees(); }}"
-    return f"[this, {idx}]() {{ {adv}return _it->first; }}"
+    return _scalar_get_lambda(
+        kt,
+        capture=f"[this, {idx}]",
+        read_expr="_it->first",
+        call_syntax=True,
+        prefix=adv,
+    )
 
 
 def _map_key_set(mem: str, idx: str, kt: str, readonly: bool) -> str:
     if readonly:
-        ro: dict[str, str] = {
-            "float": f"[this, {idx}](float) {{}}",
-            "double": f"[this, {idx}](double) {{}}",
-            "bool": f"[this, {idx}](bool) {{}}",
-            "int": f"[this, {idx}](std::int32_t) {{}}",
-            "std::int32_t": f"[this, {idx}](std::int32_t) {{}}",
-            "std::int64_t": f"[this, {idx}](std::int64_t) {{}}",
-            "std::string": f"[this, {idx}](std::string) {{}}",
-            "sf::Vector2f": f"[this, {idx}](sf::Vector2f) {{}}",
-            "sf::Vector2i": f"[this, {idx}](sf::Vector2i) {{}}",
-            "sf::Vector2u": f"[this, {idx}](sf::Vector2u) {{}}",
-            "sf::Vector3f": f"[this, {idx}](sf::Vector3f) {{}}",
-            "sf::Color": f"[this, {idx}](sf::Color) {{}}",
-            "sf::Angle": f"[this, {idx}](float) {{}}",
-        }
-        return ro[kt]
+        return _scalar_set_lambda(kt, mode="readonly", capture=f"[this, {idx}]")
     adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
     mv = "auto _mapped = std::move(_it->second); " + f"{mem}.erase(_it); "
     if kt == "sf::Angle":
@@ -1990,41 +2071,29 @@ def _map_key_set(mem: str, idx: str, kt: str, readonly: bool) -> str:
 
 def _map_val_get(mem: str, idx: str, vt: str) -> str:
     adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
-    if vt == "int":
-        return f"[this, {idx}]() {{ {adv}return static_cast<std::int32_t>(_it->second); }}"
-    if vt == "sf::Angle":
-        return f"[this, {idx}]() {{ {adv}return _it->second.asDegrees(); }}"
-    return f"[this, {idx}]() {{ {adv}return _it->second; }}"
+    return _scalar_get_lambda(
+        vt,
+        capture=f"[this, {idx}]",
+        read_expr="_it->second",
+        call_syntax=True,
+        prefix=adv,
+    )
 
 
 def _map_val_set(mem: str, idx: str, vt: str, readonly: bool) -> str:
+    capture = f"[this, {idx}]"
     if readonly:
-        ro: dict[str, str] = {
-            "float": f"[this, {idx}](float) {{}}",
-            "double": f"[this, {idx}](double) {{}}",
-            "bool": f"[this, {idx}](bool) {{}}",
-            "int": f"[this, {idx}](std::int32_t) {{}}",
-            "std::int32_t": f"[this, {idx}](std::int32_t) {{}}",
-            "std::int64_t": f"[this, {idx}](std::int64_t) {{}}",
-            "std::string": f"[this, {idx}](std::string) {{}}",
-            "sf::Vector2f": f"[this, {idx}](sf::Vector2f) {{}}",
-            "sf::Vector2i": f"[this, {idx}](sf::Vector2i) {{}}",
-            "sf::Vector2u": f"[this, {idx}](sf::Vector2u) {{}}",
-            "sf::Vector3f": f"[this, {idx}](sf::Vector3f) {{}}",
-            "sf::Color": f"[this, {idx}](sf::Color) {{}}",
-            "sf::Angle": f"[this, {idx}](float) {{}}",
-        }
-        return ro[vt]
+        return _scalar_set_lambda(vt, mode="readonly", capture=capture)
     adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
-    if vt == "int":
-        return f"[this, {idx}](std::int32_t newVal) {{ {adv}_it->second = static_cast<int>(newVal); }}"
-    if vt == "sf::Angle":
-        return f"[this, {idx}](float newVal) {{ {adv}_it->second = sf::degrees(newVal); }}"
-    if vt == "std::string":
-        return f"[this, {idx}](std::string newVal) {{ {adv}_it->second = std::move(newVal); }}"
-    if vt in _MOVE_BY_VALUE_TYPES:
-        return f"[this, {idx}]({vt} newVal) {{ {adv}_it->second = std::move(newVal); }}"
-    return f"[this, {idx}]({vt} newVal) {{ {adv}_it->second = newVal; }}"
+    return _scalar_set_lambda(
+        vt,
+        mode="assign",
+        capture=capture,
+        assign_lhs="_it->second",
+        assign_prefix=adv,
+        move_policy="move_by_value",
+        param_name="newVal",
+    )
 
 
 def _cpp_map_emplace(mem: str, kt: str, key_var: str, dv: str) -> str:
@@ -2531,19 +2600,16 @@ def emit_assoc_set_property(
             set_size=set_size,
         )
     else:
-        if et == "int":
-            g = f"[this, {idx}]() {{ auto _it = {mem}.begin(); std::advance(_it, {idx}); return static_cast<std::int32_t>(*_it); }}"
-        elif et == "sf::Angle":
-            g = f"[this, {idx}]() {{ auto _it = {mem}.begin(); std::advance(_it, {idx}); return _it->asDegrees(); }}"
-        else:
-            g = f"[this, {idx}]() {{ auto _it = {mem}.begin(); std::advance(_it, {idx}); return *_it; }}"
+        adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
+        g = _scalar_get_lambda(
+            et,
+            capture=f"[this, {idx}]",
+            read_expr="*_it",
+            call_syntax=True,
+            prefix=adv,
+        )
         if readonly:
-            if et in ("int", "std::int32_t"):
-                s = f"[this, {idx}](std::int32_t) {{}}"
-            elif et == "sf::Angle":
-                s = f"[this, {idx}](float) {{}}"
-            else:
-                s = f"[this, {idx}]({et}) {{}}"
+            s = _scalar_set_lambda(et, mode="readonly", capture=f"[this, {idx}]")
         else:
             adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); {mem}.erase(_it); "
             if et == "int":
@@ -2560,45 +2626,6 @@ def emit_assoc_set_property(
     out.append("\t\tb.pop();")
     out.append("\t}")
     out.append("\tb.endAssociative();")
-
-
-def _pair_member_get(mem: str, which: str, t: str) -> str:
-    acc = f"{mem}.{which}"
-    if t == "sf::Angle":
-        return f"[this]() {{ return {acc}.asDegrees(); }}"
-    if t == "int":
-        return f"[this]() {{ return static_cast<std::int32_t>({acc}); }}"
-    return f"[this]() {{ return {acc}; }}"
-
-
-def _pair_member_set(mem: str, which: str, t: str, readonly: bool) -> str:
-    acc = f"{mem}.{which}"
-    if readonly:
-        ro: dict[str, str] = {
-            "float": "[this](float) {}",
-            "double": "[this](double) {}",
-            "bool": "[this](bool) {}",
-            "int": "[this](std::int32_t) {}",
-            "std::int32_t": "[this](std::int32_t) {}",
-            "std::int64_t": "[this](std::int64_t) {}",
-            "std::string": "[this](std::string) {}",
-            "sf::Vector2f": "[this](sf::Vector2f) {}",
-            "sf::Vector2i": "[this](sf::Vector2i) {}",
-            "sf::Vector2u": "[this](sf::Vector2u) {}",
-            "sf::Vector3f": "[this](sf::Vector3f) {}",
-            "sf::Color": "[this](sf::Color) {}",
-            "sf::Angle": "[this](float) {}",
-        }
-        return ro[t]
-    if t == "int":
-        return f"[this](std::int32_t v) {{ {acc} = static_cast<int>(v); }}"
-    if t == "sf::Angle":
-        return f"[this](float v) {{ {acc} = sf::degrees(v); }}"
-    if t == "std::string":
-        return f"[this](std::string v) {{ {acc} = std::move(v); }}"
-    if t in _MOVE_BY_VALUE_TYPES:
-        return f"[this]({t} v) {{ {acc} = std::move(v); }}"
-    return f"[this]({t} v) {{ {acc} = v; }}"
 
 
 def emit_std_pair_property(
@@ -2619,10 +2646,23 @@ def emit_std_pair_property(
     leaf_meta = "Engine::PropertyMeta{}"
 
     out.append(f'\tb.pushObject("{fid}", "{label_esc}", {meta_arg});')
-    g1, s1 = _pair_member_get(mem, "first", ft), _pair_member_set(mem, "first", ft, readonly)
-    _emit_scalar_leaf(out, ft, "first", "First", g1, s1, leaf_meta, path, p.line, p.col)
-    g2, s2 = _pair_member_get(mem, "second", st), _pair_member_set(mem, "second", st, readonly)
-    _emit_scalar_leaf(out, st, "second", "Second", g2, s2, leaf_meta, path, p.line, p.col)
+    for which, wt, nid, label in (
+        ("first", ft, "first", "First"),
+        ("second", st, "second", "Second"),
+    ):
+        acc = f"{mem}.{which}"
+        g = _scalar_get_lambda(wt, capture="[this]", read_expr=acc, call_syntax=True)
+        if readonly:
+            s = _scalar_set_lambda(wt, mode="readonly", capture="[this]")
+        else:
+            s = _scalar_set_lambda(
+                wt,
+                mode="assign",
+                capture="[this]",
+                assign_lhs=acc,
+                move_policy="move_by_value",
+            )
+        _emit_scalar_leaf(out, wt, nid, label, g, s, leaf_meta, path, p.line, p.col)
     out.append("\tb.pop();")
 
 
@@ -2692,41 +2732,22 @@ def _optional_value_set(
     setter_name: str,
 ) -> str:
     if readonly:
-        ro: dict[str, str] = {
-            "float": "[this](float) {}",
-            "double": "[this](double) {}",
-            "bool": "[this](bool) {}",
-            "int": "[this](std::int32_t) {}",
-            "std::int32_t": "[this](std::int32_t) {}",
-            "std::int64_t": "[this](std::int64_t) {}",
-            "std::string": "[this](std::string) {}",
-            "sf::Vector2f": "[this](sf::Vector2f) {}",
-            "sf::Vector2i": "[this](sf::Vector2i) {}",
-            "sf::Vector2u": "[this](sf::Vector2u) {}",
-            "sf::Vector3f": "[this](sf::Vector3f) {}",
-            "sf::Color": "[this](sf::Color) {}",
-            "sf::Angle": "[this](float) {}",
-        }
-        return ro[inner_t]
+        return _scalar_set_lambda(inner_t, mode="readonly", capture="[this]")
     if p.is_getter:
-        if inner_t == "sf::Angle":
-            return f"[this](float v) {{ this->{setter_name}(sf::degrees(v)); }}"
-        if inner_t == "int":
-            return f"[this](std::int32_t v) {{ this->{setter_name}(static_cast<int>(v)); }}"
-        if inner_t == "std::string":
-            return f"[this](std::string v) {{ this->{setter_name}(std::move(v)); }}"
-        if inner_t in ("sf::Vector2f", "sf::Vector2i", "sf::Vector2u", "sf::Vector3f", "sf::Color"):
-            return f"[this]({inner_t} v) {{ this->{setter_name}(std::move(v)); }}"
-        return f"[this]({inner_t} v) {{ this->{setter_name}(v); }}"
-    if inner_t == "sf::Angle":
-        return f"[this](float v) {{ {storage} = sf::degrees(v); }}"
-    if inner_t == "int":
-        return f"[this](std::int32_t v) {{ {storage} = static_cast<int>(v); }}"
-    if inner_t == "std::string":
-        return f"[this](std::string v) {{ {storage} = std::move(v); }}"
-    if inner_t in ("sf::Vector2f", "sf::Vector2i", "sf::Vector2u", "sf::Vector3f", "sf::Color"):
-        return f"[this]({inner_t} v) {{ {storage} = std::move(v); }}"
-    return f"[this]({inner_t} v) {{ {storage} = v; }}"
+        return _scalar_set_lambda(
+            inner_t,
+            mode="call_setter",
+            capture="[this]",
+            setter_name=setter_name,
+            move_policy="move_by_value",
+        )
+    return _scalar_set_lambda(
+        inner_t,
+        mode="assign",
+        capture="[this]",
+        assign_lhs=storage,
+        move_policy="move_by_value",
+    )
 
 
 def emit_std_optional_property(
@@ -2918,145 +2939,28 @@ def emit_std_vector_property(
             set_size=set_size,
         )
     else:
-        if t == "int":
-            g = f"[this, {idx}]() {{ return static_cast<std::int32_t>({acc}); }}"
-        elif t == "sf::Angle":
-            g = f"[this, {idx}]() {{ return {acc}.asDegrees(); }}"
-        else:
-            g = f"[this, {idx}] {{ return {acc}; }}"
-
-        def add_inner(call: str) -> None:
-            out.append(f"\t\t{call}")
-
+        capture = f"[this, {idx}]"
+        g = _scalar_get_lambda(t, capture=capture, read_expr=acc)
         if readonly:
-            ro = {
-                "float": f"[this, {idx}](float) {{}}",
-                "double": f"[this, {idx}](double) {{}}",
-                "bool": f"[this, {idx}](bool) {{}}",
-                "int": f"[this, {idx}](std::int32_t) {{}}",
-                "std::int32_t": f"[this, {idx}](std::int32_t) {{}}",
-                "std::int64_t": f"[this, {idx}](std::int64_t) {{}}",
-                "std::string": f"[this, {idx}](std::string) {{}}",
-                "sf::Vector2f": f"[this, {idx}](sf::Vector2f) {{}}",
-                "sf::Vector2i": f"[this, {idx}](sf::Vector2i) {{}}",
-                "sf::Vector2u": f"[this, {idx}](sf::Vector2u) {{}}",
-                "sf::Vector3f": f"[this, {idx}](sf::Vector3f) {{}}",
-                "sf::Color": f"[this, {idx}](sf::Color) {{}}",
-                "sf::Angle": f"[this, {idx}](float) {{}}",
-            }
-            sl = ro[t]
-            if t == "float":
-                add_inner(f'b.addFloat("v", "", {g}, {sl}, {meta_arg});')
-            elif t == "double":
-                add_inner(f'b.addDouble("v", "", {g}, {sl}, {meta_arg});')
-            elif t == "bool":
-                add_inner(f'b.addBool("v", "", {g}, {sl}, {meta_arg});')
-            elif t in ("int", "std::int32_t"):
-                add_inner(f'b.addInt32("v", "", {g}, {sl}, {meta_arg});')
-            elif t == "std::int64_t":
-                add_inner(f'b.addInt64("v", "", {g}, {sl}, {meta_arg});')
-            elif t == "std::string":
-                add_inner(f'b.addString("v", "", {g}, {sl}, {meta_arg});')
-            elif t == "sf::Vector2f":
-                add_inner(f'b.addVec2f("v", "", {g}, {sl}, {meta_arg});')
-            elif t == "sf::Vector2i":
-                add_inner(f'b.addVec2i("v", "", {g}, {sl}, {meta_arg});')
-            elif t == "sf::Vector2u":
-                add_inner(f'b.addVec2u("v", "", {g}, {sl}, {meta_arg});')
-            elif t == "sf::Vector3f":
-                add_inner(f'b.addVec3f("v", "", {g}, {sl}, {meta_arg});')
-            elif t == "sf::Color":
-                add_inner(f'b.addColor("v", "", {g}, {sl}, {meta_arg});')
-            elif t == "sf::Angle":
-                add_inner(f'b.addFloat("v", "", {g}, {sl}, {meta_arg});')
-            else:
-                raise ParseError(f"unsupported vector element type `{t}`", path, p.line, p.col)
+            s = _scalar_set_lambda(t, mode="readonly", capture=capture)
         elif p.is_getter:
-            wl_vec = {
-                "float": f"[this, {idx}](float v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
-                "double": f"[this, {idx}](double v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
-                "bool": f"[this, {idx}](bool v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
-                "int": f"[this, {idx}](std::int32_t v) {{ auto _pv = {vec_access}; _pv[{idx}] = static_cast<int>(v); this->{setter_name}(std::move(_pv)); }}",
-                "std::int32_t": f"[this, {idx}](std::int32_t v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
-                "std::int64_t": f"[this, {idx}](std::int64_t v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
-                "std::string": f"[this, {idx}](std::string v) {{ auto _pv = {vec_access}; _pv[{idx}] = std::move(v); this->{setter_name}(std::move(_pv)); }}",
-                "sf::Vector2f": f"[this, {idx}](sf::Vector2f v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
-                "sf::Vector2i": f"[this, {idx}](sf::Vector2i v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
-                "sf::Vector2u": f"[this, {idx}](sf::Vector2u v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
-                "sf::Vector3f": f"[this, {idx}](sf::Vector3f v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
-                "sf::Color": f"[this, {idx}](sf::Color c) {{ auto _pv = {vec_access}; _pv[{idx}] = c; this->{setter_name}(std::move(_pv)); }}",
-                "sf::Angle": f"[this, {idx}](float v) {{ auto _pv = {vec_access}; _pv[{idx}] = sf::degrees(v); this->{setter_name}(std::move(_pv)); }}",
-            }
-            wl = wl_vec[t]
-            if t == "float":
-                add_inner(f'b.addFloat("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "double":
-                add_inner(f'b.addDouble("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "bool":
-                add_inner(f'b.addBool("v", "", {g}, {wl}, {meta_arg});')
-            elif t in ("int", "std::int32_t"):
-                add_inner(f'b.addInt32("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "std::int64_t":
-                add_inner(f'b.addInt64("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "std::string":
-                add_inner(f'b.addString("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "sf::Vector2f":
-                add_inner(f'b.addVec2f("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "sf::Vector2i":
-                add_inner(f'b.addVec2i("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "sf::Vector2u":
-                add_inner(f'b.addVec2u("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "sf::Vector3f":
-                add_inner(f'b.addVec3f("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "sf::Color":
-                add_inner(f'b.addColor("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "sf::Angle":
-                add_inner(f'b.addFloat("v", "", {g}, {wl}, {meta_arg});')
-            else:
-                raise ParseError(f"unsupported vector element type `{t}`", path, p.line, p.col)
+            s = _scalar_set_lambda(
+                t,
+                mode="vector_cow",
+                capture=capture,
+                vec_access=vec_access,
+                vec_index=idx,
+                setter_name=setter_name,
+            )
         else:
-            rw = {
-                "float": f"[this, {idx}](float v) {{ {acc} = v; }}",
-                "double": f"[this, {idx}](double v) {{ {acc} = v; }}",
-                "bool": f"[this, {idx}](bool v) {{ {acc} = v; }}",
-                "int": f"[this, {idx}](std::int32_t v) {{ {acc} = static_cast<int>(v); }}",
-                "std::int32_t": f"[this, {idx}](std::int32_t v) {{ {acc} = v; }}",
-                "std::int64_t": f"[this, {idx}](std::int64_t v) {{ {acc} = v; }}",
-                "std::string": f"[this, {idx}](std::string v) {{ {acc} = std::move(v); }}",
-                "sf::Vector2f": f"[this, {idx}](sf::Vector2f v) {{ {acc} = v; }}",
-                "sf::Vector2i": f"[this, {idx}](sf::Vector2i v) {{ {acc} = v; }}",
-                "sf::Vector2u": f"[this, {idx}](sf::Vector2u v) {{ {acc} = v; }}",
-                "sf::Vector3f": f"[this, {idx}](sf::Vector3f v) {{ {acc} = v; }}",
-                "sf::Color": f"[this, {idx}](sf::Color c) {{ {acc} = c; }}",
-                "sf::Angle": f"[this, {idx}](float v) {{ {acc} = sf::degrees(v); }}",
-            }
-            wl = rw[t]
-            if t == "float":
-                add_inner(f'b.addFloat("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "double":
-                add_inner(f'b.addDouble("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "bool":
-                add_inner(f'b.addBool("v", "", {g}, {wl}, {meta_arg});')
-            elif t in ("int", "std::int32_t"):
-                add_inner(f'b.addInt32("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "std::int64_t":
-                add_inner(f'b.addInt64("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "std::string":
-                add_inner(f'b.addString("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "sf::Vector2f":
-                add_inner(f'b.addVec2f("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "sf::Vector2i":
-                add_inner(f'b.addVec2i("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "sf::Vector2u":
-                add_inner(f'b.addVec2u("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "sf::Vector3f":
-                add_inner(f'b.addVec3f("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "sf::Color":
-                add_inner(f'b.addColor("v", "", {g}, {wl}, {meta_arg});')
-            elif t == "sf::Angle":
-                add_inner(f'b.addFloat("v", "", {g}, {wl}, {meta_arg});')
-            else:
-                raise ParseError(f"unsupported vector element type `{t}`", path, p.line, p.col)
+            s = _scalar_set_lambda(
+                t,
+                mode="assign",
+                capture=capture,
+                assign_lhs=acc,
+                move_policy="string_only",
+            )
+        _emit_scalar_leaf(out, t, "v", "", g, s, meta_arg, path, p.line, p.col)
     out.append("\t\tb.pop();")
     out.append("\t}")
     out.append("\tb.endSequence();")
@@ -3354,100 +3258,49 @@ def generate_file_content(
                 k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed", "valuesProvider")
             )
             meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
-            if p.cpp_type == "sf::Angle":
-                if p.is_getter:
-                    get_lambda = f"[this]() {{ return this->{p.member}().asDegrees(); }}"
-                else:
-                    get_lambda = f"[this]() {{ return {p.member}.asDegrees(); }}"
-            elif p.is_getter:
-                get_lambda = f"[this]() {{ return this->{p.member}(); }}"
+            t = p.cpp_type
+            if p.is_getter:
+                read_expr = f"this->{p.member}()"
+                call_syntax = True
             else:
-                get_lambda = "[this] { return " + p.member + "; }"
-            setters_ro = {
-                "float": "[this](float) {}",
-                "double": "[this](double) {}",
-                "bool": "[this](bool) {}",
-                "int": "[this](std::int32_t) {}",
-                "std::int32_t": "[this](std::int32_t) {}",
-                "std::int64_t": "[this](std::int64_t) {}",
-                "std::string": "[this](std::string) {}",
-                "sf::Vector2f": "[this](sf::Vector2f) {}",
-                "sf::Vector2i": "[this](sf::Vector2i) {}",
-                "sf::Vector2u": "[this](sf::Vector2u) {}",
-                "sf::Vector3f": "[this](sf::Vector3f) {}",
-                "sf::Color": "[this](sf::Color) {}",
-                "sf::Angle": "[this](float) {}",
-            }
-            setters_rw = {
-                "float": f"[this](float v) {{ {p.member} = v; }}",
-                "double": f"[this](double v) {{ {p.member} = v; }}",
-                "bool": f"[this](bool v) {{ {p.member} = v; }}",
-                "int": f"[this](std::int32_t v) {{ {p.member} = static_cast<int>(v); }}",
-                "std::int32_t": f"[this](std::int32_t v) {{ {p.member} = v; }}",
-                "std::int64_t": f"[this](std::int64_t v) {{ {p.member} = v; }}",
-                "std::string": f"[this](std::string v) {{ {p.member} = std::move(v); }}",
-                "sf::Vector2f": f"[this](sf::Vector2f v) {{ {p.member} = v; }}",
-                "sf::Vector2i": f"[this](sf::Vector2i v) {{ {p.member} = v; }}",
-                "sf::Vector2u": f"[this](sf::Vector2u v) {{ {p.member} = v; }}",
-                "sf::Vector3f": f"[this](sf::Vector3f v) {{ {p.member} = v; }}",
-                "sf::Color": f"[this](sf::Color c) {{ {p.member} = c; }}",
-                "sf::Angle": f"[this](float v) {{ {p.member} = sf::degrees(v); }}",
-            }
+                read_expr = p.member
+                call_syntax = t in ("int", "sf::Angle")
+            get_lambda = _scalar_get_lambda(
+                t, capture="[this]", read_expr=read_expr, call_syntax=call_syntax
+            )
             setter_method = a.get("setter")
             if p.is_getter and has_setter_method:
                 sn = setter_name if isinstance(setter_name, str) else ""
-                getter_gs = {
-                    "float": f"[this](float v) {{ this->{sn}(v); }}",
-                    "double": f"[this](double v) {{ this->{sn}(v); }}",
-                    "bool": f"[this](bool v) {{ this->{sn}(v); }}",
-                    "int": f"[this](std::int32_t v) {{ this->{sn}(static_cast<int>(v)); }}",
-                    "std::int32_t": f"[this](std::int32_t v) {{ this->{sn}(v); }}",
-                    "std::int64_t": f"[this](std::int64_t v) {{ this->{sn}(v); }}",
-                    "std::string": f"[this](std::string v) {{ this->{sn}(std::move(v)); }}",
-                    "sf::Vector2f": f"[this](sf::Vector2f v) {{ this->{sn}(v); }}",
-                    "sf::Vector2i": f"[this](sf::Vector2i v) {{ this->{sn}(v); }}",
-                    "sf::Vector2u": f"[this](sf::Vector2u v) {{ this->{sn}(v); }}",
-                    "sf::Vector3f": f"[this](sf::Vector3f v) {{ this->{sn}(v); }}",
-                    "sf::Color": f"[this](sf::Color c) {{ this->{sn}(c); }}",
-                    "sf::Angle": f"[this](float v) {{ this->{sn}(sf::degrees(v)); }}",
-                }
-                set_lambda = getter_gs[p.cpp_type]
+                set_lambda = _scalar_set_lambda(
+                    t,
+                    mode="call_setter",
+                    capture="[this]",
+                    setter_name=sn,
+                    move_policy="none",
+                )
             elif (
                 isinstance(setter_method, str)
                 and setter_method
                 and not readonly
                 and not p.is_getter
-                and p.cpp_type == "bool"
+                and t == "bool"
             ):
                 set_lambda = f"[this](bool v) {{ this->{setter_method}(v); }}"
+            elif readonly:
+                set_lambda = _scalar_set_lambda(t, mode="readonly", capture="[this]")
             else:
-                set_lambda = setters_ro[p.cpp_type] if readonly else setters_rw[p.cpp_type]
+                set_lambda = _scalar_set_lambda(
+                    t,
+                    mode="assign",
+                    capture="[this]",
+                    assign_lhs=p.member,
+                    move_policy="string_only",
+                )
             fid = member_to_field_id(p.member)
             label_esc = cpp_escape_string(default_label(p))
-            if p.cpp_type == "float":
-                out.append(f'\tb.addFloat("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
-            elif p.cpp_type == "double":
-                out.append(f'\tb.addDouble("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
-            elif p.cpp_type == "bool":
-                out.append(f'\tb.addBool("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
-            elif p.cpp_type in ("int", "std::int32_t"):
-                out.append(f'\tb.addInt32("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
-            elif p.cpp_type == "std::int64_t":
-                out.append(f'\tb.addInt64("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
-            elif p.cpp_type == "std::string":
-                out.append(f'\tb.addString("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
-            elif p.cpp_type == "sf::Vector2f":
-                out.append(f'\tb.addVec2f("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
-            elif p.cpp_type == "sf::Vector2i":
-                out.append(f'\tb.addVec2i("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
-            elif p.cpp_type == "sf::Vector2u":
-                out.append(f'\tb.addVec2u("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
-            elif p.cpp_type == "sf::Vector3f":
-                out.append(f'\tb.addVec3f("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
-            elif p.cpp_type == "sf::Color":
-                out.append(f'\tb.addColor("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
-            elif p.cpp_type == "sf::Angle":
-                out.append(f'\tb.addFloat("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, {meta_arg});')
+            _emit_scalar_leaf(
+                out, t, fid, label_esc, get_lambda, set_lambda, meta_arg, path, p.line, p.col, indent="\t"
+            )
         for m in c.methods:
             label_esc = cpp_escape_string(method_menu_label(m))
             out.append(f'\tb.registerInspectorMethod("{label_esc}", [this]() {{ this->{m.method}(); }});')
@@ -3583,6 +3436,83 @@ def file_signature(p: Path) -> dict[str, Any]:
     return {"mtime_ns": st.st_mtime_ns, "size": st.st_size}
 
 
+def run_scalar_lambda_self_tests() -> int:
+    def check(label: str, got: str, want: str) -> bool:
+        if got != want:
+            print(
+                f"[codegen] scalar lambda test FAIL {label}: got {got!r} expected {want!r}",
+                file=sys.stderr,
+            )
+            return False
+        return True
+
+    ok = True
+    want = "[this]() { return static_cast<std::int32_t>(_priority); }"
+    got = _scalar_get_lambda("int", capture="[this]", read_expr="_priority", call_syntax=True)
+    ok = check("top-level int field get", got, want) and ok
+
+    want = "[this]() { return this->GetPointCount(); }"
+    got = _scalar_get_lambda(
+        "int", capture="[this]", read_expr="this->GetPointCount()", call_syntax=True
+    )
+    # int getter also gets cast when using unified helper
+    want_int_getter = (
+        "[this]() { return static_cast<std::int32_t>(this->GetPointCount()); }"
+    )
+    ok = check("top-level int getter", got, want_int_getter) and ok
+
+    want = "[this](float v) { _mass = v; }"
+    got = _scalar_set_lambda(
+        "float",
+        mode="assign",
+        capture="[this]",
+        assign_lhs="_mass",
+        move_policy="string_only",
+    )
+    ok = check("top-level float field set", got, want) and ok
+
+    want = "[this, _i](float) {}"
+    got = _scalar_set_lambda("float", mode="readonly", capture="[this, _i]")
+    ok = check("vector readonly float", got, want) and ok
+
+    want = (
+        "[this, _i](float v) { auto _pv = _items; _pv[_i] = v; "
+        "this->SetItems(std::move(_pv)); }"
+    )
+    got = _scalar_set_lambda(
+        "float",
+        mode="vector_cow",
+        capture="[this, _i]",
+        vec_access="_items",
+        vec_index="_i",
+        setter_name="SetItems",
+    )
+    ok = check("vector cow float", got, want) and ok
+
+    want = "[this](sf::Vector2f v) { _pair.first = std::move(v); }"
+    got = _scalar_set_lambda(
+        "sf::Vector2f",
+        mode="assign",
+        capture="[this]",
+        assign_lhs="_pair.first",
+        move_policy="move_by_value",
+    )
+    ok = check("pair Vector2f assign", got, want) and ok
+
+    want = "[this](std::int32_t) {}"
+    got = _scalar_set_lambda("int", mode="readonly", capture="[this]")
+    ok = check("readonly int", got, want) and ok
+
+    want = "[this](float) {}"
+    got = _scalar_set_lambda("sf::Angle", mode="readonly", capture="[this]")
+    ok = check("readonly Angle", got, want) and ok
+
+    if ok:
+        print("[codegen] scalar lambda self-tests OK")
+        return 0
+    return 1
+
+
 def run_rect_codegen_self_tests() -> int:
     path = Path("self_test.h")
     try:
@@ -3653,6 +3583,9 @@ def main() -> int:
     args = ap.parse_args()
     if args.test_labels:
         rc = run_rect_codegen_self_tests()
+        if rc != 0:
+            return rc
+        rc = run_scalar_lambda_self_tests()
         if rc != 0:
             return rc
         return run_label_inference_self_tests()
