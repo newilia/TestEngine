@@ -17,7 +17,7 @@ namespace sf {
 }
 
 /// Seamlessly tiled texture that follows the camera with configurable scale and scroll coupling.
-class ParallaxTextureGameBackground final : public IGameBackground
+class TiledGameBackground final : public IGameBackground
 {
 	META_CLASS()
 

@@ -1,8 +1,8 @@
 #include "Engine/Background/GameBackgroundContext.h"
 
 #include "Engine/Background/IGameBackground.h"
-#include "Engine/Background/ParallaxTextureGameBackground.h"
 #include "Engine/Background/PlainColorGameBackground.h"
+#include "Engine/Background/TiledGameBackground.h"
 
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Time.hpp>
@@ -27,9 +27,9 @@ void GameBackgroundContext::SetPlainColorBackground(const sf::Color& color) {
 	_background = std::move(bg);
 }
 
-void GameBackgroundContext::SetParallaxTextureBackground(
+void GameBackgroundContext::SetTiledBackground(
     const std::filesystem::path& texturePath, float opacity, float staticity, float defaultScale) {
-	auto bg = std::make_unique<ParallaxTextureGameBackground>();
+	auto bg = std::make_unique<TiledGameBackground>();
 	bg->Configure(texturePath.string(), opacity, staticity, defaultScale);
 	_background = std::move(bg);
 }

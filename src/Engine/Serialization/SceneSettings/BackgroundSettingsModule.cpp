@@ -1,6 +1,6 @@
 #include "Engine/Background/GameBackgroundContext.h"
-#include "Engine/Background/ParallaxTextureGameBackground.h"
 #include "Engine/Background/PlainColorGameBackground.h"
+#include "Engine/Background/TiledGameBackground.h"
 #include "Engine/Core/IPropertiesProvider.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Serialization/PropertyTreeSerializer.h"
@@ -16,7 +16,7 @@ namespace Engine::Serialization {
 		constexpr const char kPropertiesElement[] = "Properties";
 		constexpr const char kTypeNone[] = "None";
 		constexpr const char kTypePlainColor[] = "PlainColor";
-		constexpr const char kTypeParallaxTexture[] = "ParallaxTexture";
+		constexpr const char kTypeTiled[] = "Tiled";
 
 		class BackgroundSettingsModule final : public ISceneSettingsModule
 		{
@@ -39,8 +39,8 @@ namespace Engine::Serialization {
 				if (dynamic_cast<PlainColorGameBackground*>(bg) != nullptr) {
 					node.append_attribute(kTypeAttr).set_value(kTypePlainColor);
 				}
-				else if (dynamic_cast<ParallaxTextureGameBackground*>(bg) != nullptr) {
-					node.append_attribute(kTypeAttr).set_value(kTypeParallaxTexture);
+				else if (dynamic_cast<TiledGameBackground*>(bg) != nullptr) {
+					node.append_attribute(kTypeAttr).set_value(kTypeTiled);
 				}
 				else {
 					return;
@@ -77,11 +77,11 @@ namespace Engine::Serialization {
 					return;
 				}
 
-				if (std::string_view{type} == kTypeParallaxTexture) {
-					ctx->SetParallaxTextureBackground({}, 1.f, 0.f, 256.f);
-					if (auto* parallax = dynamic_cast<ParallaxTextureGameBackground*>(ctx->GetBackground())) {
+				if (std::string_view{type} == kTypeTiled) {
+					ctx->SetTiledBackground({}, 1.f, 0.f, 256.f);
+					if (auto* tiled = dynamic_cast<TiledGameBackground*>(ctx->GetBackground())) {
 						if (const pugi::xml_node propertiesNode = node.child(kPropertiesElement)) {
-							result.Merge(PropertyTreeSerializer::LoadProvider(*parallax, propertiesNode));
+							result.Merge(PropertyTreeSerializer::LoadProvider(*tiled, propertiesNode));
 						}
 					}
 				}

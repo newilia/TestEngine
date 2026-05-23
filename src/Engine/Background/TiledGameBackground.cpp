@@ -1,8 +1,8 @@
-#include "Engine/Background/ParallaxTextureGameBackground.h"
+#include "Engine/Background/TiledGameBackground.h"
 
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/TextureManager.h"
-#include "ParallaxTextureGameBackground.generated.hpp"
+#include "TiledGameBackground.generated.hpp"
 
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
@@ -14,7 +14,7 @@
 #include <cmath>
 #include <filesystem>
 
-void ParallaxTextureGameBackground::Configure(
+void TiledGameBackground::Configure(
     const std::string& texturePath, float opacity, float staticity, float defaultScale) {
 	SetTexturePath(texturePath);
 	SetOpacity(opacity);
@@ -23,11 +23,11 @@ void ParallaxTextureGameBackground::Configure(
 	_haveReferenceView = false;
 }
 
-const std::string& ParallaxTextureGameBackground::GetTexturePath() const {
+const std::string& TiledGameBackground::GetTexturePath() const {
 	return _texturePath;
 }
 
-void ParallaxTextureGameBackground::SetTexturePath(std::string path) {
+void TiledGameBackground::SetTexturePath(std::string path) {
 	_texturePath = std::move(path);
 	_texture.reset();
 
@@ -50,29 +50,29 @@ void ParallaxTextureGameBackground::SetTexturePath(std::string path) {
 	_geometryDirty = true;
 }
 
-float ParallaxTextureGameBackground::GetOpacity() const {
+float TiledGameBackground::GetOpacity() const {
 	return _opacity;
 }
 
-void ParallaxTextureGameBackground::SetOpacity(float opacity) {
+void TiledGameBackground::SetOpacity(float opacity) {
 	_opacity = std::clamp(opacity, 0.f, 1.f);
 	_geometryDirty = true;
 }
 
-float ParallaxTextureGameBackground::GetDefaultScale() const {
+float TiledGameBackground::GetDefaultScale() const {
 	return _defaultScale;
 }
 
-void ParallaxTextureGameBackground::SetDefaultScale(float defaultScale) {
+void TiledGameBackground::SetDefaultScale(float defaultScale) {
 	_defaultScale = std::max(128.f, defaultScale);
 	_geometryDirty = true;
 }
 
-float ParallaxTextureGameBackground::GetStaticity() const {
+float TiledGameBackground::GetStaticity() const {
 	return _staticity;
 }
 
-void ParallaxTextureGameBackground::SetStaticity(float staticity) {
+void TiledGameBackground::SetStaticity(float staticity) {
 	_staticity = staticity;
 	_geometryDirty = true;
 }
@@ -88,7 +88,7 @@ namespace {
 	}
 } // namespace
 
-void ParallaxTextureGameBackground::Update(const sf::RenderWindow& window, sf::Time /*dt*/) {
+void TiledGameBackground::Update(const sf::RenderWindow& window, sf::Time /*dt*/) {
 	const sf::View view = window.getView();
 	const sf::Vector2f center = view.getCenter();
 	const sf::Vector2f size = view.getSize();
@@ -107,7 +107,7 @@ void ParallaxTextureGameBackground::Update(const sf::RenderWindow& window, sf::T
 	}
 }
 
-void ParallaxTextureGameBackground::RebuildVertices(const sf::RenderTarget& target) const {
+void TiledGameBackground::RebuildVertices(const sf::RenderTarget& target) const {
 	_vertices.clear();
 	if (!_texture) {
 		return;
@@ -188,7 +188,7 @@ void ParallaxTextureGameBackground::RebuildVertices(const sf::RenderTarget& targ
 	}
 }
 
-void ParallaxTextureGameBackground::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+void TiledGameBackground::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	if (!_texture) {
 		return;
 	}
