@@ -120,7 +120,7 @@ Scanner picks classes from headers under **`src/`** (excluding **`Codegen/`**) t
 
 ## Supported field types (v1)
 
-`float`, `double`, `bool`, `int`, `std::int32_t`, `std::int64_t`, `std::string`, `sf::Vector2f`, `sf::Vector2i`, `sf::Vector2u`, `sf::Vector3f`, `sf::Color`, **`sf::Angle`**, **`RefWrapper<T>`** (see below), plus any **`META_ENUM`**-declared `enum class` in the same scanned header (inspector: combo with enumerator names). The inspector edits **`sf::Angle` as degrees** (`asDegrees()` / `sf::degrees(float)`); radians are not shown in the UI. **`sf::Vector2i`** uses integer drag controls; **`sf::Vector2u`** uses unsigned 32-bit drag controls (both axes). Other types → codegen error until mapped in `tools/property_codegen.py`.
+`float`, `double`, `bool`, `int`, `std::int32_t`, `std::int64_t`, `std::string`, `sf::Vector2f`, `sf::Vector2i`, `sf::Vector2u`, `sf::Vector3f`, `sf::Color`, **`sf::Angle`**, **`sf::IntRect`**, **`sf::FloatRect`**, **`RefWrapper<T>`** (see below), plus any **`META_ENUM`**-declared `enum class` in the same scanned header (inspector: combo with enumerator names). The inspector edits **`sf::Angle` as degrees** (`asDegrees()` / `sf::degrees(float)`); radians are not shown in the UI. **`sf::Vector2i`** uses integer drag controls; **`sf::Vector2u`** uses unsigned 32-bit drag controls (both axes). **`sf::IntRect`** / **`sf::FloatRect`** appear as a collapsible group with **Position** and **Size** (`sf::Vector2i` / `sf::Vector2f` editors on `position` and `size`). Other types → codegen error until mapped in `tools/property_codegen.py`.
 
 ### `RefWrapper<T>` (scene object reference by id)
 
