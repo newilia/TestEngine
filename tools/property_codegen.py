@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 18
+CACHE_VERSION = 19
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
@@ -33,16 +33,31 @@ CLASS_HEAD_RE = re.compile(
     r"^\s*(?:template\s*<[^>{};]*>\s*)?(?:class|struct)\s+([A-Za-z_]\w*)\b"
 )
 NS_HEAD_RE = re.compile(r"^\s*namespace\s+([A-Za-z_]\w*)\s*(?:\{)?\s*$")
+# Element / component types for std::vector, std::pair, std::optional, std::map, std::set (same set everywhere).
+_VEC_ELT = (
+    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector2i|sf::Vector2u|"
+    r"sf::Vector3f|sf::Color|sf::Angle|sf::IntRect|sf::FloatRect)"
+)
+_RECT_TYPES = frozenset({"sf::IntRect", "sf::FloatRect"})
+_RECT_COMPONENT_VEC = {"sf::IntRect": "sf::Vector2i", "sf::FloatRect": "sf::Vector2f"}
+_MOVE_BY_VALUE_TYPES = frozenset(
+    {
+        "std::string",
+        "sf::Vector2f",
+        "sf::Vector2i",
+        "sf::Vector2u",
+        "sf::Vector3f",
+        "sf::Color",
+        "sf::IntRect",
+        "sf::FloatRect",
+    }
+)
 FIELD_RE = re.compile(
-    r"^\s*(?:inline\s+|static\s+|mutable\s+)*"
-    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector2i|sf::Vector2u|sf::Vector3f|sf::Color|sf::Angle)\s+"
-    r"(\w+)\s*.*;\s*$"
+    r"^\s*(?:inline\s+|static\s+|mutable\s+)*" + _VEC_ELT + r"\s+" + r"(\w+)\s*.*;\s*$"
 )
 REFWRAPPER_FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*RefWrapper\s*<\s*((?:[A-Za-z_]\w*\s*::\s*)*[A-Za-z_]\w*)\s*>\s+(\w+)\s*;\s*$"
 )
-# Element / component types for std::vector, std::pair, std::optional, std::map, std::set (same set everywhere).
-_VEC_ELT = r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector2i|sf::Vector2u|sf::Vector3f|sf::Color|sf::Angle)"
 VECTOR_FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*std::vector<\s*"
     + _VEC_ELT
@@ -87,8 +102,8 @@ BITSET_TYPEDEF_FIELD_RE = re.compile(
 GETTER_METHOD_RE = re.compile(
     r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?"
     r"(?:const\s+)?"
-    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector2i|sf::Vector2u|sf::Vector3f|sf::Color|sf::Angle)"
-    r"(?:\s*&)?\s+"
+    + _VEC_ELT
+    + r"(?:\s*&)?\s+"
     r"(\w+)\s*\([^)]*\)\s*"
     r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
 )
@@ -117,8 +132,8 @@ GETTER_OPTIONAL_VAL_RE = re.compile(
 SETTER_METHOD_RE = re.compile(
     r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?void\s+"
     r"(\w+)\s*\(\s*(?:const\s+)?"
-    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector2i|sf::Vector2u|sf::Vector3f|sf::Color|sf::Angle)"
-    r"(?:\s*&)?\s*\w*\s*\)\s*"
+    + _VEC_ELT
+    + r"(?:\s*&)?\s*\w*\s*\)\s*"
     r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
 )
 SETTER_VECTOR_METHOD_RE = re.compile(
@@ -179,8 +194,18 @@ KNOWN_TYPES = frozenset(
         "sf::Vector3f",
         "sf::Color",
         "sf::Angle",
+        "sf::IntRect",
+        "sf::FloatRect",
     }
 )
+
+
+def _is_rect_type(t: str) -> bool:
+    return t in _RECT_TYPES
+
+
+def _rect_vec_type(rect_t: str) -> str:
+    return _RECT_COMPONENT_VEC[rect_t]
 
 
 @dataclass
@@ -1676,11 +1701,155 @@ def _default_cpp_value(t: str) -> str:
         "sf::Vector3f": "sf::Vector3f{}",
         "sf::Color": "sf::Color{}",
         "sf::Angle": "sf::Angle{}",
+        "sf::IntRect": "sf::IntRect{}",
+        "sf::FloatRect": "sf::FloatRect{}",
     }[t]
 
 
 def _int32_param_cpp(t: str) -> str:
     return "std::int32_t" if t == "int" else t
+
+
+def _rect_component_get(acc: str, component: str, vec_t: str) -> str:
+    return f"[this]() {{ return {acc}.{component}; }}"
+
+
+def _rect_component_set_field(acc: str, component: str, vec_t: str, readonly: bool) -> str:
+    if readonly:
+        return f"[this]({vec_t}) {{}}"
+    if vec_t in _MOVE_BY_VALUE_TYPES:
+        return f"[this]({vec_t} v) {{ {acc}.{component} = std::move(v); }}"
+    return f"[this]({vec_t} v) {{ {acc}.{component} = v; }}"
+
+
+def _rect_component_set_getter(
+    get_expr: str, setter_name: str, component: str, rect_t: str, vec_t: str, readonly: bool
+) -> str:
+    if readonly:
+        return f"[this]({vec_t}) {{}}"
+    return (
+        f"[this]({vec_t} v) {{\n"
+        f"\t\tauto _r = {get_expr};\n"
+        f"\t\t_r.{component} = v;\n"
+        f"\t\tthis->{setter_name}(std::move(_r));\n"
+        f"\t}}"
+    )
+
+
+def _rect_component_set_optional_field(
+    storage: str, component: str, rect_t: str, vec_t: str, readonly: bool
+) -> str:
+    if readonly:
+        return f"[this]({vec_t}) {{}}"
+    default = _default_cpp_value(rect_t)
+    return (
+        f"[this]({vec_t} v) {{\n"
+        f"\t\tif (!{storage}) {storage} = {default};\n"
+        f"\t\t{storage}->{component} = v;\n"
+        f"\t}}"
+    )
+
+
+def _rect_component_set_optional_getter(
+    get_expr: str, setter_name: str, component: str, rect_t: str, vec_t: str, readonly: bool
+) -> str:
+    if readonly:
+        return f"[this]({vec_t}) {{}}"
+    default = _default_cpp_value(rect_t)
+    return (
+        f"[this]({vec_t} v) {{\n"
+        f"\t\tauto _opt = {get_expr};\n"
+        f"\t\tif (!_opt) _opt = {default};\n"
+        f"\t\t_opt->{component} = v;\n"
+        f"\t\tthis->{setter_name}(std::move(_opt));\n"
+        f"\t}}"
+    )
+
+
+def _rect_component_get_optional(storage: str, component: str, rect_t: str, vec_t: str) -> str:
+    default = _default_cpp_value(rect_t)
+    return (
+        f"[this]() {{ const auto& _opt = {storage}; "
+        f"return _opt ? _opt->{component} : {default}.{component}; }}"
+    )
+
+
+def _emit_rect_children(
+    out: list[str],
+    rect_t: str,
+    readonly: bool,
+    path: Path,
+    line: int,
+    col: int,
+    *,
+    get_pos: str,
+    set_pos: str,
+    get_size: str,
+    set_size: str,
+    indent: str = "\t\t",
+) -> None:
+    vec_t = _rect_vec_type(rect_t)
+    leaf_meta = "Engine::PropertyMeta{}"
+    calls = [
+        (vec_t, "position", "Position", get_pos, set_pos),
+        (vec_t, "size", "Size", get_size, set_size),
+    ]
+    for vt, nid, label, g, s in calls:
+        if vt == "sf::Vector2f":
+            out.append(f'{indent}b.addVec2f("{nid}", "{label}", {g}, {s}, {leaf_meta});')
+        elif vt == "sf::Vector2i":
+            out.append(f'{indent}b.addVec2i("{nid}", "{label}", {g}, {s}, {leaf_meta});')
+        else:
+            raise ParseError(f"unsupported rect component type `{vt}`", path, line, col)
+
+
+def emit_rect_property(
+    out: list[str],
+    p: PropSpec,
+    path: Path,
+    meta_arg: str,
+    readonly: bool,
+    setter_name: str = "",
+) -> None:
+    rect_t = p.cpp_type
+    vec_t = _rect_vec_type(rect_t)
+    fid = member_to_field_id(p.member)
+    label_esc = cpp_escape_string(default_label(p))
+    sn = setter_name.strip() if isinstance(setter_name, str) else ""
+
+    out.append(f'\tb.pushObject("{fid}", "{label_esc}", {meta_arg});')
+    if p.is_getter:
+        if not readonly and not sn:
+            raise ParseError(
+                "writable @getter returning sf::Rect requires a paired @setter (or setter= on @getter)",
+                path,
+                p.line,
+                p.col,
+            )
+        get_expr = f"this->{p.member}()"
+        get_pos = _rect_component_get(get_expr, "position", vec_t)
+        get_size = _rect_component_get(get_expr, "size", vec_t)
+        set_pos = _rect_component_set_getter(get_expr, sn, "position", rect_t, vec_t, readonly)
+        set_size = _rect_component_set_getter(get_expr, sn, "size", rect_t, vec_t, readonly)
+    else:
+        mem = p.member
+        get_pos = _rect_component_get(mem, "position", vec_t)
+        get_size = _rect_component_get(mem, "size", vec_t)
+        set_pos = _rect_component_set_field(mem, "position", vec_t, readonly)
+        set_size = _rect_component_set_field(mem, "size", vec_t, readonly)
+    _emit_rect_children(
+        out,
+        rect_t,
+        readonly,
+        path,
+        p.line,
+        p.col,
+        get_pos=get_pos,
+        set_pos=set_pos,
+        get_size=get_size,
+        set_size=set_size,
+    )
+    out.append("\tb.pop();")
 
 
 def _emit_scalar_leaf(
@@ -1760,7 +1929,7 @@ def _map_key_set(mem: str, idx: str, kt: str, readonly: bool) -> str:
         ins = f"{mem}.insert_or_assign(static_cast<int>(newKey), std::move(_mapped))"
     elif kt == "std::string":
         ins = f"{mem}.insert_or_assign(std::move(newKey), std::move(_mapped))"
-    elif kt in ("sf::Vector2f", "sf::Vector2i", "sf::Vector2u", "sf::Vector3f", "sf::Color"):
+    elif kt in _MOVE_BY_VALUE_TYPES:
         ins = f"{mem}.insert_or_assign(std::move(newKey), std::move(_mapped))"
     else:
         ins = f"{mem}.insert_or_assign(newKey, std::move(_mapped))"
@@ -1801,23 +1970,19 @@ def _map_val_set(mem: str, idx: str, vt: str, readonly: bool) -> str:
         return f"[this, {idx}](float newVal) {{ {adv}_it->second = sf::degrees(newVal); }}"
     if vt == "std::string":
         return f"[this, {idx}](std::string newVal) {{ {adv}_it->second = std::move(newVal); }}"
-    if vt in ("sf::Vector2f", "sf::Vector2i", "sf::Vector2u", "sf::Vector3f", "sf::Color"):
+    if vt in _MOVE_BY_VALUE_TYPES:
         return f"[this, {idx}]({vt} newVal) {{ {adv}_it->second = std::move(newVal); }}"
     return f"[this, {idx}]({vt} newVal) {{ {adv}_it->second = newVal; }}"
 
 
 def _cpp_map_emplace(mem: str, kt: str, key_var: str, dv: str) -> str:
-    if kt == "std::string":
-        return f"{mem}.emplace(std::move({key_var}), {dv})"
-    if kt in ("sf::Vector2f", "sf::Vector2i", "sf::Vector2u", "sf::Vector3f", "sf::Color"):
+    if kt in _MOVE_BY_VALUE_TYPES:
         return f"{mem}.emplace(std::move({key_var}), {dv})"
     return f"{mem}.emplace({key_var}, {dv})"
 
 
 def _cpp_set_insert(mem: str, et: str, val_var: str) -> str:
-    if et == "std::string":
-        return f"{mem}.insert(std::move({val_var}))"
-    if et in ("sf::Vector2f", "sf::Vector2i", "sf::Vector2u", "sf::Vector3f", "sf::Color"):
+    if et in _MOVE_BY_VALUE_TYPES:
         return f"{mem}.insert(std::move({val_var}))"
     return f"{mem}.insert({val_var})"
 
@@ -1964,6 +2129,36 @@ def _map_add_pair_body(mem: str, kt: str, vt: str, path: Path, line: int, col: i
             f"{tab}\t}}\n"
             f"{tab}\tif ({mem}.find(sf::degrees(_d)) == {mem}.end()) {{\n"
             f"{tab}\t\t{_cpp_map_emplace(mem, kt, 'sf::degrees(_d)', dv)};\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
+    if kt == "sf::IntRect":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tbool _placed = false;\n"
+            f"{tab}\tfor (int _ox = 0; _ox < 1000 && !_placed; ++_ox) {{\n"
+            f"{tab}\t\tfor (int _oy = 0; _oy < 1000 && !_placed; ++_oy) {{\n"
+            f"{tab}\t\t\tsf::IntRect _nk{{{{_ox, _oy}}, {{1, 1}}}};\n"
+            f"{tab}\t\t\tif ({mem}.find(_nk) == {mem}.end()) {{\n"
+            f"{tab}\t\t\t\t{_cpp_map_emplace(mem, kt, '_nk', dv)};\n"
+            f"{tab}\t\t\t\t_placed = true;\n"
+            f"{tab}\t\t\t}}\n"
+            f"{tab}\t\t}}\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
+    if kt == "sf::FloatRect":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tbool _placed = false;\n"
+            f"{tab}\tfor (int _ox = 0; _ox < 1000 && !_placed; ++_ox) {{\n"
+            f"{tab}\t\tfor (int _oy = 0; _oy < 1000 && !_placed; ++_oy) {{\n"
+            f"{tab}\t\t\tsf::FloatRect _nk{{{{static_cast<float>(_ox), static_cast<float>(_oy)}}, {{1.f, 1.f}}}};\n"
+            f"{tab}\t\t\tif ({mem}.find(_nk) == {mem}.end()) {{\n"
+            f"{tab}\t\t\t\t{_cpp_map_emplace(mem, kt, '_nk', dv)};\n"
+            f"{tab}\t\t\t\t_placed = true;\n"
+            f"{tab}\t\t\t}}\n"
+            f"{tab}\t\t}}\n"
             f"{tab}\t}}\n"
             f"{tab}}}"
         )
@@ -2114,7 +2309,127 @@ def _set_add_pair_body(mem: str, et: str, path: Path, line: int, col: int) -> st
             f"{tab}\t}}\n"
             f"{tab}}}"
         )
+    if et == "sf::IntRect":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tbool _placed = false;\n"
+            f"{tab}\tfor (int _ox = 0; _ox < 1000 && !_placed; ++_ox) {{\n"
+            f"{tab}\t\tfor (int _oy = 0; _oy < 1000 && !_placed; ++_oy) {{\n"
+            f"{tab}\t\t\tsf::IntRect _nv{{{{_ox, _oy}}, {{1, 1}}}};\n"
+            f"{tab}\t\t\tif ({mem}.find(_nv) == {mem}.end()) {{\n"
+            f"{tab}\t\t\t\t{_cpp_set_insert(mem, et, '_nv')};\n"
+            f"{tab}\t\t\t\t_placed = true;\n"
+            f"{tab}\t\t\t}}\n"
+            f"{tab}\t\t}}\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
+    if et == "sf::FloatRect":
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tbool _placed = false;\n"
+            f"{tab}\tfor (int _ox = 0; _ox < 1000 && !_placed; ++_ox) {{\n"
+            f"{tab}\t\tfor (int _oy = 0; _oy < 1000 && !_placed; ++_oy) {{\n"
+            f"{tab}\t\t\tsf::FloatRect _nv{{{{static_cast<float>(_ox), static_cast<float>(_oy)}}, {{1.f, 1.f}}}};\n"
+            f"{tab}\t\t\tif ({mem}.find(_nv) == {mem}.end()) {{\n"
+            f"{tab}\t\t\t\t{_cpp_set_insert(mem, et, '_nv')};\n"
+            f"{tab}\t\t\t\t_placed = true;\n"
+            f"{tab}\t\t\t}}\n"
+            f"{tab}\t\t}}\n"
+            f"{tab}\t}}\n"
+            f"{tab}}}"
+        )
     raise ParseError(f"set addPair: unsupported element type `{et}`", path, line, col)
+
+
+def _map_rect_component_get(mem: str, idx: str, side: str, component: str) -> str:
+    adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
+    field = "first" if side == "key" else "second"
+    return f"[this, {idx}]() {{ {adv}return _it->{field}.{component}; }}"
+
+
+def _map_rect_component_set_key(mem: str, idx: str, component: str, vec_t: str, readonly: bool) -> str:
+    if readonly:
+        return f"[this, {idx}]({vec_t}) {{}}"
+    adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
+    return (
+        f"[this, {idx}]({vec_t} v) {{\n"
+        f"\t\t{adv}\n"
+        f"\t\tauto _mapped = std::move(_it->second);\n"
+        f"\t\tauto _nk = _it->first;\n"
+        f"\t\t{mem}.erase(_it);\n"
+        f"\t\t_nk.{component} = v;\n"
+        f"\t\t{mem}.emplace(std::move(_nk), std::move(_mapped));\n"
+        f"\t}}"
+    )
+
+
+def _map_rect_component_set_val(mem: str, idx: str, component: str, vec_t: str, readonly: bool) -> str:
+    if readonly:
+        return f"[this, {idx}]({vec_t}) {{}}"
+    adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
+    return f"[this, {idx}]({vec_t} v) {{ {adv}_it->second.{component} = v; }}"
+
+
+def _set_rect_component_get(mem: str, idx: str, component: str) -> str:
+    adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
+    return f"[this, {idx}]() {{ {adv}return _it->{component}; }}"
+
+
+def _set_rect_component_set(mem: str, idx: str, component: str, vec_t: str, readonly: bool) -> str:
+    if readonly:
+        return f"[this, {idx}]({vec_t}) {{}}"
+    adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
+    return (
+        f"[this, {idx}]({vec_t} v) {{\n"
+        f"\t\t{adv}\n"
+        f"\t\tauto _nv = *_it;\n"
+        f"\t\t{mem}.erase(_it);\n"
+        f"\t\t_nv.{component} = v;\n"
+        f"\t\t{mem}.insert(std::move(_nv));\n"
+        f"\t}}"
+    )
+
+
+def _emit_map_rect_side(
+    out: list[str],
+    mem: str,
+    idx: str,
+    rect_t: str,
+    side: str,
+    label: str,
+    readonly: bool,
+    path: Path,
+    line: int,
+    col: int,
+) -> None:
+    vec_t = _rect_vec_type(rect_t)
+    leaf_meta = "Engine::PropertyMeta{}"
+    out.append(f'\t\tb.pushObject("{side}", "{label}", {leaf_meta});')
+    if side == "key":
+        get_pos = _map_rect_component_get(mem, idx, "key", "position")
+        get_size = _map_rect_component_get(mem, idx, "key", "size")
+        set_pos = _map_rect_component_set_key(mem, idx, "position", vec_t, readonly)
+        set_size = _map_rect_component_set_key(mem, idx, "size", vec_t, readonly)
+    else:
+        get_pos = _map_rect_component_get(mem, idx, "value", "position")
+        get_size = _map_rect_component_get(mem, idx, "value", "size")
+        set_pos = _map_rect_component_set_val(mem, idx, "position", vec_t, readonly)
+        set_size = _map_rect_component_set_val(mem, idx, "size", vec_t, readonly)
+    _emit_rect_children(
+        out,
+        rect_t,
+        readonly,
+        path,
+        line,
+        col,
+        get_pos=get_pos,
+        set_pos=set_pos,
+        get_size=get_size,
+        set_size=set_size,
+        indent="\t\t\t",
+    )
+    out.append("\t\tb.pop();")
 
 
 def emit_assoc_map_property(
@@ -2153,10 +2468,16 @@ def emit_assoc_map_property(
     out.append(
         f'\t\tb.pushObject(std::to_string({idx}), "[" + std::to_string({idx}) + "]", Engine::PropertyMeta{{}});'
     )
-    gk, sk = _map_key_get(mem, idx, kt), _map_key_set(mem, idx, kt, readonly)
-    gv, sv = _map_val_get(mem, idx, vt), _map_val_set(mem, idx, vt, readonly)
-    _emit_scalar_leaf(out, kt, "key", "Key", gk, sk, leaf_meta, path, p.line, p.col)
-    _emit_scalar_leaf(out, vt, "value", "Value", gv, sv, leaf_meta, path, p.line, p.col)
+    if _is_rect_type(kt):
+        _emit_map_rect_side(out, mem, idx, kt, "key", "Key", readonly, path, p.line, p.col)
+    else:
+        gk, sk = _map_key_get(mem, idx, kt), _map_key_set(mem, idx, kt, readonly)
+        _emit_scalar_leaf(out, kt, "key", "Key", gk, sk, leaf_meta, path, p.line, p.col)
+    if _is_rect_type(vt):
+        _emit_map_rect_side(out, mem, idx, vt, "value", "Value", readonly, path, p.line, p.col)
+    else:
+        gv, sv = _map_val_get(mem, idx, vt), _map_val_set(mem, idx, vt, readonly)
+        _emit_scalar_leaf(out, vt, "value", "Value", gv, sv, leaf_meta, path, p.line, p.col)
     out.append("\t\tb.pop();")
     out.append("\t}")
     out.append("\tb.endAssociative();")
@@ -2195,32 +2516,51 @@ def emit_assoc_set_property(
     out.append(
         f'\t\tb.pushObject(std::to_string({idx}), "[" + std::to_string({idx}) + "]", Engine::PropertyMeta{{}});'
     )
-    if et == "int":
-        g = f"[this, {idx}]() {{ auto _it = {mem}.begin(); std::advance(_it, {idx}); return static_cast<std::int32_t>(*_it); }}"
-    elif et == "sf::Angle":
-        g = f"[this, {idx}]() {{ auto _it = {mem}.begin(); std::advance(_it, {idx}); return _it->asDegrees(); }}"
+    if _is_rect_type(et):
+        vec_t = _rect_vec_type(et)
+        get_pos = _set_rect_component_get(mem, idx, "position")
+        get_size = _set_rect_component_get(mem, idx, "size")
+        set_pos = _set_rect_component_set(mem, idx, "position", vec_t, readonly)
+        set_size = _set_rect_component_set(mem, idx, "size", vec_t, readonly)
+        _emit_rect_children(
+            out,
+            et,
+            readonly,
+            path,
+            p.line,
+            p.col,
+            get_pos=get_pos,
+            set_pos=set_pos,
+            get_size=get_size,
+            set_size=set_size,
+        )
     else:
-        g = f"[this, {idx}]() {{ auto _it = {mem}.begin(); std::advance(_it, {idx}); return *_it; }}"
-    if readonly:
-        if et in ("int", "std::int32_t"):
-            s = f"[this, {idx}](std::int32_t) {{}}"
-        elif et == "sf::Angle":
-            s = f"[this, {idx}](float) {{}}"
-        else:
-            s = f"[this, {idx}]({et}) {{}}"
-    else:
-        adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); {mem}.erase(_it); "
         if et == "int":
-            s = f"[this, {idx}](std::int32_t v) {{ {adv}{mem}.insert(static_cast<int>(v)); }}"
+            g = f"[this, {idx}]() {{ auto _it = {mem}.begin(); std::advance(_it, {idx}); return static_cast<std::int32_t>(*_it); }}"
         elif et == "sf::Angle":
-            s = f"[this, {idx}](float v) {{ {adv}{mem}.insert(sf::degrees(v)); }}"
-        elif et == "std::string":
-            s = f"[this, {idx}](std::string v) {{ {adv}{mem}.insert(std::move(v)); }}"
-        elif et in ("sf::Vector2f", "sf::Vector2i", "sf::Vector2u", "sf::Vector3f", "sf::Color"):
-            s = f"[this, {idx}]({et} v) {{ {adv}{mem}.insert(std::move(v)); }}"
+            g = f"[this, {idx}]() {{ auto _it = {mem}.begin(); std::advance(_it, {idx}); return _it->asDegrees(); }}"
         else:
-            s = f"[this, {idx}]({et} v) {{ {adv}{mem}.insert(v); }}"
-    _emit_scalar_leaf(out, et, "v", "", g, s, leaf_meta, path, p.line, p.col)
+            g = f"[this, {idx}]() {{ auto _it = {mem}.begin(); std::advance(_it, {idx}); return *_it; }}"
+        if readonly:
+            if et in ("int", "std::int32_t"):
+                s = f"[this, {idx}](std::int32_t) {{}}"
+            elif et == "sf::Angle":
+                s = f"[this, {idx}](float) {{}}"
+            else:
+                s = f"[this, {idx}]({et}) {{}}"
+        else:
+            adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); {mem}.erase(_it); "
+            if et == "int":
+                s = f"[this, {idx}](std::int32_t v) {{ {adv}{mem}.insert(static_cast<int>(v)); }}"
+            elif et == "sf::Angle":
+                s = f"[this, {idx}](float v) {{ {adv}{mem}.insert(sf::degrees(v)); }}"
+            elif et == "std::string":
+                s = f"[this, {idx}](std::string v) {{ {adv}{mem}.insert(std::move(v)); }}"
+            elif et in _MOVE_BY_VALUE_TYPES:
+                s = f"[this, {idx}]({et} v) {{ {adv}{mem}.insert(std::move(v)); }}"
+            else:
+                s = f"[this, {idx}]({et} v) {{ {adv}{mem}.insert(v); }}"
+        _emit_scalar_leaf(out, et, "v", "", g, s, leaf_meta, path, p.line, p.col)
     out.append("\t\tb.pop();")
     out.append("\t}")
     out.append("\tb.endAssociative();")
@@ -2260,7 +2600,7 @@ def _pair_member_set(mem: str, which: str, t: str, readonly: bool) -> str:
         return f"[this](float v) {{ {acc} = sf::degrees(v); }}"
     if t == "std::string":
         return f"[this](std::string v) {{ {acc} = std::move(v); }}"
-    if t in ("sf::Vector2f", "sf::Vector2i", "sf::Vector2u", "sf::Vector3f", "sf::Color"):
+    if t in _MOVE_BY_VALUE_TYPES:
         return f"[this]({t} v) {{ {acc} = std::move(v); }}"
     return f"[this]({t} v) {{ {acc} = v; }}"
 
@@ -2420,10 +2760,66 @@ def emit_std_optional_property(
     g_has = _optional_has_value_get(storage)
     s_has = _optional_has_value_set(p, storage, inner_t, readonly, setter_name)
     out.append(f'\t\tb.addBool("has_value", "Set", {g_has}, {s_has}, {leaf_meta});')
-    g_val = _optional_value_get(storage, inner_t)
-    s_val = _optional_value_set(p, storage, inner_t, readonly, setter_name)
-    _emit_scalar_leaf(out, inner_t, "value", "Value", g_val, s_val, leaf_meta, path, p.line, p.col)
+    if _is_rect_type(inner_t):
+        if p.is_getter:
+            get_pos = _rect_component_get_optional(storage, "position", inner_t, _rect_vec_type(inner_t))
+            get_size = _rect_component_get_optional(storage, "size", inner_t, _rect_vec_type(inner_t))
+            set_pos = _rect_component_set_optional_getter(
+                storage, setter_name, "position", inner_t, _rect_vec_type(inner_t), readonly
+            )
+            set_size = _rect_component_set_optional_getter(
+                storage, setter_name, "size", inner_t, _rect_vec_type(inner_t), readonly
+            )
+        else:
+            get_pos = _rect_component_get_optional(storage, "position", inner_t, _rect_vec_type(inner_t))
+            get_size = _rect_component_get_optional(storage, "size", inner_t, _rect_vec_type(inner_t))
+            set_pos = _rect_component_set_optional_field(
+                storage, "position", inner_t, _rect_vec_type(inner_t), readonly
+            )
+            set_size = _rect_component_set_optional_field(
+                storage, "size", inner_t, _rect_vec_type(inner_t), readonly
+            )
+        _emit_rect_children(
+            out,
+            inner_t,
+            readonly,
+            path,
+            p.line,
+            p.col,
+            get_pos=get_pos,
+            set_pos=set_pos,
+            get_size=get_size,
+            set_size=set_size,
+        )
+    else:
+        g_val = _optional_value_get(storage, inner_t)
+        s_val = _optional_value_set(p, storage, inner_t, readonly, setter_name)
+        _emit_scalar_leaf(out, inner_t, "value", "Value", g_val, s_val, leaf_meta, path, p.line, p.col)
     out.append("\tb.pop();")
+
+
+def _vector_rect_component_set(
+    acc: str,
+    idx: str,
+    component: str,
+    vec_t: str,
+    readonly: bool,
+    *,
+    is_getter: bool,
+    vec_access: str,
+    setter_name: str,
+) -> str:
+    if readonly:
+        return f"[this, {idx}]({vec_t}) {{}}"
+    if is_getter:
+        return (
+            f"[this, {idx}]({vec_t} v) {{\n"
+            f"\t\tauto _pv = {vec_access};\n"
+            f"\t\t_pv[{idx}].{component} = v;\n"
+            f"\t\tthis->{setter_name}(std::move(_pv));\n"
+            f"\t}}"
+        )
+    return f"[this, {idx}]({vec_t} v) {{ {acc}.{component} = v; }}"
 
 
 def emit_std_vector_property(
@@ -2493,146 +2889,182 @@ def emit_std_vector_property(
         acc = f"{mem}[{idx}]"
 
     t = p.cpp_type
-    if t == "int":
-        g = f"[this, {idx}]() {{ return static_cast<std::int32_t>({acc}); }}"
-    elif t == "sf::Angle":
-        g = f"[this, {idx}]() {{ return {acc}.asDegrees(); }}"
+    if _is_rect_type(t):
+        vec_t = _rect_vec_type(t)
+        get_pos = f"[this, {idx}]() {{ return {acc}.position; }}"
+        get_size = f"[this, {idx}]() {{ return {acc}.size; }}"
+        set_pos = _vector_rect_component_set(
+            acc,
+            idx,
+            "position",
+            vec_t,
+            readonly,
+            is_getter=p.is_getter,
+            vec_access=vec_access,
+            setter_name=setter_name,
+        )
+        set_size = _vector_rect_component_set(
+            acc,
+            idx,
+            "size",
+            vec_t,
+            readonly,
+            is_getter=p.is_getter,
+            vec_access=vec_access,
+            setter_name=setter_name,
+        )
+        _emit_rect_children(
+            out,
+            t,
+            readonly,
+            path,
+            p.line,
+            p.col,
+            get_pos=get_pos,
+            set_pos=set_pos,
+            get_size=get_size,
+            set_size=set_size,
+        )
     else:
-        g = f"[this, {idx}] {{ return {acc}; }}"
-
-    def add_inner(call: str) -> None:
-        out.append(f"\t\t{call}")
-
-    if readonly:
-        ro = {
-            "float": f"[this, {idx}](float) {{}}",
-            "double": f"[this, {idx}](double) {{}}",
-            "bool": f"[this, {idx}](bool) {{}}",
-            "int": f"[this, {idx}](std::int32_t) {{}}",
-            "std::int32_t": f"[this, {idx}](std::int32_t) {{}}",
-            "std::int64_t": f"[this, {idx}](std::int64_t) {{}}",
-            "std::string": f"[this, {idx}](std::string) {{}}",
-            "sf::Vector2f": f"[this, {idx}](sf::Vector2f) {{}}",
-            "sf::Vector2i": f"[this, {idx}](sf::Vector2i) {{}}",
-            "sf::Vector2u": f"[this, {idx}](sf::Vector2u) {{}}",
-            "sf::Vector3f": f"[this, {idx}](sf::Vector3f) {{}}",
-            "sf::Color": f"[this, {idx}](sf::Color) {{}}",
-            "sf::Angle": f"[this, {idx}](float) {{}}",
-        }
-        sl = ro[t]
-        if t == "float":
-            add_inner(f'b.addFloat("v", "", {g}, {sl}, {meta_arg});')
-        elif t == "double":
-            add_inner(f'b.addDouble("v", "", {g}, {sl}, {meta_arg});')
-        elif t == "bool":
-            add_inner(f'b.addBool("v", "", {g}, {sl}, {meta_arg});')
-        elif t in ("int", "std::int32_t"):
-            add_inner(f'b.addInt32("v", "", {g}, {sl}, {meta_arg});')
-        elif t == "std::int64_t":
-            add_inner(f'b.addInt64("v", "", {g}, {sl}, {meta_arg});')
-        elif t == "std::string":
-            add_inner(f'b.addString("v", "", {g}, {sl}, {meta_arg});')
-        elif t == "sf::Vector2f":
-            add_inner(f'b.addVec2f("v", "", {g}, {sl}, {meta_arg});')
-        elif t == "sf::Vector2i":
-            add_inner(f'b.addVec2i("v", "", {g}, {sl}, {meta_arg});')
-        elif t == "sf::Vector2u":
-            add_inner(f'b.addVec2u("v", "", {g}, {sl}, {meta_arg});')
-        elif t == "sf::Vector3f":
-            add_inner(f'b.addVec3f("v", "", {g}, {sl}, {meta_arg});')
-        elif t == "sf::Color":
-            add_inner(f'b.addColor("v", "", {g}, {sl}, {meta_arg});')
+        if t == "int":
+            g = f"[this, {idx}]() {{ return static_cast<std::int32_t>({acc}); }}"
         elif t == "sf::Angle":
-            add_inner(f'b.addFloat("v", "", {g}, {sl}, {meta_arg});')
+            g = f"[this, {idx}]() {{ return {acc}.asDegrees(); }}"
         else:
-            raise ParseError(f"unsupported vector element type `{t}`", path, p.line, p.col)
-    elif p.is_getter:
-        wl_vec = {
-            "float": f"[this, {idx}](float v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
-            "double": f"[this, {idx}](double v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
-            "bool": f"[this, {idx}](bool v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
-            "int": f"[this, {idx}](std::int32_t v) {{ auto _pv = {vec_access}; _pv[{idx}] = static_cast<int>(v); this->{setter_name}(std::move(_pv)); }}",
-            "std::int32_t": f"[this, {idx}](std::int32_t v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
-            "std::int64_t": f"[this, {idx}](std::int64_t v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
-            "std::string": f"[this, {idx}](std::string v) {{ auto _pv = {vec_access}; _pv[{idx}] = std::move(v); this->{setter_name}(std::move(_pv)); }}",
-            "sf::Vector2f": f"[this, {idx}](sf::Vector2f v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
-            "sf::Vector2i": f"[this, {idx}](sf::Vector2i v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
-            "sf::Vector2u": f"[this, {idx}](sf::Vector2u v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
-            "sf::Vector3f": f"[this, {idx}](sf::Vector3f v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
-            "sf::Color": f"[this, {idx}](sf::Color c) {{ auto _pv = {vec_access}; _pv[{idx}] = c; this->{setter_name}(std::move(_pv)); }}",
-            "sf::Angle": f"[this, {idx}](float v) {{ auto _pv = {vec_access}; _pv[{idx}] = sf::degrees(v); this->{setter_name}(std::move(_pv)); }}",
-        }
-        wl = wl_vec[t]
-        if t == "float":
-            add_inner(f'b.addFloat("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "double":
-            add_inner(f'b.addDouble("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "bool":
-            add_inner(f'b.addBool("v", "", {g}, {wl}, {meta_arg});')
-        elif t in ("int", "std::int32_t"):
-            add_inner(f'b.addInt32("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "std::int64_t":
-            add_inner(f'b.addInt64("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "std::string":
-            add_inner(f'b.addString("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "sf::Vector2f":
-            add_inner(f'b.addVec2f("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "sf::Vector2i":
-            add_inner(f'b.addVec2i("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "sf::Vector2u":
-            add_inner(f'b.addVec2u("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "sf::Vector3f":
-            add_inner(f'b.addVec3f("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "sf::Color":
-            add_inner(f'b.addColor("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "sf::Angle":
-            add_inner(f'b.addFloat("v", "", {g}, {wl}, {meta_arg});')
-        else:
-            raise ParseError(f"unsupported vector element type `{t}`", path, p.line, p.col)
-    else:
-        rw = {
-            "float": f"[this, {idx}](float v) {{ {acc} = v; }}",
-            "double": f"[this, {idx}](double v) {{ {acc} = v; }}",
-            "bool": f"[this, {idx}](bool v) {{ {acc} = v; }}",
-            "int": f"[this, {idx}](std::int32_t v) {{ {acc} = static_cast<int>(v); }}",
-            "std::int32_t": f"[this, {idx}](std::int32_t v) {{ {acc} = v; }}",
-            "std::int64_t": f"[this, {idx}](std::int64_t v) {{ {acc} = v; }}",
-            "std::string": f"[this, {idx}](std::string v) {{ {acc} = std::move(v); }}",
-            "sf::Vector2f": f"[this, {idx}](sf::Vector2f v) {{ {acc} = v; }}",
-            "sf::Vector2i": f"[this, {idx}](sf::Vector2i v) {{ {acc} = v; }}",
-            "sf::Vector2u": f"[this, {idx}](sf::Vector2u v) {{ {acc} = v; }}",
-            "sf::Vector3f": f"[this, {idx}](sf::Vector3f v) {{ {acc} = v; }}",
-            "sf::Color": f"[this, {idx}](sf::Color c) {{ {acc} = c; }}",
-            "sf::Angle": f"[this, {idx}](float v) {{ {acc} = sf::degrees(v); }}",
-        }
-        wl = rw[t]
-        if t == "float":
-            add_inner(f'b.addFloat("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "double":
-            add_inner(f'b.addDouble("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "bool":
-            add_inner(f'b.addBool("v", "", {g}, {wl}, {meta_arg});')
-        elif t in ("int", "std::int32_t"):
-            add_inner(f'b.addInt32("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "std::int64_t":
-            add_inner(f'b.addInt64("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "std::string":
-            add_inner(f'b.addString("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "sf::Vector2f":
-            add_inner(f'b.addVec2f("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "sf::Vector2i":
-            add_inner(f'b.addVec2i("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "sf::Vector2u":
-            add_inner(f'b.addVec2u("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "sf::Vector3f":
-            add_inner(f'b.addVec3f("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "sf::Color":
-            add_inner(f'b.addColor("v", "", {g}, {wl}, {meta_arg});')
-        elif t == "sf::Angle":
-            add_inner(f'b.addFloat("v", "", {g}, {wl}, {meta_arg});')
-        else:
-            raise ParseError(f"unsupported vector element type `{t}`", path, p.line, p.col)
+            g = f"[this, {idx}] {{ return {acc}; }}"
 
+        def add_inner(call: str) -> None:
+            out.append(f"\t\t{call}")
+
+        if readonly:
+            ro = {
+                "float": f"[this, {idx}](float) {{}}",
+                "double": f"[this, {idx}](double) {{}}",
+                "bool": f"[this, {idx}](bool) {{}}",
+                "int": f"[this, {idx}](std::int32_t) {{}}",
+                "std::int32_t": f"[this, {idx}](std::int32_t) {{}}",
+                "std::int64_t": f"[this, {idx}](std::int64_t) {{}}",
+                "std::string": f"[this, {idx}](std::string) {{}}",
+                "sf::Vector2f": f"[this, {idx}](sf::Vector2f) {{}}",
+                "sf::Vector2i": f"[this, {idx}](sf::Vector2i) {{}}",
+                "sf::Vector2u": f"[this, {idx}](sf::Vector2u) {{}}",
+                "sf::Vector3f": f"[this, {idx}](sf::Vector3f) {{}}",
+                "sf::Color": f"[this, {idx}](sf::Color) {{}}",
+                "sf::Angle": f"[this, {idx}](float) {{}}",
+            }
+            sl = ro[t]
+            if t == "float":
+                add_inner(f'b.addFloat("v", "", {g}, {sl}, {meta_arg});')
+            elif t == "double":
+                add_inner(f'b.addDouble("v", "", {g}, {sl}, {meta_arg});')
+            elif t == "bool":
+                add_inner(f'b.addBool("v", "", {g}, {sl}, {meta_arg});')
+            elif t in ("int", "std::int32_t"):
+                add_inner(f'b.addInt32("v", "", {g}, {sl}, {meta_arg});')
+            elif t == "std::int64_t":
+                add_inner(f'b.addInt64("v", "", {g}, {sl}, {meta_arg});')
+            elif t == "std::string":
+                add_inner(f'b.addString("v", "", {g}, {sl}, {meta_arg});')
+            elif t == "sf::Vector2f":
+                add_inner(f'b.addVec2f("v", "", {g}, {sl}, {meta_arg});')
+            elif t == "sf::Vector2i":
+                add_inner(f'b.addVec2i("v", "", {g}, {sl}, {meta_arg});')
+            elif t == "sf::Vector2u":
+                add_inner(f'b.addVec2u("v", "", {g}, {sl}, {meta_arg});')
+            elif t == "sf::Vector3f":
+                add_inner(f'b.addVec3f("v", "", {g}, {sl}, {meta_arg});')
+            elif t == "sf::Color":
+                add_inner(f'b.addColor("v", "", {g}, {sl}, {meta_arg});')
+            elif t == "sf::Angle":
+                add_inner(f'b.addFloat("v", "", {g}, {sl}, {meta_arg});')
+            else:
+                raise ParseError(f"unsupported vector element type `{t}`", path, p.line, p.col)
+        elif p.is_getter:
+            wl_vec = {
+                "float": f"[this, {idx}](float v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
+                "double": f"[this, {idx}](double v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
+                "bool": f"[this, {idx}](bool v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
+                "int": f"[this, {idx}](std::int32_t v) {{ auto _pv = {vec_access}; _pv[{idx}] = static_cast<int>(v); this->{setter_name}(std::move(_pv)); }}",
+                "std::int32_t": f"[this, {idx}](std::int32_t v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
+                "std::int64_t": f"[this, {idx}](std::int64_t v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
+                "std::string": f"[this, {idx}](std::string v) {{ auto _pv = {vec_access}; _pv[{idx}] = std::move(v); this->{setter_name}(std::move(_pv)); }}",
+                "sf::Vector2f": f"[this, {idx}](sf::Vector2f v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
+                "sf::Vector2i": f"[this, {idx}](sf::Vector2i v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
+                "sf::Vector2u": f"[this, {idx}](sf::Vector2u v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
+                "sf::Vector3f": f"[this, {idx}](sf::Vector3f v) {{ auto _pv = {vec_access}; _pv[{idx}] = v; this->{setter_name}(std::move(_pv)); }}",
+                "sf::Color": f"[this, {idx}](sf::Color c) {{ auto _pv = {vec_access}; _pv[{idx}] = c; this->{setter_name}(std::move(_pv)); }}",
+                "sf::Angle": f"[this, {idx}](float v) {{ auto _pv = {vec_access}; _pv[{idx}] = sf::degrees(v); this->{setter_name}(std::move(_pv)); }}",
+            }
+            wl = wl_vec[t]
+            if t == "float":
+                add_inner(f'b.addFloat("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "double":
+                add_inner(f'b.addDouble("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "bool":
+                add_inner(f'b.addBool("v", "", {g}, {wl}, {meta_arg});')
+            elif t in ("int", "std::int32_t"):
+                add_inner(f'b.addInt32("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "std::int64_t":
+                add_inner(f'b.addInt64("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "std::string":
+                add_inner(f'b.addString("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "sf::Vector2f":
+                add_inner(f'b.addVec2f("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "sf::Vector2i":
+                add_inner(f'b.addVec2i("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "sf::Vector2u":
+                add_inner(f'b.addVec2u("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "sf::Vector3f":
+                add_inner(f'b.addVec3f("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "sf::Color":
+                add_inner(f'b.addColor("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "sf::Angle":
+                add_inner(f'b.addFloat("v", "", {g}, {wl}, {meta_arg});')
+            else:
+                raise ParseError(f"unsupported vector element type `{t}`", path, p.line, p.col)
+        else:
+            rw = {
+                "float": f"[this, {idx}](float v) {{ {acc} = v; }}",
+                "double": f"[this, {idx}](double v) {{ {acc} = v; }}",
+                "bool": f"[this, {idx}](bool v) {{ {acc} = v; }}",
+                "int": f"[this, {idx}](std::int32_t v) {{ {acc} = static_cast<int>(v); }}",
+                "std::int32_t": f"[this, {idx}](std::int32_t v) {{ {acc} = v; }}",
+                "std::int64_t": f"[this, {idx}](std::int64_t v) {{ {acc} = v; }}",
+                "std::string": f"[this, {idx}](std::string v) {{ {acc} = std::move(v); }}",
+                "sf::Vector2f": f"[this, {idx}](sf::Vector2f v) {{ {acc} = v; }}",
+                "sf::Vector2i": f"[this, {idx}](sf::Vector2i v) {{ {acc} = v; }}",
+                "sf::Vector2u": f"[this, {idx}](sf::Vector2u v) {{ {acc} = v; }}",
+                "sf::Vector3f": f"[this, {idx}](sf::Vector3f v) {{ {acc} = v; }}",
+                "sf::Color": f"[this, {idx}](sf::Color c) {{ {acc} = c; }}",
+                "sf::Angle": f"[this, {idx}](float v) {{ {acc} = sf::degrees(v); }}",
+            }
+            wl = rw[t]
+            if t == "float":
+                add_inner(f'b.addFloat("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "double":
+                add_inner(f'b.addDouble("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "bool":
+                add_inner(f'b.addBool("v", "", {g}, {wl}, {meta_arg});')
+            elif t in ("int", "std::int32_t"):
+                add_inner(f'b.addInt32("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "std::int64_t":
+                add_inner(f'b.addInt64("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "std::string":
+                add_inner(f'b.addString("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "sf::Vector2f":
+                add_inner(f'b.addVec2f("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "sf::Vector2i":
+                add_inner(f'b.addVec2i("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "sf::Vector2u":
+                add_inner(f'b.addVec2u("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "sf::Vector3f":
+                add_inner(f'b.addVec3f("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "sf::Color":
+                add_inner(f'b.addColor("v", "", {g}, {wl}, {meta_arg});')
+            elif t == "sf::Angle":
+                add_inner(f'b.addFloat("v", "", {g}, {wl}, {meta_arg});')
+            else:
+                raise ParseError(f"unsupported vector element type `{t}`", path, p.line, p.col)
     out.append("\t\tb.pop();")
     out.append("\t}")
     out.append("\tb.endSequence();")
@@ -2680,6 +3112,7 @@ def generate_file_content(
     needs_sfml = any(uses_sfml(p) for c in classes for p in c.props)
     if needs_sfml:
         out.append('#include <SFML/Graphics/Color.hpp>')
+        out.append('#include <SFML/Graphics/Rect.hpp>')
         out.append('#include <SFML/System/Vector2.hpp>')
         out.append('#include <SFML/System/Vector3.hpp>')
         out.append("")
@@ -2898,6 +3331,15 @@ def generate_file_content(
 
             if p.cpp_type not in KNOWN_TYPES:
                 raise ParseError(f"unsupported type `{p.cpp_type}`", path, p.line, p.col)
+
+            if _is_rect_type(p.cpp_type):
+                has_meta = readonly or any(
+                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed", "valuesProvider")
+                )
+                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
+                sn = setter_name if isinstance(setter_name, str) else ""
+                emit_rect_property(out, p, path, meta_arg, readonly, sn)
+                continue
 
             if p.is_vector:
                 has_meta = readonly or any(
