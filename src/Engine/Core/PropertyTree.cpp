@@ -136,6 +136,12 @@ namespace Engine {
 		(void)appendChild(makeLeaf(std::move(id), label, PropertyKind::SceneRef, std::move(meta), std::move(acc)));
 	}
 
+	void PropertyBuilder::addAssetRef(std::string id, const std::string& label, std::function<std::string()> get,
+	    std::function<void(std::string)> set, PropertyMeta meta) {
+		PropAccessAssetRef acc{std::move(get), std::move(set)};
+		(void)appendChild(makeLeaf(std::move(id), label, PropertyKind::AssetRef, std::move(meta), std::move(acc)));
+	}
+
 	void PropertyBuilder::beginSequence(
 	    std::string id, const std::string& label, PropAccessSequence sequenceOps, PropertyMeta meta) {
 		PropertyNode n;

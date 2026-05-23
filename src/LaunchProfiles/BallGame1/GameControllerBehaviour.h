@@ -1,10 +1,10 @@
 #pragma once
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Behaviour/EventHandlerBehaviourBase.h"
+#include "Engine/Core/AssetRef.h"
 #include "Engine/Core/MetaClass.h"
 #include "Engine/Core/RefWrapper.h"
-
-#include <functional>
+#include "Engine/Core/SceneObject.h"
 
 namespace BallGame1 {
 	class GameControllerBehaviour : public EventHandlerBehaviourBase
@@ -16,12 +16,7 @@ namespace BallGame1 {
 		void OnUpdate(const sf::Time& dt) override;
 		void OnEvent(const sf::Event& event) override;
 
-		void SetFieldNode(const std::weak_ptr<SceneNode>& fieldNode);
-		void SetGunNode(const std::weak_ptr<SceneNode>& gunNode);
-		void SetScoreNode(const std::weak_ptr<SceneNode>& scoreNode);
-		void SetCreateBallFunc(const std::function<std::shared_ptr<SceneNode>(void)>& func);
-		void SetShootVelocity(float vel);
-
+		/// @method
 		void StartNewGame();
 
 	private:
@@ -31,11 +26,18 @@ namespace BallGame1 {
 		void DetachBallFromGun();
 
 	private:
-		std::function<std::shared_ptr<SceneNode>(void)> _createBall;
-		std::weak_ptr<SceneNode> _fieldNode;
+		/// @property
+		AssetRef<SceneObject> _ballAsset;
+		/// @property
+		RefWrapper<SceneNode> _fieldNode;
+		/// @property
+		RefWrapper<SceneNode> _gunNode;
+		/// @property
+		RefWrapper<SceneNode> _scoreNode;
+		/// @property(dragSpeed=0.05f)
+		float _shootVelocity = 100.f;
+
+	private:
 		std::weak_ptr<SceneNode> _ballNode;
-		std::weak_ptr<SceneNode> _gunNode;
-		std::weak_ptr<SceneNode> _scoreNode;
-		float _shootVelocity = 0.f;
 	};
 } // namespace BallGame1

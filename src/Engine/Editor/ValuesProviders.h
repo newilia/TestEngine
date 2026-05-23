@@ -48,6 +48,8 @@ namespace Editor {
 	namespace ValuesProviders {
 
 		[[nodiscard]] std::vector<std::string> GetTextures();
+		[[nodiscard]] std::vector<std::string> GetSceneXmlPaths();
+		[[nodiscard]] std::vector<std::string> GetSceneObjectXmlPaths();
 
 	} // namespace ValuesProviders
 

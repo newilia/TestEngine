@@ -1,5 +1,6 @@
 #include "MainContext.h"
 
+#include "Engine/Core/AssetManager.h"
 #include "Engine/Core/EventsDispatcher.h"
 #include "Engine/Core/FontManager.h"
 #include "Engine/Core/SceneNodeUtils.h"
@@ -35,6 +36,7 @@ namespace Engine {
 		_physicsProcessor = make_shared<PhysicsProcessor>();
 		_fontManager = make_shared<FontManager>();
 		_textureManager = make_shared<TextureManager>();
+		_assetManager = std::make_shared<AssetManager>();
 		_gameBackgroundContext = make_shared<GameBackgroundContext>();
 	}
 
@@ -56,6 +58,10 @@ namespace Engine {
 
 	shared_ptr<TextureManager> MainContext::GetTextureManager() const {
 		return _textureManager;
+	}
+
+	std::shared_ptr<AssetManager> MainContext::GetAssetManager() const {
+		return _assetManager;
 	}
 
 	shared_ptr<GameBackgroundContext> MainContext::GetGameBackgroundContext() const {

@@ -15,6 +15,7 @@ namespace Engine::Serialization {
 		constexpr const char kIdAttr[] = "id";
 		constexpr const char kKindAttr[] = "kind";
 		constexpr const char kValueAttr[] = "value";
+		constexpr const char kTypeAttr[] = "type";
 		constexpr const char kNameAttr[] = "name";
 		constexpr const char kXAttr[] = "x";
 		constexpr const char kYAttr[] = "y";
@@ -52,6 +53,8 @@ namespace Engine::Serialization {
 				return "Color";
 			case PropertyKind::SceneRef:
 				return "SceneRef";
+			case PropertyKind::AssetRef:
+				return "AssetRef";
 			case PropertyKind::Object:
 				return "Object";
 			case PropertyKind::Sequence:
@@ -249,6 +252,18 @@ namespace Engine::Serialization {
 					return;
 				}
 				xmlProperty.append_attribute(kValueAttr).set_value(access->get());
+				return;
+			}
+			case PropertyKind::AssetRef: {
+				const auto* access = std::get_if<PropAccessAssetRef>(&node.access);
+				if (!access || !access->get) {
+					result.AddError(node.id, "Missing AssetRef getter");
+					return;
+				}
+				xmlProperty.append_attribute(kValueAttr).set_value(access->get().c_str());
+				if (!node.meta.assetTypeId.empty()) {
+					xmlProperty.append_attribute(kTypeAttr).set_value(node.meta.assetTypeId.c_str());
+				}
 				return;
 			}
 			case PropertyKind::Object:
@@ -472,6 +487,16 @@ namespace Engine::Serialization {
 					return;
 				}
 				access->set(static_cast<std::uint32_t>(valueAttr.as_uint()));
+				return;
+			}
+			case PropertyKind::AssetRef: {
+				auto* access = std::get_if<PropAccessAssetRef>(&targetNode.access);
+				const pugi::xml_attribute valueAttr = xmlNode.attribute(kValueAttr);
+				if (!access || !access->set || !valueAttr) {
+					result.AddError(path, "Missing AssetRef setter or value");
+					return;
+				}
+				access->set(valueAttr.as_string());
 				return;
 			}
 			case PropertyKind::Object:

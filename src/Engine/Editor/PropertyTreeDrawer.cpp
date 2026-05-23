@@ -1,12 +1,14 @@
 #include "Engine/Editor/PropertyTreeDrawer.h"
 
 #include "Engine/Behaviour/Behaviour.h"
+#include "Engine/Core/ContentPaths.h"
 #include "Engine/Core/EntityOnNode.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/PropertyNode.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Transform.h"
+#include "Engine/Editor/NativeFileDialog.h"
 #include "Engine/Sorting/SortingStrategy.h"
 #include "Engine/Visual/Visual.h"
 
@@ -21,6 +23,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -1034,6 +1037,94 @@ namespace Engine {
 						MarkLeafEditedIfMixed(n, drawOptions);
 					}
 					PopMixedFlagIfNeeded(n.meta);
+				}
+				ItemTooltipAfter(n.meta);
+			}
+			break;
+		}
+		case PropertyKind::AssetRef: {
+			if (const auto* a = std::get_if<PropAccessAssetRef>(&n.access)) {
+				DrawLabelLeft(n);
+				std::string s = a->get();
+				bool drewCombo = false;
+				if (n.meta.valuesProviderStdString && !n.meta.stringMultiline) {
+					std::vector<std::string> storage = n.meta.valuesProviderStdString();
+					if (!storage.empty()) {
+						drewCombo = true;
+						if (std::find(storage.begin(), storage.end(), s) == storage.end()) {
+							storage.insert(storage.begin(), s);
+						}
+						std::vector<const char*> labels;
+						labels.reserve(storage.size());
+						for (const std::string& row : storage) {
+							if (row.empty()) {
+								labels.push_back("##empty");
+							}
+							else {
+								labels.push_back(row.c_str());
+							}
+						}
+						int idx = 0;
+						for (std::size_t i = 0; i < storage.size(); ++i) {
+							if (storage[i] == s) {
+								idx = static_cast<int>(i);
+								break;
+							}
+						}
+						if (readOnly) {
+							const char* text =
+							    n.meta.hasMixedValues ? MixedMarker(n.meta) : labels[static_cast<std::size_t>(idx)];
+							ImGui::TextUnformatted(text);
+						}
+						else {
+							PushMixedFlagIfNeeded(n.meta);
+							if (DrawFilteredValuesProviderCombo(
+							        _valuesProviderComboFilter, labels[static_cast<std::size_t>(idx)], idx, labels)) {
+								a->set(storage[static_cast<std::size_t>(idx)]);
+								MarkLeafEditedIfMixed(n, drawOptions);
+							}
+							PopMixedFlagIfNeeded(n.meta);
+						}
+					}
+				}
+				if (!readOnly) {
+					ImGui::SameLine();
+					if (ImGui::Button("Browse…")) {
+						EditorDialogs::SceneFileDialogOptions dialogOpts;
+						if (n.meta.assetTypeId == "Engine.Scene") {
+							dialogOpts.initialDirectory = DefaultScenesDirectory();
+						}
+						else {
+							dialogOpts.initialDirectory = DefaultSceneObjectsDirectory();
+						}
+						if (const auto picked = EditorDialogs::PickSceneXmlOpen(dialogOpts)) {
+							std::error_code ec;
+							std::filesystem::path rel = std::filesystem::relative(*picked, ContentRoot(), ec);
+							if (!ec && !rel.empty()) {
+								a->set(rel.generic_string());
+							}
+							else {
+								a->set(picked->generic_string());
+							}
+							MarkLeafEditedIfMixed(n, drawOptions);
+						}
+					}
+				}
+				if (!drewCombo) {
+					std::array<char, 512> buf{};
+					(void)std::snprintf(buf.data(), buf.size(), "%s", s.c_str());
+					const ImGuiInputTextFlags flags = readOnly ? ImGuiInputTextFlags_ReadOnly : 0;
+					bool edited = false;
+					if (!readOnly && n.meta.hasMixedValues) {
+						edited = ImGui::InputTextWithHint("##v", MixedMarker(n.meta), buf.data(), buf.size(), flags);
+					}
+					else {
+						edited = ImGui::InputText("##v", buf.data(), buf.size(), flags);
+					}
+					if (edited && !readOnly) {
+						a->set(std::string(buf.data()));
+						MarkLeafEditedIfMixed(n, drawOptions);
+					}
 				}
 				ItemTooltipAfter(n.meta);
 			}

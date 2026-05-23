@@ -205,6 +205,14 @@ namespace Engine {
 				}
 				return;
 			}
+			case PropertyKind::AssetRef: {
+				const auto* s = std::get_if<PropAccessAssetRef>(&source.access);
+				const auto* t = std::get_if<PropAccessAssetRef>(&target.access);
+				if (s && t && s->get && t->set) {
+					t->set(s->get());
+				}
+				return;
+			}
 			case PropertyKind::Object:
 			case PropertyKind::Sequence:
 			case PropertyKind::Associative:

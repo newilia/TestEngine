@@ -62,9 +62,43 @@ namespace {
 
 namespace Editor::ValuesProviders {
 
+	std::vector<std::string> CollectRepoRelativeXmlPaths(const fs::path& repoRoot, const fs::path& dir) {
+		std::error_code ec;
+		if (!fs::exists(dir, ec) || !fs::is_directory(dir, ec)) {
+			return {};
+		}
+		std::vector<std::string> out;
+		for (fs::recursive_directory_iterator it(dir, fs::directory_options::skip_permission_denied), end; it != end;
+		    ++it) {
+			if (!it->is_regular_file()) {
+				continue;
+			}
+			if (it->path().extension() != ".xml") {
+				continue;
+			}
+			std::string rel = RepoRelativeLower(repoRoot, it->path());
+			if (!rel.empty()) {
+				out.push_back(std::move(rel));
+			}
+		}
+		std::sort(out.begin(), out.end());
+		out.erase(std::unique(out.begin(), out.end()), out.end());
+		return out;
+	}
+
 	std::vector<std::string> GetTextures() {
 		const fs::path root = Engine::ContentRoot();
 		return CollectRepoRelativeImagePaths(root, root / "resources" / "textures");
+	}
+
+	std::vector<std::string> GetSceneXmlPaths() {
+		const fs::path root = Engine::ContentRoot();
+		return CollectRepoRelativeXmlPaths(root, root / "assets" / "scenes");
+	}
+
+	std::vector<std::string> GetSceneObjectXmlPaths() {
+		const fs::path root = Engine::ContentRoot();
+		return CollectRepoRelativeXmlPaths(root, root / "assets" / "sceneObjects");
 	}
 
 } // namespace Editor::ValuesProviders

@@ -47,5 +47,8 @@ namespace Engine {
 		/// For `PropertyKind::SceneRef` (inspector / picker).
 		SceneRefFilterKind sceneRefFilterKind = SceneRefFilterKind::SceneNode;
 		bool (*sceneRefEntityIsAllowed)(const std::shared_ptr<EntityOnNode>&) = nullptr;
+
+		/// For `PropertyKind::AssetRef` (XML `type` attribute and editor browse defaults).
+		std::string assetTypeId;
 	};
 } // namespace Engine
