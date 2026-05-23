@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
-#include <optional>
 
 namespace {
 
@@ -62,11 +61,6 @@ namespace {
 } // namespace
 
 namespace Editor::ValuesProviders {
-
-	std::vector<std::string> GetBackgroundTextures() {
-		const fs::path root = Engine::ContentRoot();
-		return CollectRepoRelativeImagePaths(root, root / "resources" / "textures" / "backgrounds");
-	}
 
 	std::vector<std::string> GetTextures() {
 		const fs::path root = Engine::ContentRoot();

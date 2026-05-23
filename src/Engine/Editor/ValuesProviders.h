@@ -47,7 +47,6 @@ namespace Editor {
 
 	namespace ValuesProviders {
 
-		[[nodiscard]] std::vector<std::string> GetBackgroundTextures();
 		[[nodiscard]] std::vector<std::string> GetTextures();
 
 	} // namespace ValuesProviders

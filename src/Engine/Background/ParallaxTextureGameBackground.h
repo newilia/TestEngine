@@ -27,7 +27,7 @@ public:
 
 public:
 	/// @getter
-	/// @valuesProvider(GetBackgroundTextures)
+	/// @valuesProvider(GetTextures)
 	const std::string& GetTexturePath() const;
 	/// @setter
 	void SetTexturePath(std::string path);
