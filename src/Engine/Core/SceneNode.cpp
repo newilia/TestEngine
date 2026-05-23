@@ -22,12 +22,12 @@ const std::string& SceneNode::GetName() const {
 	return _name;
 }
 
-Engine::SceneObjectId SceneNode::GetSceneObjectId() const {
-	return _sceneObjectId;
+Engine::EntityId SceneNode::GetEntityId() const {
+	return _entityId;
 }
 
-void SceneNode::SetSceneObjectId(Engine::SceneObjectId id) {
-	_sceneObjectId = id;
+void SceneNode::SetEntityId(Engine::EntityId id) {
+	_entityId = id;
 }
 
 bool SceneNode::IsInited() const {
@@ -199,7 +199,7 @@ void SceneNode::SetVisual(shared_ptr<Visual>&& visual) {
 	if (_visual) {
 		_visual->AttachTo(shared_from_this());
 	}
-	NotifyActiveSceneObjectIndexDirty();
+	NotifyActiveEntityIndexDirty();
 }
 
 void SceneNode::SetSortingStrategy(const shared_ptr<SortingStrategy>& sorting) {
@@ -207,7 +207,7 @@ void SceneNode::SetSortingStrategy(const shared_ptr<SortingStrategy>& sorting) {
 	if (_sortingStrategy) {
 		_sortingStrategy->AttachTo(shared_from_this());
 	}
-	NotifyActiveSceneObjectIndexDirty();
+	NotifyActiveEntityIndexDirty();
 }
 
 void SceneNode::AddChild(const std::shared_ptr<SceneNode>& child) {
@@ -227,7 +227,7 @@ void SceneNode::AddChildAt(const std::shared_ptr<SceneNode>& child, std::size_t 
 	if (IsInActiveScene()) {
 		child->NotifyLifecycleInitRecursive();
 	}
-	NotifyActiveSceneObjectIndexDirty();
+	NotifyActiveEntityIndexDirty();
 }
 
 void SceneNode::RemoveChild(SceneNode* child) {
@@ -245,7 +245,7 @@ void SceneNode::RemoveChild(SceneNode* child) {
 	node->SetParent(nullptr);
 	node->MarkWorldTransformSubtreeDirty();
 	_children.erase(it);
-	NotifyActiveSceneObjectIndexDirty();
+	NotifyActiveEntityIndexDirty();
 }
 
 shared_ptr<SceneNode> SceneNode::FindChild(const std::string& id, bool recursively) {
@@ -288,7 +288,7 @@ std::vector<shared_ptr<SceneNode>> SceneNode::FindChildren(const std::string& id
 void SceneNode::AddBehaviour(shared_ptr<Behaviour> behaviour) {
 	behaviour->AttachTo(shared_from_this());
 	_behaviours.push_back(behaviour);
-	NotifyActiveSceneObjectIndexDirty();
+	NotifyActiveEntityIndexDirty();
 	if (_isNodeLifecycleInited) {
 		behaviour->OnInit();
 	}
@@ -303,7 +303,7 @@ void SceneNode::RemoveBehaviour(Behaviour* behaviour) {
 	}
 	DetachBehaviourForRemove(*it);
 	_behaviours.erase(it);
-	NotifyActiveSceneObjectIndexDirty();
+	NotifyActiveEntityIndexDirty();
 }
 
 void SceneNode::SetEnabled(bool isEnabled) {
@@ -361,9 +361,9 @@ bool SceneNode::IsInActiveScene() const {
 	return false;
 }
 
-void SceneNode::NotifyActiveSceneObjectIndexDirty() const {
+void SceneNode::NotifyActiveEntityIndexDirty() const {
 	if (const auto scene = _owningScene.lock()) {
-		scene->MarkSceneObjectIndexDirty();
+		scene->MarkEntityIndexDirty();
 	}
 }
 

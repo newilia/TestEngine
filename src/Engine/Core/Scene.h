@@ -1,8 +1,8 @@
 #pragma once
 
+#include "Engine/Core/EntityId.h"
 #include "Engine/Core/EntityOnNode.h"
 #include "Engine/Core/EventHandlerBase.h"
-#include "Engine/Core/SceneObjectId.h"
 #include "SceneNode.h"
 #include "Updatable.h"
 
@@ -39,18 +39,18 @@ public:
 	[[nodiscard]] std::vector<std::shared_ptr<SceneNode>> FindNodesInRect(
 	    const sf::FloatRect& worldRect, RectSelectionMode mode) const;
 
-	void RebuildObjectIndex();
-	void MarkSceneObjectIndexDirty();
-	void FlushSceneObjectIndexIfDirty();
-	std::shared_ptr<SceneNode> FindNodeByObjectId(Engine::SceneObjectId id) const;
-	std::shared_ptr<EntityOnNode> FindEntityByObjectId(Engine::SceneObjectId id) const;
+	void RebuildEntityIndex();
+	void MarkEntityIndexDirty();
+	void FlushEntityIndexIfDirty();
+	std::shared_ptr<SceneNode> FindNodeByEntityId(Engine::EntityId id) const;
+	std::shared_ptr<EntityOnNode> FindEntityByEntityId(Engine::EntityId id) const;
 
 private:
 	void WireGraphOwningScene();
 
 	std::shared_ptr<SceneNode> _root;
 
-	std::unordered_map<std::uint32_t, std::weak_ptr<SceneNode>> _nodesByObjectId;
-	std::unordered_map<std::uint32_t, std::weak_ptr<EntityOnNode>> _entitiesByObjectId;
-	bool _sceneObjectIndexDirty = false;
+	std::unordered_map<std::uint32_t, std::weak_ptr<SceneNode>> _nodesByEntityId;
+	std::unordered_map<std::uint32_t, std::weak_ptr<EntityOnNode>> _entitiesByEntityId;
+	bool _entityIndexDirty = false;
 };

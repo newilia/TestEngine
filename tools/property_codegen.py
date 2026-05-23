@@ -3094,7 +3094,7 @@ def generate_file_content(
                 set_lambda = (
                     "[](std::uint32_t) {}"
                     if readonly
-                    else f"[this](std::uint32_t v) {{ this->{p.member}.SetId(static_cast<Engine::SceneObjectId>(v)); }}"
+                    else f"[this](std::uint32_t v) {{ this->{p.member}.SetId(static_cast<Engine::EntityId>(v)); }}"
                 )
                 out.append("\t{")
                 out.append("\t\tEngine::PropertyMeta _sm{};")
@@ -3690,7 +3690,7 @@ def main() -> int:
     save_cache(cache_path, {"version": CACHE_VERSION, "files": cache_files})
 
     wrapper_ids = collect_inheritance_property_wrapper_ids(root)
-    scene_path = root / "assets" / "prefabs" / "CurrentScene.xml"
+    scene_path = root / "assets" / "sceneObjects" / "CurrentScene.xml"
     migrate_passes = migrate_scene_property_wrappers(scene_path, wrapper_ids)
     if migrate_passes:
         print(

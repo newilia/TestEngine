@@ -125,7 +125,7 @@ Scanner picks classes from headers under **`src/`** (excluding **`Codegen/`**) t
 ### `RefWrapper<T>` (scene object reference by id)
 
 - One line: **`RefWrapper<SceneNode> _nodeRef;`** or **`RefWrapper<MyBehaviour> _behaviourRef;`** after `/// @property`. **`T`** must be **`SceneNode`** (possibly qualified) or a concrete type derived from **`EntityOnNode`** (behaviour, visual, transform, sorting strategy, etc.); include **`#include "Engine/Core/RefWrapper.h"`** and the full definition of **`T`** in the same header.
-- Stores **`Engine::SceneObjectId`**; **`Resolve(const Scene&)`** returns **`std::shared_ptr<T>`** and caches a **`weak_ptr`**. Not `@getter` / `@setter` in v1.
+- Stores **`Engine::EntityId`**; **`Resolve(const Scene&)`** returns **`std::shared_ptr<T>`** and caches a **`weak_ptr`**. Not `@getter` / `@setter` in v1.
 - Inspector: **`PropertyKind::SceneRef`** — **Pick…** opens a hierarchy modal (scene from **`MainContext`** unless **`PropertyTreeDrawOptions::sceneForSceneRefsOverride`** is set).
 
 ## `std::bitset<N>` (fixed bit masks)

@@ -1,7 +1,7 @@
 #pragma once
 
+#include "Engine/Core/EntityId.h"
 #include "Engine/Core/IPropertiesProvider.h"
-#include "Engine/Core/SceneObjectId.h"
 
 #include <memory>
 
@@ -15,10 +15,10 @@ public:
 	void AttachTo(const std::shared_ptr<SceneNode>& node);
 	std::shared_ptr<SceneNode> GetNode() const;
 
-	Engine::SceneObjectId GetSceneObjectId() const;
-	void SetSceneObjectId(Engine::SceneObjectId id);
+	Engine::EntityId GetEntityId() const;
+	void SetEntityId(Engine::EntityId id);
 
 protected:
 	std::weak_ptr<SceneNode> _node;
-	Engine::SceneObjectId _sceneObjectId = Engine::kInvalidSceneObjectId;
+	Engine::EntityId _entityId = Engine::kInvalidEntityId;
 };

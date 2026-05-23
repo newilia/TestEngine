@@ -10,7 +10,7 @@ class Scene;
 
 namespace Engine::Serialization {
 
-	/// Legacy entry points; prefer SceneDocumentSerializer for Scene/Prefab-aware IO.
+	/// Legacy entry points; prefer SceneDocumentSerializer for Scene/SceneObject-aware IO.
 	class SceneSerializer
 	{
 	public:

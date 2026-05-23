@@ -571,8 +571,8 @@ namespace Engine {
 				ImGui::EndDisabled();
 			}
 			ImGui::Separator();
-			if (ImGui::MenuItem("Save as prefab…")) {
-				(void)editor.SaveNodeAsPrefab(nodePtr);
+			if (ImGui::MenuItem("Save as scene object…")) {
+				(void)editor.SaveNodeAsSceneObject(nodePtr);
 			}
 			ImGui::EndPopup();
 		}

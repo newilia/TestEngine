@@ -9,16 +9,16 @@ class SceneNode;
 
 namespace Engine::Serialization {
 
-	struct PrefabInstantiateResult
+	struct SceneObjectInstantiateResult
 	{
 		std::shared_ptr<SceneNode> instance;
 		SerializationResult result;
 	};
 
-	class PrefabSerializer
+	class SceneObjectSerializer
 	{
 	public:
-		static PrefabInstantiateResult InstantiateFromFile(const std::filesystem::path& path);
+		static SceneObjectInstantiateResult InstantiateFromFile(const std::filesystem::path& path);
 	};
 
 } // namespace Engine::Serialization
