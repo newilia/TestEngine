@@ -146,7 +146,7 @@ Scanner picks classes from headers under **`src/`** (excluding **`Codegen/`**) t
 
 ## `std::pair<First, Second>`
 
-- Declare **`std::pair<FirstType, SecondType> memberName;`** on one line after `/// @property` (optional `= …` / `{…}` before `;`). **`FirstType`** and **`SecondType`** must each be a **container element type** (same `_VEC_ELT` list as `std::vector` / map / set: scalars including **`sf::Angle`**). Include **`<utility>`** in the header where the type appears.
+- Declare **`std::pair<FirstType, SecondType> memberName;`** on one line after `/// @property` (optional `= …` / `{…}` before `;`). **`FirstType`** and **`SecondType`** must each be a **container element type** (same `_VEC_ELT` list as `std::vector` / map / set: scalars including **`sf::Angle`**, but **not** **`sf::IntRect`** / **`sf::FloatRect`** — use a rect field or `std::optional<sf::IntRect>` instead). Include **`<utility>`** in the header where the type appears.
 - Generated UI: one collapsible **object** with two scalar editors: **`first` / `First`** and **`second` / `Second`** (`pushObject` + `add*`, not a map/set list).
 - **`@property` meta:** `readonly`, `tooltip`, and numeric hints apply to the **group**; per-component editors use default leaf meta (same as map row scalars).
 - **Not supported in v1:** `@getter` / `@setter` for `std::pair`; nested commas inside template arguments beyond the single `First, Second` pair.

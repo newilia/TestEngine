@@ -3,10 +3,6 @@
 #include "Engine/Core/MetaClass.h"
 #include "Engine/Visual/Visual.h"
 
-#include <memory>
-#include <string>
-#include <vector>
-
 namespace sf {
 	class Sprite;
 }
@@ -44,7 +40,13 @@ public:
 	/// @setter
 	void SetSize(const sf::Vector2f& size);
 
+	/// @getter
+	std::optional<sf::IntRect> GetTextureRect() const;
+	/// @setter
+	void SetTextureRect(std::optional<sf::IntRect> textureRect);
+
 private:
 	std::string _texturePath;
 	std::unique_ptr<sf::Sprite> _sprite;
+	std::optional<sf::IntRect> _textureRect;
 };
