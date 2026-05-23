@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 17
+CACHE_VERSION = 18
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
@@ -41,7 +41,7 @@ FIELD_RE = re.compile(
 REFWRAPPER_FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*RefWrapper\s*<\s*((?:[A-Za-z_]\w*\s*::\s*)*[A-Za-z_]\w*)\s*>\s+(\w+)\s*;\s*$"
 )
-# Element / component types for std::vector, std::pair, std::map, std::set (same set everywhere).
+# Element / component types for std::vector, std::pair, std::optional, std::map, std::set (same set everywhere).
 _VEC_ELT = r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector2i|sf::Vector2u|sf::Vector3f|sf::Color|sf::Angle)"
 VECTOR_FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*std::vector<\s*"
@@ -52,6 +52,11 @@ PAIR_FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*std::pair\s*<\s*"
     + _VEC_ELT
     + r"\s*,\s*"
+    + _VEC_ELT
+    + r"\s*>\s+(\w+)\s*(?:\{[^}]*\}|=\s*[^;]+)?\s*;\s*$"
+)
+OPTIONAL_FIELD_RE = re.compile(
+    r"^\s*(?:inline\s+|static\s+|mutable\s+)*std::optional<\s*"
     + _VEC_ELT
     + r"\s*>\s+(\w+)\s*(?:\{[^}]*\}|=\s*[^;]+)?\s*;\s*$"
 )
@@ -103,6 +108,11 @@ GETTER_VECTOR_CONSTREF2_RE = re.compile(
     r"std::vector<\s*" + _VEC_ELT + r"\s*>\s*const\s*&\s*"
     r"(\w+)\s*\([^)]*\)\s*(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
 )
+GETTER_OPTIONAL_VAL_RE = re.compile(
+    r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?"
+    r"std::optional<\s*" + _VEC_ELT + r"\s*>\s+"
+    r"(\w+)\s*\([^)]*\)\s*(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
+)
 # void Method(Type param); — one parameter, known value type (v1).
 SETTER_METHOD_RE = re.compile(
     r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?void\s+"
@@ -114,6 +124,11 @@ SETTER_METHOD_RE = re.compile(
 SETTER_VECTOR_METHOD_RE = re.compile(
     r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?void\s+"
     r"(\w+)\s*\(\s*(?:const\s+)?std::vector<\s*" + _VEC_ELT + r"\s*>\s*(?:const\s*)?(?:&)?\s*\w+\s*\)\s*"
+    r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
+)
+SETTER_OPTIONAL_METHOD_RE = re.compile(
+    r"^\s*(?:\[\[[^\]]*\]\]\s+)*(?!static\b)(?:virtual\s+)?void\s+"
+    r"(\w+)\s*\(\s*(?:const\s+)?std::optional<\s*" + _VEC_ELT + r"\s*>\s*(?:const\s*)?(?:&)?\s*\w+\s*\)\s*"
     r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
 )
 # void Method(); — no parameters (v1).
@@ -181,6 +196,7 @@ class PropSpec:
     is_map: bool = False
     is_set: bool = False
     is_pair: bool = False
+    is_optional: bool = False
     is_object: bool = False
     is_ref_wrapper: bool = False
     ref_inner_type: str | None = None
@@ -229,6 +245,7 @@ class GetterDecl:
     col: int
     attrs: dict[str, Any]
     is_vector: bool = False
+    is_optional: bool = False
     enum_enumerators: tuple[str, ...] | None = None
 
 
@@ -240,6 +257,7 @@ class SetterDecl:
     col: int
     attrs: dict[str, Any]
     is_vector: bool = False
+    is_optional: bool = False
     enum_enumerators: tuple[str, ...] | None = None
 
 
@@ -332,7 +350,11 @@ def merge_getter_setter_decls(
                 )
         elif graw is not None and normalize_pair_key(graw) in by_key:
             s = by_key.pop(normalize_pair_key(graw))
-            if s.cpp_type != g.cpp_type or s.is_vector != g.is_vector:
+            if (
+                s.cpp_type != g.cpp_type
+                or s.is_vector != g.is_vector
+                or s.is_optional != g.is_optional
+            ):
                 raise ParseError(
                     f'@getter / @setter pair "{graw}": type mismatch ({g.cpp_type} vs {s.cpp_type})',
                     path,
@@ -362,6 +384,7 @@ def merge_getter_setter_decls(
                 is_map=False,
                 is_set=False,
                 is_pair=False,
+                is_optional=g.is_optional,
                 map_value_type=None,
                 assoc_container=None,
                 enum_enumerators=g.enum_enumerators,
@@ -893,6 +916,33 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                             is_bitset=False,
                         )
                     )
+                elif m_opt := OPTIONAL_FIELD_RE.match(line):
+                    et, member = m_opt.group(1), m_opt.group(2)
+                    if et not in KNOWN_TYPES:
+                        raise ParseError(
+                            f"std::optional element must be a supported scalar type (tag at line {pline})",
+                            path,
+                            line_no,
+                            1,
+                        )
+                    inner.setdefault("props", []).append(
+                        PropSpec(
+                            cpp_type=et,
+                            member=member,
+                            line=pline,
+                            col=pcol,
+                            attrs=attrs,
+                            is_getter=False,
+                            is_vector=False,
+                            is_bitset=False,
+                            is_map=False,
+                            is_set=False,
+                            is_pair=False,
+                            is_optional=True,
+                            map_value_type=None,
+                            assoc_container=None,
+                        )
+                    )
                 elif m_pair := PAIR_FIELD_RE.match(line):
                     ft, st, member = m_pair.group(1), m_pair.group(2), m_pair.group(3)
                     if ft not in KNOWN_TYPES or st not in KNOWN_TYPES:
@@ -1117,6 +1167,19 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                             is_vector=True,
                         )
                     )
+                elif m_opt := GETTER_OPTIONAL_VAL_RE.match(line):
+                    cpp_type, method = m_opt.group(1), m_opt.group(2)
+                    inner.setdefault("getter_decls", []).append(
+                        GetterDecl(
+                            cpp_type=cpp_type,
+                            method=method,
+                            line=pline,
+                            col=pcol,
+                            attrs=attrs,
+                            is_vector=False,
+                            is_optional=True,
+                        )
+                    )
                 else:
                     m_getter_enum = GETTER_ENUM_METHOD_RE.match(line)
                     resolved_ge: tuple[str, tuple[str, ...]] | None = None
@@ -1163,6 +1226,19 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                             col=pcol,
                             attrs=attrs,
                             is_vector=True,
+                        )
+                    )
+                elif m_setter_opt := SETTER_OPTIONAL_METHOD_RE.match(line):
+                    smethod, stype = m_setter_opt.group(1), m_setter_opt.group(2)
+                    inner.setdefault("setter_decls", []).append(
+                        SetterDecl(
+                            cpp_type=stype,
+                            method=smethod,
+                            line=pline,
+                            col=pcol,
+                            attrs=attrs,
+                            is_vector=False,
+                            is_optional=True,
                         )
                     )
                 else:
@@ -1467,7 +1543,7 @@ def validate_values_provider_tag(p: PropSpec, path: Path) -> None:
         return
     if not isinstance(vp, str) or not vp.strip():
         raise ParseError("valuesProvider must be a non-empty identifier", path, p.line, p.col)
-    if p.is_vector or p.is_bitset or p.is_map or p.is_set or p.is_pair:
+    if p.is_vector or p.is_bitset or p.is_map or p.is_set or p.is_pair or p.is_optional:
         raise ParseError(
             "@valuesProvider is not supported for container or bitset properties",
             path,
@@ -2213,6 +2289,143 @@ def emit_std_pair_property(
     out.append("\tb.pop();")
 
 
+def _optional_storage_expr(p: PropSpec) -> str:
+    if p.is_getter:
+        return f"this->{p.member}()"
+    return p.member
+
+
+def _optional_has_value_get(storage: str) -> str:
+    return f"[this]() {{ return {storage}.has_value(); }}"
+
+
+def _optional_has_value_set(
+    p: PropSpec,
+    storage: str,
+    inner_t: str,
+    readonly: bool,
+    setter_name: str,
+) -> str:
+    if readonly:
+        return "[this](bool) {}"
+    default = _default_cpp_value(inner_t)
+    if p.is_getter:
+        return (
+            f"[this](bool v) {{\n"
+            f"\t\tauto _opt = {storage};\n"
+            f"\t\tif (v) {{\n"
+            f"\t\t\tif (!_opt) _opt = {default};\n"
+            f"\t\t}} else {{\n"
+            f"\t\t\t_opt = std::nullopt;\n"
+            f"\t\t}}\n"
+            f"\t\tthis->{setter_name}(std::move(_opt));\n"
+            f"\t}}"
+        )
+    return (
+        f"[this](bool v) {{\n"
+        f"\t\tif (v) {{\n"
+        f"\t\t\tif (!{storage}) {storage} = {default};\n"
+        f"\t\t}} else {{\n"
+        f"\t\t\t{storage} = std::nullopt;\n"
+        f"\t\t}}\n"
+        f"\t}}"
+    )
+
+
+def _optional_value_get(storage: str, inner_t: str) -> str:
+    default = _default_cpp_value(inner_t)
+    if inner_t == "sf::Angle":
+        return (
+            f"[this]() {{ const auto& _opt = {storage}; "
+            f"return _opt ? _opt->asDegrees() : {default}.asDegrees(); }}"
+        )
+    if inner_t == "int":
+        return (
+            f"[this]() {{ const auto& _opt = {storage}; "
+            f"return _opt ? static_cast<std::int32_t>(*_opt) : static_cast<std::int32_t>({default}); }}"
+        )
+    return f"[this]() {{ const auto& _opt = {storage}; return _opt ? *_opt : {default}; }}"
+
+
+def _optional_value_set(
+    p: PropSpec,
+    storage: str,
+    inner_t: str,
+    readonly: bool,
+    setter_name: str,
+) -> str:
+    if readonly:
+        ro: dict[str, str] = {
+            "float": "[this](float) {}",
+            "double": "[this](double) {}",
+            "bool": "[this](bool) {}",
+            "int": "[this](std::int32_t) {}",
+            "std::int32_t": "[this](std::int32_t) {}",
+            "std::int64_t": "[this](std::int64_t) {}",
+            "std::string": "[this](std::string) {}",
+            "sf::Vector2f": "[this](sf::Vector2f) {}",
+            "sf::Vector2i": "[this](sf::Vector2i) {}",
+            "sf::Vector2u": "[this](sf::Vector2u) {}",
+            "sf::Vector3f": "[this](sf::Vector3f) {}",
+            "sf::Color": "[this](sf::Color) {}",
+            "sf::Angle": "[this](float) {}",
+        }
+        return ro[inner_t]
+    if p.is_getter:
+        if inner_t == "sf::Angle":
+            return f"[this](float v) {{ this->{setter_name}(sf::degrees(v)); }}"
+        if inner_t == "int":
+            return f"[this](std::int32_t v) {{ this->{setter_name}(static_cast<int>(v)); }}"
+        if inner_t == "std::string":
+            return f"[this](std::string v) {{ this->{setter_name}(std::move(v)); }}"
+        if inner_t in ("sf::Vector2f", "sf::Vector2i", "sf::Vector2u", "sf::Vector3f", "sf::Color"):
+            return f"[this]({inner_t} v) {{ this->{setter_name}(std::move(v)); }}"
+        return f"[this]({inner_t} v) {{ this->{setter_name}(v); }}"
+    if inner_t == "sf::Angle":
+        return f"[this](float v) {{ {storage} = sf::degrees(v); }}"
+    if inner_t == "int":
+        return f"[this](std::int32_t v) {{ {storage} = static_cast<int>(v); }}"
+    if inner_t == "std::string":
+        return f"[this](std::string v) {{ {storage} = std::move(v); }}"
+    if inner_t in ("sf::Vector2f", "sf::Vector2i", "sf::Vector2u", "sf::Vector3f", "sf::Color"):
+        return f"[this]({inner_t} v) {{ {storage} = std::move(v); }}"
+    return f"[this]({inner_t} v) {{ {storage} = v; }}"
+
+
+def emit_std_optional_property(
+    out: list[str],
+    p: PropSpec,
+    path: Path,
+    meta_arg: str,
+    readonly: bool,
+) -> None:
+    inner_t = p.cpp_type
+    setter_raw = p.attrs.get("setter")
+    setter_name = setter_raw.strip() if isinstance(setter_raw, str) else ""
+
+    if p.is_getter and not readonly and not setter_name:
+        raise ParseError(
+            "writable @getter returning std::optional requires a paired @setter (or setter= on @getter)",
+            path,
+            p.line,
+            p.col,
+        )
+
+    storage = _optional_storage_expr(p)
+    fid = member_to_field_id(p.member)
+    label_esc = cpp_escape_string(default_label(p))
+    leaf_meta = "Engine::PropertyMeta{}"
+
+    out.append(f'\tb.pushObject("{fid}", "{label_esc}", {meta_arg});')
+    g_has = _optional_has_value_get(storage)
+    s_has = _optional_has_value_set(p, storage, inner_t, readonly, setter_name)
+    out.append(f'\t\tb.addBool("has_value", "Set", {g_has}, {s_has}, {leaf_meta});')
+    g_val = _optional_value_get(storage, inner_t)
+    s_val = _optional_value_set(p, storage, inner_t, readonly, setter_name)
+    _emit_scalar_leaf(out, inner_t, "value", "Value", g_val, s_val, leaf_meta, path, p.line, p.col)
+    out.append("\tb.pop();")
+
+
 def emit_std_vector_property(
     out: list[str],
     p: PropSpec,
@@ -2485,6 +2698,8 @@ def generate_file_content(
         out.append("#include <bitset>")
     if any(p.is_pair for c in classes for p in c.props):
         out.append("#include <utility>")
+    if any(p.is_optional for c in classes for p in c.props):
+        out.append("#include <optional>")
     if any(p.is_ref_wrapper for c in classes for p in c.props):
         out.append("#include <memory>")
         out.append('#include "Engine/Core/EntityOnNode.h"')
@@ -2614,6 +2829,14 @@ def generate_file_content(
                 )
                 meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
                 emit_std_pair_property(out, p, path, meta_arg, readonly)
+                continue
+
+            if p.is_optional:
+                has_meta = readonly or any(
+                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed", "valuesProvider")
+                )
+                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
+                emit_std_optional_property(out, p, path, meta_arg, readonly)
                 continue
 
             if p.enum_enumerators is not None:
