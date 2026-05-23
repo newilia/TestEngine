@@ -45,6 +45,11 @@ public:
 	/// @setter
 	void SetStaticity(float staticity);
 
+	/// @getter
+	sf::Vector2i GetTextureOffset() const;
+	/// @setter
+	void SetTextureOffset(sf::Vector2i offset);
+
 private:
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 	void RebuildVertices(const sf::RenderTarget& target) const;
@@ -54,6 +59,7 @@ private:
 	float _opacity = 1.f;
 	float _defaultScale = 256.f;
 	float _staticity = 0.f;
+	sf::Vector2i _textureOffset{};
 
 private:
 	std::shared_ptr<sf::Texture> _texture;
