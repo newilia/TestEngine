@@ -128,6 +128,14 @@ Scanner picks classes from headers under **`src/`** (excluding **`Codegen/`**) t
 - Stores **`Engine::EntityId`**; **`Resolve(const Scene&)`** returns **`std::shared_ptr<T>`** and caches a **`weak_ptr`**. Not `@getter` / `@setter` in v1.
 - Inspector: **`PropertyKind::SceneRef`** — **Pick…** opens a hierarchy modal (scene from **`MainContext`** unless **`PropertyTreeDrawOptions::sceneForSceneRefsOverride`** is set).
 
+### `AssetRef<TAsset>` (external asset by content path)
+
+- One line: **`AssetRef<Scene> _level;`** or **`AssetRef<SceneObject> _prefab;`** after `/// @property`. **`TAsset`** must be **`Scene`** or **`SceneObject`** in codegen v1; include **`#include "Engine/Core/AssetRef.h"`** and the asset type header (`Scene.h` / `SceneObject.h`) in the same header.
+- Stores a **content-relative path**; **`Get()`** returns **`std::shared_ptr<TAsset>`** via **`MainContext`** asset manager (does not load files itself). Not `@getter` / `@setter` in v1.
+- Inspector: **`PropertyKind::AssetRef`** — filtered combo of known XML paths (auto **`valuesProvider`** from asset type) plus **Browse…** (scene vs scene-object folder from **`ContentPaths`**).
+- XML: `kind="AssetRef"` `value="assets/…"` `type="Engine.Scene"` or `type="Engine.SceneObject"`.
+- Do not add **`@valuesProvider`** on `AssetRef` fields (codegen sets it from **`T`**). Clone/save/load copies the path like a string (unlike **`RefWrapper`**, which is cleared on clone).
+
 ## `std::bitset<N>` (fixed bit masks)
 
 - Declare **`std::bitset</*size expression*/> memberName;`** on one line after `/// @property` (optional `= …` / braced init before `;` is allowed), or use a **`using Alias = std::bitset<...>;`** in the **same class** and then **`Alias memberName;`**. The header must **`#include <bitset>`** where the type appears.

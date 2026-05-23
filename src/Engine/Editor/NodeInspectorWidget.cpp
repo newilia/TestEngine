@@ -393,6 +393,9 @@ namespace {
 			merged.access = BuildMergedScalarAccess<Engine::PropAccessSceneRef, std::uint32_t>(
 			    nodes, merged.meta, AreAllEqual<std::uint32_t>, BuildIntegerRangeMarker<std::uint32_t>);
 			break;
+		case Engine::PropertyKind::AssetRef:
+			merged.access = BuildMergedScalarAccess<Engine::PropAccessAssetRef, std::string>(nodes, merged.meta);
+			break;
 		}
 		return merged;
 	}

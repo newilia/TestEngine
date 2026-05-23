@@ -70,6 +70,9 @@ namespace Engine {
 		void addSceneRef(std::string id, const std::string& label, std::function<std::uint32_t()> get,
 		    std::function<void(std::uint32_t)> set, PropertyMeta meta = {});
 
+		void addAssetRef(std::string id, const std::string& label, std::function<std::string()> get,
+		    std::function<void(std::string)> set, PropertyMeta meta = {});
+
 		/// Begins a sequence node; push children (e.g. one object per element), then `endSequence()`.
 		void beginSequence(
 		    std::string id, const std::string& label, PropAccessSequence sequenceOps, PropertyMeta meta = {});

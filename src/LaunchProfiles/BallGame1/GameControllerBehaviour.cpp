@@ -4,7 +4,6 @@
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/SceneNodeUtils.h"
-#include "Engine/Core/Transform.h"
 #include "GameControllerBehaviour.generated.hpp"
 
 #include <cmath>
@@ -28,26 +27,6 @@ namespace BallGame1 {
 				Shoot();
 			}
 		}
-	}
-
-	void GameControllerBehaviour::SetFieldNode(const std::weak_ptr<SceneNode>& fieldNode) {
-		_fieldNode = fieldNode;
-	}
-
-	void GameControllerBehaviour::SetGunNode(const std::weak_ptr<SceneNode>& gunNode) {
-		_gunNode = gunNode;
-	}
-
-	void GameControllerBehaviour::SetScoreNode(const std::weak_ptr<SceneNode>& scoreNode) {
-		_scoreNode = scoreNode;
-	}
-
-	void GameControllerBehaviour::SetCreateBallFunc(const std::function<std::shared_ptr<SceneNode>(void)>& func) {
-		_createBall = func;
-	}
-
-	void GameControllerBehaviour::SetShootVelocity(float vel) {
-		_shootVelocity = vel;
 	}
 
 	void GameControllerBehaviour::StartNewGame() {
@@ -75,14 +54,14 @@ namespace BallGame1 {
 	}
 
 	std::shared_ptr<SceneNode> GameControllerBehaviour::CreateBallNode() const {
-		if (Verify(_createBall)) {
-			return _createBall();
+		if (Verify(_ballAsset)) {
+			return _ballAsset.Get()->GetNode();
 		}
 		return nullptr;
 	}
 
 	void GameControllerBehaviour::AttachBallToGun(const std::shared_ptr<SceneNode>& ballNode) {
-		auto gunNode = _gunNode.lock();
+		auto gunNode = _gunNode.Resolve();
 		if (!ballNode || !gunNode) {
 			return;
 		}

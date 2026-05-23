@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 21
+CACHE_VERSION = 22
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
@@ -57,6 +57,9 @@ FIELD_RE = re.compile(
 )
 REFWRAPPER_FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*RefWrapper\s*<\s*((?:[A-Za-z_]\w*\s*::\s*)*[A-Za-z_]\w*)\s*>\s+(\w+)\s*;\s*$"
+)
+ASSETREF_FIELD_RE = re.compile(
+    r"^\s*(?:inline\s+|static\s+|mutable\s+)*AssetRef\s*<\s*((?:[A-Za-z_]\w*\s*::\s*)*[A-Za-z_]\w*)\s*>\s+(\w+)\s*;\s*$"
 )
 VECTOR_FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*std::vector<\s*"
@@ -263,6 +266,8 @@ class PropSpec:
     is_object: bool = False
     is_ref_wrapper: bool = False
     ref_inner_type: str | None = None
+    is_asset_ref: bool = False
+    asset_inner_type: str | None = None
     map_value_type: str | None = None
     assoc_container: str | None = None
     enum_enumerators: tuple[str, ...] | None = None
@@ -1110,8 +1115,25 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                         )
                     )
                 else:
-                    m_ref = REFWRAPPER_FIELD_RE.match(line)
-                    if m_ref:
+                    m_asset = ASSETREF_FIELD_RE.match(line)
+                    if m_asset:
+                        inner_t, member = m_asset.group(1), m_asset.group(2)
+                        inner_t = re.sub(r"\s*::\s*", "::", inner_t.strip())
+                        inner.setdefault("props", []).append(
+                            PropSpec(
+                                cpp_type=f"AssetRef<{inner_t}>",
+                                member=member,
+                                line=pline,
+                                col=pcol,
+                                attrs=attrs,
+                                is_getter=False,
+                                is_vector=False,
+                                is_bitset=False,
+                                is_asset_ref=True,
+                                asset_inner_type=inner_t,
+                            )
+                        )
+                    elif (m_ref := REFWRAPPER_FIELD_RE.match(line)):
                         inner_t, member = m_ref.group(1), m_ref.group(2)
                         inner_t = re.sub(r"\s*::\s*", "::", inner_t.strip())
                         inner.setdefault("props", []).append(
@@ -1593,6 +1615,15 @@ def method_menu_label(m: MethodSpec) -> str:
 
 
 def validate_values_provider_tag(p: PropSpec, path: Path) -> None:
+    if p.is_asset_ref:
+        if p.attrs.get("valuesProvider") is not None:
+            raise ParseError(
+                "valuesProvider / @valuesProvider is set automatically for AssetRef<T>; omit the tag",
+                path,
+                p.line,
+                p.col,
+            )
+        return
     if p.enum_enumerators is not None:
         if p.attrs.get("valuesProvider") is not None:
             raise ParseError(
@@ -2966,6 +2997,22 @@ def emit_std_vector_property(
     out.append("\tb.endSequence();")
 
 
+def asset_ref_config(inner: str, path: Path, line: int, col: int) -> tuple[str, str]:
+    """Return (assetTypeId, valuesProvider function name) for AssetRef<T>."""
+    t = re.sub(r"\s*::\s*", "::", inner.strip())
+    base = t.split("::")[-1]
+    if base == "Scene":
+        return "Engine.Scene", "GetSceneXmlPaths"
+    if base == "SceneObject":
+        return "Engine.SceneObject", "GetSceneObjectXmlPaths"
+    raise ParseError(
+        f"AssetRef<{inner}>: unsupported asset type in codegen v1 (use Scene or SceneObject)",
+        path,
+        line,
+        col,
+    )
+
+
 def ref_inner_is_scene_node(inner: str) -> bool:
     t = inner.strip()
     return t == "SceneNode" or t.endswith("::SceneNode")
@@ -3032,6 +3079,19 @@ def generate_file_content(
     if any(p.is_ref_wrapper for c in classes for p in c.props):
         out.append("#include <memory>")
         out.append('#include "Engine/Core/EntityOnNode.h"')
+    if any(p.is_asset_ref for c in classes for p in c.props):
+        out.append('#include "Engine/Core/AssetRef.h"')
+        out.append('#include "Engine/Editor/ValuesProviders.h"')
+        asset_inners = {
+            (p.asset_inner_type or "").split("::")[-1]
+            for c in classes
+            for p in c.props
+            if p.is_asset_ref
+        }
+        if "Scene" in asset_inners:
+            out.append("class Scene;")
+        if "SceneObject" in asset_inners:
+            out.append('#include "Engine/Core/SceneObject.h"')
     assoc_headers: set[str] = set()
     reflected_types = {c.qualified() for c in classes}
 
@@ -3073,6 +3133,43 @@ def generate_file_content(
             setter_name = a.get("setter")
             has_setter_method = isinstance(setter_name, str) and bool(setter_name)
             readonly = (a.get("readonly") is True) or (p.is_getter and not has_setter_method)
+
+            if p.is_asset_ref:
+                if p.is_getter:
+                    raise ParseError(
+                        "AssetRef fields must be data members (not @getter) in codegen v1",
+                        path,
+                        p.line,
+                        p.col,
+                    )
+                asset_type_id, values_provider = asset_ref_config(
+                    p.asset_inner_type or "", path, p.line, p.col
+                )
+                fid = member_to_field_id(p.member)
+                label_esc = cpp_escape_string(default_label(p))
+                get_lambda = (
+                    f"[this]() -> std::string {{ return this->{p.member}.GetPathString(); }}"
+                )
+                set_lambda = (
+                    "[](std::string) {}"
+                    if readonly
+                    else f"[this](std::string v) {{ this->{p.member}.SetPath(std::move(v)); }}"
+                )
+                out.append("\t{")
+                out.append("\t\tEngine::PropertyMeta _sm{};")
+                if readonly:
+                    out.append("\t\t_sm.readOnly = true;")
+                if isinstance(a.get("tooltip"), str):
+                    out.append(f'\t\t_sm.tooltip = "{cpp_escape_string(a["tooltip"])}";')
+                out.append(f'\t\t_sm.assetTypeId = "{cpp_escape_string(asset_type_id)}";')
+                out.append(
+                    "\t\t_sm.valuesProviderStdString = []() -> std::vector<std::string> { "
+                    f"return Editor::ValuesProviderDetail::ToVector(Editor::ValuesProviders::{values_provider}()); "
+                    "};"
+                )
+                out.append(f'\t\tb.addAssetRef("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, _sm);')
+                out.append("\t}")
+                continue
 
             if p.is_ref_wrapper:
                 if p.is_getter:
