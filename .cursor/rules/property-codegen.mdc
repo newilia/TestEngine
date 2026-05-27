@@ -57,7 +57,7 @@ Scanner picks classes from headers under **`src/`** (excluding **`Codegen/`**) t
   - If the field type is **exactly** the fq name as registered, it matches.
   - If the field type is a **single** identifier without `::`, the scanner also tries `::`-joining the **class’s** namespace prefix (the tuple stored on the `META_CLASS` block) with that identifier.
 - **`valuesProvider` / `@valuesProvider`** are rejected for enum-backed properties (the combo options come from `META_ENUM` only).
-- **Not in v1:** `META_ENUM` types as `std::vector` / map / set / `std::pair` element types (`_VEC_ELT`); use only scalar fields or method-backed get/set with the enum type.
+- **Not in v1:** `META_ENUM` types as container element types; use only scalar fields or method-backed get/set with the enum type.
 
 ## `@property` argument syntax
 
@@ -135,6 +135,7 @@ Scanner picks classes from headers under **`src/`** (excluding **`Codegen/`**) t
 - Inspector: **`PropertyKind::AssetRef`** — filtered combo of known XML paths (auto **`valuesProvider`** from asset type) plus **Browse…** (scene vs scene-object folder from **`ContentPaths`**).
 - XML: `kind="AssetRef"` `value="assets/…"` `type="Engine.Scene"` or `type="Engine.SceneObject"`.
 - Do not add **`@valuesProvider`** on `AssetRef` fields (codegen sets it from **`T`**). Clone/save/load copies the path like a string (unlike **`RefWrapper`**, which is cleared on clone).
+- **In containers:** **`AssetRef<TAsset>`** and **`RefWrapper<T>`** are valid element types for **`std::vector`**, **`std::optional`**, **`std::pair`**, and **`std::map` / `std::set`** (same rules as top-level; inspector uses **`addAssetRef`** / **`addSceneRef`** per element or map key/value/set value). Not supported as **`@getter` / `@setter`** return/parameter types when the container holds these types.
 
 ## `std::bitset<N>` (fixed bit masks)
 
@@ -145,23 +146,22 @@ Scanner picks classes from headers under **`src/`** (excluding **`Codegen/`**) t
 
 ## `std::vector<T>` (sequences)
 
-- Declare **`std::vector<ElementType> memberName;`** on one line after `/// @property`, where **`ElementType`** is any **container element type** (same `_VEC_ELT` as `std::pair` / map / set in `tools/property_codegen.py`). The header must **`#include <vector>`** for that type.
-- The header must **`#include <vector>`** for that type.
-- Generated UI: `PropertyBuilder::beginSequence` / `endSequence` with **`PropAccessSequence`** (`resize` / `getSize`), one **object child per index** and one scalar editor (`addFloat`, …) per element. Inspector behaviour matches existing **`PropertyKind::Sequence`** support (`PropertyTreeDrawer`).
+- Declare **`std::vector<ElementType> memberName;`** on one line after `/// @property`, where **`ElementType`** is any **container element type** (scalars, **`AssetRef<T>`**, **`RefWrapper<T>`** — see `classify_container_element` / `_CONTAINER_ELT_RE` in `tools/property_codegen.py`). The header must **`#include <vector>`** for that type.
+- Generated UI: `PropertyBuilder::beginSequence` / `endSequence` with **`PropAccessSequence`** (`resize` / `getSize`), one **object child per index** and one editor per element (`addFloat`, `addAssetRef`, `addSceneRef`, …). Inspector behaviour matches existing **`PropertyKind::Sequence`** support (`PropertyTreeDrawer`).
 - **`@property` meta:** `minCount` / `maxCount` map to `PropertyMeta::minElementCount` / `maxElementCount` (size drag limits). `readonly=true` removes list length editing and makes elements read-only. Per-element `minValue` / `maxValue` / `dragSpeed` apply to each item’s control.
-- **Method-backed sequences:** pair `/// @getter` returning `std::vector<Elt>` (or `const std::vector<Elt>&` / `std::vector<Elt> const&`) with `/// @setter` taking the same `std::vector<Elt>` (by ref or value). Writable UI calls the getter, edits a copy, then calls the setter (including per-index edits and list length).
-- **Not supported:** `std::vector` of custom structs, nested vectors, or `@getter` returning types other than the supported scalars / `std::vector` of those scalars.
+- **Method-backed sequences:** pair `/// @getter` returning `std::vector<Elt>` (or `const std::vector<Elt>&` / `std::vector<Elt> const&`) with `/// @setter` taking the same `std::vector<Elt>` (by ref or value). Writable UI calls the getter, edits a copy, then calls the setter (including per-index edits and list length). **`Elt`** must be a **scalar** container element (not **`AssetRef`** / **`RefWrapper`**).
+- **Not supported:** `std::vector` of custom structs, nested vectors, or `@getter` / `@setter` for vectors of **`AssetRef`** / **`RefWrapper`**.
 
 ## `std::pair<First, Second>`
 
-- Declare **`std::pair<FirstType, SecondType> memberName;`** on one line after `/// @property` (optional `= …` / `{…}` before `;`). **`FirstType`** and **`SecondType`** must each be a **container element type** (same `_VEC_ELT` list as `std::vector` / map / set: scalars including **`sf::Angle`**, but **not** **`sf::IntRect`** / **`sf::FloatRect`** — use a rect field or `std::optional<sf::IntRect>` instead). Include **`<utility>`** in the header where the type appears.
+- Declare **`std::pair<FirstType, SecondType> memberName;`** on one line after `/// @property` (optional `= …` / `{…}` before `;`). **`FirstType`** and **`SecondType`** must each be a **container element type** (scalars including **`sf::Angle`**, **`AssetRef<T>`**, **`RefWrapper<T>`**, but **not** **`sf::IntRect`** / **`sf::FloatRect`** — use a rect field or `std::optional<sf::IntRect>` instead). Include **`<utility>`** in the header where the type appears.
 - Generated UI: one collapsible **object** with two scalar editors: **`first` / `First`** and **`second` / `Second`** (`pushObject` + `add*`, not a map/set list).
 - **`@property` meta:** `readonly`, `tooltip`, and numeric hints apply to the **group**; per-component editors use default leaf meta (same as map row scalars).
 - **Not supported in v1:** `@getter` / `@setter` for `std::pair`; nested commas inside template arguments beyond the single `First, Second` pair.
 
 ## `std::map` / `std::unordered_map` / `std::set` / `std::unordered_set`
 
-- **`std::map<Key, Value>`** or **`std::unordered_map<Key, Value>`** on one line after `/// @property` (optional `= …` / `{…}` before `;`). **`Key`** and **`Value`** must each be a **container element type** (same `_VEC_ELT` as `std::vector` / `std::pair`). Include **`<map>`** / **`<unordered_map>`** in the header as appropriate.
+- **`std::map<Key, Value>`** or **`std::unordered_map<Key, Value>`** on one line after `/// @property` (optional `= …` / `{…}` before `;`). **`Key`** and **`Value`** must each be a **container element type** (scalars, **`AssetRef<T>`**, **`RefWrapper<T>`**). Include **`<map>`** / **`<unordered_map>`** in the header as appropriate.
 - **`std::set<Element>`** or **`std::unordered_set<Element>`** — same **`Element`** list; include **`<set>`** / **`<unordered_set>`** in the header.
 - Generated UI: `PropertyBuilder::beginAssociative` / `endAssociative` with **`PropAccessAssociative`** (`Add entry` / per-row `Remove`), matching **`PropertyKind::Associative`** in `PropertyTreeDrawer`.
   - **Map:** one child object per entry with **Key** and **Value** scalar editors. **Add entry** picks a **new key** that is not already in the map (e.g. next free integer, `__new_<n>` strings, stepped floats, grid for `sf::Vector*`, …) then **emplace**s the default value. **Key edits** in a row still use `erase` + `insert_or_assign` so duplicate keys merge sensibly.
@@ -187,7 +187,7 @@ Scanner picks classes from headers under **`src/`** (excluding **`Codegen/`**) t
 ## Extending reflection
 
 1. Prefer extending **meta keys** → `Engine::PropertyMeta` / existing `PropertyBuilder::add*` in the generator. For side-effect actions without editor fields, extend **`@method`** / `PropertyBuilder::registerInspectorMethod` before adding bespoke virtuals on `IPropertiesProvider`.
-2. New C++ types: extend **`_VEC_ELT`** (and `FIELD_RE` / getters if the type is also a top-level field), then `KNOWN_TYPES` if needed, `BITSET_FIELD_RE` / alias tracking / `GETTER_METHOD_RE`, …; extend **`_emit_scalar_leaf`** and any container-specific emit (`emit_std_vector_property`, map/set `_map_*` / `_set_*` helpers, `emit_std_pair_property`, …). For **`enum class`**, prefer **`META_ENUM`** in headers plus generator support for `addEnum` rather than ad-hoc `PropertyMeta::valuesProviderInt32` unless you need dynamic option lists.
+2. New C++ types: extend **`_SCALAR_ELT`** / **`KNOWN_TYPES`** (and `FIELD_RE` / getters if the type is also a top-level field), or add to **`_CONTAINER_ELT_RE`** via **`classify_container_element`** and **`_emit_container_element_leaf`** for **`AssetRef`** / **`RefWrapper`**-style references; extend **`_emit_scalar_leaf`** and container emit (`emit_std_vector_property`, map/set helpers, `emit_std_pair_property`, …). For **`enum class`**, prefer **`META_ENUM`** in headers plus generator support for `addEnum` rather than ad-hoc `PropertyMeta::valuesProviderInt32` unless you need dynamic option lists.
 3. If headers outgrow the scanner, plan a **Clang-based** extraction step; keep `_gen.hpp` output format stable.
 
 ## CMake

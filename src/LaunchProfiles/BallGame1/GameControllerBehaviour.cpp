@@ -11,6 +11,7 @@
 namespace BallGame1 {
 	void GameControllerBehaviour::OnInit() {
 		EventHandlerBehaviourBase::OnInit();
+		StartNewGame();
 	}
 
 	void GameControllerBehaviour::OnDeinit() {
@@ -30,7 +31,7 @@ namespace BallGame1 {
 	}
 
 	void GameControllerBehaviour::StartNewGame() {
-		if (auto ballNode = CreateBallNode()) {
+		if (auto ballNode = CreateRandomBallNode()) {
 			AttachBallToGun(ballNode);
 		}
 	}
@@ -48,16 +49,27 @@ namespace BallGame1 {
 		ballBody->SetVelocity(moveDirection * _shootVelocity);
 		DetachBallFromGun();
 
-		if (auto ballNode = CreateBallNode()) {
+		if (auto ballNode = CreateRandomBallNode()) {
 			AttachBallToGun(ballNode);
 		}
 	}
 
-	std::shared_ptr<SceneNode> GameControllerBehaviour::CreateBallNode() const {
-		if (Verify(_ballAssetRef)) {
-			return _ballAssetRef.Get()->GetNode();
+	std::shared_ptr<SceneNode> GameControllerBehaviour::CreateBallNode(size_t index) const {
+		if (index >= _ballAssetRefs.size()) {
+			return nullptr;
+		}
+		if (Verify(_ballAssetRefs[index])) {
+			return _ballAssetRefs[index].Get()->GetNode();
 		}
 		return nullptr;
+	}
+
+	std::shared_ptr<SceneNode> GameControllerBehaviour::CreateRandomBallNode() const {
+		if (_ballAssetRefs.empty()) {
+			return nullptr;
+		}
+		auto index = rand() % _ballAssetRefs.size();
+		return CreateBallNode(index);
 	}
 
 	void GameControllerBehaviour::AttachBallToGun(const std::shared_ptr<SceneNode>& ballNode) {
