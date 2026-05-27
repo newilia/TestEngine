@@ -63,10 +63,6 @@ namespace BallGame1 {
 		rootNode->AddChild(CreateFieldNode());
 
 		auto gameController = rootNode->RequireBehaviour<GameControllerBehaviour>();
-		gameController->SetShootVelocity(1500);
-		gameController->SetCreateBallFunc([this] {
-			return CreateBallNode();
-		});
 
 		auto gunNode = CreateGunNode();
 
@@ -77,9 +73,6 @@ namespace BallGame1 {
 		auto tmpNode = SceneNode::Create();
 		rootNode->AddChild(tmpNode);
 
-		gameController->SetFieldNode(tmpNode);
-		gameController->SetGunNode(gunNode);
-		gameController->SetScoreNode(scoreNode);
 		gameController->StartNewGame();
 
 		return scene;

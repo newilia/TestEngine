@@ -37,7 +37,7 @@ namespace BallGame1 {
 
 	void GameControllerBehaviour::Shoot() {
 		auto ballNode = _ballNode.lock();
-		auto gunNode = _gunNode.lock();
+		auto gunNode = _gunNodeRef.Get();
 
 		if (!ballNode || !gunNode) {
 			return;
@@ -54,14 +54,14 @@ namespace BallGame1 {
 	}
 
 	std::shared_ptr<SceneNode> GameControllerBehaviour::CreateBallNode() const {
-		if (Verify(_ballAsset)) {
-			return _ballAsset.Get()->GetNode();
+		if (Verify(_ballAssetRef)) {
+			return _ballAssetRef.Get()->GetNode();
 		}
 		return nullptr;
 	}
 
 	void GameControllerBehaviour::AttachBallToGun(const std::shared_ptr<SceneNode>& ballNode) {
-		auto gunNode = _gunNode.Resolve();
+		auto gunNode = _gunNodeRef.Get();
 		if (!ballNode || !gunNode) {
 			return;
 		}
@@ -78,7 +78,7 @@ namespace BallGame1 {
 
 	void GameControllerBehaviour::DetachBallFromGun() {
 		auto ballNode = _ballNode.lock();
-		auto rootNode = _fieldNode.lock();
+		auto rootNode = _fieldNodeRef.Get();
 		if (!ballNode || !rootNode) {
 			return;
 		}

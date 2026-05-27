@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Engine/Core/EntityOnNode.h"
+#include "Engine/Core/MainContext.h"
 #include "Engine/Core/Scene.h"
 
-#include <cstdint>
 #include <memory>
 #include <type_traits>
 
@@ -31,9 +31,7 @@ public:
 		return _id != Engine::kInvalidEntityId;
 	}
 
-	[[nodiscard]] std::shared_ptr<T> Resolve(const Scene& scene) const {
-		// Checked here (not at class scope): `RefWrapper<Derived>` members inside `Derived` instantiate
-		// `RefWrapper<Derived>` while `Derived` is still incomplete, so `std::is_base_of` would be unreliable.
+	[[nodiscard]] std::shared_ptr<T> Get(const Scene& scene) const {
 		constexpr bool isNode = std::is_same_v<T, SceneNode>;
 		constexpr bool isEntity = std::is_base_of_v<EntityOnNode, T> && !isNode;
 		static_assert(isNode || isEntity, "RefWrapper<T>: T must be SceneNode or a subclass of EntityOnNode");
@@ -58,6 +56,13 @@ public:
 			_cached = t;
 			return t;
 		}
+	}
+
+	[[nodiscard]] std::shared_ptr<T> Get() const {
+		if (auto scene = Engine::MainContext::GetInstance().GetScene()) {
+			return Get(*scene);
+		}
+		return nullptr;
 	}
 
 private:
