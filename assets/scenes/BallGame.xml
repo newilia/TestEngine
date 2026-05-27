@@ -46,7 +46,12 @@
     <Behaviours>
       <Behaviour type="BallGame1.GameControllerBehaviour" entityId="373387783">
         <Properties>
-          <Property id="game_controller_behaviour" kind="Object" />
+          <Property id="game_controller_behaviour" kind="Object">
+            <Property id="ball_asset_ref" kind="AssetRef" value="assets/sceneobjects/ballgame/ball.xml" type="Engine.SceneObject" />
+            <Property id="field_node_ref" kind="SceneRef" value="1274006239" />
+            <Property id="gun_node_ref" kind="SceneRef" value="3006411972" />
+            <Property id="shoot_velocity" kind="Float" value="100" />
+          </Property>
         </Properties>
       </Behaviour>
     </Behaviours>
@@ -490,7 +495,7 @@
             <Property id="transform" kind="Object">
               <Property id="get_position" kind="Vec2f" x="0" y="-80" />
               <Property id="get_scale" kind="Vec2f" x="1" y="1" />
-              <Property id="get_rotation" kind="Float" value="13.9191904" />
+              <Property id="get_rotation" kind="Float" value="354.697632" />
               <Property id="get_origin" kind="Vec2f" x="0" y="0" />
             </Property>
           </Properties>

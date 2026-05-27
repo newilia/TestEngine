@@ -27,13 +27,11 @@ namespace BallGame1 {
 
 	private:
 		/// @property
-		AssetRef<SceneObject> _ballAsset;
-		/// @property
-		RefWrapper<SceneNode> _fieldNode;
-		/// @property
-		RefWrapper<SceneNode> _gunNode;
-		/// @property
-		RefWrapper<SceneNode> _scoreNode;
+		AssetRef<SceneObject> _ballAssetRef;
+		/// @property(tooltip="Node to place the ball on when it is shoot")
+		RefWrapper<SceneNode> _fieldNodeRef;
+		/// @property(tooltip="Node to place the ball before shooting")
+		RefWrapper<SceneNode> _gunNodeRef;
 		/// @property(dragSpeed=0.05f)
 		float _shootVelocity = 100.f;
 

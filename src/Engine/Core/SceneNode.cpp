@@ -5,9 +5,6 @@
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/SceneNodeUtils.h"
 #include "Engine/Core/Transform.h"
-#include "Engine/Visual/ShapeVisualBase.h"
-#include "Engine/Visual/SpriteVisual.h"
-#include "Engine/Visual/TextVisual.h"
 #include "SceneNode.generated.hpp"
 
 #include <cassert>
@@ -120,6 +117,10 @@ bool SceneNode::IsVisible() const {
 
 void SceneNode::SetParent(const shared_ptr<SceneNode>& parent) {
 	_parent = parent;
+}
+
+shared_ptr<Scene> SceneNode::GetScene() const {
+	return _owningScene.lock();
 }
 
 const sf::Transform& SceneNode::GetWorldTransform() const {

@@ -11,9 +11,7 @@
 
 #include <SFML/Graphics.hpp>
 
-#include <algorithm>
 #include <memory>
-#include <ranges>
 #include <type_traits>
 #include <vector>
 
@@ -31,6 +29,7 @@ class SceneNode final : public enable_shared_from_this<SceneNode>,
                         public Engine::IPropertiesProvider
 {
 	META_CLASS()
+	friend class Scene;
 
 public:
 	SceneNode() = default;
@@ -116,7 +115,7 @@ public:
 	void NotifyLifecycleInitRecursive();
 	void NotifyLifecycleDeinitRecursive();
 
-	friend class Scene;
+	shared_ptr<Scene> GetScene() const;
 
 private:
 	void NotifyEnabledRecursive(bool isEnabled);
