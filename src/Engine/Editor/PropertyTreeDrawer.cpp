@@ -7,10 +7,8 @@
 #include "Engine/Core/PropertyNode.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Core/Transform.h"
+#include "Engine/Editor/Editor.h"
 #include "Engine/Editor/NativeFileDialog.h"
-#include "Engine/Sorting/SortingStrategy.h"
-#include "Engine/Visual/Visual.h"
 
 #include <fmt/format.h>
 #include <imgui.h>
@@ -1136,11 +1134,13 @@ namespace Engine {
 				const std::shared_ptr<Scene> scene = ResolveSceneForRefs(drawOptions);
 				const std::uint32_t cur = a->get();
 				std::string summary = "None";
+				shared_ptr<SceneNode> targetNode;
 				if (cur != 0) {
 					if (scene) {
 						if (n.meta.sceneRefFilterKind == SceneRefFilterKind::SceneNode) {
-							if (const auto target = scene->FindNodeByEntityId(cur)) {
-								const std::string& nm = target->GetName();
+							targetNode = scene->FindNodeByEntityId(cur);
+							if (targetNode) {
+								const std::string& nm = targetNode->GetName();
 								summary = nm.empty() ? fmt::format("Node {}", cur) : nm;
 							}
 							else {
@@ -1149,6 +1149,7 @@ namespace Engine {
 						}
 						else if (const auto ent = scene->FindEntityByEntityId(cur)) {
 							summary = fmt::format("{} [{}]", typeid(*ent).name(), cur);
+							targetNode = ent->GetNode();
 						}
 						else {
 							summary = fmt::format("Missing {}", cur);
@@ -1159,11 +1160,27 @@ namespace Engine {
 					}
 				}
 				if (readOnly) {
-					ImGui::TextUnformatted(n.meta.hasMixedValues ? MixedMarker(n.meta) : summary.c_str());
+					if (targetNode) {
+						if (ImGui::Button(targetNode->GetName().c_str())) {
+							Engine::Editor::GetInstance().SetSelectedNode(targetNode);
+						}
+					}
+					else {
+						ImGui::TextUnformatted(n.meta.hasMixedValues ? MixedMarker(n.meta) : summary.c_str());
+					}
 				}
 				else {
 					PushMixedFlagIfNeeded(n.meta);
-					ImGui::TextUnformatted(summary.c_str());
+
+					if (targetNode) {
+						if (ImGui::Button(targetNode->GetName().c_str())) {
+							Engine::Editor::GetInstance().SetSelectedNode(targetNode);
+						}
+					}
+					else {
+						ImGui::TextUnformatted(summary.c_str());
+					}
+
 					ImGui::SameLine();
 					const std::string popupId = fmt::format("SceneRefPick##{}", n.id);
 					if (ImGui::Button("Pick…")) {
