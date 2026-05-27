@@ -20,14 +20,15 @@ namespace BallGame1 {
 		void StartNewGame();
 
 	private:
-		std::shared_ptr<SceneNode> CreateBallNode() const;
+		std::shared_ptr<SceneNode> CreateBallNode(size_t index) const;
+		std::shared_ptr<SceneNode> CreateRandomBallNode() const;
 		void Shoot();
 		void AttachBallToGun(const std::shared_ptr<SceneNode>& ballNode);
 		void DetachBallFromGun();
 
 	private:
 		/// @property
-		AssetRef<SceneObject> _ballAssetRef;
+		std::vector<AssetRef<SceneObject>> _ballAssetRefs;
 		/// @property(tooltip="Node to place the ball on when it is shoot")
 		RefWrapper<SceneNode> _fieldNodeRef;
 		/// @property(tooltip="Node to place the ball before shooting")

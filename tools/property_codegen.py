@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 22
+CACHE_VERSION = 23
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
@@ -33,11 +33,19 @@ CLASS_HEAD_RE = re.compile(
     r"^\s*(?:template\s*<[^>{};]*>\s*)?(?:class|struct)\s+([A-Za-z_]\w*)\b"
 )
 NS_HEAD_RE = re.compile(r"^\s*namespace\s+([A-Za-z_]\w*)\s*(?:\{)?\s*$")
-# Element / component types for std::vector, std::pair, std::optional, std::map, std::set (same set everywhere).
-_VEC_ELT = (
-    r"(float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector2i|sf::Vector2u|"
-    r"sf::Vector3f|sf::Color|sf::Angle|sf::IntRect|sf::FloatRect)"
+# Scalar element types for top-level fields and inside containers (with RefWrapper / AssetRef).
+_SCALAR_ELT = (
+    r"float|double|bool|int|std::int32_t|std::int64_t|std::string|sf::Vector2f|sf::Vector2i|sf::Vector2u|"
+    r"sf::Vector3f|sf::Color|sf::Angle|sf::IntRect|sf::FloatRect"
 )
+_VEC_ELT = rf"({_SCALAR_ELT})"
+_REF_INNER = r"(?:[A-Za-z_]\w*\s*::\s*)*[A-Za-z_]\w*"
+_REF_INNER_CAP = rf"({_REF_INNER})"
+_REFWRAPPER_TYPE_RE = rf"RefWrapper\s*<\s*{_REF_INNER_CAP}\s*>"
+_ASSETREF_TYPE_RE = rf"AssetRef\s*<\s*{_REF_INNER_CAP}\s*>"
+_REFWRAPPER_TYPE_NOCAP = rf"RefWrapper\s*<\s*{_REF_INNER}\s*>"
+_ASSETREF_TYPE_NOCAP = rf"AssetRef\s*<\s*{_REF_INNER}\s*>"
+_CONTAINER_ELT_RE = rf"(?:{_SCALAR_ELT}|{_REFWRAPPER_TYPE_NOCAP}|{_ASSETREF_TYPE_NOCAP})"
 _RECT_TYPES = frozenset({"sf::IntRect", "sf::FloatRect"})
 _RECT_COMPONENT_VEC = {"sf::IntRect": "sf::Vector2i", "sf::FloatRect": "sf::Vector2f"}
 _MOVE_BY_VALUE_TYPES = frozenset(
@@ -56,39 +64,27 @@ FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*" + _VEC_ELT + r"\s+" + r"(\w+)\s*.*;\s*$"
 )
 REFWRAPPER_FIELD_RE = re.compile(
-    r"^\s*(?:inline\s+|static\s+|mutable\s+)*RefWrapper\s*<\s*((?:[A-Za-z_]\w*\s*::\s*)*[A-Za-z_]\w*)\s*>\s+(\w+)\s*;\s*$"
+    rf"^\s*(?:inline\s+|static\s+|mutable\s+)*{_REFWRAPPER_TYPE_RE}\s+(\w+)\s*;\s*$"
 )
 ASSETREF_FIELD_RE = re.compile(
-    r"^\s*(?:inline\s+|static\s+|mutable\s+)*AssetRef\s*<\s*((?:[A-Za-z_]\w*\s*::\s*)*[A-Za-z_]\w*)\s*>\s+(\w+)\s*;\s*$"
+    rf"^\s*(?:inline\s+|static\s+|mutable\s+)*{_ASSETREF_TYPE_RE}\s+(\w+)\s*;\s*$"
 )
 VECTOR_FIELD_RE = re.compile(
-    r"^\s*(?:inline\s+|static\s+|mutable\s+)*std::vector<\s*"
-    + _VEC_ELT
-    + r"\s*>\s+(\w+)\s*;\s*$"
+    rf"^\s*(?:inline\s+|static\s+|mutable\s+)*std::vector<\s*({_CONTAINER_ELT_RE})\s*>\s+(\w+)\s*;\s*$"
 )
 PAIR_FIELD_RE = re.compile(
-    r"^\s*(?:inline\s+|static\s+|mutable\s+)*std::pair\s*<\s*"
-    + _VEC_ELT
-    + r"\s*,\s*"
-    + _VEC_ELT
-    + r"\s*>\s+(\w+)\s*(?:\{[^}]*\}|=\s*[^;]+)?\s*;\s*$"
+    rf"^\s*(?:inline\s+|static\s+|mutable\s+)*std::pair\s*<\s*({_CONTAINER_ELT_RE})\s*,\s*"
+    rf"({_CONTAINER_ELT_RE})\s*>\s+(\w+)\s*(?:\{{[^}}]*\}}|=\s*[^;]+)?\s*;\s*$"
 )
 OPTIONAL_FIELD_RE = re.compile(
-    r"^\s*(?:inline\s+|static\s+|mutable\s+)*std::optional<\s*"
-    + _VEC_ELT
-    + r"\s*>\s+(\w+)\s*(?:\{[^}]*\}|=\s*[^;]+)?\s*;\s*$"
+    rf"^\s*(?:inline\s+|static\s+|mutable\s+)*std::optional<\s*({_CONTAINER_ELT_RE})\s*>\s+(\w+)\s*(?:\{{[^}}]*\}}|=\s*[^;]+)?\s*;\s*$"
 )
 MAP_FIELD_RE = re.compile(
-    r"^\s*(?:inline\s+|static\s+|mutable\s+)*(std::map|std::unordered_map)\s*<\s*"
-    + _VEC_ELT
-    + r"\s*,\s*"
-    + _VEC_ELT
-    + r"\s*>\s+(\w+)\s*(?:\{[^}]*\}|=\s*[^;]+)?\s*;\s*$"
+    rf"^\s*(?:inline\s+|static\s+|mutable\s+)*(std::map|std::unordered_map)\s*<\s*({_CONTAINER_ELT_RE})\s*,\s*"
+    rf"({_CONTAINER_ELT_RE})\s*>\s+(\w+)\s*(?:\{{[^}}]*\}}|=\s*[^;]+)?\s*;\s*$"
 )
 SET_FIELD_RE = re.compile(
-    r"^\s*(?:inline\s+|static\s+|mutable\s+)*(std::set|std::unordered_set)\s*<\s*"
-    + _VEC_ELT
-    + r"\s*>\s+(\w+)\s*(?:\{[^}]*\}|=\s*[^;]+)?\s*;\s*$"
+    rf"^\s*(?:inline\s+|static\s+|mutable\s+)*(std::set|std::unordered_set)\s*<\s*({_CONTAINER_ELT_RE})\s*>\s+(\w+)\s*(?:\{{[^}}]*\}}|=\s*[^;]+)?\s*;\s*$"
 )
 BITSET_FIELD_RE = re.compile(
     r"^\s*(?:inline\s+|static\s+|mutable\s+)*std::bitset\s*<\s*[^>]+\s*>\s+(\w+)\s*(?:\{[^}]*\}|=\s*[^;]+)?\s*;\s*$"
@@ -203,6 +199,64 @@ KNOWN_TYPES = frozenset(
 )
 
 
+ContainerElementKindName = Literal["scalar", "asset_ref", "ref_wrapper"]
+
+
+@dataclass(frozen=True)
+class ContainerElementKind:
+    kind: ContainerElementKindName
+    cpp_type: str
+    asset_inner_type: str | None = None
+    ref_inner_type: str | None = None
+
+
+def normalize_qualified_type(s: str) -> str:
+    return re.sub(r"\s*::\s*", "::", s.strip())
+
+
+def classify_container_element(type_str: str) -> ContainerElementKind:
+    t = normalize_qualified_type(type_str)
+    m_ref = re.fullmatch(_REFWRAPPER_TYPE_RE, t)
+    if m_ref:
+        inner = normalize_qualified_type(m_ref.group(1))
+        return ContainerElementKind("ref_wrapper", f"RefWrapper<{inner}>", ref_inner_type=inner)
+    m_asset = re.fullmatch(_ASSETREF_TYPE_RE, t)
+    if m_asset:
+        inner = normalize_qualified_type(m_asset.group(1))
+        return ContainerElementKind("asset_ref", f"AssetRef<{inner}>", asset_inner_type=inner)
+    if t in KNOWN_TYPES:
+        return ContainerElementKind("scalar", t)
+    raise ValueError(f"unsupported container element type `{type_str}`")
+
+
+def _element_flags_first(el: ContainerElementKind) -> dict[str, Any]:
+    out: dict[str, Any] = {"cpp_type": el.cpp_type}
+    if el.kind == "asset_ref":
+        out["is_asset_ref"] = True
+        out["asset_inner_type"] = el.asset_inner_type
+    elif el.kind == "ref_wrapper":
+        out["is_ref_wrapper"] = True
+        out["ref_inner_type"] = el.ref_inner_type
+    return out
+
+
+def _element_flags_map_value(el: ContainerElementKind) -> dict[str, Any]:
+    out: dict[str, Any] = {"map_value_type": el.cpp_type}
+    if el.kind == "asset_ref":
+        out["map_value_is_asset_ref"] = True
+        out["map_value_asset_inner_type"] = el.asset_inner_type
+    elif el.kind == "ref_wrapper":
+        out["map_value_is_ref_wrapper"] = True
+        out["map_value_ref_inner_type"] = el.ref_inner_type
+    return out
+
+
+def _prop_is_top_level_ref(p: "PropSpec") -> bool:
+    return (p.is_asset_ref or p.is_ref_wrapper) and not (
+        p.is_vector or p.is_pair or p.is_optional or p.is_map or p.is_set
+    )
+
+
 def _is_rect_type(t: str) -> bool:
     return t in _RECT_TYPES
 
@@ -268,6 +322,10 @@ class PropSpec:
     ref_inner_type: str | None = None
     is_asset_ref: bool = False
     asset_inner_type: str | None = None
+    map_value_is_asset_ref: bool = False
+    map_value_is_ref_wrapper: bool = False
+    map_value_asset_inner_type: str | None = None
+    map_value_ref_inner_type: str | None = None
     map_value_type: str | None = None
     assoc_container: str | None = None
     enum_enumerators: tuple[str, ...] | None = None
@@ -971,10 +1029,18 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
             if kind == "property":
                 m_vec = VECTOR_FIELD_RE.match(line)
                 if m_vec:
-                    cpp_type, member = m_vec.group(1), m_vec.group(2)
+                    try:
+                        el = classify_container_element(m_vec.group(1))
+                    except ValueError as e:
+                        raise ParseError(
+                            f"std::vector element: {e} (tag at line {pline})",
+                            path,
+                            line_no,
+                            1,
+                        ) from e
+                    member = m_vec.group(2)
                     inner.setdefault("props", []).append(
                         PropSpec(
-                            cpp_type=cpp_type,
                             member=member,
                             line=pline,
                             col=pcol,
@@ -982,20 +1048,22 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                             is_getter=False,
                             is_vector=True,
                             is_bitset=False,
+                            **_element_flags_first(el),
                         )
                     )
                 elif m_opt := OPTIONAL_FIELD_RE.match(line):
-                    et, member = m_opt.group(1), m_opt.group(2)
-                    if et not in KNOWN_TYPES:
+                    try:
+                        el = classify_container_element(m_opt.group(1))
+                    except ValueError as e:
                         raise ParseError(
-                            f"std::optional element must be a supported scalar type (tag at line {pline})",
+                            f"std::optional element: {e} (tag at line {pline})",
                             path,
                             line_no,
                             1,
-                        )
+                        ) from e
+                    member = m_opt.group(2)
                     inner.setdefault("props", []).append(
                         PropSpec(
-                            cpp_type=et,
                             member=member,
                             line=pline,
                             col=pcol,
@@ -1009,21 +1077,26 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                             is_optional=True,
                             map_value_type=None,
                             assoc_container=None,
+                            **_element_flags_first(el),
                         )
                     )
                 elif m_pair := PAIR_FIELD_RE.match(line):
-                    ft, st, member = m_pair.group(1), m_pair.group(2), m_pair.group(3)
-                    if ft not in KNOWN_TYPES or st not in KNOWN_TYPES:
+                    try:
+                        el_first = classify_container_element(m_pair.group(1))
+                        el_second = classify_container_element(m_pair.group(2))
+                    except ValueError as e:
                         raise ParseError(
-                            f"std::pair first/second must be supported scalar types (tag at line {pline})",
+                            f"std::pair element: {e} (tag at line {pline})",
                             path,
                             line_no,
                             1,
-                        )
-                    _reject_rect_in_pair_types(ft, st, path, line_no, 1)
+                        ) from e
+                    member = m_pair.group(3)
+                    _reject_rect_in_pair_types(
+                        el_first.cpp_type, el_second.cpp_type, path, line_no, 1
+                    )
                     inner.setdefault("props", []).append(
                         PropSpec(
-                            cpp_type=ft,
                             member=member,
                             line=pline,
                             col=pcol,
@@ -1034,27 +1107,26 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                             is_map=False,
                             is_set=False,
                             is_pair=True,
-                            map_value_type=st,
                             assoc_container=None,
+                            **_element_flags_first(el_first),
+                            **_element_flags_map_value(el_second),
                         )
                     )
                 elif m_map := MAP_FIELD_RE.match(line):
-                    cont, kt, vt, member = (
-                        m_map.group(1),
-                        m_map.group(2),
-                        m_map.group(3),
-                        m_map.group(4),
-                    )
-                    if kt not in KNOWN_TYPES or vt not in KNOWN_TYPES:
+                    cont = m_map.group(1)
+                    try:
+                        el_key = classify_container_element(m_map.group(2))
+                        el_val = classify_container_element(m_map.group(3))
+                    except ValueError as e:
                         raise ParseError(
-                            f"std::map key/value must be supported scalar types (tag at line {pline})",
+                            f"std::map key/value: {e} (tag at line {pline})",
                             path,
                             line_no,
                             1,
-                        )
+                        ) from e
+                    member = m_map.group(4)
                     inner.setdefault("props", []).append(
                         PropSpec(
-                            cpp_type=kt,
                             member=member,
                             line=pline,
                             col=pcol,
@@ -1064,22 +1136,25 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                             is_bitset=False,
                             is_map=True,
                             is_set=False,
-                            map_value_type=vt,
                             assoc_container=cont,
+                            **_element_flags_first(el_key),
+                            **_element_flags_map_value(el_val),
                         )
                     )
                 elif m_set := SET_FIELD_RE.match(line):
-                    cont, et, member = m_set.group(1), m_set.group(2), m_set.group(3)
-                    if et not in KNOWN_TYPES:
+                    cont = m_set.group(1)
+                    try:
+                        el = classify_container_element(m_set.group(2))
+                    except ValueError as e:
                         raise ParseError(
-                            f"std::set element must be a supported scalar type (tag at line {pline})",
+                            f"std::set element: {e} (tag at line {pline})",
                             path,
                             line_no,
                             1,
-                        )
+                        ) from e
+                    member = m_set.group(3)
                     inner.setdefault("props", []).append(
                         PropSpec(
-                            cpp_type=et,
                             member=member,
                             line=pline,
                             col=pcol,
@@ -1091,6 +1166,7 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
                             is_set=True,
                             map_value_type=None,
                             assoc_container=cont,
+                            **_element_flags_first(el),
                         )
                     )
                 elif (m_bs := BITSET_FIELD_RE.match(line)) or (
@@ -1615,7 +1691,7 @@ def method_menu_label(m: MethodSpec) -> str:
 
 
 def validate_values_provider_tag(p: PropSpec, path: Path) -> None:
-    if p.is_asset_ref:
+    if _prop_is_top_level_ref(p) and p.is_asset_ref:
         if p.attrs.get("valuesProvider") is not None:
             raise ParseError(
                 "valuesProvider / @valuesProvider is set automatically for AssetRef<T>; omit the tag",
@@ -1774,6 +1850,39 @@ def _default_cpp_value(t: str) -> str:
         "sf::IntRect": "sf::IntRect{}",
         "sf::FloatRect": "sf::FloatRect{}",
     }[t]
+
+
+def _default_cpp_value_for_element(el: ContainerElementKind) -> str:
+    if el.kind == "asset_ref":
+        return f"AssetRef<{el.asset_inner_type}>{{}}"
+    if el.kind == "ref_wrapper":
+        return f"RefWrapper<{el.ref_inner_type}>{{}}"
+    return _default_cpp_value(el.cpp_type)
+
+
+def _element_from_prop_first(p: PropSpec) -> ContainerElementKind:
+    if p.is_asset_ref:
+        return ContainerElementKind(
+            "asset_ref", p.cpp_type, asset_inner_type=p.asset_inner_type
+        )
+    if p.is_ref_wrapper:
+        return ContainerElementKind(
+            "ref_wrapper", p.cpp_type, ref_inner_type=p.ref_inner_type
+        )
+    return ContainerElementKind("scalar", p.cpp_type)
+
+
+def _element_from_prop_map_value(p: PropSpec) -> ContainerElementKind:
+    mt = p.map_value_type or ""
+    if p.map_value_is_asset_ref:
+        return ContainerElementKind(
+            "asset_ref", mt, asset_inner_type=p.map_value_asset_inner_type
+        )
+    if p.map_value_is_ref_wrapper:
+        return ContainerElementKind(
+            "ref_wrapper", mt, ref_inner_type=p.map_value_ref_inner_type
+        )
+    return ContainerElementKind("scalar", mt)
 
 
 def _int32_param_cpp(t: str) -> str:
@@ -2069,10 +2178,16 @@ def _emit_scalar_leaf(
         raise ParseError(f"unsupported scalar type `{t}`", path, line, col)
 
 
-def _map_key_get(mem: str, idx: str, kt: str) -> str:
+def _map_key_get(mem: str, idx: str, el: ContainerElementKind) -> str:
     adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
+    if el.kind == "asset_ref":
+        return f"[this, {idx}]() {{ {adv}return _it->first.GetPathString(); }}"
+    if el.kind == "ref_wrapper":
+        return (
+            f"[this, {idx}]() {{ {adv}return static_cast<std::uint32_t>(_it->first.GetId()); }}"
+        )
     return _scalar_get_lambda(
-        kt,
+        el.cpp_type,
         capture=f"[this, {idx}]",
         read_expr="_it->first",
         call_syntax=True,
@@ -2080,11 +2195,38 @@ def _map_key_get(mem: str, idx: str, kt: str) -> str:
     )
 
 
-def _map_key_set(mem: str, idx: str, kt: str, readonly: bool) -> str:
+def _map_key_set(mem: str, idx: str, el: ContainerElementKind, readonly: bool) -> str:
     if readonly:
-        return _scalar_set_lambda(kt, mode="readonly", capture=f"[this, {idx}]")
+        if el.kind == "asset_ref":
+            return f"[this, {idx}](std::string) {{}}"
+        if el.kind == "ref_wrapper":
+            return f"[this, {idx}](std::uint32_t) {{}}"
+        return _scalar_set_lambda(el.cpp_type, mode="readonly", capture=f"[this, {idx}]")
     adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
     mv = "auto _mapped = std::move(_it->second); " + f"{mem}.erase(_it); "
+    if el.kind == "asset_ref":
+        inner = el.asset_inner_type
+        return (
+            f"[this, {idx}](std::string v) {{\n"
+            f"\t\t{adv}\n"
+            f"\t\t{mv}\n"
+            f"\t\tAssetRef<{inner}> _nk;\n"
+            f"\t\t_nk.SetPath(std::move(v));\n"
+            f"\t\t{mem}.emplace(std::move(_nk), std::move(_mapped));\n"
+            f"\t}}"
+        )
+    if el.kind == "ref_wrapper":
+        inner = el.ref_inner_type
+        return (
+            f"[this, {idx}](std::uint32_t v) {{\n"
+            f"\t\t{adv}\n"
+            f"\t\t{mv}\n"
+            f"\t\tRefWrapper<{inner}> _nk;\n"
+            f"\t\t_nk.SetId(static_cast<Engine::EntityId>(v));\n"
+            f"\t\t{mem}.emplace(std::move(_nk), std::move(_mapped));\n"
+            f"\t}}"
+        )
+    kt = el.cpp_type
     if kt == "sf::Angle":
         ins = f"{mem}.insert_or_assign(sf::degrees(newKey), std::move(_mapped))"
         return f"[this, {idx}](float newKey) {{ {adv}{mv}{ins}; }}"
@@ -2100,10 +2242,16 @@ def _map_key_set(mem: str, idx: str, kt: str, readonly: bool) -> str:
     return f"[this, {idx}]({pk} newKey) {{ {adv}{mv}{ins}; }}"
 
 
-def _map_val_get(mem: str, idx: str, vt: str) -> str:
+def _map_val_get(mem: str, idx: str, el: ContainerElementKind) -> str:
     adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
+    if el.kind == "asset_ref":
+        return f"[this, {idx}]() {{ {adv}return _it->second.GetPathString(); }}"
+    if el.kind == "ref_wrapper":
+        return (
+            f"[this, {idx}]() {{ {adv}return static_cast<std::uint32_t>(_it->second.GetId()); }}"
+        )
     return _scalar_get_lambda(
-        vt,
+        el.cpp_type,
         capture=f"[this, {idx}]",
         read_expr="_it->second",
         call_syntax=True,
@@ -2111,13 +2259,24 @@ def _map_val_get(mem: str, idx: str, vt: str) -> str:
     )
 
 
-def _map_val_set(mem: str, idx: str, vt: str, readonly: bool) -> str:
+def _map_val_set(mem: str, idx: str, el: ContainerElementKind, readonly: bool) -> str:
     capture = f"[this, {idx}]"
     if readonly:
-        return _scalar_set_lambda(vt, mode="readonly", capture=capture)
+        if el.kind == "asset_ref":
+            return f"{capture}(std::string) {{}}"
+        if el.kind == "ref_wrapper":
+            return f"{capture}(std::uint32_t) {{}}"
+        return _scalar_set_lambda(el.cpp_type, mode="readonly", capture=capture)
     adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
+    if el.kind == "asset_ref":
+        return f"{capture}(std::string v) {{ {adv}_it->second.SetPath(std::move(v)); }}"
+    if el.kind == "ref_wrapper":
+        return (
+            f"{capture}(std::uint32_t v) {{ "
+            f"{adv}_it->second.SetId(static_cast<Engine::EntityId>(v)); }}"
+        )
     return _scalar_set_lambda(
-        vt,
+        el.cpp_type,
         mode="assign",
         capture=capture,
         assign_lhs="_it->second",
@@ -2139,10 +2298,52 @@ def _cpp_set_insert(mem: str, et: str, val_var: str) -> str:
     return f"{mem}.insert({val_var})"
 
 
-def _map_add_pair_body(mem: str, kt: str, vt: str, path: Path, line: int, col: int) -> str:
+def _map_add_pair_body(
+    mem: str,
+    el_key: ContainerElementKind,
+    el_val: ContainerElementKind,
+    path: Path,
+    line: int,
+    col: int,
+) -> str:
     """Statements for addPair: choose a key not already present, then emplace."""
-    dv = _default_cpp_value(vt)
+    dv = _default_cpp_value_for_element(el_val)
     tab = "\t\t\t"
+    if el_key.kind == "asset_ref":
+        inner = el_key.asset_inner_type
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tstd::size_t _i = {mem}.size();\n"
+            f"{tab}\tstd::string _path;\n"
+            f"{tab}\tdo {{\n"
+            f'{tab}\t\t_path = std::string("__new_") + std::to_string(_i++);\n'
+            f"{tab}\t}} while ([&]() {{\n"
+            f"{tab}\t\tAssetRef<{inner}> _probe;\n"
+            f"{tab}\t\t_probe.SetPath(_path);\n"
+            f"{tab}\t\treturn {mem}.find(_probe) != {mem}.end();\n"
+            f"{tab}\t}}());\n"
+            f"{tab}\tAssetRef<{inner}> _nk;\n"
+            f"{tab}\t_nk.SetPath(_path);\n"
+            f"{tab}\t{mem}.emplace(std::move(_nk), {dv});\n"
+            f"{tab}}}"
+        )
+    if el_key.kind == "ref_wrapper":
+        inner = el_key.ref_inner_type
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tEngine::EntityId _id = Engine::kInvalidEntityId;\n"
+            f"{tab}\twhile (true) {{\n"
+            f"{tab}\t\tRefWrapper<{inner}> _probe;\n"
+            f"{tab}\t\t_probe.SetId(_id);\n"
+            f"{tab}\t\tif ({mem}.find(_probe) == {mem}.end()) break;\n"
+            f"{tab}\t\t_id = static_cast<Engine::EntityId>(static_cast<std::uint32_t>(_id) + 1u);\n"
+            f"{tab}\t}}\n"
+            f"{tab}\tRefWrapper<{inner}> _nk;\n"
+            f"{tab}\t_nk.SetId(_id);\n"
+            f"{tab}\t{mem}.emplace(std::move(_nk), {dv});\n"
+            f"{tab}}}"
+        )
+    kt = el_key.cpp_type
     if kt in ("int", "std::int32_t"):
         decl = "int _nk = 0;" if kt == "int" else "std::int32_t _nk = 0;"
         return (
@@ -2290,9 +2491,46 @@ def _map_add_pair_body(mem: str, kt: str, vt: str, path: Path, line: int, col: i
     raise ParseError(f"map addPair: unsupported key type `{kt}`", path, line, col)
 
 
-def _set_add_pair_body(mem: str, et: str, path: Path, line: int, col: int) -> str:
+def _set_add_pair_body(
+    mem: str, el: ContainerElementKind, path: Path, line: int, col: int
+) -> str:
     """Statements for addPair on a set: choose a value not already present, then insert."""
     tab = "\t\t\t"
+    if el.kind == "asset_ref":
+        inner = el.asset_inner_type
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tstd::size_t _i = {mem}.size();\n"
+            f"{tab}\tstd::string _path;\n"
+            f"{tab}\tdo {{\n"
+            f'{tab}\t\t_path = std::string("__new_") + std::to_string(_i++);\n'
+            f"{tab}\t}} while ([&]() {{\n"
+            f"{tab}\t\tAssetRef<{inner}> _probe;\n"
+            f"{tab}\t\t_probe.SetPath(_path);\n"
+            f"{tab}\t\treturn {mem}.find(_probe) != {mem}.end();\n"
+            f"{tab}\t}}());\n"
+            f"{tab}\tAssetRef<{inner}> _nv;\n"
+            f"{tab}\t_nv.SetPath(_path);\n"
+            f"{tab}\t{mem}.insert(std::move(_nv));\n"
+            f"{tab}}}"
+        )
+    if el.kind == "ref_wrapper":
+        inner = el.ref_inner_type
+        return (
+            f"{tab}{{\n"
+            f"{tab}\tEngine::EntityId _id = Engine::kInvalidEntityId;\n"
+            f"{tab}\twhile (true) {{\n"
+            f"{tab}\t\tRefWrapper<{inner}> _probe;\n"
+            f"{tab}\t\t_probe.SetId(_id);\n"
+            f"{tab}\t\tif ({mem}.find(_probe) == {mem}.end()) break;\n"
+            f"{tab}\t\t_id = static_cast<Engine::EntityId>(static_cast<std::uint32_t>(_id) + 1u);\n"
+            f"{tab}\t}}\n"
+            f"{tab}\tRefWrapper<{inner}> _nv;\n"
+            f"{tab}\t_nv.SetId(_id);\n"
+            f"{tab}\t{mem}.insert(std::move(_nv));\n"
+            f"{tab}}}"
+        )
+    et = el.cpp_type
     if et in ("int", "std::int32_t"):
         decl = "int _nv = 0;" if et == "int" else "std::int32_t _nv = 0;"
         return (
@@ -2529,6 +2767,61 @@ def _emit_map_rect_side(
     out.append("\t\tb.pop();")
 
 
+def _emit_map_side_leaf(
+    out: list[str],
+    mem: str,
+    idx: str,
+    el: ContainerElementKind,
+    nid: str,
+    label: str,
+    readonly: bool,
+    leaf_meta: str,
+    path: Path,
+    line: int,
+    col: int,
+    *,
+    side: Literal["key", "value"],
+) -> None:
+    if side == "key":
+        g = _map_key_get(mem, idx, el)
+        s = _map_key_set(mem, idx, el, readonly)
+    else:
+        g = _map_val_get(mem, idx, el)
+        s = _map_val_set(mem, idx, el, readonly)
+    if el.kind == "asset_ref":
+        _emit_asset_ref_leaf(
+            out,
+            nid,
+            label,
+            g,
+            s,
+            el.asset_inner_type or "",
+            readonly,
+            leaf_meta,
+            path,
+            line,
+            col,
+            indent="\t\t",
+        )
+    elif el.kind == "ref_wrapper":
+        _emit_scene_ref_leaf(
+            out,
+            nid,
+            label,
+            g,
+            s,
+            el.ref_inner_type or "",
+            readonly,
+            leaf_meta,
+            path,
+            line,
+            col,
+            indent="\t\t",
+        )
+    else:
+        _emit_scalar_leaf(out, el.cpp_type, nid, label, g, s, leaf_meta, path, line, col)
+
+
 def emit_assoc_map_property(
     out: list[str],
     p: PropSpec,
@@ -2536,10 +2829,10 @@ def emit_assoc_map_property(
     meta_arg: str,
     readonly: bool,
 ) -> None:
-    vt = p.map_value_type
-    if vt is None:
+    if p.map_value_type is None:
         raise ParseError("internal: map without map_value_type", path, p.line, p.col)
-    kt = p.cpp_type
+    el_key = _element_from_prop_first(p)
+    el_val = _element_from_prop_map_value(p)
     mem = p.member
     fid = member_to_field_id(p.member)
     label_esc = cpp_escape_string(default_label(p))
@@ -2549,7 +2842,7 @@ def emit_assoc_map_property(
     if readonly:
         asc = "Engine::PropAccessAssociative{\n\t\t{},\n\t\t{}\n\t}"
     else:
-        add_body = _map_add_pair_body(mem, kt, vt, path, p.line, p.col)
+        add_body = _map_add_pair_body(mem, el_key, el_val, path, p.line, p.col)
         asc = (
             "Engine::PropAccessAssociative{\n"
             f"\t\t[this]() {{\n{add_body}\n\t\t}},\n"
@@ -2565,16 +2858,44 @@ def emit_assoc_map_property(
     out.append(
         f'\t\tb.pushObject(std::to_string({idx}), "[" + std::to_string({idx}) + "]", Engine::PropertyMeta{{}});'
     )
-    if _is_rect_type(kt):
-        _emit_map_rect_side(out, mem, idx, kt, "key", "Key", readonly, path, p.line, p.col)
+    if _is_rect_type(el_key.cpp_type):
+        _emit_map_rect_side(
+            out, mem, idx, el_key.cpp_type, "key", "Key", readonly, path, p.line, p.col
+        )
     else:
-        gk, sk = _map_key_get(mem, idx, kt), _map_key_set(mem, idx, kt, readonly)
-        _emit_scalar_leaf(out, kt, "key", "Key", gk, sk, leaf_meta, path, p.line, p.col)
-    if _is_rect_type(vt):
-        _emit_map_rect_side(out, mem, idx, vt, "value", "Value", readonly, path, p.line, p.col)
+        _emit_map_side_leaf(
+            out,
+            mem,
+            idx,
+            el_key,
+            "key",
+            "Key",
+            readonly,
+            leaf_meta,
+            path,
+            p.line,
+            p.col,
+            side="key",
+        )
+    if _is_rect_type(el_val.cpp_type):
+        _emit_map_rect_side(
+            out, mem, idx, el_val.cpp_type, "value", "Value", readonly, path, p.line, p.col
+        )
     else:
-        gv, sv = _map_val_get(mem, idx, vt), _map_val_set(mem, idx, vt, readonly)
-        _emit_scalar_leaf(out, vt, "value", "Value", gv, sv, leaf_meta, path, p.line, p.col)
+        _emit_map_side_leaf(
+            out,
+            mem,
+            idx,
+            el_val,
+            "value",
+            "Value",
+            readonly,
+            leaf_meta,
+            path,
+            p.line,
+            p.col,
+            side="value",
+        )
     out.append("\t\tb.pop();")
     out.append("\t}")
     out.append("\tb.endAssociative();")
@@ -2587,7 +2908,7 @@ def emit_assoc_set_property(
     meta_arg: str,
     readonly: bool,
 ) -> None:
-    et = p.cpp_type
+    el = _element_from_prop_first(p)
     mem = p.member
     fid = member_to_field_id(p.member)
     label_esc = cpp_escape_string(default_label(p))
@@ -2597,7 +2918,7 @@ def emit_assoc_set_property(
     if readonly:
         asc = "Engine::PropAccessAssociative{\n\t\t{},\n\t\t{}\n\t}"
     else:
-        add_body = _set_add_pair_body(mem, et, path, p.line, p.col)
+        add_body = _set_add_pair_body(mem, el, path, p.line, p.col)
         asc = (
             "Engine::PropAccessAssociative{\n"
             f"\t\t[this]() {{\n{add_body}\n\t\t}},\n"
@@ -2613,15 +2934,15 @@ def emit_assoc_set_property(
     out.append(
         f'\t\tb.pushObject(std::to_string({idx}), "[" + std::to_string({idx}) + "]", Engine::PropertyMeta{{}});'
     )
-    if _is_rect_type(et):
-        vec_t = _rect_vec_type(et)
+    if _is_rect_type(el.cpp_type):
+        vec_t = _rect_vec_type(el.cpp_type)
         get_pos = _set_rect_component_get(mem, idx, "position")
         get_size = _set_rect_component_get(mem, idx, "size")
         set_pos = _set_rect_component_set(mem, idx, "position", vec_t, readonly)
         set_size = _set_rect_component_set(mem, idx, "size", vec_t, readonly)
         _emit_rect_children(
             out,
-            et,
+            el.cpp_type,
             path,
             p.line,
             p.col,
@@ -2630,7 +2951,68 @@ def emit_assoc_set_property(
             get_size=get_size,
             set_size=set_size,
         )
+    elif el.kind in ("asset_ref", "ref_wrapper"):
+        adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
+        if el.kind == "asset_ref":
+            g = f"[this, {idx}]() {{ {adv}return _it->GetPathString(); }}"
+            if readonly:
+                s = f"[this, {idx}](std::string) {{}}"
+            else:
+                s = (
+                    f"[this, {idx}](std::string v) {{\n"
+                    f"\t\t{adv}\n"
+                    f"\t\tauto _nv = *_it;\n"
+                    f"\t\t{mem}.erase(_it);\n"
+                    f"\t\t_nv.SetPath(std::move(v));\n"
+                    f"\t\t{mem}.insert(std::move(_nv));\n"
+                    f"\t}}"
+                )
+            _emit_asset_ref_leaf(
+                out,
+                "v",
+                "",
+                g,
+                s,
+                el.asset_inner_type or "",
+                readonly,
+                leaf_meta,
+                path,
+                p.line,
+                p.col,
+                indent="\t\t",
+            )
+        else:
+            g = (
+                f"[this, {idx}]() {{ {adv}return static_cast<std::uint32_t>(_it->GetId()); }}"
+            )
+            if readonly:
+                s = f"[this, {idx}](std::uint32_t) {{}}"
+            else:
+                s = (
+                    f"[this, {idx}](std::uint32_t v) {{\n"
+                    f"\t\t{adv}\n"
+                    f"\t\tauto _nv = *_it;\n"
+                    f"\t\t{mem}.erase(_it);\n"
+                    f"\t\t_nv.SetId(static_cast<Engine::EntityId>(v));\n"
+                    f"\t\t{mem}.insert(std::move(_nv));\n"
+                    f"\t}}"
+                )
+            _emit_scene_ref_leaf(
+                out,
+                "v",
+                "",
+                g,
+                s,
+                el.ref_inner_type or "",
+                readonly,
+                leaf_meta,
+                path,
+                p.line,
+                p.col,
+                indent="\t\t",
+            )
     else:
+        et = el.cpp_type
         adv = f"auto _it = {mem}.begin(); std::advance(_it, {idx}); "
         g = _scalar_get_lambda(
             et,
@@ -2666,34 +3048,38 @@ def emit_std_pair_property(
     meta_arg: str,
     readonly: bool,
 ) -> None:
-    st = p.map_value_type
-    if st is None:
+    if p.map_value_type is None:
         raise ParseError("internal: std::pair without second type", path, p.line, p.col)
-    ft = p.cpp_type
-    _reject_rect_in_pair_types(ft, st, path, p.line, p.col)
+    el_first = _element_from_prop_first(p)
+    el_second = _element_from_prop_map_value(p)
+    _reject_rect_in_pair_types(
+        el_first.cpp_type, el_second.cpp_type, path, p.line, p.col
+    )
     mem = p.member
     fid = member_to_field_id(p.member)
     label_esc = cpp_escape_string(default_label(p))
     leaf_meta = "Engine::PropertyMeta{}"
 
     out.append(f'\tb.pushObject("{fid}", "{label_esc}", {meta_arg});')
-    for which, wt, nid, label in (
-        ("first", ft, "first", "First"),
-        ("second", st, "second", "Second"),
+    for which, el, nid, label in (
+        ("first", el_first, "first", "First"),
+        ("second", el_second, "second", "Second"),
     ):
         acc = f"{mem}.{which}"
-        g = _scalar_get_lambda(wt, capture="[this]", read_expr=acc, call_syntax=True)
-        if readonly:
-            s = _scalar_set_lambda(wt, mode="readonly", capture="[this]")
-        else:
-            s = _scalar_set_lambda(
-                wt,
-                mode="assign",
-                capture="[this]",
-                assign_lhs=acc,
-                move_policy="move_by_value",
-            )
-        _emit_scalar_leaf(out, wt, nid, label, g, s, leaf_meta, path, p.line, p.col)
+        _emit_container_element_leaf(
+            out,
+            el,
+            nid,
+            label,
+            capture="[this]",
+            read_expr=acc,
+            readonly=readonly,
+            meta_arg=leaf_meta,
+            path=path,
+            line=p.line,
+            col=p.col,
+            call_syntax=True,
+        )
     out.append("\tb.pop();")
 
 
@@ -2710,13 +3096,13 @@ def _optional_has_value_get(storage: str) -> str:
 def _optional_has_value_set(
     p: PropSpec,
     storage: str,
-    inner_t: str,
+    el: ContainerElementKind,
     readonly: bool,
     setter_name: str,
 ) -> str:
     if readonly:
         return "[this](bool) {}"
-    default = _default_cpp_value(inner_t)
+    default = _default_cpp_value_for_element(el)
     if p.is_getter:
         return (
             f"[this](bool v) {{\n"
@@ -2740,8 +3126,19 @@ def _optional_has_value_set(
     )
 
 
-def _optional_value_get(storage: str, inner_t: str) -> str:
-    default = _default_cpp_value(inner_t)
+def _optional_value_get(storage: str, el: ContainerElementKind) -> str:
+    default = _default_cpp_value_for_element(el)
+    if el.kind == "asset_ref":
+        return (
+            f"[this]() {{ const auto& _opt = {storage}; "
+            f"return _opt ? _opt->GetPathString() : {default}.GetPathString(); }}"
+        )
+    if el.kind == "ref_wrapper":
+        return (
+            f"[this]() {{ const auto& _opt = {storage}; "
+            f"return static_cast<std::uint32_t>(_opt ? _opt->GetId() : {default}.GetId()); }}"
+        )
+    inner_t = el.cpp_type
     if inner_t == "sf::Angle":
         return (
             f"[this]() {{ const auto& _opt = {storage}; "
@@ -2758,10 +3155,49 @@ def _optional_value_get(storage: str, inner_t: str) -> str:
 def _optional_value_set(
     p: PropSpec,
     storage: str,
-    inner_t: str,
+    el: ContainerElementKind,
     readonly: bool,
     setter_name: str,
 ) -> str:
+    if el.kind == "asset_ref":
+        default = _default_cpp_value_for_element(el)
+        if readonly:
+            return "[this](std::string) {}"
+        if p.is_getter:
+            return (
+                f"[this](std::string v) {{\n"
+                f"\t\tauto _opt = {storage};\n"
+                f"\t\tif (!_opt) _opt = {default};\n"
+                f"\t\t_opt->SetPath(std::move(v));\n"
+                f"\t\tthis->{setter_name}(std::move(_opt));\n"
+                f"\t}}"
+            )
+        return (
+            f"[this](std::string v) {{\n"
+            f"\t\tif (!{storage}) {storage} = {default};\n"
+            f"\t\t{storage}->SetPath(std::move(v));\n"
+            f"\t}}"
+        )
+    if el.kind == "ref_wrapper":
+        default = _default_cpp_value_for_element(el)
+        if readonly:
+            return "[this](std::uint32_t) {}"
+        if p.is_getter:
+            return (
+                f"[this](std::uint32_t v) {{\n"
+                f"\t\tauto _opt = {storage};\n"
+                f"\t\tif (!_opt) _opt = {default};\n"
+                f"\t\t_opt->SetId(static_cast<Engine::EntityId>(v));\n"
+                f"\t\tthis->{setter_name}(std::move(_opt));\n"
+                f"\t}}"
+            )
+        return (
+            f"[this](std::uint32_t v) {{\n"
+            f"\t\tif (!{storage}) {storage} = {default};\n"
+            f"\t\t{storage}->SetId(static_cast<Engine::EntityId>(v));\n"
+            f"\t}}"
+        )
+    inner_t = el.cpp_type
     if readonly:
         return _scalar_set_lambda(inner_t, mode="readonly", capture="[this]")
     if p.is_getter:
@@ -2788,7 +3224,15 @@ def emit_std_optional_property(
     meta_arg: str,
     readonly: bool,
 ) -> None:
-    inner_t = p.cpp_type
+    el = _element_from_prop_first(p)
+    if p.is_getter and (el.kind == "asset_ref" or el.kind == "ref_wrapper"):
+        raise ParseError(
+            "@getter std::optional of AssetRef/RefWrapper is not supported in codegen v1",
+            path,
+            p.line,
+            p.col,
+        )
+    inner_t = el.cpp_type
     setter_raw = p.attrs.get("setter")
     setter_name = setter_raw.strip() if isinstance(setter_raw, str) else ""
 
@@ -2807,7 +3251,7 @@ def emit_std_optional_property(
 
     out.append(f'\tb.pushObject("{fid}", "{label_esc}", {meta_arg});')
     g_has = _optional_has_value_get(storage)
-    s_has = _optional_has_value_set(p, storage, inner_t, readonly, setter_name)
+    s_has = _optional_has_value_set(p, storage, el, readonly, setter_name)
     out.append(f'\t\tb.addBool("has_value", "Set", {g_has}, {s_has}, {leaf_meta});')
     if _is_rect_type(inner_t):
         vec_t = _rect_vec_type(inner_t)
@@ -2836,9 +3280,42 @@ def emit_std_optional_property(
             get_size=get_size,
             set_size=set_size,
         )
+    elif el.kind in ("asset_ref", "ref_wrapper"):
+        g_val = _optional_value_get(storage, el)
+        s_val = _optional_value_set(p, storage, el, readonly, setter_name)
+        if el.kind == "asset_ref":
+            _emit_asset_ref_leaf(
+                out,
+                "value",
+                "Value",
+                g_val,
+                s_val,
+                el.asset_inner_type or "",
+                readonly,
+                leaf_meta,
+                path,
+                p.line,
+                p.col,
+                indent="\t\t",
+            )
+        else:
+            _emit_scene_ref_leaf(
+                out,
+                "value",
+                "Value",
+                g_val,
+                s_val,
+                el.ref_inner_type or "",
+                readonly,
+                leaf_meta,
+                path,
+                p.line,
+                p.col,
+                indent="\t\t",
+            )
     else:
-        g_val = _optional_value_get(storage, inner_t)
-        s_val = _optional_value_set(p, storage, inner_t, readonly, setter_name)
+        g_val = _optional_value_get(storage, el)
+        s_val = _optional_value_set(p, storage, el, readonly, setter_name)
         _emit_scalar_leaf(out, inner_t, "value", "Value", g_val, s_val, leaf_meta, path, p.line, p.col)
     out.append("\tb.pop();")
 
@@ -2874,6 +3351,15 @@ def emit_std_vector_property(
     meta_arg: str,
     readonly: bool,
 ) -> None:
+    el = _element_from_prop_first(p)
+    if p.is_getter and (el.kind == "asset_ref" or el.kind == "ref_wrapper"):
+        raise ParseError(
+            "@getter std::vector of AssetRef/RefWrapper is not supported in codegen v1",
+            path,
+            p.line,
+            p.col,
+        )
+
     setter_raw = p.attrs.get("setter")
     setter_name = setter_raw.strip() if isinstance(setter_raw, str) else ""
 
@@ -2933,9 +3419,8 @@ def emit_std_vector_property(
     else:
         acc = f"{mem}[{idx}]"
 
-    t = p.cpp_type
-    if _is_rect_type(t):
-        vec_t = _rect_vec_type(t)
+    if _is_rect_type(el.cpp_type):
+        vec_t = _rect_vec_type(el.cpp_type)
         get_pos = f"[this, {idx}]() {{ return {acc}.position; }}"
         get_size = f"[this, {idx}]() {{ return {acc}.size; }}"
         set_pos = _vector_rect_component_set(
@@ -2960,7 +3445,7 @@ def emit_std_vector_property(
         )
         _emit_rect_children(
             out,
-            t,
+            el.cpp_type,
             path,
             p.line,
             p.col,
@@ -2971,30 +3456,222 @@ def emit_std_vector_property(
         )
     else:
         capture = f"[this, {idx}]"
-        g = _scalar_get_lambda(t, capture=capture, read_expr=acc)
-        if readonly:
-            s = _scalar_set_lambda(t, mode="readonly", capture=capture)
-        elif p.is_getter:
-            s = _scalar_set_lambda(
-                t,
-                mode="vector_cow",
-                capture=capture,
-                vec_access=vec_access,
-                vec_index=idx,
-                setter_name=setter_name,
-            )
-        else:
-            s = _scalar_set_lambda(
-                t,
-                mode="assign",
-                capture=capture,
-                assign_lhs=acc,
-                move_policy="string_only",
-            )
-        _emit_scalar_leaf(out, t, "v", "", g, s, meta_arg, path, p.line, p.col)
+        _emit_container_element_leaf(
+            out,
+            el,
+            "v",
+            "",
+            capture=capture,
+            read_expr=acc,
+            readonly=readonly,
+            meta_arg=meta_arg,
+            path=path,
+            line=p.line,
+            col=p.col,
+            call_syntax=True,
+            vector_cow=p.is_getter and not readonly,
+            vec_access=vec_access,
+            vec_index=idx,
+            setter_name=setter_name,
+        )
     out.append("\t\tb.pop();")
     out.append("\t}")
     out.append("\tb.endSequence();")
+
+
+def _emit_asset_ref_leaf(
+    out: list[str],
+    nid: str,
+    label: str,
+    get_lambda: str,
+    set_lambda: str,
+    inner: str,
+    readonly: bool,
+    meta_arg: str,
+    path: Path,
+    line: int,
+    col: int,
+    *,
+    tooltip: str | None = None,
+    indent: str = "\t",
+) -> None:
+    asset_type_id, values_provider = asset_ref_config(inner, path, line, col)
+    body = indent + "\t"
+    out.append(f"{indent}{{")
+    out.append(f"{body}Engine::PropertyMeta _sm{{}};")
+    if readonly:
+        out.append(f"{body}_sm.readOnly = true;")
+    if tooltip:
+        out.append(f'{body}_sm.tooltip = "{cpp_escape_string(tooltip)}";')
+    out.append(f'{body}_sm.assetTypeId = "{cpp_escape_string(asset_type_id)}";')
+    out.append(
+        f"{body}_sm.valuesProviderStdString = []() -> std::vector<std::string> {{ "
+        f"return Editor::ValuesProviderDetail::ToVector(Editor::ValuesProviders::{values_provider}()); "
+        "};"
+    )
+    out.append(
+        f'{body}b.addAssetRef("{nid}", "{label}", {get_lambda}, {set_lambda}, _sm);'
+    )
+    out.append(f"{indent}}}")
+
+
+def _emit_scene_ref_leaf(
+    out: list[str],
+    nid: str,
+    label: str,
+    get_lambda: str,
+    set_lambda: str,
+    inner: str,
+    readonly: bool,
+    meta_arg: str,
+    path: Path,
+    line: int,
+    col: int,
+    *,
+    tooltip: str | None = None,
+    indent: str = "\t",
+) -> None:
+    filter_kind = (
+        "Engine::SceneRefFilterKind::SceneNode"
+        if ref_inner_is_scene_node(inner)
+        else "Engine::SceneRefFilterKind::Entity"
+    )
+    body = indent + "\t"
+    out.append(f"{indent}{{")
+    out.append(f"{body}Engine::PropertyMeta _sm{{}};")
+    if readonly:
+        out.append(f"{body}_sm.readOnly = true;")
+    if tooltip:
+        out.append(f'{body}_sm.tooltip = "{cpp_escape_string(tooltip)}";')
+    out.append(f"{body}_sm.sceneRefFilterKind = {filter_kind};")
+    if not ref_inner_is_scene_node(inner):
+        out.append(
+            f"{body}_sm.sceneRefEntityIsAllowed = [](const std::shared_ptr<EntityOnNode>& e) -> bool "
+            f"{{ return static_cast<bool>(std::dynamic_pointer_cast<{inner}>(e)); }};"
+        )
+    out.append(
+        f'{body}b.addSceneRef("{nid}", "{label}", {get_lambda}, {set_lambda}, _sm);'
+    )
+    out.append(f"{indent}}}")
+
+
+def _emit_container_element_leaf(
+    out: list[str],
+    el: ContainerElementKind,
+    nid: str,
+    label: str,
+    *,
+    capture: str,
+    read_expr: str,
+    readonly: bool,
+    meta_arg: str,
+    path: Path,
+    line: int,
+    col: int,
+    indent: str = "\t\t",
+    call_syntax: bool | None = None,
+    vector_cow: bool = False,
+    vec_access: str = "",
+    vec_index: str = "",
+    setter_name: str = "",
+    tooltip: str | None = None,
+) -> None:
+    if el.kind == "asset_ref":
+        inner = el.asset_inner_type or ""
+        g = f"{capture}() -> std::string {{ return {read_expr}.GetPathString(); }}"
+        if readonly:
+            s = f"{capture}(std::string) {{}}"
+        elif vector_cow:
+            s = (
+                f"{capture}(std::string v) {{\n"
+                f"\t\tauto _pv = {vec_access};\n"
+                f"\t\t_pv[{vec_index}].SetPath(std::move(v));\n"
+                f"\t\tthis->{setter_name}(std::move(_pv));\n"
+                f"\t}}"
+            )
+        else:
+            s = f"{capture}(std::string v) {{ {read_expr}.SetPath(std::move(v)); }}"
+        _emit_asset_ref_leaf(
+            out,
+            nid,
+            label,
+            g,
+            s,
+            inner,
+            readonly,
+            meta_arg,
+            path,
+            line,
+            col,
+            tooltip=tooltip,
+            indent=indent,
+        )
+        return
+    if el.kind == "ref_wrapper":
+        inner = el.ref_inner_type or ""
+        g = f"{capture}() -> std::uint32_t {{ return static_cast<std::uint32_t>({read_expr}.GetId()); }}"
+        if readonly:
+            s = f"{capture}(std::uint32_t) {{}}"
+        elif vector_cow:
+            s = (
+                f"{capture}(std::uint32_t v) {{\n"
+                f"\t\tauto _pv = {vec_access};\n"
+                f"\t\t_pv[{vec_index}].SetId(static_cast<Engine::EntityId>(v));\n"
+                f"\t\tthis->{setter_name}(std::move(_pv));\n"
+                f"\t}}"
+            )
+        else:
+            s = (
+                f"{capture}(std::uint32_t v) {{ "
+                f"{read_expr}.SetId(static_cast<Engine::EntityId>(v)); }}"
+            )
+        _emit_scene_ref_leaf(
+            out,
+            nid,
+            label,
+            g,
+            s,
+            inner,
+            readonly,
+            meta_arg,
+            path,
+            line,
+            col,
+            tooltip=tooltip,
+            indent=indent,
+        )
+        return
+    t = el.cpp_type
+    if _is_rect_type(t):
+        raise ParseError(
+            f"rect type `{t}` must use rect component helpers, not scalar leaf",
+            path,
+            line,
+            col,
+        )
+    g = _scalar_get_lambda(
+        t, capture=capture, read_expr=read_expr, call_syntax=call_syntax
+    )
+    if readonly:
+        s = _scalar_set_lambda(t, mode="readonly", capture=capture)
+    elif vector_cow:
+        s = _scalar_set_lambda(
+            t,
+            mode="vector_cow",
+            capture=capture,
+            vec_access=vec_access,
+            vec_index=vec_index,
+            setter_name=setter_name,
+        )
+    else:
+        s = _scalar_set_lambda(
+            t,
+            mode="assign",
+            capture=capture,
+            assign_lhs=read_expr,
+            move_policy="move_by_value",
+        )
+    _emit_scalar_leaf(out, t, nid, label, g, s, meta_arg, path, line, col, indent=indent)
 
 
 def asset_ref_config(inner: str, path: Path, line: int, col: int) -> tuple[str, str]:
@@ -3076,18 +3753,24 @@ def generate_file_content(
         out.append("#include <utility>")
     if any(p.is_optional for c in classes for p in c.props):
         out.append("#include <optional>")
-    if any(p.is_ref_wrapper for c in classes for p in c.props):
+    if any(
+        p.is_ref_wrapper or p.map_value_is_ref_wrapper for c in classes for p in c.props
+    ):
         out.append("#include <memory>")
         out.append('#include "Engine/Core/EntityOnNode.h"')
-    if any(p.is_asset_ref for c in classes for p in c.props):
+        out.append('#include "Engine/Core/RefWrapper.h"')
+    if any(
+        p.is_asset_ref or p.map_value_is_asset_ref for c in classes for p in c.props
+    ):
         out.append('#include "Engine/Core/AssetRef.h"')
         out.append('#include "Engine/Editor/ValuesProviders.h"')
-        asset_inners = {
-            (p.asset_inner_type or "").split("::")[-1]
-            for c in classes
-            for p in c.props
-            if p.is_asset_ref
-        }
+        asset_inners: set[str] = set()
+        for c in classes:
+            for p in c.props:
+                if p.is_asset_ref and p.asset_inner_type:
+                    asset_inners.add(p.asset_inner_type.split("::")[-1])
+                if p.map_value_is_asset_ref and p.map_value_asset_inner_type:
+                    asset_inners.add(p.map_value_asset_inner_type.split("::")[-1])
         if "Scene" in asset_inners:
             out.append("class Scene;")
         if "SceneObject" in asset_inners:
@@ -3134,7 +3817,7 @@ def generate_file_content(
             has_setter_method = isinstance(setter_name, str) and bool(setter_name)
             readonly = (a.get("readonly") is True) or (p.is_getter and not has_setter_method)
 
-            if p.is_asset_ref:
+            if _prop_is_top_level_ref(p) and p.is_asset_ref:
                 if p.is_getter:
                     raise ParseError(
                         "AssetRef fields must be data members (not @getter) in codegen v1",
@@ -3142,11 +3825,9 @@ def generate_file_content(
                         p.line,
                         p.col,
                     )
-                asset_type_id, values_provider = asset_ref_config(
-                    p.asset_inner_type or "", path, p.line, p.col
-                )
                 fid = member_to_field_id(p.member)
                 label_esc = cpp_escape_string(default_label(p))
+                tooltip = a.get("tooltip") if isinstance(a.get("tooltip"), str) else None
                 get_lambda = (
                     f"[this]() -> std::string {{ return this->{p.member}.GetPathString(); }}"
                 )
@@ -3155,23 +3836,25 @@ def generate_file_content(
                     if readonly
                     else f"[this](std::string v) {{ this->{p.member}.SetPath(std::move(v)); }}"
                 )
-                out.append("\t{")
-                out.append("\t\tEngine::PropertyMeta _sm{};")
-                if readonly:
-                    out.append("\t\t_sm.readOnly = true;")
-                if isinstance(a.get("tooltip"), str):
-                    out.append(f'\t\t_sm.tooltip = "{cpp_escape_string(a["tooltip"])}";')
-                out.append(f'\t\t_sm.assetTypeId = "{cpp_escape_string(asset_type_id)}";')
-                out.append(
-                    "\t\t_sm.valuesProviderStdString = []() -> std::vector<std::string> { "
-                    f"return Editor::ValuesProviderDetail::ToVector(Editor::ValuesProviders::{values_provider}()); "
-                    "};"
+                meta_arg = format_meta_inline(p) if readonly or tooltip else "Engine::PropertyMeta{}"
+                _emit_asset_ref_leaf(
+                    out,
+                    fid,
+                    label_esc,
+                    get_lambda,
+                    set_lambda,
+                    p.asset_inner_type or "",
+                    readonly,
+                    meta_arg,
+                    path,
+                    p.line,
+                    p.col,
+                    tooltip=tooltip,
+                    indent="\t",
                 )
-                out.append(f'\t\tb.addAssetRef("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, _sm);')
-                out.append("\t}")
                 continue
 
-            if p.is_ref_wrapper:
+            if _prop_is_top_level_ref(p) and p.is_ref_wrapper:
                 if p.is_getter:
                     raise ParseError(
                         "RefWrapper fields must be data members (not @getter) in codegen v1",
@@ -3179,34 +3862,31 @@ def generate_file_content(
                         p.line,
                         p.col,
                     )
-                inner = p.ref_inner_type or ""
-                filter_kind = (
-                    "Engine::SceneRefFilterKind::SceneNode"
-                    if ref_inner_is_scene_node(inner)
-                    else "Engine::SceneRefFilterKind::Entity"
-                )
                 fid = member_to_field_id(p.member)
                 label_esc = cpp_escape_string(default_label(p))
+                tooltip = a.get("tooltip") if isinstance(a.get("tooltip"), str) else None
                 get_lambda = f"[this]() -> std::uint32_t {{ return static_cast<std::uint32_t>(this->{p.member}.GetId()); }}"
                 set_lambda = (
                     "[](std::uint32_t) {}"
                     if readonly
                     else f"[this](std::uint32_t v) {{ this->{p.member}.SetId(static_cast<Engine::EntityId>(v)); }}"
                 )
-                out.append("\t{")
-                out.append("\t\tEngine::PropertyMeta _sm{};")
-                if readonly:
-                    out.append("\t\t_sm.readOnly = true;")
-                if isinstance(a.get("tooltip"), str):
-                    out.append(f'\t\t_sm.tooltip = "{cpp_escape_string(a["tooltip"])}";')
-                out.append(f"\t\t_sm.sceneRefFilterKind = {filter_kind};")
-                if not ref_inner_is_scene_node(inner):
-                    out.append(
-                        f"\t\t_sm.sceneRefEntityIsAllowed = [](const std::shared_ptr<EntityOnNode>& e) -> bool "
-                        f"{{ return static_cast<bool>(std::dynamic_pointer_cast<{inner}>(e)); }};"
-                    )
-                out.append(f'\t\tb.addSceneRef("{fid}", "{label_esc}", {get_lambda}, {set_lambda}, _sm);')
-                out.append("\t}")
+                meta_arg = format_meta_inline(p) if readonly or tooltip else "Engine::PropertyMeta{}"
+                _emit_scene_ref_leaf(
+                    out,
+                    fid,
+                    label_esc,
+                    get_lambda,
+                    set_lambda,
+                    p.ref_inner_type or "",
+                    readonly,
+                    meta_arg,
+                    path,
+                    p.line,
+                    p.col,
+                    tooltip=tooltip,
+                    indent="\t",
+                )
                 continue
 
             if p.is_bitset:
@@ -3322,18 +4002,6 @@ def generate_file_content(
                 out.append("\tb.pop();")
                 continue
 
-            if p.cpp_type not in KNOWN_TYPES:
-                raise ParseError(f"unsupported type `{p.cpp_type}`", path, p.line, p.col)
-
-            if _is_rect_type(p.cpp_type):
-                has_meta = readonly or any(
-                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed", "valuesProvider")
-                )
-                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
-                sn = setter_name if isinstance(setter_name, str) else ""
-                emit_rect_property(out, p, path, meta_arg, readonly, sn)
-                continue
-
             if p.is_vector:
                 has_meta = readonly or any(
                     k in a
@@ -3349,6 +4017,18 @@ def generate_file_content(
                 )
                 meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
                 emit_std_vector_property(out, p, path, meta_arg, readonly)
+                continue
+
+            if p.cpp_type not in KNOWN_TYPES:
+                raise ParseError(f"unsupported type `{p.cpp_type}`", path, p.line, p.col)
+
+            if _is_rect_type(p.cpp_type):
+                has_meta = readonly or any(
+                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed", "valuesProvider")
+                )
+                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
+                sn = setter_name if isinstance(setter_name, str) else ""
+                emit_rect_property(out, p, path, meta_arg, readonly, sn)
                 continue
 
             has_meta = readonly or any(
@@ -3667,6 +4347,43 @@ def run_label_inference_self_tests() -> int:
     return 0
 
 
+def run_container_element_self_tests() -> int:
+    cases: list[tuple[str, ContainerElementKindName, str]] = [
+        ("AssetRef<SceneObject>", "asset_ref", "AssetRef<SceneObject>"),
+        ("RefWrapper<Engine::SceneNode>", "ref_wrapper", "RefWrapper<Engine::SceneNode>"),
+        ("sf::Vector2f", "scalar", "sf::Vector2f"),
+    ]
+    for raw, kind, cpp_type in cases:
+        try:
+            el = classify_container_element(raw)
+        except ValueError as e:
+            print(f"[codegen] container element test FAIL classify({raw!r}): {e}", file=sys.stderr)
+            return 1
+        if el.kind != kind or el.cpp_type != cpp_type:
+            print(
+                f"[codegen] container element test FAIL classify({raw!r}): "
+                f"got kind={el.kind!r} cpp_type={el.cpp_type!r} expected kind={kind!r} cpp_type={cpp_type!r}",
+                file=sys.stderr,
+            )
+            return 1
+    vec_line = "\t\tstd::vector<AssetRef<SceneObject>> _ballAssetRefs;"
+    m_vec = VECTOR_FIELD_RE.match(vec_line)
+    if not m_vec:
+        print("[codegen] container element test FAIL: VECTOR_FIELD_RE did not match vector<AssetRef>", file=sys.stderr)
+        return 1
+    el_vec = classify_container_element(m_vec.group(1))
+    if el_vec.kind != "asset_ref" or el_vec.asset_inner_type != "SceneObject":
+        print("[codegen] container element test FAIL: vector element not AssetRef<SceneObject>", file=sys.stderr)
+        return 1
+    pair_line = "\t\tstd::pair<RefWrapper<SceneNode>, float> _nodeAndSpeed;"
+    m_pair = PAIR_FIELD_RE.match(pair_line)
+    if not m_pair:
+        print("[codegen] container element test FAIL: PAIR_FIELD_RE did not match mixed pair", file=sys.stderr)
+        return 1
+    print("[codegen] container element self-tests OK")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Property tree codegen for TestEngine.")
     ap.add_argument("--root", type=Path, default=Path.cwd(), help="Repository root (default: cwd)")
@@ -3683,6 +4400,9 @@ def main() -> int:
         if rc != 0:
             return rc
         rc = run_scalar_lambda_self_tests()
+        if rc != 0:
+            return rc
+        rc = run_container_element_self_tests()
         if rc != 0:
             return rc
         return run_label_inference_self_tests()
