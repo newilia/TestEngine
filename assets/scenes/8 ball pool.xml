@@ -270,7 +270,7 @@
             <Transform type="Engine.Transform">
               <Properties>
                 <Property id="transform" kind="Object">
-                  <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                  <Property id="get_position" kind="Vec2f" x="-99.0733062" y="0.0000000" />
                   <Property id="get_scale" kind="Vec2f" x="1" y="1" />
                   <Property id="get_rotation" kind="Float" value="0" />
                   <Property id="get_origin" kind="Vec2f" x="0" y="0" />
@@ -374,7 +374,7 @@
             <Transform type="Engine.Transform">
               <Properties>
                 <Property id="transform" kind="Object">
-                  <Property id="get_position" kind="Vec2f" x="0" y="57.2000008" />
+                  <Property id="get_position" kind="Vec2f" x="-49.5366531" y="28.6000000" />
                   <Property id="get_scale" kind="Vec2f" x="1" y="1" />
                   <Property id="get_rotation" kind="Float" value="0" />
                   <Property id="get_origin" kind="Vec2f" x="0" y="0" />
@@ -478,7 +478,7 @@
             <Transform type="Engine.Transform">
               <Properties>
                 <Property id="transform" kind="Object">
-                  <Property id="get_position" kind="Vec2f" x="0" y="57.2000008" />
+                  <Property id="get_position" kind="Vec2f" x="0.0000000" y="57.2000000" />
                   <Property id="get_scale" kind="Vec2f" x="1" y="1" />
                   <Property id="get_rotation" kind="Float" value="0" />
                   <Property id="get_origin" kind="Vec2f" x="0" y="0" />
@@ -582,7 +582,7 @@
             <Transform type="Engine.Transform">
               <Properties>
                 <Property id="transform" kind="Object">
-                  <Property id="get_position" kind="Vec2f" x="0" y="57.2000008" />
+                  <Property id="get_position" kind="Vec2f" x="49.5366531" y="-28.6000000" />
                   <Property id="get_scale" kind="Vec2f" x="1" y="1" />
                   <Property id="get_rotation" kind="Float" value="0" />
                   <Property id="get_origin" kind="Vec2f" x="0" y="0" />
@@ -686,7 +686,7 @@
             <Transform type="Engine.Transform">
               <Properties>
                 <Property id="transform" kind="Object">
-                  <Property id="get_position" kind="Vec2f" x="0" y="57.2000008" />
+                  <Property id="get_position" kind="Vec2f" x="49.5366531" y="85.8000000" />
                   <Property id="get_scale" kind="Vec2f" x="1" y="1" />
                   <Property id="get_rotation" kind="Float" value="0" />
                   <Property id="get_origin" kind="Vec2f" x="0" y="0" />
@@ -790,7 +790,7 @@
             <Transform type="Engine.Transform">
               <Properties>
                 <Property id="transform" kind="Object">
-                  <Property id="get_position" kind="Vec2f" x="0" y="57.2000008" />
+                  <Property id="get_position" kind="Vec2f" x="99.0733062" y="-57.2000000" />
                   <Property id="get_scale" kind="Vec2f" x="1" y="1" />
                   <Property id="get_rotation" kind="Float" value="0" />
                   <Property id="get_origin" kind="Vec2f" x="0" y="0" />
@@ -894,7 +894,7 @@
             <Transform type="Engine.Transform">
               <Properties>
                 <Property id="transform" kind="Object">
-                  <Property id="get_position" kind="Vec2f" x="0" y="57.2000008" />
+                  <Property id="get_position" kind="Vec2f" x="99.0733062" y="57.2000000" />
                   <Property id="get_scale" kind="Vec2f" x="1" y="1" />
                   <Property id="get_rotation" kind="Float" value="0" />
                   <Property id="get_origin" kind="Vec2f" x="0" y="0" />
@@ -998,7 +998,7 @@
             <Transform type="Engine.Transform">
               <Properties>
                 <Property id="transform" kind="Object">
-                  <Property id="get_position" kind="Vec2f" x="0" y="57.2000008" />
+                  <Property id="get_position" kind="Vec2f" x="0.0000000" y="0.0000000" />
                   <Property id="get_scale" kind="Vec2f" x="1" y="1" />
                   <Property id="get_rotation" kind="Float" value="0" />
                   <Property id="get_origin" kind="Vec2f" x="0" y="0" />
@@ -1102,7 +1102,7 @@
             <Transform type="Engine.Transform">
               <Properties>
                 <Property id="transform" kind="Object">
-                  <Property id="get_position" kind="Vec2f" x="0" y="57.2000008" />
+                  <Property id="get_position" kind="Vec2f" x="-49.5366531" y="-28.6000000" />
                   <Property id="get_scale" kind="Vec2f" x="1" y="1" />
                   <Property id="get_rotation" kind="Float" value="0" />
                   <Property id="get_origin" kind="Vec2f" x="0" y="0" />
@@ -1206,7 +1206,7 @@
             <Transform type="Engine.Transform">
               <Properties>
                 <Property id="transform" kind="Object">
-                  <Property id="get_position" kind="Vec2f" x="0" y="57.2000008" />
+                  <Property id="get_position" kind="Vec2f" x="0.0000000" y="-57.2000000" />
                   <Property id="get_scale" kind="Vec2f" x="1" y="1" />
                   <Property id="get_rotation" kind="Float" value="0" />
                   <Property id="get_origin" kind="Vec2f" x="0" y="0" />
@@ -1310,7 +1310,7 @@
             <Transform type="Engine.Transform">
               <Properties>
                 <Property id="transform" kind="Object">
-                  <Property id="get_position" kind="Vec2f" x="0" y="57.2000008" />
+                  <Property id="get_position" kind="Vec2f" x="49.5366531" y="-85.8000000" />
                   <Property id="get_scale" kind="Vec2f" x="1" y="1" />
                   <Property id="get_rotation" kind="Float" value="0" />
                   <Property id="get_origin" kind="Vec2f" x="0" y="0" />
@@ -1414,7 +1414,7 @@
             <Transform type="Engine.Transform">
               <Properties>
                 <Property id="transform" kind="Object">
-                  <Property id="get_position" kind="Vec2f" x="0" y="57.2000008" />
+                  <Property id="get_position" kind="Vec2f" x="49.5366531" y="28.6000000" />
                   <Property id="get_scale" kind="Vec2f" x="1" y="1" />
                   <Property id="get_rotation" kind="Float" value="0" />
                   <Property id="get_origin" kind="Vec2f" x="0" y="0" />
@@ -1518,7 +1518,7 @@
             <Transform type="Engine.Transform">
               <Properties>
                 <Property id="transform" kind="Object">
-                  <Property id="get_position" kind="Vec2f" x="0" y="57.2000008" />
+                  <Property id="get_position" kind="Vec2f" x="99.0733062" y="-114.4000000" />
                   <Property id="get_scale" kind="Vec2f" x="1" y="1" />
                   <Property id="get_rotation" kind="Float" value="0" />
                   <Property id="get_origin" kind="Vec2f" x="0" y="0" />
@@ -1622,7 +1622,7 @@
             <Transform type="Engine.Transform">
               <Properties>
                 <Property id="transform" kind="Object">
-                  <Property id="get_position" kind="Vec2f" x="0" y="57.2000008" />
+                  <Property id="get_position" kind="Vec2f" x="99.0733062" y="0.0000000" />
                   <Property id="get_scale" kind="Vec2f" x="1" y="1" />
                   <Property id="get_rotation" kind="Float" value="0" />
                   <Property id="get_origin" kind="Vec2f" x="0" y="0" />
@@ -1726,7 +1726,7 @@
             <Transform type="Engine.Transform">
               <Properties>
                 <Property id="transform" kind="Object">
-                  <Property id="get_position" kind="Vec2f" x="0" y="57.2000008" />
+                  <Property id="get_position" kind="Vec2f" x="99.0733062" y="114.4000000" />
                   <Property id="get_scale" kind="Vec2f" x="1" y="1" />
                   <Property id="get_rotation" kind="Float" value="0" />
                   <Property id="get_origin" kind="Vec2f" x="0" y="0" />
