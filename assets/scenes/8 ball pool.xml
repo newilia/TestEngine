@@ -176,8 +176,8 @@
             <Visual type="Engine.CircleShapeVisual" entityId="1307715819">
               <Properties>
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                <Property id="get_fill_color" kind="Color" r="255" g="255" b="255" a="255" />
-                <Property id="get_outline_color" kind="Color" r="193" g="193" b="193" a="255" />
+                <Property id="get_fill_color" kind="Color" r="248" g="240" b="220" a="255" />
+                <Property id="get_outline_color" kind="Color" r="178" g="172" b="158" a="255" />
                 <Property id="get_outline_thickness" kind="Float" value="-1" />
                 <Property id="get_position" kind="Vec2f" x="0" y="0" />
                 <Property id="get_rotation" kind="Float" value="0" />
@@ -186,8 +186,8 @@
                 <Property id="get_miter_limit" kind="Float" value="10" />
                 <Property id="get_radius" kind="Float" value="28.6000004" />
                 <Property id="get_point_count" kind="Int32" value="64" />
-                <Property id="get_draw_sector" kind="Bool" value="true" />
-                <Property id="get_sector_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_draw_sector" kind="Bool" value="false" />
+                <Property id="get_sector_color" kind="Color" r="248" g="240" b="220" a="255" />
               </Properties>
             </Visual>
             <Behaviours>
@@ -280,8 +280,8 @@
             <Visual type="Engine.CircleShapeVisual" entityId="2647101062">
               <Properties>
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                <Property id="get_fill_color" kind="Color" r="131" g="193" b="58" a="255" />
-                <Property id="get_outline_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_fill_color" kind="Color" r="210" g="168" b="28" a="255" />
+                <Property id="get_outline_color" kind="Color" r="130" g="104" b="17" a="255" />
                 <Property id="get_outline_thickness" kind="Float" value="-1" />
                 <Property id="get_position" kind="Vec2f" x="0" y="0" />
                 <Property id="get_rotation" kind="Float" value="0" />
@@ -290,8 +290,8 @@
                 <Property id="get_miter_limit" kind="Float" value="10" />
                 <Property id="get_radius" kind="Float" value="28.6000004" />
                 <Property id="get_point_count" kind="Int32" value="64" />
-                <Property id="get_draw_sector" kind="Bool" value="true" />
-                <Property id="get_sector_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_draw_sector" kind="Bool" value="false" />
+                <Property id="get_sector_color" kind="Color" r="248" g="240" b="220" a="255" />
               </Properties>
             </Visual>
             <Behaviours>
@@ -384,8 +384,8 @@
             <Visual type="Engine.CircleShapeVisual" entityId="48221417">
               <Properties>
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                <Property id="get_fill_color" kind="Color" r="131" g="193" b="58" a="255" />
-                <Property id="get_outline_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_fill_color" kind="Color" r="28" g="98" b="178" a="255" />
+                <Property id="get_outline_color" kind="Color" r="17" g="60" b="110" a="255" />
                 <Property id="get_outline_thickness" kind="Float" value="-1" />
                 <Property id="get_position" kind="Vec2f" x="0" y="0" />
                 <Property id="get_rotation" kind="Float" value="0" />
@@ -394,8 +394,8 @@
                 <Property id="get_miter_limit" kind="Float" value="10" />
                 <Property id="get_radius" kind="Float" value="28.6000004" />
                 <Property id="get_point_count" kind="Int32" value="64" />
-                <Property id="get_draw_sector" kind="Bool" value="true" />
-                <Property id="get_sector_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_draw_sector" kind="Bool" value="false" />
+                <Property id="get_sector_color" kind="Color" r="248" g="240" b="220" a="255" />
               </Properties>
             </Visual>
             <Behaviours>
@@ -488,8 +488,8 @@
             <Visual type="Engine.CircleShapeVisual" entityId="620581609">
               <Properties>
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                <Property id="get_fill_color" kind="Color" r="131" g="193" b="58" a="255" />
-                <Property id="get_outline_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_fill_color" kind="Color" r="178" g="38" b="38" a="255" />
+                <Property id="get_outline_color" kind="Color" r="110" g="23" b="23" a="255" />
                 <Property id="get_outline_thickness" kind="Float" value="-1" />
                 <Property id="get_position" kind="Vec2f" x="0" y="0" />
                 <Property id="get_rotation" kind="Float" value="0" />
@@ -498,8 +498,8 @@
                 <Property id="get_miter_limit" kind="Float" value="10" />
                 <Property id="get_radius" kind="Float" value="28.6000004" />
                 <Property id="get_point_count" kind="Int32" value="64" />
-                <Property id="get_draw_sector" kind="Bool" value="true" />
-                <Property id="get_sector_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_draw_sector" kind="Bool" value="false" />
+                <Property id="get_sector_color" kind="Color" r="248" g="240" b="220" a="255" />
               </Properties>
             </Visual>
             <Behaviours>
@@ -592,8 +592,8 @@
             <Visual type="Engine.CircleShapeVisual" entityId="1870133124">
               <Properties>
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                <Property id="get_fill_color" kind="Color" r="131" g="193" b="58" a="255" />
-                <Property id="get_outline_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_fill_color" kind="Color" r="98" g="42" b="138" a="255" />
+                <Property id="get_outline_color" kind="Color" r="60" g="26" b="85" a="255" />
                 <Property id="get_outline_thickness" kind="Float" value="-1" />
                 <Property id="get_position" kind="Vec2f" x="0" y="0" />
                 <Property id="get_rotation" kind="Float" value="0" />
@@ -602,8 +602,8 @@
                 <Property id="get_miter_limit" kind="Float" value="10" />
                 <Property id="get_radius" kind="Float" value="28.6000004" />
                 <Property id="get_point_count" kind="Int32" value="64" />
-                <Property id="get_draw_sector" kind="Bool" value="true" />
-                <Property id="get_sector_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_draw_sector" kind="Bool" value="false" />
+                <Property id="get_sector_color" kind="Color" r="248" g="240" b="220" a="255" />
               </Properties>
             </Visual>
             <Behaviours>
@@ -696,8 +696,8 @@
             <Visual type="Engine.CircleShapeVisual" entityId="915482970">
               <Properties>
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                <Property id="get_fill_color" kind="Color" r="131" g="193" b="58" a="255" />
-                <Property id="get_outline_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_fill_color" kind="Color" r="205" g="98" b="28" a="255" />
+                <Property id="get_outline_color" kind="Color" r="127" g="60" b="17" a="255" />
                 <Property id="get_outline_thickness" kind="Float" value="-1" />
                 <Property id="get_position" kind="Vec2f" x="0" y="0" />
                 <Property id="get_rotation" kind="Float" value="0" />
@@ -706,8 +706,8 @@
                 <Property id="get_miter_limit" kind="Float" value="10" />
                 <Property id="get_radius" kind="Float" value="28.6000004" />
                 <Property id="get_point_count" kind="Int32" value="64" />
-                <Property id="get_draw_sector" kind="Bool" value="true" />
-                <Property id="get_sector_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_draw_sector" kind="Bool" value="false" />
+                <Property id="get_sector_color" kind="Color" r="248" g="240" b="220" a="255" />
               </Properties>
             </Visual>
             <Behaviours>
@@ -800,8 +800,8 @@
             <Visual type="Engine.CircleShapeVisual" entityId="2004354690">
               <Properties>
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                <Property id="get_fill_color" kind="Color" r="131" g="193" b="58" a="255" />
-                <Property id="get_outline_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_fill_color" kind="Color" r="28" g="128" b="72" a="255" />
+                <Property id="get_outline_color" kind="Color" r="17" g="79" b="44" a="255" />
                 <Property id="get_outline_thickness" kind="Float" value="-1" />
                 <Property id="get_position" kind="Vec2f" x="0" y="0" />
                 <Property id="get_rotation" kind="Float" value="0" />
@@ -810,8 +810,8 @@
                 <Property id="get_miter_limit" kind="Float" value="10" />
                 <Property id="get_radius" kind="Float" value="28.6000004" />
                 <Property id="get_point_count" kind="Int32" value="64" />
-                <Property id="get_draw_sector" kind="Bool" value="true" />
-                <Property id="get_sector_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_draw_sector" kind="Bool" value="false" />
+                <Property id="get_sector_color" kind="Color" r="248" g="240" b="220" a="255" />
               </Properties>
             </Visual>
             <Behaviours>
@@ -904,8 +904,8 @@
             <Visual type="Engine.CircleShapeVisual" entityId="712770954">
               <Properties>
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                <Property id="get_fill_color" kind="Color" r="131" g="193" b="58" a="255" />
-                <Property id="get_outline_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_fill_color" kind="Color" r="128" g="28" b="48" a="255" />
+                <Property id="get_outline_color" kind="Color" r="79" g="17" b="29" a="255" />
                 <Property id="get_outline_thickness" kind="Float" value="-1" />
                 <Property id="get_position" kind="Vec2f" x="0" y="0" />
                 <Property id="get_rotation" kind="Float" value="0" />
@@ -914,8 +914,8 @@
                 <Property id="get_miter_limit" kind="Float" value="10" />
                 <Property id="get_radius" kind="Float" value="28.6000004" />
                 <Property id="get_point_count" kind="Int32" value="64" />
-                <Property id="get_draw_sector" kind="Bool" value="true" />
-                <Property id="get_sector_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_draw_sector" kind="Bool" value="false" />
+                <Property id="get_sector_color" kind="Color" r="248" g="240" b="220" a="255" />
               </Properties>
             </Visual>
             <Behaviours>
@@ -1008,8 +1008,8 @@
             <Visual type="Engine.CircleShapeVisual" entityId="4268831284">
               <Properties>
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                <Property id="get_fill_color" kind="Color" r="131" g="193" b="58" a="255" />
-                <Property id="get_outline_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_fill_color" kind="Color" r="32" g="32" b="32" a="255" />
+                <Property id="get_outline_color" kind="Color" r="19" g="19" b="19" a="255" />
                 <Property id="get_outline_thickness" kind="Float" value="-1" />
                 <Property id="get_position" kind="Vec2f" x="0" y="0" />
                 <Property id="get_rotation" kind="Float" value="0" />
@@ -1018,8 +1018,8 @@
                 <Property id="get_miter_limit" kind="Float" value="10" />
                 <Property id="get_radius" kind="Float" value="28.6000004" />
                 <Property id="get_point_count" kind="Int32" value="64" />
-                <Property id="get_draw_sector" kind="Bool" value="true" />
-                <Property id="get_sector_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_draw_sector" kind="Bool" value="false" />
+                <Property id="get_sector_color" kind="Color" r="248" g="240" b="220" a="255" />
               </Properties>
             </Visual>
             <Behaviours>
@@ -1112,8 +1112,8 @@
             <Visual type="Engine.CircleShapeVisual" entityId="1303076877">
               <Properties>
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                <Property id="get_fill_color" kind="Color" r="131" g="193" b="58" a="255" />
-                <Property id="get_outline_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_fill_color" kind="Color" r="210" g="168" b="28" a="255" />
+                <Property id="get_outline_color" kind="Color" r="130" g="104" b="17" a="255" />
                 <Property id="get_outline_thickness" kind="Float" value="-1" />
                 <Property id="get_position" kind="Vec2f" x="0" y="0" />
                 <Property id="get_rotation" kind="Float" value="0" />
@@ -1123,7 +1123,7 @@
                 <Property id="get_radius" kind="Float" value="28.6000004" />
                 <Property id="get_point_count" kind="Int32" value="64" />
                 <Property id="get_draw_sector" kind="Bool" value="true" />
-                <Property id="get_sector_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_sector_color" kind="Color" r="248" g="240" b="220" a="255" />
               </Properties>
             </Visual>
             <Behaviours>
@@ -1216,8 +1216,8 @@
             <Visual type="Engine.CircleShapeVisual" entityId="4172500679">
               <Properties>
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                <Property id="get_fill_color" kind="Color" r="131" g="193" b="58" a="255" />
-                <Property id="get_outline_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_fill_color" kind="Color" r="28" g="98" b="178" a="255" />
+                <Property id="get_outline_color" kind="Color" r="17" g="60" b="110" a="255" />
                 <Property id="get_outline_thickness" kind="Float" value="-1" />
                 <Property id="get_position" kind="Vec2f" x="0" y="0" />
                 <Property id="get_rotation" kind="Float" value="0" />
@@ -1227,7 +1227,7 @@
                 <Property id="get_radius" kind="Float" value="28.6000004" />
                 <Property id="get_point_count" kind="Int32" value="64" />
                 <Property id="get_draw_sector" kind="Bool" value="true" />
-                <Property id="get_sector_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_sector_color" kind="Color" r="248" g="240" b="220" a="255" />
               </Properties>
             </Visual>
             <Behaviours>
@@ -1320,8 +1320,8 @@
             <Visual type="Engine.CircleShapeVisual" entityId="9465005">
               <Properties>
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                <Property id="get_fill_color" kind="Color" r="131" g="193" b="58" a="255" />
-                <Property id="get_outline_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_fill_color" kind="Color" r="178" g="38" b="38" a="255" />
+                <Property id="get_outline_color" kind="Color" r="110" g="23" b="23" a="255" />
                 <Property id="get_outline_thickness" kind="Float" value="-1" />
                 <Property id="get_position" kind="Vec2f" x="0" y="0" />
                 <Property id="get_rotation" kind="Float" value="0" />
@@ -1331,7 +1331,7 @@
                 <Property id="get_radius" kind="Float" value="28.6000004" />
                 <Property id="get_point_count" kind="Int32" value="64" />
                 <Property id="get_draw_sector" kind="Bool" value="true" />
-                <Property id="get_sector_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_sector_color" kind="Color" r="248" g="240" b="220" a="255" />
               </Properties>
             </Visual>
             <Behaviours>
@@ -1424,8 +1424,8 @@
             <Visual type="Engine.CircleShapeVisual" entityId="1550440279">
               <Properties>
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                <Property id="get_fill_color" kind="Color" r="131" g="193" b="58" a="255" />
-                <Property id="get_outline_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_fill_color" kind="Color" r="98" g="42" b="138" a="255" />
+                <Property id="get_outline_color" kind="Color" r="60" g="26" b="85" a="255" />
                 <Property id="get_outline_thickness" kind="Float" value="-1" />
                 <Property id="get_position" kind="Vec2f" x="0" y="0" />
                 <Property id="get_rotation" kind="Float" value="0" />
@@ -1435,7 +1435,7 @@
                 <Property id="get_radius" kind="Float" value="28.6000004" />
                 <Property id="get_point_count" kind="Int32" value="64" />
                 <Property id="get_draw_sector" kind="Bool" value="true" />
-                <Property id="get_sector_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_sector_color" kind="Color" r="248" g="240" b="220" a="255" />
               </Properties>
             </Visual>
             <Behaviours>
@@ -1528,8 +1528,8 @@
             <Visual type="Engine.CircleShapeVisual" entityId="2122256143">
               <Properties>
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                <Property id="get_fill_color" kind="Color" r="131" g="193" b="58" a="255" />
-                <Property id="get_outline_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_fill_color" kind="Color" r="205" g="98" b="28" a="255" />
+                <Property id="get_outline_color" kind="Color" r="127" g="60" b="17" a="255" />
                 <Property id="get_outline_thickness" kind="Float" value="-1" />
                 <Property id="get_position" kind="Vec2f" x="0" y="0" />
                 <Property id="get_rotation" kind="Float" value="0" />
@@ -1539,7 +1539,7 @@
                 <Property id="get_radius" kind="Float" value="28.6000004" />
                 <Property id="get_point_count" kind="Int32" value="64" />
                 <Property id="get_draw_sector" kind="Bool" value="true" />
-                <Property id="get_sector_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_sector_color" kind="Color" r="248" g="240" b="220" a="255" />
               </Properties>
             </Visual>
             <Behaviours>
@@ -1632,8 +1632,8 @@
             <Visual type="Engine.CircleShapeVisual" entityId="2964132398">
               <Properties>
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                <Property id="get_fill_color" kind="Color" r="131" g="193" b="58" a="255" />
-                <Property id="get_outline_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_fill_color" kind="Color" r="28" g="128" b="72" a="255" />
+                <Property id="get_outline_color" kind="Color" r="17" g="79" b="44" a="255" />
                 <Property id="get_outline_thickness" kind="Float" value="-1" />
                 <Property id="get_position" kind="Vec2f" x="0" y="0" />
                 <Property id="get_rotation" kind="Float" value="0" />
@@ -1643,7 +1643,7 @@
                 <Property id="get_radius" kind="Float" value="28.6000004" />
                 <Property id="get_point_count" kind="Int32" value="64" />
                 <Property id="get_draw_sector" kind="Bool" value="true" />
-                <Property id="get_sector_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_sector_color" kind="Color" r="248" g="240" b="220" a="255" />
               </Properties>
             </Visual>
             <Behaviours>
@@ -1736,8 +1736,8 @@
             <Visual type="Engine.CircleShapeVisual" entityId="1800501640">
               <Properties>
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                <Property id="get_fill_color" kind="Color" r="131" g="193" b="58" a="255" />
-                <Property id="get_outline_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_fill_color" kind="Color" r="128" g="28" b="48" a="255" />
+                <Property id="get_outline_color" kind="Color" r="79" g="17" b="29" a="255" />
                 <Property id="get_outline_thickness" kind="Float" value="-1" />
                 <Property id="get_position" kind="Vec2f" x="0" y="0" />
                 <Property id="get_rotation" kind="Float" value="0" />
@@ -1747,7 +1747,7 @@
                 <Property id="get_radius" kind="Float" value="28.6000004" />
                 <Property id="get_point_count" kind="Int32" value="64" />
                 <Property id="get_draw_sector" kind="Bool" value="true" />
-                <Property id="get_sector_color" kind="Color" r="86" g="127" b="38" a="255" />
+                <Property id="get_sector_color" kind="Color" r="248" g="240" b="220" a="255" />
               </Properties>
             </Visual>
             <Behaviours>
