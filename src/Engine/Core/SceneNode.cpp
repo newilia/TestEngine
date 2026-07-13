@@ -200,7 +200,7 @@ void SceneNode::SetVisual(shared_ptr<Visual>&& visual) {
 	if (_visual) {
 		_visual->AttachTo(shared_from_this());
 	}
-	NotifyActiveEntityIndexDirty();
+	NotifySceneEntityIndexDirty();
 }
 
 void SceneNode::SetSortingStrategy(const shared_ptr<SortingStrategy>& sorting) {
@@ -208,7 +208,7 @@ void SceneNode::SetSortingStrategy(const shared_ptr<SortingStrategy>& sorting) {
 	if (_sortingStrategy) {
 		_sortingStrategy->AttachTo(shared_from_this());
 	}
-	NotifyActiveEntityIndexDirty();
+	NotifySceneEntityIndexDirty();
 }
 
 void SceneNode::AddChild(const std::shared_ptr<SceneNode>& child) {
@@ -228,7 +228,7 @@ void SceneNode::AddChildAt(const std::shared_ptr<SceneNode>& child, std::size_t 
 	if (IsInActiveScene()) {
 		child->NotifyLifecycleInitRecursive();
 	}
-	NotifyActiveEntityIndexDirty();
+	NotifySceneEntityIndexDirty();
 }
 
 void SceneNode::RemoveChild(SceneNode* child) {
@@ -246,7 +246,7 @@ void SceneNode::RemoveChild(SceneNode* child) {
 	node->SetParent(nullptr);
 	node->MarkWorldTransformSubtreeDirty();
 	_children.erase(it);
-	NotifyActiveEntityIndexDirty();
+	NotifySceneEntityIndexDirty();
 }
 
 shared_ptr<SceneNode> SceneNode::FindChild(const std::string& id, bool recursively) {
@@ -289,7 +289,7 @@ std::vector<shared_ptr<SceneNode>> SceneNode::FindChildren(const std::string& id
 void SceneNode::AddBehaviour(shared_ptr<Behaviour> behaviour) {
 	behaviour->AttachTo(shared_from_this());
 	_behaviours.push_back(behaviour);
-	NotifyActiveEntityIndexDirty();
+	NotifySceneEntityIndexDirty();
 	if (_isNodeLifecycleInited) {
 		behaviour->OnInit();
 	}
@@ -304,7 +304,7 @@ void SceneNode::RemoveBehaviour(Behaviour* behaviour) {
 	}
 	DetachBehaviourForRemove(*it);
 	_behaviours.erase(it);
-	NotifyActiveEntityIndexDirty();
+	NotifySceneEntityIndexDirty();
 }
 
 void SceneNode::SetEnabled(bool isEnabled) {
@@ -362,7 +362,7 @@ bool SceneNode::IsInActiveScene() const {
 	return false;
 }
 
-void SceneNode::NotifyActiveEntityIndexDirty() const {
+void SceneNode::NotifySceneEntityIndexDirty() const {
 	if (const auto scene = _owningScene.lock()) {
 		scene->MarkEntityIndexDirty();
 	}

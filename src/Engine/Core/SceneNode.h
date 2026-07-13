@@ -125,7 +125,7 @@ private:
 	void DetachBehaviourForRemove(const shared_ptr<Behaviour>& b);
 	bool IsInActiveScene() const;
 	void PropagateOwningScene(const weak_ptr<Scene>& scene);
-	void NotifyActiveEntityIndexDirty() const;
+	void NotifySceneEntityIndexDirty() const;
 	// prevents UB if _behaviours is modified during iteration loop
 	void IterateBehavioursSafely(const std::function<void(shared_ptr<Behaviour>)>& func);
 
