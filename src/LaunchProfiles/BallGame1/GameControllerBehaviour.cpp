@@ -39,15 +39,13 @@ namespace BallGame1 {
 	void GameControllerBehaviour::Shoot() {
 		auto ballNode = _ballNode.lock();
 		auto gunNode = _gunNodeRef.Get();
-
-		if (!ballNode || !gunNode) {
-			return;
+		if (ballNode && gunNode) {
+			auto gunRotation = gunNode->GetLocalRotation().asRadians();
+			auto ballBody = ballNode->RequireBehaviour<PhysicsBodyBehaviour>();
+			auto moveDirection = sf::Vector2f(std::sin(gunRotation), -std::cos(gunRotation));
+			ballBody->SetVelocity(moveDirection * _shootVelocity);
+			DetachBallFromGun();
 		}
-		auto gunRotation = gunNode->GetLocalRotation().asRadians();
-		auto ballBody = ballNode->RequireBehaviour<PhysicsBodyBehaviour>();
-		auto moveDirection = sf::Vector2f(std::sin(gunRotation), -std::cos(gunRotation));
-		ballBody->SetVelocity(moveDirection * _shootVelocity);
-		DetachBallFromGun();
 
 		if (auto ballNode = CreateRandomBallNode()) {
 			AttachBallToGun(ballNode);
