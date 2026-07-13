@@ -45,8 +45,14 @@ public:
 	/// @setter
 	void SetTextureRect(std::optional<sf::IntRect> textureRect);
 
+	/// @getter
+	const sf::Color& GetColor() const;
+	/// @setter
+	void SetColor(const sf::Color& opacity);
+
 private:
 	std::string _texturePath;
 	std::unique_ptr<sf::Sprite> _sprite;
 	std::optional<sf::IntRect> _textureRect;
+	sf::Color _color;
 };

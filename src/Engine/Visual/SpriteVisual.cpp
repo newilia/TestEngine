@@ -124,3 +124,18 @@ void SpriteVisual::SetTextureRect(std::optional<sf::IntRect> textureRect) {
 		_sprite->setTextureRect(sf::IntRect({0, 0}, sf::Vector2i(static_cast<int>(sz.x), static_cast<int>(sz.y))));
 	}
 }
+
+const sf::Color& SpriteVisual::GetColor() const {
+	if (!_sprite) {
+		static const sf::Color empty;
+		return empty;
+	}
+	return _sprite->getColor();
+}
+
+void SpriteVisual::SetColor(const sf::Color& color) {
+	if (!_sprite) {
+		return;
+	}
+	_sprite->setColor(color);
+}
