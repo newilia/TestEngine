@@ -42,3 +42,13 @@ Resize tool
 
 bbox rework
 
+snap to objects bounds and centers
+snap to guides
+
+Disable snap by honding Alt
+
+F2 to rename node
+
+Добавить чекбокс Select on click в move tool
+
+не работает выделение при переименовании ноды
