@@ -21,15 +21,15 @@
     <Visual type="Engine.CircleShapeVisual" entityId="483085029">
       <Properties>
         <Property id="tap_handling_enabled" kind="Bool" value="false" />
-        <Property id="get_fill_color" kind="Color" r="198" g="63" b="71" a="255" />
-        <Property id="get_outline_color" kind="Color" r="127" g="41" b="45" a="255" />
+        <Property id="get_fill_color" kind="Color" r="62" g="205" b="205" a="255" />
+        <Property id="get_outline_color" kind="Color" r="41" g="127" b="115" a="255" />
         <Property id="get_outline_thickness" kind="Float" value="-1" />
         <Property id="get_position" kind="Vec2f" x="0" y="0" />
         <Property id="get_rotation" kind="Float" value="0" />
         <Property id="get_scale" kind="Vec2f" x="1" y="1" />
-        <Property id="get_origin" kind="Vec2f" x="33" y="33" />
+        <Property id="get_origin" kind="Vec2f" x="39" y="39" />
         <Property id="get_miter_limit" kind="Float" value="10" />
-        <Property id="get_radius" kind="Float" value="33" />
+        <Property id="get_radius" kind="Float" value="39" />
         <Property id="get_point_count" kind="Int32" value="64" />
         <Property id="get_draw_sector" kind="Bool" value="true" />
         <Property id="get_sector_color" kind="Color" r="127" g="41" b="45" a="255" />

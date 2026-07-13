@@ -2,7 +2,7 @@
 <Scene version="2">
   <Settings>
     <Simulation speedMultiplier="1" vsync="false" />
-    <View centerX="92.6117554" centerY="-834.627075" scale="2.02173162" />
+    <View centerX="58.4985352" centerY="-607.087341" scale="1.4991442" />
     <Grid visible="true" size="200" basis="10" snap="true" />
     <Physics gravityX="0" gravityY="400" gravityEnabled="false" airFriction="0" substeps="1">
       <Attraction strength="50" softening="4" massCoupling="true" />
@@ -47,10 +47,17 @@
       <Behaviour type="BallGame1.GameControllerBehaviour" entityId="373387783">
         <Properties>
           <Property id="game_controller_behaviour" kind="Object">
-            <Property id="ball_asset_ref" kind="AssetRef" value="assets/sceneobjects/ballgame/ball.xml" type="Engine.SceneObject" />
+            <Property id="ball_asset_refs" kind="Sequence">
+              <Property id="0" kind="Object">
+                <Property id="v" kind="AssetRef" value="assets/sceneobjects/ballgame/ball.xml" type="Engine.SceneObject" />
+              </Property>
+              <Property id="1" kind="Object">
+                <Property id="v" kind="AssetRef" value="assets/sceneobjects/ballgame/ball2.xml" type="Engine.SceneObject" />
+              </Property>
+            </Property>
             <Property id="field_node_ref" kind="SceneRef" value="1274006239" />
             <Property id="gun_node_ref" kind="SceneRef" value="3006411972" />
-            <Property id="shoot_velocity" kind="Float" value="100" />
+            <Property id="shoot_velocity" kind="Float" value="3000" />
           </Property>
         </Properties>
       </Behaviour>
@@ -495,7 +502,7 @@
             <Property id="transform" kind="Object">
               <Property id="get_position" kind="Vec2f" x="0" y="-80" />
               <Property id="get_scale" kind="Vec2f" x="1" y="1" />
-              <Property id="get_rotation" kind="Float" value="354.697632" />
+              <Property id="get_rotation" kind="Float" value="0.621946633" />
               <Property id="get_origin" kind="Vec2f" x="0" y="0" />
             </Property>
           </Properties>
