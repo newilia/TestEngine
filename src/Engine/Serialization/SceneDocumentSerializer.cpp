@@ -137,8 +137,8 @@ namespace Engine::Serialization {
 			return loadResult;
 		}
 
-		SceneSettingsRegistry::GetInstance().ApplyAllDefaults();
 		if (sceneElement) {
+			SceneSettingsRegistry::GetInstance().ApplyAllDefaults();
 			if (const pugi::xml_node settingsNode = sceneElement.child(kSettingsElement)) {
 				SceneSettingsRegistry::GetInstance().LoadAll(settingsNode, loadResult.result);
 			}
