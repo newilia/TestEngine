@@ -911,7 +911,7 @@ namespace Engine {
 		if (e.control && e.code == sf::Keyboard::Key::D) {
 			ClearNodeSelection();
 		}
-		if (e.code == sf::Keyboard::Key::Space) {
+		if (e.code == sf::Keyboard::Key::Space && !ImGui::GetIO().WantCaptureKeyboard) {
 			MainContext::GetInstance().ToggleSimPaused();
 		}
 		if (_isOpen && !ImGui::GetIO().WantCaptureKeyboard && _editorToolManager->TryActivateToolViaDigitKey(e.code)) {
