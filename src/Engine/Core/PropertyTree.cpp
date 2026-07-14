@@ -158,6 +158,35 @@ namespace Engine {
 		pop();
 	}
 
+	void PropertyBuilder::beginPolymorphicSequence(
+	    std::string id, const std::string& label, PropAccessPolymorphicSequence sequenceOps, PropertyMeta meta) {
+		PropertyNode n;
+		n.id = std::move(id);
+		n.label = PropertyTreeDetail::effectiveLabel(label, meta);
+		n.kind = PropertyKind::Sequence;
+		n.meta = std::move(meta);
+		n.access = std::move(sequenceOps);
+		PropertyNode& ref = appendChild(std::move(n));
+		_stack.push_back(&ref);
+	}
+
+	void PropertyBuilder::endPolymorphicSequence() {
+		pop();
+	}
+
+	PropertyNode& PropertyBuilder::pushPolymorphicMetaClassObject(
+	    std::string id, const std::string& label, std::function<std::string()> getTypeId, PropertyMeta meta) {
+		PropertyNode n;
+		n.id = std::move(id);
+		n.label = PropertyTreeDetail::effectiveLabel(label, meta);
+		n.kind = PropertyKind::Object;
+		n.meta = std::move(meta);
+		n.access = PropAccessMetaClassTypeId{std::move(getTypeId)};
+		PropertyNode& ref = appendChild(std::move(n));
+		_stack.push_back(&ref);
+		return ref;
+	}
+
 	void PropertyBuilder::beginAssociative(
 	    std::string id, const std::string& label, PropAccessAssociative associativeOps, PropertyMeta meta) {
 		PropertyNode n;

@@ -50,5 +50,10 @@ namespace Engine {
 
 		/// For `PropertyKind::AssetRef` (XML `type` attribute and editor browse defaults).
 		std::string assetTypeId;
+
+		/// For polymorphic META_CLASS sequences: immediate base class short name (e.g. `PhysicsBodyModifierBase`).
+		std::string metaClassBaseTypeId;
+		/// Combo options for "Add …" in polymorphic sequences (inspector-only).
+		std::function<std::vector<std::string>()> metaClassDerivedTypeIdsProvider;
 	};
 } // namespace Engine

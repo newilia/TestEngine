@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Scan src/**/*.h for META_CLASS(), META_PROPERTY_BASE(), META_ENUM(), /// @property, /// @getter,
-/// @setter, and /// @method tags; emit src/Codegen/<Stem>.generated.hpp and
-/// src/Codegen/SceneEntityRegistry.generated.cpp (scene entity registration).
+/// @setter, and /// @method tags; emit src/Codegen/<Stem>.generated.hpp,
+/// src/Codegen/SceneEntityRegistry.generated.cpp, and src/Codegen/MetaClassRegistry.generated.cpp.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 23
+CACHE_VERSION = 24
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
@@ -152,6 +152,9 @@ VOID_METHOD_RE = re.compile(
     r"(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?\s*;\s*$"
 )
 _QUALIFIED_ID_ENUM = r"[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*"
+VECTOR_POLY_FIELD_RE = re.compile(
+    rf"^\s*(?:inline\s+|static\s+|mutable\s+)*std::vector<\s*std::unique_ptr<\s*({_QUALIFIED_ID_ENUM})\s*>\s*>\s+(\w+)\s*;\s*$"
+)
 META_ENUM_LINE_RE = re.compile(
     r"^\s*META_ENUM\s*\(\s*([A-Za-z_]\w*)\s*,\s*((?:[A-Za-z_]\w*)(?:\s*,\s*[A-Za-z_]\w*)*)\s*\)\s*;\s*$"
 )
@@ -199,7 +202,7 @@ KNOWN_TYPES = frozenset(
 )
 
 
-ContainerElementKindName = Literal["scalar", "asset_ref", "ref_wrapper"]
+ContainerElementKindName = Literal["scalar", "asset_ref", "ref_wrapper", "polymorphic_object"]
 
 
 @dataclass(frozen=True)
@@ -208,13 +211,36 @@ class ContainerElementKind:
     cpp_type: str
     asset_inner_type: str | None = None
     ref_inner_type: str | None = None
+    base_type: str | None = None
+
+
+@dataclass(frozen=True)
+class MetaClassIndex:
+    by_qualified: dict[str, tuple["ClassSpec", str]]
+    all_qualified: frozenset[str]
+
+    def resolve_type(self, raw_type: str, class_namespaces: tuple[str, ...]) -> str | None:
+        t = normalize_qualified_type(raw_type)
+        if t in self.all_qualified:
+            return t
+        if "::" not in t:
+            candidate = "::".join((*class_namespaces, t))
+            if candidate in self.all_qualified:
+                return candidate
+        return None
 
 
 def normalize_qualified_type(s: str) -> str:
     return re.sub(r"\s*::\s*", "::", s.strip())
 
 
-def classify_container_element(type_str: str) -> ContainerElementKind:
+def classify_container_element(
+    type_str: str,
+    meta_class_index: MetaClassIndex | None = None,
+    class_namespaces: tuple[str, ...] = (),
+    *,
+    allow_meta_class: bool = False,
+) -> ContainerElementKind:
     t = normalize_qualified_type(type_str)
     m_ref = re.fullmatch(_REFWRAPPER_TYPE_RE, t)
     if m_ref:
@@ -224,6 +250,11 @@ def classify_container_element(type_str: str) -> ContainerElementKind:
     if m_asset:
         inner = normalize_qualified_type(m_asset.group(1))
         return ContainerElementKind("asset_ref", f"AssetRef<{inner}>", asset_inner_type=inner)
+    if allow_meta_class and meta_class_index is not None:
+        resolved = meta_class_index.resolve_type(t, class_namespaces)
+        if resolved is not None:
+            base_short = resolved.rsplit("::", 1)[-1]
+            return ContainerElementKind("polymorphic_object", resolved, base_type=base_short)
     if t in KNOWN_TYPES:
         return ContainerElementKind("scalar", t)
     raise ValueError(f"unsupported container element type `{type_str}`")
@@ -237,6 +268,9 @@ def _element_flags_first(el: ContainerElementKind) -> dict[str, Any]:
     elif el.kind == "ref_wrapper":
         out["is_ref_wrapper"] = True
         out["ref_inner_type"] = el.ref_inner_type
+    elif el.kind == "polymorphic_object":
+        out["is_polymorphic_vector"] = True
+        out["polymorphic_base_type"] = el.base_type
     return out
 
 
@@ -318,6 +352,8 @@ class PropSpec:
     is_pair: bool = False
     is_optional: bool = False
     is_object: bool = False
+    is_polymorphic_vector: bool = False
+    polymorphic_base_type: str | None = None
     is_ref_wrapper: bool = False
     ref_inner_type: str | None = None
     is_asset_ref: bool = False
@@ -930,7 +966,7 @@ def resolve_reflected_object_type(
     return None
 
 
-def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
+def parse_header(path: Path, meta_class_index: MetaClassIndex | None = None) -> tuple[list[ClassSpec], list[str]]:
     text = path.read_text(encoding="utf-8", errors="replace")
     lines = text.splitlines()
     log: list[str] = []
@@ -1027,10 +1063,42 @@ def parse_header(path: Path) -> tuple[list[ClassSpec], list[str]]:
             pline = pending.line
             pcol = pending.col
             if kind == "property":
-                m_vec = VECTOR_FIELD_RE.match(line)
-                if m_vec:
+                m_poly_vec = VECTOR_POLY_FIELD_RE.match(line)
+                if m_poly_vec:
+                    raw_base, member = m_poly_vec.group(1), m_poly_vec.group(2)
+                    class_ns = tuple(inner["namespaces"])
+                    if meta_class_index is None:
+                        resolved = normalize_qualified_type(raw_base)
+                    else:
+                        resolved = meta_class_index.resolve_type(raw_base, class_ns)
+                        if resolved is None:
+                            raise ParseError(
+                                f"std::vector<std::unique_ptr<{raw_base}>> requires META_CLASS() on `{raw_base}` "
+                                f"(tag at line {pline})",
+                                path,
+                                line_no,
+                                1,
+                            )
+                    base_short = resolved.rsplit("::", 1)[-1]
+                    inner.setdefault("props", []).append(
+                        PropSpec(
+                            cpp_type=resolved,
+                            member=member,
+                            line=pline,
+                            col=pcol,
+                            attrs=attrs,
+                            is_getter=False,
+                            is_vector=True,
+                            is_bitset=False,
+                            is_polymorphic_vector=True,
+                            polymorphic_base_type=base_short,
+                        )
+                    )
+                elif m_vec := VECTOR_FIELD_RE.match(line):
                     try:
-                        el = classify_container_element(m_vec.group(1))
+                        el = classify_container_element(
+                            m_vec.group(1), meta_class_index, tuple(inner["namespaces"])
+                        )
                     except ValueError as e:
                         raise ParseError(
                             f"std::vector element: {e} (tag at line {pline})",
@@ -3344,6 +3412,84 @@ def _vector_rect_component_set(
     return f"[this, {idx}]({vec_t} v) {{ {acc}.{component} = v; }}"
 
 
+def emit_polymorphic_vector_property(
+    out: list[str],
+    p: PropSpec,
+    path: Path,
+    meta_arg: str,
+    readonly: bool,
+) -> None:
+    if p.is_getter:
+        raise ParseError(
+            "polymorphic META_CLASS std::vector fields must be data members (not @getter) in codegen v1",
+            path,
+            p.line,
+            p.col,
+        )
+    base_short = p.polymorphic_base_type or ""
+    base_esc = cpp_escape_string(base_short)
+    base_type = p.cpp_type
+    fid = member_to_field_id(p.member)
+    label_esc = cpp_escape_string(default_label(p))
+    mem = p.member
+    idx = f"_pv_{fid}_i"
+    size_body = f"{mem}.size()"
+
+    out.append("\t{")
+    out.append("\t\tEngine::PropertyMeta _pm{};")
+    if readonly:
+        out.append("\t\t_pm.readOnly = true;")
+    out.append(f'\t\t_pm.metaClassBaseTypeId = "{base_esc}";')
+    out.append(
+        f"\t\t_pm.metaClassDerivedTypeIdsProvider = []() -> std::vector<std::string> {{ "
+        f'return Engine::Serialization::MetaClassRegistry::GetInstance().GetDerivedTypeIds("{base_esc}"); '
+        f"}};"
+    )
+    if readonly:
+        seq = (
+            "Engine::PropAccessPolymorphicSequence{\n"
+            f"\t\t\t[this]() {{ return {size_body}; }},\n"
+            "\t\t\t{},\n"
+            "\t\t\t{},\n"
+            "\t\t\t{}\n"
+            "\t\t}"
+        )
+    else:
+        seq = (
+            "Engine::PropAccessPolymorphicSequence{\n"
+            f"\t\t\t[this]() {{ return {size_body}; }},\n"
+            "\t\t\t[this](std::string_view typeId) {\n"
+            f"\t\t\t\t{mem}.push_back("
+            f"Engine::Serialization::MetaClassRegistry::GetInstance().CreateUniqueByTypeIdAs<{base_type}>(typeId));\n"
+            "\t\t\t},\n"
+            f"\t\t\t[this](std::size_t removeIndex) {{\n"
+            f"\t\t\t\t{mem}.erase({mem}.begin() + static_cast<std::ptrdiff_t>(removeIndex));\n"
+            "\t\t\t},\n"
+            "\t\t\t[this](std::size_t replaceIndex, std::string_view typeId) {\n"
+            f"\t\t\t\t{mem}[replaceIndex] = "
+            f"Engine::Serialization::MetaClassRegistry::GetInstance().CreateUniqueByTypeIdAs<{base_type}>(typeId);\n"
+            "\t\t\t}\n"
+            "\t\t}"
+        )
+    out.append(f'\t\tb.beginPolymorphicSequence("{fid}", "{label_esc}", {seq}, _pm);')
+    out.append(f"\t\tfor (std::size_t {idx} = 0; {idx} < {size_body}; ++{idx}) {{")
+    out.append(
+        f"\t\t\tb.pushPolymorphicMetaClassObject(std::to_string({idx}), "
+        f'"[" + std::to_string({idx}) + "]", '
+        f"[this, {idx}]() -> std::string {{\n"
+        f"\t\t\t\tconst auto& _elem = {mem}[{idx}];\n"
+        f"\t\t\t\treturn _elem ? Engine::Serialization::MetaClassRegistry::GetInstance().GetTypeIdForInstance(*_elem) : std::string{{}};\n"
+        f"\t\t\t}});"
+    )
+    out.append(f"\t\t\tif ({mem}[{idx}]) {{")
+    out.append(f"\t\t\t\t{mem}[{idx}]->BuildPropertyTree(b);")
+    out.append("\t\t\t}")
+    out.append("\t\t\tb.pop();")
+    out.append("\t\t}")
+    out.append("\t\tb.endPolymorphicSequence();")
+    out.append("\t}")
+
+
 def emit_std_vector_property(
     out: list[str],
     p: PropSpec,
@@ -3696,7 +3842,10 @@ def ref_inner_is_scene_node(inner: str) -> bool:
 
 
 def generate_file_content(
-    path: Path, classes: list[ClassSpec], property_base_targets: set[str]
+    path: Path,
+    classes: list[ClassSpec],
+    property_base_targets: set[str],
+    meta_class_index: MetaClassIndex,
 ) -> str:
     out: list[str] = [
         "// Generated by tools/property_codegen.py — do not edit.",
@@ -3745,8 +3894,12 @@ def generate_file_content(
         out.append("")
     out.append("#include <cstdint>")
     out.append("#include <string>")
-    if any(p.is_vector for c in classes for p in c.props):
+    if any(p.is_vector or p.is_polymorphic_vector for c in classes for p in c.props):
         out.append("#include <cstddef>")
+    if any(p.is_polymorphic_vector for c in classes for p in c.props):
+        out.append("#include <memory>")
+        out.append("#include <string_view>")
+        out.append('#include "Engine/Serialization/MetaClassRegistry.h"')
     if any(p.is_bitset for c in classes for p in c.props):
         out.append("#include <bitset>")
     if any(p.is_pair for c in classes for p in c.props):
@@ -3776,7 +3929,16 @@ def generate_file_content(
         if "SceneObject" in asset_inners:
             out.append('#include "Engine/Core/SceneObject.h"')
     assoc_headers: set[str] = set()
-    reflected_types = {c.qualified() for c in classes}
+    reflected_types = meta_class_index.all_qualified
+    object_includes: set[str] = set()
+    for c in classes:
+        for p in c.props:
+            if p.is_object:
+                resolved = resolve_reflected_object_type(p.cpp_type, c.namespaces, reflected_types)
+                if resolved and resolved in meta_class_index.by_qualified:
+                    object_includes.add(meta_class_index.by_qualified[resolved][1])
+            if p.is_polymorphic_vector and p.cpp_type in meta_class_index.by_qualified:
+                object_includes.add(meta_class_index.by_qualified[p.cpp_type][1])
 
     for c in classes:
         for p in c.props:
@@ -3793,6 +3955,8 @@ def generate_file_content(
                 assoc_headers.add("<unordered_set>")
     for h in sorted(assoc_headers):
         out.append(f"#include {h}")
+    for inc in sorted(object_includes):
+        out.append(f'#include "{inc}"')
     if assoc_headers:
         out.append("#include <iterator>")
     if any(p.enum_enumerators is not None for c in classes for p in c.props):
@@ -4002,6 +4166,21 @@ def generate_file_content(
                 out.append("\tb.pop();")
                 continue
 
+            if p.is_polymorphic_vector:
+                if p.is_getter:
+                    raise ParseError(
+                        "polymorphic META_CLASS std::vector fields must be data members (not @getter) in codegen v1",
+                        path,
+                        p.line,
+                        p.col,
+                    )
+                has_meta = readonly or any(
+                    k in a for k in ("tooltip", "minCount", "maxCount", "valuesProvider")
+                )
+                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
+                emit_polymorphic_vector_property(out, p, path, meta_arg, readonly)
+                continue
+
             if p.is_vector:
                 has_meta = readonly or any(
                     k in a
@@ -4134,6 +4313,104 @@ def scene_entity_kind_cpp(rel_src: str, class_name: str) -> str:
     if rel_src.startswith("Engine/Visual/"):
         return "Visual"
     return "Behaviour"
+
+
+META_CLASS_REGISTRY_EXCLUDE = frozenset(
+    {
+        "PhysicsBodyModifierBase",
+    }
+)
+
+
+def collect_meta_class_index(root: Path) -> MetaClassIndex:
+    src = root / "src"
+    by_qualified: dict[str, tuple[ClassSpec, str]] = {}
+    for h in sorted(src.rglob("*.h"), key=lambda p: p.as_posix()):
+        if "Codegen" in h.parts:
+            continue
+        rel_header = h.relative_to(src).as_posix()
+        classes, _ = parse_header(h)
+        for c in classes:
+            by_qualified[c.qualified()] = (c, rel_header)
+    return MetaClassIndex(by_qualified=by_qualified, all_qualified=frozenset(by_qualified))
+
+
+def should_register_meta_class(
+    c: ClassSpec, classes_used_as_property_base: frozenset[str]
+) -> bool:
+    if c.class_name in META_CLASS_REGISTRY_EXCLUDE:
+        return False
+    if not c.property_base:
+        return False
+    if c.class_name in classes_used_as_property_base:
+        return False
+    return True
+
+
+def collect_meta_class_registry_entries(root: Path) -> list[tuple[ClassSpec, str]]:
+    index = collect_meta_class_index(root)
+    used_as_base: set[str] = set()
+    for c, _ in index.by_qualified.values():
+        if not c.property_base:
+            continue
+        base = c.property_base.strip()
+        used_as_base.add(base.rsplit("::", 1)[-1])
+        used_as_base.add(base)
+    used_frozen = frozenset(used_as_base)
+    entries: list[tuple[ClassSpec, str]] = []
+    for qualified, (c, rel_h) in sorted(index.by_qualified.items(), key=lambda t: t[0]):
+        if should_register_meta_class(c, used_frozen):
+            entries.append((c, rel_h))
+    return entries
+
+
+def meta_class_type_id(rel_src: str, class_name: str) -> str:
+    return scene_entity_type_id(rel_src, class_name)
+
+
+def meta_class_property_base_short(c: ClassSpec) -> str:
+    if not c.property_base:
+        return ""
+    base = c.property_base.strip()
+    if "::" in base:
+        return base.rsplit("::", 1)[-1]
+    return base
+
+
+def generate_meta_class_registry_cpp(root: Path) -> str:
+    entries = collect_meta_class_registry_entries(root)
+    lines: list[str] = [
+        "// Auto-generated by tools/property_codegen.py — do not edit.",
+        '#include "Engine/Serialization/MetaClassRegistrar.h"',
+        "",
+    ]
+    includes = sorted({rel_h for _, rel_h in entries})
+    for inc in includes:
+        lines.append(f'#include "{inc}"')
+    lines.append("")
+    lines.append("namespace {")
+    lines.append("")
+    lines.append("struct TeCodegenMetaClassRegistration {")
+    lines.append("\tTeCodegenMetaClassRegistration() {")
+    lines.append("\t\tusing ::Engine::Serialization::RegisterMetaClass;")
+    for c, rel_h in entries:
+        q = c.qualified()
+        tid = meta_class_type_id(rel_h, c.class_name)
+        tid_esc = cpp_escape_string(tid)
+        base_short = meta_class_property_base_short(c)
+        base_esc = cpp_escape_string(base_short)
+        class_esc = cpp_escape_string(c.class_name)
+        lines.append(
+            f'\t\tRegisterMetaClass<{q}>("{tid_esc}", "{class_esc}", "{base_esc}");'
+        )
+    lines.append("\t}")
+    lines.append("};")
+    lines.append("")
+    lines.append("TeCodegenMetaClassRegistration teCodegenMetaClassRegistration{};")
+    lines.append("")
+    lines.append("} // namespace")
+    lines.append("")
+    return "\n".join(lines)
 
 
 def collect_scene_entity_registry_entries(root: Path) -> list[tuple[ClassSpec, str]]:
@@ -4418,6 +4695,12 @@ def main() -> int:
     codegen_dir.mkdir(parents=True, exist_ok=True)
 
     try:
+        meta_class_index = collect_meta_class_index(root)
+    except ParseError as e:
+        print(f"[codegen] ERROR: {e}", file=sys.stderr)
+        return 1
+
+    try:
         property_base_targets = collect_property_base_targets(root)
     except ParseError as e:
         print(f"[codegen] ERROR: {e}", file=sys.stderr)
@@ -4455,7 +4738,7 @@ def main() -> int:
             continue
 
         try:
-            classes, clog = parse_header(h)
+            classes, clog = parse_header(h, meta_class_index)
         except ParseError as e:
             print(f"[codegen] ERROR: {e}", file=sys.stderr)
             return 1
@@ -4477,7 +4760,7 @@ def main() -> int:
             print(f"[codegen] {rel}: {line}")
 
         try:
-            content = generate_file_content(h, meta_only, property_base_targets)
+            content = generate_file_content(h, meta_only, property_base_targets, meta_class_index)
         except ParseError as e:
             print(f"[codegen] ERROR: {e}", file=sys.stderr)
             return 1
@@ -4502,6 +4785,19 @@ def main() -> int:
         print(f"[codegen] wrote {registry_path.relative_to(root)}")
     else:
         print(f"[codegen] unchanged {registry_path.relative_to(root)}")
+
+    meta_registry_path = codegen_dir / "MetaClassRegistry.generated.cpp"
+    try:
+        meta_reg_content = generate_meta_class_registry_cpp(root)
+    except ParseError as e:
+        print(f"[codegen] ERROR: {e}", file=sys.stderr)
+        return 1
+    old_meta_reg = meta_registry_path.read_text(encoding="utf-8") if meta_registry_path.is_file() else None
+    if old_meta_reg != meta_reg_content:
+        meta_registry_path.write_text(meta_reg_content, encoding="utf-8")
+        print(f"[codegen] wrote {meta_registry_path.relative_to(root)}")
+    else:
+        print(f"[codegen] unchanged {meta_registry_path.relative_to(root)}")
 
     cache_files = {k: cache_files[k] for k in sorted(cache_files)}
     save_cache(cache_path, {"version": CACHE_VERSION, "files": cache_files})

@@ -79,6 +79,15 @@ namespace Engine {
 
 		void endSequence();
 
+		/// Polymorphic META_CLASS sequence; children via `pushPolymorphicMetaClassObject`, then `endPolymorphicSequence()`.
+		void beginPolymorphicSequence(std::string id, const std::string& label,
+		    PropAccessPolymorphicSequence sequenceOps, PropertyMeta meta = {});
+
+		void endPolymorphicSequence();
+
+		PropertyNode& pushPolymorphicMetaClassObject(
+		    std::string id, const std::string& label, std::function<std::string()> getTypeId, PropertyMeta meta = {});
+
 		/// Begins an associative node (map/set-like); children are built by the caller (e.g. pair objects).
 		void beginAssociative(
 		    std::string id, const std::string& label, PropAccessAssociative associativeOps, PropertyMeta meta = {});
