@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <Scene version="2">
   <Settings>
-    <Simulation speedMultiplier="1" vsync="true" />
-    <View centerX="1396.86243" centerY="478.887421" scale="1.75035357" />
-    <Grid visible="true" size="50" basis="10" snap="true" />
+    <Simulation speedMultiplier="0.291999996" vsync="true" />
+    <View centerX="1101.18396" centerY="469.124146" scale="1.82801604" />
+    <Grid visible="false" size="50" basis="10" snap="true" />
     <Physics gravityX="0" gravityY="400" gravityEnabled="false" airFriction="0" substeps="1">
       <Attraction strength="50" softening="4" massCoupling="true" />
     </Physics>
@@ -131,7 +131,7 @@
                         <Property id="is_fixed" kind="Bool" value="false" />
                         <Property id="velocity" kind="Vec2f" x="0" y="0" />
                         <Property id="angular_speed" kind="Float" value="0" />
-                        <Property id="restitution" kind="Float" value="0.5" />
+                        <Property id="restitution" kind="Float" value="1" />
                         <Property id="friction" kind="Float" value="0.5" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="collision_groups" kind="Sequence">
@@ -235,7 +235,7 @@
                         <Property id="is_fixed" kind="Bool" value="false" />
                         <Property id="velocity" kind="Vec2f" x="0" y="0" />
                         <Property id="angular_speed" kind="Float" value="0" />
-                        <Property id="restitution" kind="Float" value="0.5" />
+                        <Property id="restitution" kind="Float" value="1" />
                         <Property id="friction" kind="Float" value="0.5" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="collision_groups" kind="Sequence">
@@ -339,7 +339,7 @@
                         <Property id="is_fixed" kind="Bool" value="false" />
                         <Property id="velocity" kind="Vec2f" x="0" y="0" />
                         <Property id="angular_speed" kind="Float" value="0" />
-                        <Property id="restitution" kind="Float" value="0.5" />
+                        <Property id="restitution" kind="Float" value="1" />
                         <Property id="friction" kind="Float" value="0.5" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="collision_groups" kind="Sequence">
@@ -443,7 +443,7 @@
                         <Property id="is_fixed" kind="Bool" value="false" />
                         <Property id="velocity" kind="Vec2f" x="0" y="0" />
                         <Property id="angular_speed" kind="Float" value="0" />
-                        <Property id="restitution" kind="Float" value="0.5" />
+                        <Property id="restitution" kind="Float" value="1" />
                         <Property id="friction" kind="Float" value="0.5" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="collision_groups" kind="Sequence">
@@ -547,7 +547,7 @@
                         <Property id="is_fixed" kind="Bool" value="false" />
                         <Property id="velocity" kind="Vec2f" x="0" y="0" />
                         <Property id="angular_speed" kind="Float" value="0" />
-                        <Property id="restitution" kind="Float" value="0.5" />
+                        <Property id="restitution" kind="Float" value="1" />
                         <Property id="friction" kind="Float" value="0.5" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="collision_groups" kind="Sequence">
@@ -651,7 +651,7 @@
                         <Property id="is_fixed" kind="Bool" value="false" />
                         <Property id="velocity" kind="Vec2f" x="0" y="0" />
                         <Property id="angular_speed" kind="Float" value="0" />
-                        <Property id="restitution" kind="Float" value="0.5" />
+                        <Property id="restitution" kind="Float" value="1" />
                         <Property id="friction" kind="Float" value="0.5" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="collision_groups" kind="Sequence">
@@ -755,7 +755,7 @@
                         <Property id="is_fixed" kind="Bool" value="false" />
                         <Property id="velocity" kind="Vec2f" x="0" y="0" />
                         <Property id="angular_speed" kind="Float" value="0" />
-                        <Property id="restitution" kind="Float" value="0.5" />
+                        <Property id="restitution" kind="Float" value="1" />
                         <Property id="friction" kind="Float" value="0.5" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="collision_groups" kind="Sequence">
@@ -859,7 +859,7 @@
                         <Property id="is_fixed" kind="Bool" value="false" />
                         <Property id="velocity" kind="Vec2f" x="0" y="0" />
                         <Property id="angular_speed" kind="Float" value="0" />
-                        <Property id="restitution" kind="Float" value="0.5" />
+                        <Property id="restitution" kind="Float" value="1" />
                         <Property id="friction" kind="Float" value="0.5" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="collision_groups" kind="Sequence">
@@ -963,7 +963,7 @@
                         <Property id="is_fixed" kind="Bool" value="false" />
                         <Property id="velocity" kind="Vec2f" x="0" y="0" />
                         <Property id="angular_speed" kind="Float" value="0" />
-                        <Property id="restitution" kind="Float" value="0.5" />
+                        <Property id="restitution" kind="Float" value="1" />
                         <Property id="friction" kind="Float" value="0.5" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="collision_groups" kind="Sequence">
@@ -1067,7 +1067,7 @@
                         <Property id="is_fixed" kind="Bool" value="false" />
                         <Property id="velocity" kind="Vec2f" x="0" y="0" />
                         <Property id="angular_speed" kind="Float" value="0" />
-                        <Property id="restitution" kind="Float" value="0.5" />
+                        <Property id="restitution" kind="Float" value="1" />
                         <Property id="friction" kind="Float" value="0.5" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="collision_groups" kind="Sequence">
@@ -1171,7 +1171,7 @@
                         <Property id="is_fixed" kind="Bool" value="false" />
                         <Property id="velocity" kind="Vec2f" x="0" y="0" />
                         <Property id="angular_speed" kind="Float" value="0" />
-                        <Property id="restitution" kind="Float" value="0.5" />
+                        <Property id="restitution" kind="Float" value="1" />
                         <Property id="friction" kind="Float" value="0.5" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="collision_groups" kind="Sequence">
@@ -1275,7 +1275,7 @@
                         <Property id="is_fixed" kind="Bool" value="false" />
                         <Property id="velocity" kind="Vec2f" x="0" y="0" />
                         <Property id="angular_speed" kind="Float" value="0" />
-                        <Property id="restitution" kind="Float" value="0.5" />
+                        <Property id="restitution" kind="Float" value="1" />
                         <Property id="friction" kind="Float" value="0.5" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="collision_groups" kind="Sequence">
@@ -1379,7 +1379,7 @@
                         <Property id="is_fixed" kind="Bool" value="false" />
                         <Property id="velocity" kind="Vec2f" x="0" y="0" />
                         <Property id="angular_speed" kind="Float" value="0" />
-                        <Property id="restitution" kind="Float" value="0.5" />
+                        <Property id="restitution" kind="Float" value="1" />
                         <Property id="friction" kind="Float" value="0.5" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="collision_groups" kind="Sequence">
@@ -1483,7 +1483,7 @@
                         <Property id="is_fixed" kind="Bool" value="false" />
                         <Property id="velocity" kind="Vec2f" x="0" y="0" />
                         <Property id="angular_speed" kind="Float" value="0" />
-                        <Property id="restitution" kind="Float" value="0.5" />
+                        <Property id="restitution" kind="Float" value="1" />
                         <Property id="friction" kind="Float" value="0.5" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="collision_groups" kind="Sequence">
@@ -1587,7 +1587,7 @@
                         <Property id="is_fixed" kind="Bool" value="false" />
                         <Property id="velocity" kind="Vec2f" x="0" y="0" />
                         <Property id="angular_speed" kind="Float" value="0" />
-                        <Property id="restitution" kind="Float" value="0.5" />
+                        <Property id="restitution" kind="Float" value="1" />
                         <Property id="friction" kind="Float" value="0.5" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="collision_groups" kind="Sequence">
@@ -1693,7 +1693,7 @@
                     <Property id="is_fixed" kind="Bool" value="false" />
                     <Property id="velocity" kind="Vec2f" x="0" y="0" />
                     <Property id="angular_speed" kind="Float" value="0" />
-                    <Property id="restitution" kind="Float" value="0.5" />
+                    <Property id="restitution" kind="Float" value="1" />
                     <Property id="friction" kind="Float" value="0.5" />
                     <Property id="gravity_scale" kind="Float" value="1" />
                     <Property id="collision_groups" kind="Sequence">
@@ -1904,10 +1904,10 @@
                         <Properties>
                           <Property id="physics_body_behaviour" kind="Object">
                             <Property id="mass" kind="Float" value="1" />
-                            <Property id="is_fixed" kind="Bool" value="false" />
+                            <Property id="is_fixed" kind="Bool" value="true" />
                             <Property id="velocity" kind="Vec2f" x="0" y="0" />
                             <Property id="angular_speed" kind="Float" value="0" />
-                            <Property id="restitution" kind="Float" value="0.5" />
+                            <Property id="restitution" kind="Float" value="0.800000012" />
                             <Property id="friction" kind="Float" value="0.5" />
                             <Property id="gravity_scale" kind="Float" value="1" />
                             <Property id="collision_groups" kind="Sequence">
@@ -1981,7 +1981,7 @@
                         <Property id="transform" kind="Object">
                           <Property id="get_position" kind="Vec2f" x="-39.8288193" y="49.9272614" />
                           <Property id="get_scale" kind="Vec2f" x="1" y="1" />
-                          <Property id="get_rotation" kind="Float" value="319.999969" />
+                          <Property id="get_rotation" kind="Float" value="319.999908" />
                           <Property id="get_origin" kind="Vec2f" x="0" y="0" />
                         </Property>
                       </Properties>
@@ -2005,10 +2005,10 @@
                         <Properties>
                           <Property id="physics_body_behaviour" kind="Object">
                             <Property id="mass" kind="Float" value="1" />
-                            <Property id="is_fixed" kind="Bool" value="false" />
+                            <Property id="is_fixed" kind="Bool" value="true" />
                             <Property id="velocity" kind="Vec2f" x="0" y="0" />
                             <Property id="angular_speed" kind="Float" value="0" />
-                            <Property id="restitution" kind="Float" value="0.5" />
+                            <Property id="restitution" kind="Float" value="0.800000012" />
                             <Property id="friction" kind="Float" value="0.5" />
                             <Property id="gravity_scale" kind="Float" value="1" />
                             <Property id="collision_groups" kind="Sequence">
@@ -2166,10 +2166,10 @@
                         <Properties>
                           <Property id="physics_body_behaviour" kind="Object">
                             <Property id="mass" kind="Float" value="1" />
-                            <Property id="is_fixed" kind="Bool" value="false" />
+                            <Property id="is_fixed" kind="Bool" value="true" />
                             <Property id="velocity" kind="Vec2f" x="0" y="0" />
                             <Property id="angular_speed" kind="Float" value="0" />
-                            <Property id="restitution" kind="Float" value="0.5" />
+                            <Property id="restitution" kind="Float" value="0.800000012" />
                             <Property id="friction" kind="Float" value="0.5" />
                             <Property id="gravity_scale" kind="Float" value="1" />
                             <Property id="collision_groups" kind="Sequence">
@@ -2243,7 +2243,7 @@
                         <Property id="transform" kind="Object">
                           <Property id="get_position" kind="Vec2f" x="-39.8288193" y="49.9272614" />
                           <Property id="get_scale" kind="Vec2f" x="1" y="1" />
-                          <Property id="get_rotation" kind="Float" value="319.999969" />
+                          <Property id="get_rotation" kind="Float" value="319.999908" />
                           <Property id="get_origin" kind="Vec2f" x="0" y="0" />
                         </Property>
                       </Properties>
@@ -2267,10 +2267,10 @@
                         <Properties>
                           <Property id="physics_body_behaviour" kind="Object">
                             <Property id="mass" kind="Float" value="1" />
-                            <Property id="is_fixed" kind="Bool" value="false" />
+                            <Property id="is_fixed" kind="Bool" value="true" />
                             <Property id="velocity" kind="Vec2f" x="0" y="0" />
                             <Property id="angular_speed" kind="Float" value="0" />
-                            <Property id="restitution" kind="Float" value="0.5" />
+                            <Property id="restitution" kind="Float" value="0.800000012" />
                             <Property id="friction" kind="Float" value="0.5" />
                             <Property id="gravity_scale" kind="Float" value="1" />
                             <Property id="collision_groups" kind="Sequence">
@@ -2428,10 +2428,10 @@
                         <Properties>
                           <Property id="physics_body_behaviour" kind="Object">
                             <Property id="mass" kind="Float" value="1" />
-                            <Property id="is_fixed" kind="Bool" value="false" />
+                            <Property id="is_fixed" kind="Bool" value="true" />
                             <Property id="velocity" kind="Vec2f" x="0" y="0" />
                             <Property id="angular_speed" kind="Float" value="0" />
-                            <Property id="restitution" kind="Float" value="0.5" />
+                            <Property id="restitution" kind="Float" value="0.800000012" />
                             <Property id="friction" kind="Float" value="0.5" />
                             <Property id="gravity_scale" kind="Float" value="1" />
                             <Property id="collision_groups" kind="Sequence">
@@ -2505,7 +2505,7 @@
                         <Property id="transform" kind="Object">
                           <Property id="get_position" kind="Vec2f" x="-39.8288193" y="49.9272614" />
                           <Property id="get_scale" kind="Vec2f" x="1" y="1" />
-                          <Property id="get_rotation" kind="Float" value="319.999969" />
+                          <Property id="get_rotation" kind="Float" value="319.999908" />
                           <Property id="get_origin" kind="Vec2f" x="0" y="0" />
                         </Property>
                       </Properties>
@@ -2529,10 +2529,10 @@
                         <Properties>
                           <Property id="physics_body_behaviour" kind="Object">
                             <Property id="mass" kind="Float" value="1" />
-                            <Property id="is_fixed" kind="Bool" value="false" />
+                            <Property id="is_fixed" kind="Bool" value="true" />
                             <Property id="velocity" kind="Vec2f" x="0" y="0" />
                             <Property id="angular_speed" kind="Float" value="0" />
-                            <Property id="restitution" kind="Float" value="0.5" />
+                            <Property id="restitution" kind="Float" value="0.800000012" />
                             <Property id="friction" kind="Float" value="0.5" />
                             <Property id="gravity_scale" kind="Float" value="1" />
                             <Property id="collision_groups" kind="Sequence">
@@ -2690,10 +2690,10 @@
                         <Properties>
                           <Property id="physics_body_behaviour" kind="Object">
                             <Property id="mass" kind="Float" value="1" />
-                            <Property id="is_fixed" kind="Bool" value="false" />
+                            <Property id="is_fixed" kind="Bool" value="true" />
                             <Property id="velocity" kind="Vec2f" x="0" y="0" />
                             <Property id="angular_speed" kind="Float" value="0" />
-                            <Property id="restitution" kind="Float" value="0.5" />
+                            <Property id="restitution" kind="Float" value="0.800000012" />
                             <Property id="friction" kind="Float" value="0.5" />
                             <Property id="gravity_scale" kind="Float" value="1" />
                             <Property id="collision_groups" kind="Sequence">
@@ -2767,7 +2767,7 @@
                         <Property id="transform" kind="Object">
                           <Property id="get_position" kind="Vec2f" x="-39.8288193" y="49.9272614" />
                           <Property id="get_scale" kind="Vec2f" x="1" y="1" />
-                          <Property id="get_rotation" kind="Float" value="319.999969" />
+                          <Property id="get_rotation" kind="Float" value="319.999908" />
                           <Property id="get_origin" kind="Vec2f" x="0" y="0" />
                         </Property>
                       </Properties>
@@ -2791,10 +2791,534 @@
                         <Properties>
                           <Property id="physics_body_behaviour" kind="Object">
                             <Property id="mass" kind="Float" value="1" />
-                            <Property id="is_fixed" kind="Bool" value="false" />
+                            <Property id="is_fixed" kind="Bool" value="true" />
                             <Property id="velocity" kind="Vec2f" x="0" y="0" />
                             <Property id="angular_speed" kind="Float" value="0" />
-                            <Property id="restitution" kind="Float" value="0.5" />
+                            <Property id="restitution" kind="Float" value="0.800000012" />
+                            <Property id="friction" kind="Float" value="0.5" />
+                            <Property id="gravity_scale" kind="Float" value="1" />
+                            <Property id="collision_groups" kind="Sequence">
+                              <Property id="0" kind="Object">
+                                <Property id="v" kind="Bool" value="true" />
+                              </Property>
+                              <Property id="1" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="2" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="3" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="4" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="5" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="6" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="7" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                            </Property>
+                            <Property id="overlap_groups" kind="Sequence">
+                              <Property id="0" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="1" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="2" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="3" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="4" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="5" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="6" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="7" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                            </Property>
+                          </Property>
+                        </Properties>
+                      </Behaviour>
+                    </Behaviours>
+                    <Children />
+                  </Node>
+                </Children>
+              </Node>
+              <Node entityId="2072144006">
+                <Properties>
+                  <Property id="scene_node" kind="Object">
+                    <Property id="name" kind="String" value="Top middle" />
+                    <Property id="is_enabled" kind="Bool" value="true" />
+                    <Property id="is_visible" kind="Bool" value="true" />
+                  </Property>
+                </Properties>
+                <Transform type="Engine.Transform">
+                  <Properties>
+                    <Property id="transform" kind="Object">
+                      <Property id="get_position" kind="Vec2f" x="1270" y="-58.0299988" />
+                      <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                      <Property id="get_rotation" kind="Float" value="45" />
+                      <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    </Property>
+                  </Properties>
+                </Transform>
+                <Behaviours />
+                <Children>
+                  <Node entityId="1658601083">
+                    <Properties>
+                      <Property id="scene_node" kind="Object">
+                        <Property id="name" kind="String" value="Circle" />
+                        <Property id="is_enabled" kind="Bool" value="false" />
+                        <Property id="is_visible" kind="Bool" value="true" />
+                      </Property>
+                    </Properties>
+                    <Transform type="Engine.Transform">
+                      <Properties>
+                        <Property id="transform" kind="Object">
+                          <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                          <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                          <Property id="get_rotation" kind="Float" value="0" />
+                          <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                        </Property>
+                      </Properties>
+                    </Transform>
+                    <Visual type="Engine.CircleShapeVisual" entityId="3701691821">
+                      <Properties>
+                        <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                        <Property id="get_fill_color" kind="Color" r="26" g="173" b="117" a="255" />
+                        <Property id="get_outline_color" kind="Color" r="19" g="127" b="86" a="255" />
+                        <Property id="get_outline_thickness" kind="Float" value="-1" />
+                        <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                        <Property id="get_rotation" kind="Float" value="0" />
+                        <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                        <Property id="get_origin" kind="Vec2f" x="58" y="58" />
+                        <Property id="get_miter_limit" kind="Float" value="10" />
+                        <Property id="get_radius" kind="Float" value="58" />
+                        <Property id="get_point_count" kind="Int32" value="64" />
+                        <Property id="get_draw_sector" kind="Bool" value="true" />
+                        <Property id="get_sector_color" kind="Color" r="19" g="127" b="86" a="255" />
+                      </Properties>
+                    </Visual>
+                    <Behaviours />
+                    <Children />
+                  </Node>
+                  <Node entityId="1937404842">
+                    <Properties>
+                      <Property id="scene_node" kind="Object">
+                        <Property id="name" kind="String" value="Rectangle" />
+                        <Property id="is_enabled" kind="Bool" value="true" />
+                        <Property id="is_visible" kind="Bool" value="true" />
+                      </Property>
+                    </Properties>
+                    <Transform type="Engine.Transform">
+                      <Properties>
+                        <Property id="transform" kind="Object">
+                          <Property id="get_position" kind="Vec2f" x="50.0764732" y="-39.782341" />
+                          <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                          <Property id="get_rotation" kind="Float" value="120" />
+                          <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                        </Property>
+                      </Properties>
+                    </Transform>
+                    <Visual type="Engine.RectangleShapeVisual" entityId="2911258665">
+                      <Properties>
+                        <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                        <Property id="get_fill_color" kind="Color" r="2" g="112" b="40" a="255" />
+                        <Property id="get_outline_color" kind="Color" r="0" g="86" b="15" a="255" />
+                        <Property id="get_outline_thickness" kind="Float" value="-2.06999993" />
+                        <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                        <Property id="get_rotation" kind="Float" value="0" />
+                        <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                        <Property id="get_origin" kind="Vec2f" x="10" y="50" />
+                        <Property id="get_miter_limit" kind="Float" value="10" />
+                        <Property id="get_size" kind="Vec2f" x="20" y="100" />
+                      </Properties>
+                    </Visual>
+                    <Behaviours>
+                      <Behaviour type="Engine.PhysicsBodyBehaviour" entityId="1869799651">
+                        <Properties>
+                          <Property id="physics_body_behaviour" kind="Object">
+                            <Property id="mass" kind="Float" value="1" />
+                            <Property id="is_fixed" kind="Bool" value="true" />
+                            <Property id="velocity" kind="Vec2f" x="0" y="0" />
+                            <Property id="angular_speed" kind="Float" value="0" />
+                            <Property id="restitution" kind="Float" value="0.800000012" />
+                            <Property id="friction" kind="Float" value="0.5" />
+                            <Property id="gravity_scale" kind="Float" value="1" />
+                            <Property id="collision_groups" kind="Sequence">
+                              <Property id="0" kind="Object">
+                                <Property id="v" kind="Bool" value="true" />
+                              </Property>
+                              <Property id="1" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="2" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="3" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="4" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="5" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="6" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="7" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                            </Property>
+                            <Property id="overlap_groups" kind="Sequence">
+                              <Property id="0" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="1" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="2" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="3" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="4" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="5" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="6" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="7" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                            </Property>
+                          </Property>
+                        </Properties>
+                      </Behaviour>
+                    </Behaviours>
+                    <Children />
+                  </Node>
+                  <Node entityId="3111714789">
+                    <Properties>
+                      <Property id="scene_node" kind="Object">
+                        <Property id="name" kind="String" value="Rectangle" />
+                        <Property id="is_enabled" kind="Bool" value="true" />
+                        <Property id="is_visible" kind="Bool" value="true" />
+                      </Property>
+                    </Properties>
+                    <Transform type="Engine.Transform">
+                      <Properties>
+                        <Property id="transform" kind="Object">
+                          <Property id="get_position" kind="Vec2f" x="-39.8288193" y="49.9272614" />
+                          <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                          <Property id="get_rotation" kind="Float" value="329.999939" />
+                          <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                        </Property>
+                      </Properties>
+                    </Transform>
+                    <Visual type="Engine.RectangleShapeVisual" entityId="2191721780">
+                      <Properties>
+                        <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                        <Property id="get_fill_color" kind="Color" r="2" g="112" b="40" a="255" />
+                        <Property id="get_outline_color" kind="Color" r="0" g="86" b="15" a="255" />
+                        <Property id="get_outline_thickness" kind="Float" value="-2.06999993" />
+                        <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                        <Property id="get_rotation" kind="Float" value="0" />
+                        <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                        <Property id="get_origin" kind="Vec2f" x="10" y="50" />
+                        <Property id="get_miter_limit" kind="Float" value="10" />
+                        <Property id="get_size" kind="Vec2f" x="20" y="100" />
+                      </Properties>
+                    </Visual>
+                    <Behaviours>
+                      <Behaviour type="Engine.PhysicsBodyBehaviour" entityId="1837041549">
+                        <Properties>
+                          <Property id="physics_body_behaviour" kind="Object">
+                            <Property id="mass" kind="Float" value="1" />
+                            <Property id="is_fixed" kind="Bool" value="true" />
+                            <Property id="velocity" kind="Vec2f" x="0" y="0" />
+                            <Property id="angular_speed" kind="Float" value="0" />
+                            <Property id="restitution" kind="Float" value="0.800000012" />
+                            <Property id="friction" kind="Float" value="0.5" />
+                            <Property id="gravity_scale" kind="Float" value="1" />
+                            <Property id="collision_groups" kind="Sequence">
+                              <Property id="0" kind="Object">
+                                <Property id="v" kind="Bool" value="true" />
+                              </Property>
+                              <Property id="1" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="2" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="3" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="4" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="5" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="6" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="7" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                            </Property>
+                            <Property id="overlap_groups" kind="Sequence">
+                              <Property id="0" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="1" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="2" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="3" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="4" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="5" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="6" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="7" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                            </Property>
+                          </Property>
+                        </Properties>
+                      </Behaviour>
+                    </Behaviours>
+                    <Children />
+                  </Node>
+                </Children>
+              </Node>
+              <Node entityId="977478610">
+                <Properties>
+                  <Property id="scene_node" kind="Object">
+                    <Property id="name" kind="String" value="Top middle" />
+                    <Property id="is_enabled" kind="Bool" value="true" />
+                    <Property id="is_visible" kind="Bool" value="true" />
+                  </Property>
+                </Properties>
+                <Transform type="Engine.Transform">
+                  <Properties>
+                    <Property id="transform" kind="Object">
+                      <Property id="get_position" kind="Vec2f" x="1270" y="1328.15002" />
+                      <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                      <Property id="get_rotation" kind="Float" value="224.999969" />
+                      <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    </Property>
+                  </Properties>
+                </Transform>
+                <Behaviours />
+                <Children>
+                  <Node entityId="2956516208">
+                    <Properties>
+                      <Property id="scene_node" kind="Object">
+                        <Property id="name" kind="String" value="Circle" />
+                        <Property id="is_enabled" kind="Bool" value="false" />
+                        <Property id="is_visible" kind="Bool" value="true" />
+                      </Property>
+                    </Properties>
+                    <Transform type="Engine.Transform">
+                      <Properties>
+                        <Property id="transform" kind="Object">
+                          <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                          <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                          <Property id="get_rotation" kind="Float" value="0" />
+                          <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                        </Property>
+                      </Properties>
+                    </Transform>
+                    <Visual type="Engine.CircleShapeVisual" entityId="3499714977">
+                      <Properties>
+                        <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                        <Property id="get_fill_color" kind="Color" r="26" g="173" b="117" a="255" />
+                        <Property id="get_outline_color" kind="Color" r="19" g="127" b="86" a="255" />
+                        <Property id="get_outline_thickness" kind="Float" value="-1" />
+                        <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                        <Property id="get_rotation" kind="Float" value="0" />
+                        <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                        <Property id="get_origin" kind="Vec2f" x="58" y="58" />
+                        <Property id="get_miter_limit" kind="Float" value="10" />
+                        <Property id="get_radius" kind="Float" value="58" />
+                        <Property id="get_point_count" kind="Int32" value="64" />
+                        <Property id="get_draw_sector" kind="Bool" value="true" />
+                        <Property id="get_sector_color" kind="Color" r="19" g="127" b="86" a="255" />
+                      </Properties>
+                    </Visual>
+                    <Behaviours />
+                    <Children />
+                  </Node>
+                  <Node entityId="2807824828">
+                    <Properties>
+                      <Property id="scene_node" kind="Object">
+                        <Property id="name" kind="String" value="Rectangle" />
+                        <Property id="is_enabled" kind="Bool" value="true" />
+                        <Property id="is_visible" kind="Bool" value="true" />
+                      </Property>
+                    </Properties>
+                    <Transform type="Engine.Transform">
+                      <Properties>
+                        <Property id="transform" kind="Object">
+                          <Property id="get_position" kind="Vec2f" x="50.0764732" y="-39.782341" />
+                          <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                          <Property id="get_rotation" kind="Float" value="120" />
+                          <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                        </Property>
+                      </Properties>
+                    </Transform>
+                    <Visual type="Engine.RectangleShapeVisual" entityId="3602486678">
+                      <Properties>
+                        <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                        <Property id="get_fill_color" kind="Color" r="2" g="112" b="40" a="255" />
+                        <Property id="get_outline_color" kind="Color" r="0" g="86" b="15" a="255" />
+                        <Property id="get_outline_thickness" kind="Float" value="-2.06999993" />
+                        <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                        <Property id="get_rotation" kind="Float" value="0" />
+                        <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                        <Property id="get_origin" kind="Vec2f" x="10" y="50" />
+                        <Property id="get_miter_limit" kind="Float" value="10" />
+                        <Property id="get_size" kind="Vec2f" x="20" y="100" />
+                      </Properties>
+                    </Visual>
+                    <Behaviours>
+                      <Behaviour type="Engine.PhysicsBodyBehaviour" entityId="1108772617">
+                        <Properties>
+                          <Property id="physics_body_behaviour" kind="Object">
+                            <Property id="mass" kind="Float" value="1" />
+                            <Property id="is_fixed" kind="Bool" value="true" />
+                            <Property id="velocity" kind="Vec2f" x="0" y="0" />
+                            <Property id="angular_speed" kind="Float" value="0" />
+                            <Property id="restitution" kind="Float" value="0.800000012" />
+                            <Property id="friction" kind="Float" value="0.5" />
+                            <Property id="gravity_scale" kind="Float" value="1" />
+                            <Property id="collision_groups" kind="Sequence">
+                              <Property id="0" kind="Object">
+                                <Property id="v" kind="Bool" value="true" />
+                              </Property>
+                              <Property id="1" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="2" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="3" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="4" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="5" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="6" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="7" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                            </Property>
+                            <Property id="overlap_groups" kind="Sequence">
+                              <Property id="0" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="1" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="2" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="3" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="4" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="5" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="6" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                              <Property id="7" kind="Object">
+                                <Property id="v" kind="Bool" value="false" />
+                              </Property>
+                            </Property>
+                          </Property>
+                        </Properties>
+                      </Behaviour>
+                    </Behaviours>
+                    <Children />
+                  </Node>
+                  <Node entityId="246714633">
+                    <Properties>
+                      <Property id="scene_node" kind="Object">
+                        <Property id="name" kind="String" value="Rectangle" />
+                        <Property id="is_enabled" kind="Bool" value="true" />
+                        <Property id="is_visible" kind="Bool" value="true" />
+                      </Property>
+                    </Properties>
+                    <Transform type="Engine.Transform">
+                      <Properties>
+                        <Property id="transform" kind="Object">
+                          <Property id="get_position" kind="Vec2f" x="-39.8288193" y="49.9272614" />
+                          <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                          <Property id="get_rotation" kind="Float" value="329.999939" />
+                          <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                        </Property>
+                      </Properties>
+                    </Transform>
+                    <Visual type="Engine.RectangleShapeVisual" entityId="1090685922">
+                      <Properties>
+                        <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                        <Property id="get_fill_color" kind="Color" r="2" g="112" b="40" a="255" />
+                        <Property id="get_outline_color" kind="Color" r="0" g="86" b="15" a="255" />
+                        <Property id="get_outline_thickness" kind="Float" value="-2.06999993" />
+                        <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                        <Property id="get_rotation" kind="Float" value="0" />
+                        <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                        <Property id="get_origin" kind="Vec2f" x="10" y="50" />
+                        <Property id="get_miter_limit" kind="Float" value="10" />
+                        <Property id="get_size" kind="Vec2f" x="20" y="100" />
+                      </Properties>
+                    </Visual>
+                    <Behaviours>
+                      <Behaviour type="Engine.PhysicsBodyBehaviour" entityId="766220606">
+                        <Properties>
+                          <Property id="physics_body_behaviour" kind="Object">
+                            <Property id="mass" kind="Float" value="1" />
+                            <Property id="is_fixed" kind="Bool" value="true" />
+                            <Property id="velocity" kind="Vec2f" x="0" y="0" />
+                            <Property id="angular_speed" kind="Float" value="0" />
+                            <Property id="restitution" kind="Float" value="0.800000012" />
                             <Property id="friction" kind="Float" value="0.5" />
                             <Property id="gravity_scale" kind="Float" value="1" />
                             <Property id="collision_groups" kind="Sequence">
@@ -2916,10 +3440,10 @@
                     <Properties>
                       <Property id="physics_body_behaviour" kind="Object">
                         <Property id="mass" kind="Float" value="1" />
-                        <Property id="is_fixed" kind="Bool" value="false" />
+                        <Property id="is_fixed" kind="Bool" value="true" />
                         <Property id="velocity" kind="Vec2f" x="0" y="0" />
                         <Property id="angular_speed" kind="Float" value="0" />
-                        <Property id="restitution" kind="Float" value="0.5" />
+                        <Property id="restitution" kind="Float" value="0.800000012" />
                         <Property id="friction" kind="Float" value="0.5" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="collision_groups" kind="Sequence">
@@ -3017,10 +3541,414 @@
                     <Properties>
                       <Property id="physics_body_behaviour" kind="Object">
                         <Property id="mass" kind="Float" value="1" />
-                        <Property id="is_fixed" kind="Bool" value="false" />
+                        <Property id="is_fixed" kind="Bool" value="true" />
                         <Property id="velocity" kind="Vec2f" x="0" y="0" />
                         <Property id="angular_speed" kind="Float" value="0" />
-                        <Property id="restitution" kind="Float" value="0.5" />
+                        <Property id="restitution" kind="Float" value="0.800000012" />
+                        <Property id="friction" kind="Float" value="0.5" />
+                        <Property id="gravity_scale" kind="Float" value="1" />
+                        <Property id="collision_groups" kind="Sequence">
+                          <Property id="0" kind="Object">
+                            <Property id="v" kind="Bool" value="true" />
+                          </Property>
+                          <Property id="1" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="2" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="3" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="4" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="5" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="6" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="7" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                        </Property>
+                        <Property id="overlap_groups" kind="Sequence">
+                          <Property id="0" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="1" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="2" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="3" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="4" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="5" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="6" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="7" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                        </Property>
+                      </Property>
+                    </Properties>
+                  </Behaviour>
+                </Behaviours>
+                <Children />
+              </Node>
+              <Node entityId="73127040">
+                <Properties>
+                  <Property id="scene_node" kind="Object">
+                    <Property id="name" kind="String" value="Bottom left" />
+                    <Property id="is_enabled" kind="Bool" value="true" />
+                    <Property id="is_visible" kind="Bool" value="true" />
+                  </Property>
+                </Properties>
+                <Transform type="Engine.Transform">
+                  <Properties>
+                    <Property id="transform" kind="Object">
+                      <Property id="get_position" kind="Vec2f" x="81.8199997" y="1270" />
+                      <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                      <Property id="get_rotation" kind="Float" value="270" />
+                      <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    </Property>
+                  </Properties>
+                </Transform>
+                <Visual type="Engine.RectangleShapeVisual" entityId="2132961653">
+                  <Properties>
+                    <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                    <Property id="get_fill_color" kind="Color" r="2" g="112" b="40" a="255" />
+                    <Property id="get_outline_color" kind="Color" r="0" g="86" b="15" a="255" />
+                    <Property id="get_outline_thickness" kind="Float" value="-2.06999993" />
+                    <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_rotation" kind="Float" value="0" />
+                    <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                    <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_miter_limit" kind="Float" value="10" />
+                    <Property id="get_size" kind="Vec2f" x="-25" y="1121.19995" />
+                  </Properties>
+                </Visual>
+                <Behaviours>
+                  <Behaviour type="Engine.PhysicsBodyBehaviour" entityId="1122693502">
+                    <Properties>
+                      <Property id="physics_body_behaviour" kind="Object">
+                        <Property id="mass" kind="Float" value="1" />
+                        <Property id="is_fixed" kind="Bool" value="true" />
+                        <Property id="velocity" kind="Vec2f" x="0" y="0" />
+                        <Property id="angular_speed" kind="Float" value="0" />
+                        <Property id="restitution" kind="Float" value="0.800000012" />
+                        <Property id="friction" kind="Float" value="0.5" />
+                        <Property id="gravity_scale" kind="Float" value="1" />
+                        <Property id="collision_groups" kind="Sequence">
+                          <Property id="0" kind="Object">
+                            <Property id="v" kind="Bool" value="true" />
+                          </Property>
+                          <Property id="1" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="2" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="3" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="4" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="5" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="6" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="7" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                        </Property>
+                        <Property id="overlap_groups" kind="Sequence">
+                          <Property id="0" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="1" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="2" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="3" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="4" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="5" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="6" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="7" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                        </Property>
+                      </Property>
+                    </Properties>
+                  </Behaviour>
+                </Behaviours>
+                <Children />
+              </Node>
+              <Node entityId="1626818917">
+                <Properties>
+                  <Property id="scene_node" kind="Object">
+                    <Property id="name" kind="String" value="Bottom right" />
+                    <Property id="is_enabled" kind="Bool" value="true" />
+                    <Property id="is_visible" kind="Bool" value="true" />
+                  </Property>
+                </Properties>
+                <Transform type="Engine.Transform">
+                  <Properties>
+                    <Property id="transform" kind="Object">
+                      <Property id="get_position" kind="Vec2f" x="1336.81995" y="1270" />
+                      <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                      <Property id="get_rotation" kind="Float" value="270" />
+                      <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    </Property>
+                  </Properties>
+                </Transform>
+                <Visual type="Engine.RectangleShapeVisual" entityId="3199043871">
+                  <Properties>
+                    <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                    <Property id="get_fill_color" kind="Color" r="2" g="112" b="40" a="255" />
+                    <Property id="get_outline_color" kind="Color" r="0" g="86" b="15" a="255" />
+                    <Property id="get_outline_thickness" kind="Float" value="-2.06999993" />
+                    <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_rotation" kind="Float" value="0" />
+                    <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                    <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_miter_limit" kind="Float" value="10" />
+                    <Property id="get_size" kind="Vec2f" x="-25" y="1121.19995" />
+                  </Properties>
+                </Visual>
+                <Behaviours>
+                  <Behaviour type="Engine.PhysicsBodyBehaviour" entityId="2446704581">
+                    <Properties>
+                      <Property id="physics_body_behaviour" kind="Object">
+                        <Property id="mass" kind="Float" value="1" />
+                        <Property id="is_fixed" kind="Bool" value="true" />
+                        <Property id="velocity" kind="Vec2f" x="0" y="0" />
+                        <Property id="angular_speed" kind="Float" value="0" />
+                        <Property id="restitution" kind="Float" value="0.800000012" />
+                        <Property id="friction" kind="Float" value="0.5" />
+                        <Property id="gravity_scale" kind="Float" value="1" />
+                        <Property id="collision_groups" kind="Sequence">
+                          <Property id="0" kind="Object">
+                            <Property id="v" kind="Bool" value="true" />
+                          </Property>
+                          <Property id="1" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="2" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="3" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="4" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="5" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="6" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="7" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                        </Property>
+                        <Property id="overlap_groups" kind="Sequence">
+                          <Property id="0" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="1" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="2" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="3" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="4" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="5" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="6" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="7" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                        </Property>
+                      </Property>
+                    </Properties>
+                  </Behaviour>
+                </Behaviours>
+                <Children />
+              </Node>
+              <Node entityId="2275364717">
+                <Properties>
+                  <Property id="scene_node" kind="Object">
+                    <Property id="name" kind="String" value="Top left" />
+                    <Property id="is_enabled" kind="Bool" value="true" />
+                    <Property id="is_visible" kind="Bool" value="true" />
+                  </Property>
+                </Properties>
+                <Transform type="Engine.Transform">
+                  <Properties>
+                    <Property id="transform" kind="Object">
+                      <Property id="get_position" kind="Vec2f" x="81.8199997" y="0" />
+                      <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                      <Property id="get_rotation" kind="Float" value="270" />
+                      <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    </Property>
+                  </Properties>
+                </Transform>
+                <Visual type="Engine.RectangleShapeVisual" entityId="290052788">
+                  <Properties>
+                    <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                    <Property id="get_fill_color" kind="Color" r="2" g="112" b="40" a="255" />
+                    <Property id="get_outline_color" kind="Color" r="0" g="86" b="15" a="255" />
+                    <Property id="get_outline_thickness" kind="Float" value="-2.06999993" />
+                    <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_rotation" kind="Float" value="0" />
+                    <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                    <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_miter_limit" kind="Float" value="10" />
+                    <Property id="get_size" kind="Vec2f" x="25" y="1121.19995" />
+                  </Properties>
+                </Visual>
+                <Behaviours>
+                  <Behaviour type="Engine.PhysicsBodyBehaviour" entityId="2691345294">
+                    <Properties>
+                      <Property id="physics_body_behaviour" kind="Object">
+                        <Property id="mass" kind="Float" value="1" />
+                        <Property id="is_fixed" kind="Bool" value="true" />
+                        <Property id="velocity" kind="Vec2f" x="0" y="0" />
+                        <Property id="angular_speed" kind="Float" value="0" />
+                        <Property id="restitution" kind="Float" value="0.800000012" />
+                        <Property id="friction" kind="Float" value="0.5" />
+                        <Property id="gravity_scale" kind="Float" value="1" />
+                        <Property id="collision_groups" kind="Sequence">
+                          <Property id="0" kind="Object">
+                            <Property id="v" kind="Bool" value="true" />
+                          </Property>
+                          <Property id="1" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="2" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="3" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="4" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="5" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="6" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="7" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                        </Property>
+                        <Property id="overlap_groups" kind="Sequence">
+                          <Property id="0" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="1" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="2" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="3" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="4" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="5" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="6" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                          <Property id="7" kind="Object">
+                            <Property id="v" kind="Bool" value="false" />
+                          </Property>
+                        </Property>
+                      </Property>
+                    </Properties>
+                  </Behaviour>
+                </Behaviours>
+                <Children />
+              </Node>
+              <Node entityId="2736771962">
+                <Properties>
+                  <Property id="scene_node" kind="Object">
+                    <Property id="name" kind="String" value="Top right" />
+                    <Property id="is_enabled" kind="Bool" value="true" />
+                    <Property id="is_visible" kind="Bool" value="true" />
+                  </Property>
+                </Properties>
+                <Transform type="Engine.Transform">
+                  <Properties>
+                    <Property id="transform" kind="Object">
+                      <Property id="get_position" kind="Vec2f" x="1336.81995" y="0" />
+                      <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                      <Property id="get_rotation" kind="Float" value="270" />
+                      <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    </Property>
+                  </Properties>
+                </Transform>
+                <Visual type="Engine.RectangleShapeVisual" entityId="231863909">
+                  <Properties>
+                    <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                    <Property id="get_fill_color" kind="Color" r="2" g="112" b="40" a="255" />
+                    <Property id="get_outline_color" kind="Color" r="0" g="86" b="15" a="255" />
+                    <Property id="get_outline_thickness" kind="Float" value="-2.06999993" />
+                    <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_rotation" kind="Float" value="0" />
+                    <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                    <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_miter_limit" kind="Float" value="10" />
+                    <Property id="get_size" kind="Vec2f" x="25" y="1121.19995" />
+                  </Properties>
+                </Visual>
+                <Behaviours>
+                  <Behaviour type="Engine.PhysicsBodyBehaviour" entityId="924060099">
+                    <Properties>
+                      <Property id="physics_body_behaviour" kind="Object">
+                        <Property id="mass" kind="Float" value="1" />
+                        <Property id="is_fixed" kind="Bool" value="true" />
+                        <Property id="velocity" kind="Vec2f" x="0" y="0" />
+                        <Property id="angular_speed" kind="Float" value="0" />
+                        <Property id="restitution" kind="Float" value="0.800000012" />
                         <Property id="friction" kind="Float" value="0.5" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="collision_groups" kind="Sequence">
