@@ -110,6 +110,21 @@ namespace Engine {
 		std::function<void(std::size_t)> resize;
 	};
 
+	/// Size / add / remove for polymorphic `std::vector<std::unique_ptr<Base>>` META_CLASS lists.
+	struct PropAccessPolymorphicSequence
+	{
+		std::function<std::size_t()> getSize;
+		std::function<void(std::string_view typeId)> emplace;
+		std::function<void(std::size_t index)> remove;
+		std::function<void(std::size_t index, std::string_view typeId)> replaceAt;
+	};
+
+	/// XML `type` attribute for polymorphic META_CLASS object nodes.
+	struct PropAccessMetaClassTypeId
+	{
+		std::function<std::string()> getTypeId;
+	};
+
 	/// Optional add/remove for `PropertyKind::Associative` maps / sets.
 	struct PropAccessAssociative
 	{
@@ -120,7 +135,7 @@ namespace Engine {
 	using PropertyAccess = std::variant<PropAccessNone, PropAccessBool, PropAccessInt32, PropAccessInt64,
 	    PropAccessFloat, PropAccessDouble, PropAccessString, PropAccessEnum, PropAccessVec2f, PropAccessVec2i,
 	    PropAccessVec2u, PropAccessVec3f, PropAccessColor, PropAccessSceneRef, PropAccessAssetRef, PropAccessSequence,
-	    PropAccessAssociative>;
+	    PropAccessPolymorphicSequence, PropAccessMetaClassTypeId, PropAccessAssociative>;
 
 	struct PropertyNode
 	{

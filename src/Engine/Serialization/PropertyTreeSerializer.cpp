@@ -268,16 +268,49 @@ namespace Engine::Serialization {
 			}
 			case PropertyKind::Object:
 			case PropertyKind::Sequence:
-			case PropertyKind::Associative:
+			case PropertyKind::Associative: {
+				if (node.kind == PropertyKind::Object) {
+					if (const auto* typeAccess = std::get_if<PropAccessMetaClassTypeId>(&node.access)) {
+						if (typeAccess->getTypeId) {
+							const std::string typeId = typeAccess->getTypeId();
+							if (!typeId.empty()) {
+								xmlProperty.append_attribute(kTypeAttr).set_value(typeId.c_str());
+							}
+						}
+					}
+				}
 				for (const PropertyNode& child : node.children) {
 					SavePropertyNode(child, xmlProperty, result);
 				}
 				return;
 			}
+			}
 		}
 
 		void AdjustContainersByXml(const pugi::xml_node& xmlNode, PropertyNode& targetNode) {
 			if (targetNode.kind == PropertyKind::Sequence) {
+				if (auto* polyAccess = std::get_if<PropAccessPolymorphicSequence>(&targetNode.access)) {
+					const std::vector<pugi::xml_node> xmlChildren = GatherXmlChildren(xmlNode);
+					std::size_t runtimeSize = polyAccess->getSize ? polyAccess->getSize() : targetNode.children.size();
+					while (runtimeSize > xmlChildren.size() && polyAccess->remove) {
+						polyAccess->remove(runtimeSize - 1);
+						--runtimeSize;
+					}
+					for (std::size_t i = runtimeSize; i < xmlChildren.size(); ++i) {
+						const pugi::xml_attribute typeAttr = xmlChildren[i].attribute(kTypeAttr);
+						if (polyAccess->emplace && typeAttr) {
+							polyAccess->emplace(typeAttr.as_string());
+						}
+					}
+					runtimeSize = polyAccess->getSize ? polyAccess->getSize() : xmlChildren.size();
+					for (std::size_t i = 0; i < xmlChildren.size() && i < runtimeSize; ++i) {
+						const pugi::xml_attribute typeAttr = xmlChildren[i].attribute(kTypeAttr);
+						if (typeAttr && polyAccess->replaceAt) {
+							polyAccess->replaceAt(i, typeAttr.as_string());
+						}
+					}
+					return;
+				}
 				if (auto* access = std::get_if<PropAccessSequence>(&targetNode.access)) {
 					if (access->resize) {
 						access->resize(CountXmlPropertyChildren(xmlNode));

@@ -353,6 +353,61 @@ namespace Engine {
 			break;
 		}
 		case PropertyKind::Sequence: {
+			if (const auto* polySeq = std::get_if<PropAccessPolymorphicSequence>(&n.access)) {
+				if (ImGui::TreeNodeEx("##polyseq", 0, "%s", n.label.c_str())) {
+					if (polySeq->getSize) {
+						const int sz = static_cast<int>(polySeq->getSize());
+						ImGui::AlignTextToFramePadding();
+						ImGui::Text("Size = %d", sz);
+						ItemTooltipAfter(n.meta);
+					}
+					if (!readOnly && polySeq->emplace && n.meta.metaClassDerivedTypeIdsProvider) {
+						const std::vector<std::string> typeIds = n.meta.metaClassDerivedTypeIdsProvider();
+						if (!typeIds.empty()) {
+							ImGui::PushID("addpoly");
+							int selectedAddType = 0;
+							ImGui::SetNextItemWidth(220.f);
+							if (ImGui::BeginCombo(
+							        "##addType", typeIds[static_cast<std::size_t>(selectedAddType)].c_str())) {
+								for (int i = 0; i < static_cast<int>(typeIds.size()); ++i) {
+									const bool selected = i == selectedAddType;
+									if (ImGui::Selectable(typeIds[static_cast<std::size_t>(i)].c_str(), selected)) {
+										selectedAddType = i;
+									}
+								}
+								ImGui::EndCombo();
+							}
+							ImGui::SameLine();
+							if (ImGui::Button("Add")) {
+								polySeq->emplace(typeIds[static_cast<std::size_t>(selectedAddType)]);
+								MarkLeafEditedIfMixed(n, drawOptions);
+							}
+							ImGui::PopID();
+						}
+					}
+					for (std::size_t i = 0; i < n.children.size(); ++i) {
+						ImGui::PushID(static_cast<int>(i));
+						if (polySeq->remove && !readOnly) {
+							if (ImGui::SmallButton("Remove")) {
+								polySeq->remove(i);
+								MarkLeafEditedIfMixed(n, drawOptions);
+								ImGui::PopID();
+								ImGui::TreePop();
+								ImGui::PopID();
+								return;
+							}
+							ImGui::SameLine();
+						}
+						DrawNode(n.children[i], drawOptions);
+						ImGui::PopID();
+					}
+					ImGui::TreePop();
+				}
+				else {
+					ItemTooltipAfter(n.meta);
+				}
+				break;
+			}
 			const auto* seq = std::get_if<PropAccessSequence>(&n.access);
 			if (ImGui::TreeNodeEx("##seq", 0, "%s", n.label.c_str())) {
 				if (seq && seq->getSize) {
