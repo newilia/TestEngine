@@ -3,6 +3,7 @@
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Core/PropertyNode.h"
 #include "Engine/Core/PropertyTree.h"
+#include "Engine/Core/Scene.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Transform.h"
 #include "Engine/Serialization/SceneEntityRegistry.h"
@@ -320,6 +321,16 @@ namespace Engine {
 			}
 		}
 		ClearSceneRefsOnClonedSubtree(clone);
+		return clone;
+	}
+
+	std::shared_ptr<Scene> CloneScene(const std::shared_ptr<Scene>& source) {
+		if (!source) {
+			return nullptr;
+		}
+		auto clone = std::make_shared<Scene>();
+		clone->SetRoot(CloneSceneNode(source->GetRoot()));
+		ClearSceneRefsOnClonedSubtree(clone->GetRoot());
 		return clone;
 	}
 
