@@ -125,10 +125,9 @@ void SpriteVisual::SetTextureRect(std::optional<sf::IntRect> textureRect) {
 	}
 }
 
-const sf::Color& SpriteVisual::GetColor() const {
+sf::Color SpriteVisual::GetColor() const {
 	if (!_sprite) {
-		static const sf::Color empty;
-		return empty;
+		return {};
 	}
 	return _sprite->getColor();
 }

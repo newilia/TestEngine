@@ -46,7 +46,7 @@ public:
 	void SetTextureRect(std::optional<sf::IntRect> textureRect);
 
 	/// @getter
-	const sf::Color& GetColor() const;
+	sf::Color GetColor() const;
 	/// @setter
 	void SetColor(const sf::Color& opacity);
 
