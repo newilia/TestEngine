@@ -549,9 +549,6 @@ namespace Engine::Serialization {
 				for (std::size_t i = 0; i < targetNode.children.size(); ++i) {
 					PropertyNode& runtimeChild = targetNode.children[i];
 					pugi::xml_node xmlChild = FindChildPropertyById(xmlNode, runtimeChild.id);
-					if (!xmlChild && i < xmlChildren.size()) {
-						xmlChild = xmlChildren[i];
-					}
 					if (!xmlChild) {
 						continue;
 					}
