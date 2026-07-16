@@ -23,6 +23,7 @@
 #include "Engine/Editor/Commands/MoveNodesInHierarchyCommand.h"
 #include "Engine/Editor/Commands/PasteEntityCommand.h"
 #include "Engine/Editor/Commands/PasteNodeCommand.h"
+#include "Engine/Editor/Commands/PlaySimulationCommand.h"
 #include "Engine/Editor/Commands/RenameNodeCommand.h"
 #include "Engine/Editor/Commands/SetNodeWorldPositionCommand.h"
 #include "Engine/Editor/EditorPreferences.h"
@@ -146,6 +147,14 @@ namespace Engine {
 
 	bool Editor::IsOpen() const {
 		return _isOpen;
+	}
+
+	void Editor::PlaySimulation() {
+		_history.Execute(std::make_unique<EditorCommands::PlaySimulationCommand>());
+	}
+
+	void Editor::PauseSimulation() {
+		MainContext::GetInstance().SetSimPaused(true);
 	}
 
 	void Editor::OnUpdate(const sf::Time dt) {
@@ -912,7 +921,12 @@ namespace Engine {
 			ClearNodeSelection();
 		}
 		if (e.code == sf::Keyboard::Key::Space && !ImGui::GetIO().WantCaptureKeyboard) {
-			MainContext::GetInstance().ToggleSimPaused();
+			if (MainContext::GetInstance().IsSimPaused()) {
+				PlaySimulation();
+			}
+			else {
+				PauseSimulation();
+			}
 		}
 		if (_isOpen && !ImGui::GetIO().WantCaptureKeyboard && _editorToolManager->TryActivateToolViaDigitKey(e.code)) {
 			return;

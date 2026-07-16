@@ -57,6 +57,8 @@ namespace Engine {
 		void OnMouseButtonPressed(const sf::Event::MouseButtonPressed& e);
 		void OnMouseButtonReleased(const sf::Event::MouseButtonReleased& e);
 		void OnMouseWheelScrolled(const sf::Event::MouseWheelScrolled& e);
+		void PlaySimulation();
+		void PauseSimulation();
 
 		std::shared_ptr<SceneNode> GetSelectedNode() const;
 		std::vector<std::shared_ptr<SceneNode>> GetSelectedNodes() const;

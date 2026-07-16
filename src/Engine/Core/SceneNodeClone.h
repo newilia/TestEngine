@@ -7,12 +7,14 @@
 
 class SceneNode;
 class Transform;
+class Scene;
 
 namespace Engine {
 
 	std::shared_ptr<EntityOnNode> CloneEntity(const std::shared_ptr<EntityOnNode>& source);
 	std::shared_ptr<Transform> CloneTransform(const Transform& source);
 	std::shared_ptr<SceneNode> CloneSceneNode(const std::shared_ptr<SceneNode>& source);
+	std::shared_ptr<Scene> CloneScene(const std::shared_ptr<Scene>& source);
 
 	/// Applies source provider values onto target provider for reflected properties.
 	bool CopyReflectedProperties(IPropertiesProvider& source, IPropertiesProvider& target);
