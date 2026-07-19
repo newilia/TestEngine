@@ -17,6 +17,7 @@ namespace Engine::EditorCommands {
 	void PlaySimulationCommand::Undo() {
 		MainContext::GetInstance().SetScene(std::move(_sceneSnapshot));
 		_sceneSnapshot.reset();
+		MainContext::GetInstance().SetSimPaused(true);
 	}
 
 } // namespace Engine::EditorCommands
