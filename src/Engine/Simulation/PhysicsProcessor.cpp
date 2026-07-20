@@ -707,6 +707,10 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision, fl
 	const float rn2 = Cross2D(r2, normal);
 	const float denom = invM1 + invM2 + rn1 * rn1 * invI1 + rn2 * rn2 * invI2;
 
+	const bool isImpact = approachSpeed > gCollisionTuning.restingSpeedThreshold;
+	const bool isRigidImpact = isImpact && pairSoft <= 0.f;
+	const bool isSoftImpact = isImpact && pairSoft > 0.f;
+
 	float appliedJnMag = 0.f;
 	auto applyNormalImpulse = [&](float J) {
 		appliedJnMag += std::abs(J);
@@ -721,21 +725,29 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision, fl
 		}
 	};
 
-	if (vn < 0.f && denom > std::numeric_limits<float>::epsilon()) {
-		const float e = std::min(pb1->GetRestitution(), pb2->GetRestitution());
-		const float J = -(1.f + e) * vn / denom;
-		applyNormalImpulse(J);
+	if (denom > std::numeric_limits<float>::epsilon()) {
+		if (pairSoft > 0.f && fullPenetration > 0.f) {
+			/* soft contact — velocity bias spring (rate * penetration), not impulse * dt */
+			const float rate = ContactSeparationRate(pairSoft);
+			const float vn_bias = rate * fullPenetration;
+			const float e = isSoftImpact ? std::min(pb1->GetRestitution(), pb2->GetRestitution()) : 0.f;
+			float J = 0.f;
+			if (vn < 0.f) {
+				J = -((1.f + e) * vn - vn_bias) / denom;
+			}
+			else if (vn < vn_bias) {
+				J = -(vn - vn_bias) / denom;
+			}
+			if (J != 0.f) {
+				applyNormalImpulse(J);
+			}
+		}
+		else if (vn < 0.f) {
+			const float e = std::min(pb1->GetRestitution(), pb2->GetRestitution());
+			const float J = -(1.f + e) * vn / denom;
+			applyNormalImpulse(J);
+		}
 	}
-
-	if (pairSoft > 0.f && fullPenetration > 0.f && vn >= 0.f && denom > std::numeric_limits<float>::epsilon()) {
-		const float rate = ContactSeparationRate(pairSoft);
-		const float J_sep = rate * fullPenetration * dtSec / denom;
-		applyNormalImpulse(J_sep);
-	}
-
-	const bool isImpact = approachSpeed > gCollisionTuning.restingSpeedThreshold;
-	const bool isRigidImpact = isImpact && pairSoft <= 0.f;
-	const bool isSoftImpact = isImpact && pairSoft > 0.f;
 
 	if (!isRigidImpact && appliedJnMag > std::numeric_limits<float>::epsilon()) {
 		/* tangential (Coulomb) friction impulse — removes slip at contact, drives spin via r×t */
