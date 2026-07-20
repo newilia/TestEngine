@@ -96,8 +96,8 @@ private:
 	float _restitution = 0.5f;
 	/// @property(minValue=0.f, maxValue=1.f, dragSpeed=0.05f)
 	float _friction = 0.5f;
-	/// @property(minValue=0.f, dragSpeed=0.05f, tooltip="0 = rigid; higher = more overlap and slower separation")
-	float _softness = 0.f;
+	/// @property(minValue=0.f, maxValue=1.f, dragSpeed=0.05f, tooltip="0 = rigid; higher = more overlap and slower separation")
+	float _softness = 0.5f;
 	/// @property(minValue=-1.f, maxValue=1.f, dragSpeed=0.05f, tooltip="Scales world gravity on this body")
 	float _gravityScale = 1.f;
 	/// @property(minValue=0.f, dragSpeed=0.05f, tooltip="Constant linear deceleration opposing velocity (rolling resistance, not contact friction)")

@@ -727,15 +727,15 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision, fl
 
 	if (denom > std::numeric_limits<float>::epsilon()) {
 		if (pairSoft > 0.f && fullPenetration > 0.f) {
-			/* soft contact — velocity bias spring (rate * penetration), not impulse * dt */
+			/* soft contact — spring bias for support; restitution on impact only (no vn_bias) */
 			const float rate = ContactSeparationRate(pairSoft);
 			const float vn_bias = rate * fullPenetration;
-			const float e = isSoftImpact ? std::min(pb1->GetRestitution(), pb2->GetRestitution()) : 0.f;
 			float J = 0.f;
-			if (vn < 0.f) {
-				J = -((1.f + e) * vn - vn_bias) / denom;
+			if (isSoftImpact && vn < 0.f) {
+				const float e = std::min(pb1->GetRestitution(), pb2->GetRestitution());
+				J = -(1.f + e) * vn / denom;
 			}
-			else if (vn < vn_bias) {
+			else if (!isImpact && vn < vn_bias) {
 				J = -(vn - vn_bias) / denom;
 			}
 			if (J != 0.f) {

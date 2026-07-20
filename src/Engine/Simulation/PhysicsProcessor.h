@@ -71,9 +71,9 @@ private:
 struct CollisionTuning
 {
 	float displacementFactor = 0.9f;
-	float rigidSeparationRate = 1000.f;
+	float rigidSeparationRate = 150.f;
 	float softSeparationRate = 1.f;
-	float restingSpeedThreshold = 2.f;
+	float restingSpeedThreshold = 5.f;
 };
 
 inline CollisionTuning gCollisionTuning;
