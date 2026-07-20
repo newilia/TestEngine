@@ -32,6 +32,7 @@ public:
 	void Init();
 	void Deinit();
 	std::shared_ptr<SceneNode> GetRoot() const;
+	void SetRoot(std::shared_ptr<SceneNode> root);
 	void NotifyPresentRec(const sf::Time& wallFrameDt); // TODO is it necessary?
 	bool DispatchTapAt(const sf::Vector2f& worldPoint);
 	[[nodiscard]] std::shared_ptr<SceneNode> FindTopMostNodeAtPoint(
