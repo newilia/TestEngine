@@ -99,6 +99,10 @@ std::shared_ptr<SceneNode> Scene::GetRoot() const {
 	return _root;
 }
 
+void Scene::SetRoot(std::shared_ptr<SceneNode> root) {
+	_root = root;
+}
+
 void Scene::OnEvent(const sf::Event& event) {
 	if (auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
 		if (pressed->button == sf::Mouse::Button::Left) {
