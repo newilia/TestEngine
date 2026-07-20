@@ -36,6 +36,15 @@ namespace {
 		return {-omega * r.y, omega * r.x};
 	}
 
+	float ContactSeparationRate(float pairSoftness) {
+		const float rigidRate = gCollisionTuning.rigidSeparationRate;
+		if (pairSoftness <= 0.f) {
+			return rigidRate;
+		}
+		const float softRate = gCollisionTuning.softSeparationRate;
+		return rigidRate + (softRate - rigidRate) * pairSoftness;
+	}
+
 } // namespace
 
 void PhysicsProcessor::RegisterBody(shared_ptr<PhysicsBodyBehaviour> body) {
@@ -75,7 +84,7 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 			IntegratePosition(body.get(), substepDt);
 		}
 
-		DetactAndResolveCollisions();
+		DetactAndResolveCollisions(substepDt);
 	}
 }
 
@@ -85,6 +94,29 @@ void PhysicsProcessor::IntergateVelocity(PhysicsBodyBehaviour* body, float dtSec
 	}
 	const auto force = EvaluateExternalForces(body);
 	body->AddVelocity(force * dtSec);
+	ApplyAngularDamping(body, dtSec);
+}
+
+void PhysicsProcessor::ApplyAngularDamping(PhysicsBodyBehaviour* body, float dtSec) {
+	if (body->IsFixed()) {
+		return;
+	}
+	const float k = body->GetAngularDamping();
+	if (k <= 0.f) {
+		return;
+	}
+	float w = body->GetAngularSpeed();
+	if (w == 0.f) {
+		return;
+	}
+	const float sign = w > 0.f ? 1.f : -1.f;
+	const float dw = -sign * k * dtSec;
+	if (std::abs(dw) >= std::abs(w)) {
+		body->SetAngularSpeed(0.f);
+	}
+	else {
+		body->SetAngularSpeed(w + dw);
+	}
 }
 
 sf::Vector2f PhysicsProcessor::EvaluateExternalForces(PhysicsBodyBehaviour* body) const {
@@ -111,6 +143,14 @@ sf::Vector2f PhysicsProcessor::EvaluateExternalForces(PhysicsBodyBehaviour* body
 			result -= vel.normalized() * vel.lengthSquared() * _airFriction;
 		}
 	}
+	if (const float k = body->GetLinearDamping(); k > 0.f) {
+		const sf::Vector2f vel = body->GetVelocity();
+		const float speed = Utils::Length(vel);
+		if (speed > 1e-10f) {
+			// F = -k * mass * v/|v|  =>  a = -k * v/|v|  (constant deceleration magnitude)
+			result -= Utils::Normalize(vel) * k;
+		}
+	}
 	assert(!Utils::IsNan(result));
 	return result;
 }
@@ -133,7 +173,7 @@ void PhysicsProcessor::IntegratePosition(PhysicsBodyBehaviour* body, float dtSec
 	node->SetLocalRotation(node->GetLocalRotation() + sf::radians(body->GetAngularSpeed() * dtSec));
 }
 
-void PhysicsProcessor::DetactAndResolveCollisions() {
+void PhysicsProcessor::DetactAndResolveCollisions(float dtSec) {
 	// handle intersections — sweep-and-prune broad phase, then masks + narrow phase
 	struct BodySweepEntry
 	{
@@ -214,7 +254,7 @@ void PhysicsProcessor::DetactAndResolveCollisions() {
 			if (auto intersection = DetectIntersection(node1, node2, body1, body2)) {
 				if ((body1->GetCollisionGroups() & body2->GetCollisionGroups()).any()) {
 					if (!body1->IsFixed() || !body2->IsFixed()) {
-						ResolveCollision(*intersection);
+						ResolveCollision(*intersection, dtSec);
 						body1->GetOnCollideSignal().Emit(*intersection);
 						body2->GetOnCollideSignal().Emit(*intersection);
 					}
@@ -548,7 +588,7 @@ std::optional<SegmentIntersectionPoints> PhysicsProcessor::FindSegmentCircleInte
 	return result;
 }
 
-void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
+void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision, float dtSec) {
 	auto body1 = collision.wNode1.lock();
 	auto body2 = collision.wNode2.lock();
 	if (!body1 || !body2) {
@@ -615,24 +655,26 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 		return result;
 	};
 
-	constexpr float kDisplacementFactor = 0.9f;
-	float displacementDistance =
-	    (getPenetrationDepth(shape1, body1.get(), normal) + getPenetrationDepth(shape2, body2.get(), -normal)) *
-	    kDisplacementFactor;
+	const float pairSoft = std::max(pb1->GetSoftness(), pb2->GetSoftness());
+	const float fullPenetration =
+	    getPenetrationDepth(shape1, body1.get(), normal) + getPenetrationDepth(shape2, body2.get(), -normal);
 
-	if (pb2->IsFixed()) {
-		auto b1_pos = Utils::GetWorldPos(body1) - normal * displacementDistance;
-		Utils::SetLocalPosToWorld(body1, b1_pos);
-	}
-	else {
-		auto b1_pos = Utils::GetWorldPos(body1) - normal * displacementDistance * (m1 / (m1 + m2));
-		Utils::SetLocalPosToWorld(body1, b1_pos);
-		auto b2_pos = Utils::GetWorldPos(body2) + normal * displacementDistance * (m2 / (m1 + m2));
-		Utils::SetLocalPosToWorld(body2, b2_pos);
+	if (pairSoft <= 0.f && fullPenetration > 0.f) {
+		const float displacementDistance = fullPenetration * gCollisionTuning.displacementFactor;
+		if (pb2->IsFixed()) {
+			auto b1_pos = Utils::GetWorldPos(body1) - normal * displacementDistance;
+			Utils::SetLocalPosToWorld(body1, b1_pos);
+		}
+		else {
+			auto b1_pos = Utils::GetWorldPos(body1) - normal * displacementDistance * (m1 / (m1 + m2));
+			Utils::SetLocalPosToWorld(body1, b1_pos);
+			auto b2_pos = Utils::GetWorldPos(body2) + normal * displacementDistance * (m2 / (m1 + m2));
+			Utils::SetLocalPosToWorld(body2, b2_pos);
+		}
 	}
 
 	/* reaction — normal impulse at contact (linear + angular, 2D rigid) */
-	const sf::Vector2f contact = (collision.intersection.start + collision.intersection.end) * 0.5f;
+	const sf::Vector2f contact = collisionPoint;
 
 	const sf::Transform shapeToWorld1 = body1->GetWorldTransform() * shape1->getTransform();
 	const sf::Transform shapeToWorld2 = body2->GetWorldTransform() * shape2->getTransform();
@@ -659,64 +701,75 @@ void PhysicsProcessor::ResolveCollision(const IntersectionDetails& collision) {
 	const sf::Vector2f v2p = v2 + OmegaCrossR(w2, r2);
 	const sf::Vector2f vRel = v2p - v1p;
 	const float vn = Utils::Dot(vRel, normal);
+	const float approachSpeed = std::max(0.f, -vn);
 
-	if (vn < 0.f) {
-		constexpr static float kNormVelocityCutoff = 100.f;
-		const float approachSpeed = -vn;
-		const bool needSuppress = approachSpeed < kNormVelocityCutoff;
-		const float e = needSuppress ? 0.f : std::min(pb1->GetRestitution(), pb2->GetRestitution());
+	const float rn1 = Cross2D(r1, normal);
+	const float rn2 = Cross2D(r2, normal);
+	const float denom = invM1 + invM2 + rn1 * rn1 * invI1 + rn2 * rn2 * invI2;
 
-		const float rn1 = Cross2D(r1, normal);
-		const float rn2 = Cross2D(r2, normal);
-		const float denom = invM1 + invM2 + rn1 * rn1 * invI1 + rn2 * rn2 * invI2;
-		float appliedJnMag = 0.f;
-		if (denom > std::numeric_limits<float>::epsilon()) {
-			const float J = -(1.f + e) * vn / denom;
-			appliedJnMag = std::abs(J);
-			const sf::Vector2f impulse = normal * J;
+	float appliedJnMag = 0.f;
+	auto applyNormalImpulse = [&](float J) {
+		appliedJnMag += std::abs(J);
+		const sf::Vector2f impulse = normal * J;
+		if (invM1 > 0.f) {
+			pb1->AddVelocity(-impulse * invM1);
+			pb1->SetAngularSpeed(pb1->GetAngularSpeed() - J * rn1 * invI1);
+		}
+		if (invM2 > 0.f) {
+			pb2->AddVelocity(impulse * invM2);
+			pb2->SetAngularSpeed(pb2->GetAngularSpeed() + J * rn2 * invI2);
+		}
+	};
+
+	if (vn < 0.f && denom > std::numeric_limits<float>::epsilon()) {
+		const float e = std::min(pb1->GetRestitution(), pb2->GetRestitution());
+		const float J = -(1.f + e) * vn / denom;
+		applyNormalImpulse(J);
+	}
+
+	if (pairSoft > 0.f && fullPenetration > 0.f && vn >= 0.f && denom > std::numeric_limits<float>::epsilon()) {
+		const float rate = ContactSeparationRate(pairSoft);
+		const float J_sep = rate * fullPenetration * dtSec / denom;
+		applyNormalImpulse(J_sep);
+	}
+
+	const bool isImpact = approachSpeed > gCollisionTuning.restingSpeedThreshold;
+	const bool isRigidImpact = isImpact && pairSoft <= 0.f;
+	const bool isSoftImpact = isImpact && pairSoft > 0.f;
+
+	if (!isRigidImpact && appliedJnMag > std::numeric_limits<float>::epsilon()) {
+		/* tangential (Coulomb) friction impulse — removes slip at contact, drives spin via r×t */
+		const float w1f = pb1->IsFixed() ? 0.f : pb1->GetAngularSpeed();
+		const float w2f = pb2->IsFixed() ? 0.f : pb2->GetAngularSpeed();
+		const sf::Vector2f v1f = pb1->GetVelocity();
+		const sf::Vector2f v2f = pb2->GetVelocity();
+		const sf::Vector2f v1pf = v1f + OmegaCrossR(w1f, r1);
+		const sf::Vector2f v2pf = v2f + OmegaCrossR(w2f, r2);
+		const sf::Vector2f vRelf = v2pf - v1pf;
+		const float vt = Utils::Dot(vRelf, tangent);
+
+		const float rt1 = Cross2D(r1, tangent);
+		const float rt2 = Cross2D(r2, tangent);
+		const float denomT = invM1 + invM2 + rt1 * rt1 * invI1 + rt2 * rt2 * invI2;
+		if (denomT > std::numeric_limits<float>::epsilon()) {
+			const float mu = std::min(pb1->GetFriction(), pb2->GetFriction());
+			const float frictionBlend = isSoftImpact ? pairSoft : 1.f;
+			const float JtFree = -vt / denomT;
+			const float JtMax = mu * frictionBlend * appliedJnMag;
+			const float Jt = std::clamp(JtFree, -JtMax, JtMax);
+			const sf::Vector2f impT = tangent * Jt;
 			if (invM1 > 0.f) {
-				pb1->AddVelocity(-impulse * invM1);
-				pb1->SetAngularSpeed(pb1->GetAngularSpeed() - J * rn1 * invI1);
+				pb1->AddVelocity(-impT * invM1);
+				pb1->SetAngularSpeed(pb1->GetAngularSpeed() - Jt * rt1 * invI1);
 			}
 			if (invM2 > 0.f) {
-				pb2->AddVelocity(impulse * invM2);
-				pb2->SetAngularSpeed(pb2->GetAngularSpeed() + J * rn2 * invI2);
+				pb2->AddVelocity(impT * invM2);
+				pb2->SetAngularSpeed(pb2->GetAngularSpeed() + Jt * rt2 * invI2);
 			}
 		}
-
-		/* tangential (Coulomb) friction impulse — removes slip at contact, drives spin via r×t */
-		if (appliedJnMag > std::numeric_limits<float>::epsilon()) {
-			const float w1f = pb1->IsFixed() ? 0.f : pb1->GetAngularSpeed();
-			const float w2f = pb2->IsFixed() ? 0.f : pb2->GetAngularSpeed();
-			const sf::Vector2f v1f = pb1->GetVelocity();
-			const sf::Vector2f v2f = pb2->GetVelocity();
-			const sf::Vector2f v1pf = v1f + OmegaCrossR(w1f, r1);
-			const sf::Vector2f v2pf = v2f + OmegaCrossR(w2f, r2);
-			const sf::Vector2f vRelf = v2pf - v1pf;
-			const float vt = Utils::Dot(vRelf, tangent);
-
-			const float rt1 = Cross2D(r1, tangent);
-			const float rt2 = Cross2D(r2, tangent);
-			const float denomT = invM1 + invM2 + rt1 * rt1 * invI1 + rt2 * rt2 * invI2;
-			if (denomT > std::numeric_limits<float>::epsilon()) {
-				const float mu = std::min(pb1->GetFriction(), pb2->GetFriction());
-				const float JtFree = -vt / denomT;
-				const float JtMax = mu * appliedJnMag;
-				const float Jt = std::clamp(JtFree, -JtMax, JtMax);
-				const sf::Vector2f impT = tangent * Jt;
-				if (invM1 > 0.f) {
-					pb1->AddVelocity(-impT * invM1);
-					pb1->SetAngularSpeed(pb1->GetAngularSpeed() - Jt * rt1 * invI1);
-				}
-				if (invM2 > 0.f) {
-					pb2->AddVelocity(impT * invM2);
-					pb2->SetAngularSpeed(pb2->GetAngularSpeed() + Jt * rt2 * invI2);
-				}
-			}
-		}
-
-		assert(!Utils::IsNan(pb1->GetVelocity()) && !Utils::IsNan(pb2->GetVelocity()));
 	}
+
+	assert(!Utils::IsNan(pb1->GetVelocity()) && !Utils::IsNan(pb2->GetVelocity()));
 }
 
 const std::list<std::weak_ptr<PhysicsBodyBehaviour>>& PhysicsProcessor::GetAllBodies() const {

@@ -41,9 +41,10 @@ public:
 
 private:
 	void IntergateVelocity(PhysicsBodyBehaviour* body, float dtSec);
+	void ApplyAngularDamping(PhysicsBodyBehaviour* body, float dtSec);
 	void IntegratePosition(PhysicsBodyBehaviour* body, float dtSec);
-	void DetactAndResolveCollisions();
-	void ResolveCollision(const IntersectionDetails& collision);
+	void DetactAndResolveCollisions(float dtSec);
+	void ResolveCollision(const IntersectionDetails& collision, float dtSec);
 
 	static std::optional<IntersectionDetails> DetectIntersection(
 	    SceneNode* node1, SceneNode* node2, PhysicsBodyBehaviour* body1, PhysicsBodyBehaviour* body2);
@@ -65,3 +66,14 @@ private:
 	float _airFriction = 0.f;
 	int _simulationSubsteps = 1;
 };
+
+/// Temporary debug tuning for collision resolution (see DebugSettingsWidget).
+struct CollisionTuning
+{
+	float displacementFactor = 0.9f;
+	float rigidSeparationRate = 1000.f;
+	float softSeparationRate = 1.f;
+	float restingSpeedThreshold = 2.f;
+};
+
+inline CollisionTuning gCollisionTuning;

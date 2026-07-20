@@ -190,12 +190,36 @@ void PhysicsBodyBehaviour::SetFriction(float f) {
 	_friction = f;
 }
 
+float PhysicsBodyBehaviour::GetSoftness() const {
+	return _softness;
+}
+
+void PhysicsBodyBehaviour::SetSoftness(float s) {
+	_softness = s;
+}
+
 float PhysicsBodyBehaviour::GetGravityScale() const {
 	return _gravityScale;
 }
 
 void PhysicsBodyBehaviour::SetGravityScale(float s) {
 	_gravityScale = s;
+}
+
+float PhysicsBodyBehaviour::GetLinearDamping() const {
+	return _linearDamping;
+}
+
+void PhysicsBodyBehaviour::SetLinearDamping(float d) {
+	_linearDamping = std::max(0.f, d);
+}
+
+float PhysicsBodyBehaviour::GetAngularDamping() const {
+	return _angularDamping;
+}
+
+void PhysicsBodyBehaviour::SetAngularDamping(float d) {
+	_angularDamping = std::max(0.f, d);
 }
 
 PhysicsBodyBehaviour::GroupSet& PhysicsBodyBehaviour::GetCollisionGroups() {

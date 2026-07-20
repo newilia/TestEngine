@@ -102,6 +102,12 @@ namespace Engine {
 				physicsProc->SetAirFriction(airFriction);
 			}
 
+			ImGui::SeparatorText("Collision tuning (temp)");
+			ImGui::SliderFloat("Displacement factor", &gCollisionTuning.displacementFactor, 0.f, 1.f);
+			ImGui::DragFloat("Rigid sep. rate", &gCollisionTuning.rigidSeparationRate, 10.f, 1.f, 10000.f);
+			ImGui::DragFloat("Soft sep. rate", &gCollisionTuning.softSeparationRate, 0.1f, 0.01f, 100.f);
+			ImGui::DragFloat("Resting speed threshold", &gCollisionTuning.restingSpeedThreshold, 0.1f, 0.f, 50.f);
+
 			if (auto field = physicsProc->GetAttractionField()) {
 				ImGui::Text("Attraction:");
 				bool massCoupling = field->GetUseMassCoupling();
