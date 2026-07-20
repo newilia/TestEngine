@@ -57,8 +57,17 @@ public:
 	float GetFriction() const;
 	void SetFriction(float f);
 
+	float GetSoftness() const;
+	void SetSoftness(float s);
+
 	float GetGravityScale() const;
 	void SetGravityScale(float s);
+
+	float GetLinearDamping() const;
+	void SetLinearDamping(float d);
+
+	float GetAngularDamping() const;
+	void SetAngularDamping(float d);
 
 	GroupSet& GetCollisionGroups();
 	const GroupSet& GetCollisionGroups() const;
@@ -87,8 +96,14 @@ private:
 	float _restitution = 0.5f;
 	/// @property(minValue=0.f, maxValue=1.f, dragSpeed=0.05f)
 	float _friction = 0.5f;
+	/// @property(minValue=0.f, dragSpeed=0.05f, tooltip="0 = rigid; higher = more overlap and slower separation")
+	float _softness = 0.f;
 	/// @property(minValue=-1.f, maxValue=1.f, dragSpeed=0.05f, tooltip="Scales world gravity on this body")
 	float _gravityScale = 1.f;
+	/// @property(minValue=0.f, dragSpeed=0.05f, tooltip="Constant linear deceleration opposing velocity (rolling resistance, not contact friction)")
+	float _linearDamping = 0.f;
+	/// @property(minValue=0.f, dragSpeed=0.05f, tooltip="Constant angular deceleration opposing spin (rolling resistance, not contact friction)")
+	float _angularDamping = 0.f;
 	/// @property
 	GroupSet _collisionGroups = {{true}};
 	/// @property(tooltip="Bodies with common groups will trigger overlap signal, but won't interact in a physical way")
