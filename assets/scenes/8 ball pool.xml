@@ -2,7 +2,7 @@
 <Scene version="2">
   <Settings>
     <Simulation speedMultiplier="1" vsync="false" />
-    <View centerX="797.992676" centerY="506.226868" scale="0.905030787" />
+    <View centerX="533.042358" centerY="420.509888" scale="0.472431779" />
     <Grid visible="false" size="50" basis="10" snap="true" />
     <Physics gravityX="0" gravityY="400" gravityEnabled="false" airFriction="0" substeps="1">
       <Attraction strength="50" softening="4" massCoupling="true" />
@@ -4214,6 +4214,15 @@
                         <Property id="v" kind="Bool" value="false" />
                       </Property>
                     </Property>
+                  </Property>
+                </Properties>
+              </Behaviour>
+              <Behaviour type="Billiard.RollingBallBehaviour" entityId="1604605174">
+                <Properties>
+                  <Property id="rolling_ball_behaviour" kind="Object">
+                    <Property id="circle_ref" kind="SceneRef" value="3698677571" />
+                    <Property id="sphere_projection_ref" kind="SceneRef" value="3290324261" />
+                    <Property id="body_ref" kind="SceneRef" value="759259200" />
                   </Property>
                 </Properties>
               </Behaviour>
