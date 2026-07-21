@@ -18,17 +18,8 @@ namespace Engine {
 			return false;
 		}
 		out.active = true;
-		out.rotation = _rotation;
 		out.sphereUvOffset = _sphereUvOffset;
 		return true;
-	}
-
-	sf::Angle SphereProjectionContributorBehaviour::GetRotation() const {
-		return _rotation;
-	}
-
-	void SphereProjectionContributorBehaviour::SetRotation(sf::Angle value) {
-		_rotation = value;
 	}
 
 	sf::Vector2f SphereProjectionContributorBehaviour::GetSphereUvOffset() const {

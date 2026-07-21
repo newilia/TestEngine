@@ -1,7 +1,6 @@
 #pragma once
 
 #include <SFML/Graphics/Color.hpp>
-#include <SFML/System/Angle.hpp>
 #include <SFML/System/Vector2.hpp>
 
 namespace sf {
@@ -27,7 +26,6 @@ namespace Engine {
 	struct ComposedSurfaceSphereProjectionData
 	{
 		bool active = false;
-		sf::Angle rotation{};
 		sf::Vector2f sphereUvOffset{};
 	};
 

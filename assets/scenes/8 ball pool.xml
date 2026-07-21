@@ -2,7 +2,7 @@
 <Scene version="2">
   <Settings>
     <Simulation speedMultiplier="1" vsync="false" />
-    <View centerX="27.7506065" centerY="15.9999237" scale="0.0780806169" />
+    <View centerX="797.992676" centerY="506.226868" scale="0.905030787" />
     <Grid visible="false" size="50" basis="10" snap="true" />
     <Physics gravityX="0" gravityY="400" gravityEnabled="false" airFriction="0" substeps="1">
       <Attraction strength="50" softening="4" massCoupling="true" />
@@ -4113,10 +4113,10 @@
               </Node>
             </Children>
           </Node>
-          <Node entityId="1930483441">
+          <Node entityId="1090916461">
             <Properties>
               <Property id="scene_node" kind="Object">
-                <Property id="name" kind="String" value="test" />
+                <Property id="name" kind="String" value="Test ball" />
                 <Property id="is_enabled" kind="Bool" value="true" />
                 <Property id="is_visible" kind="Bool" value="true" />
               </Property>
@@ -4124,49 +4124,158 @@
             <Transform type="Engine.Transform">
               <Properties>
                 <Property id="transform" kind="Object">
-                  <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                  <Property id="get_position" kind="Vec2f" x="456" y="421" />
                   <Property id="get_scale" kind="Vec2f" x="1" y="1" />
                   <Property id="get_rotation" kind="Float" value="0" />
                   <Property id="get_origin" kind="Vec2f" x="0" y="0" />
                 </Property>
               </Properties>
             </Transform>
-            <Visual type="Engine.ComposedSurfaceVisual" entityId="2879153579">
+            <Visual type="Engine.CircleShapeVisual" entityId="3698677571">
               <Properties>
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                <Property id="contributors" kind="Sequence">
-                  <Property id="0" kind="Object">
-                    <Property id="v" kind="SceneRef" value="679675849" />
-                  </Property>
-                  <Property id="1" kind="Object">
-                    <Property id="v" kind="SceneRef" value="3866846946" />
-                  </Property>
-                </Property>
+                <Property id="get_fill_color" kind="Color" r="248" g="240" b="220" a="255" />
+                <Property id="get_outline_color" kind="Color" r="178" g="172" b="158" a="255" />
+                <Property id="get_outline_thickness" kind="Float" value="-1" />
+                <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                <Property id="get_rotation" kind="Float" value="0" />
+                <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                <Property id="get_origin" kind="Vec2f" x="28.6000004" y="28.6000004" />
+                <Property id="get_miter_limit" kind="Float" value="10" />
+                <Property id="get_radius" kind="Float" value="28.6000004" />
+                <Property id="get_point_count" kind="Int32" value="64" />
+                <Property id="get_draw_sector" kind="Bool" value="false" />
+                <Property id="get_sector_color" kind="Color" r="248" g="240" b="220" a="255" />
               </Properties>
             </Visual>
             <Behaviours>
-              <Behaviour type="Engine.TiledTextureContributorBehaviour" entityId="679675849">
+              <Behaviour type="Engine.PhysicsBodyBehaviour" entityId="759259200">
                 <Properties>
-                  <Property id="tiled_texture_contributor_behaviour" kind="Object">
-                    <Property id="is_enabled" kind="Bool" value="true" />
-                    <Property id="texture_path" kind="String" value="resources/textures/planets/earth spheric grid.jpg" />
-                    <Property id="tiling" kind="Vec2f" x="1" y="1" />
-                    <Property id="uv_offset" kind="Vec2f" x="0" y="0" />
-                    <Property id="tint" kind="Color" r="255" g="255" b="255" a="255" />
-                  </Property>
-                </Properties>
-              </Behaviour>
-              <Behaviour type="Engine.SphereProjectionContributorBehaviour" entityId="3866846946">
-                <Properties>
-                  <Property id="sphere_projection_contributor_behaviour" kind="Object">
-                    <Property id="is_enabled" kind="Bool" value="true" />
-                    <Property id="rotation" kind="Float" value="0" />
-                    <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
+                  <Property id="physics_body_behaviour" kind="Object">
+                    <Property id="mass" kind="Float" value="167" />
+                    <Property id="is_fixed" kind="Bool" value="false" />
+                    <Property id="velocity" kind="Vec2f" x="0" y="0" />
+                    <Property id="angular_speed" kind="Float" value="0" />
+                    <Property id="restitution" kind="Float" value="0.949999988" />
+                    <Property id="friction" kind="Float" value="0.5" />
+                    <Property id="softness" kind="Float" value="0" />
+                    <Property id="gravity_scale" kind="Float" value="1" />
+                    <Property id="linear_damping" kind="Float" value="500" />
+                    <Property id="angular_damping" kind="Float" value="20" />
+                    <Property id="collision_groups" kind="Sequence">
+                      <Property id="0" kind="Object">
+                        <Property id="v" kind="Bool" value="true" />
+                      </Property>
+                      <Property id="1" kind="Object">
+                        <Property id="v" kind="Bool" value="false" />
+                      </Property>
+                      <Property id="2" kind="Object">
+                        <Property id="v" kind="Bool" value="false" />
+                      </Property>
+                      <Property id="3" kind="Object">
+                        <Property id="v" kind="Bool" value="false" />
+                      </Property>
+                      <Property id="4" kind="Object">
+                        <Property id="v" kind="Bool" value="false" />
+                      </Property>
+                      <Property id="5" kind="Object">
+                        <Property id="v" kind="Bool" value="false" />
+                      </Property>
+                      <Property id="6" kind="Object">
+                        <Property id="v" kind="Bool" value="false" />
+                      </Property>
+                      <Property id="7" kind="Object">
+                        <Property id="v" kind="Bool" value="false" />
+                      </Property>
+                    </Property>
+                    <Property id="overlap_groups" kind="Sequence">
+                      <Property id="0" kind="Object">
+                        <Property id="v" kind="Bool" value="false" />
+                      </Property>
+                      <Property id="1" kind="Object">
+                        <Property id="v" kind="Bool" value="false" />
+                      </Property>
+                      <Property id="2" kind="Object">
+                        <Property id="v" kind="Bool" value="false" />
+                      </Property>
+                      <Property id="3" kind="Object">
+                        <Property id="v" kind="Bool" value="false" />
+                      </Property>
+                      <Property id="4" kind="Object">
+                        <Property id="v" kind="Bool" value="false" />
+                      </Property>
+                      <Property id="5" kind="Object">
+                        <Property id="v" kind="Bool" value="false" />
+                      </Property>
+                      <Property id="6" kind="Object">
+                        <Property id="v" kind="Bool" value="false" />
+                      </Property>
+                      <Property id="7" kind="Object">
+                        <Property id="v" kind="Bool" value="false" />
+                      </Property>
+                    </Property>
                   </Property>
                 </Properties>
               </Behaviour>
             </Behaviours>
-            <Children />
+            <Children>
+              <Node entityId="2298085435">
+                <Properties>
+                  <Property id="scene_node" kind="Object">
+                    <Property id="name" kind="String" value="Visual" />
+                    <Property id="is_enabled" kind="Bool" value="true" />
+                    <Property id="is_visible" kind="Bool" value="true" />
+                  </Property>
+                </Properties>
+                <Transform type="Engine.Transform">
+                  <Properties>
+                    <Property id="transform" kind="Object">
+                      <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                      <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                      <Property id="get_rotation" kind="Float" value="0" />
+                      <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    </Property>
+                  </Properties>
+                </Transform>
+                <Visual type="Engine.ComposedSurfaceVisual" entityId="1082508573">
+                  <Properties>
+                    <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                    <Property id="contributors" kind="Sequence">
+                      <Property id="0" kind="Object">
+                        <Property id="v" kind="SceneRef" value="3850518943" />
+                      </Property>
+                      <Property id="1" kind="Object">
+                        <Property id="v" kind="SceneRef" value="3290324261" />
+                      </Property>
+                    </Property>
+                    <Property id="size" kind="Vec2f" x="57.2000008" y="57.2000008" />
+                    <Property id="origin" kind="Vec2f" x="28.6000004" y="28.6000004" />
+                  </Properties>
+                </Visual>
+                <Behaviours>
+                  <Behaviour type="Engine.TiledTextureContributorBehaviour" entityId="3850518943">
+                    <Properties>
+                      <Property id="tiled_texture_contributor_behaviour" kind="Object">
+                        <Property id="is_enabled" kind="Bool" value="true" />
+                        <Property id="texture_path" kind="String" value="resources/textures/planets/earth spheric grid.jpg" />
+                        <Property id="tiling" kind="Vec2f" x="1" y="1" />
+                        <Property id="uv_offset" kind="Vec2f" x="0" y="0" />
+                        <Property id="tint" kind="Color" r="255" g="255" b="255" a="255" />
+                      </Property>
+                    </Properties>
+                  </Behaviour>
+                  <Behaviour type="Engine.SphereProjectionContributorBehaviour" entityId="3290324261">
+                    <Properties>
+                      <Property id="sphere_projection_contributor_behaviour" kind="Object">
+                        <Property id="is_enabled" kind="Bool" value="true" />
+                        <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
+                      </Property>
+                    </Properties>
+                  </Behaviour>
+                </Behaviours>
+                <Children />
+              </Node>
+            </Children>
           </Node>
         </Children>
       </Node>
