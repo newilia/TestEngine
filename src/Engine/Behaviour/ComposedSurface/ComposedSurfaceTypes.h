@@ -27,6 +27,9 @@ namespace Engine {
 	{
 		bool active = false;
 		sf::Vector2f sphereUvOffset{};
+		int sphereUnwrap = 0;
+		float sphereRotationYawRadians = 0.f;
+		float sphereRotationPitchRadians = 0.f;
 	};
 
 } // namespace Engine
