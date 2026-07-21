@@ -116,8 +116,9 @@ namespace Engine {
 		shader->setUniform(
 		    "u_sphere_uv_offset", sf::Glsl::Vec2(sphereProjection.sphereUvOffset.x, sphereProjection.sphereUvOffset.y));
 		shader->setUniform("u_sphere_unwrap", sphereProjection.sphereUnwrap);
-		shader->setUniform("u_sphere_rotation",
-		    sf::Glsl::Vec2(sphereProjection.sphereRotationYawRadians, sphereProjection.sphereRotationPitchRadians));
+		shader->setUniform("u_sphere_orientation",
+		    sf::Glsl::Vec4(sphereProjection.sphereOrientationX, sphereProjection.sphereOrientationY,
+		        sphereProjection.sphereOrientationZ, sphereProjection.sphereOrientationW));
 		shader->setUniform("u_world_origin", sf::Glsl::Vec2(w00.x, w00.y));
 		shader->setUniform("u_world_dx", sf::Glsl::Vec2(wx.x - w00.x, wx.y - w00.y));
 		shader->setUniform("u_world_dy", sf::Glsl::Vec2(wy.x - w00.x, wy.y - w00.y));

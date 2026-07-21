@@ -28,8 +28,10 @@ namespace Engine {
 		bool active = false;
 		sf::Vector2f sphereUvOffset{};
 		int sphereUnwrap = 0;
-		float sphereRotationYawRadians = 0.f;
-		float sphereRotationPitchRadians = 0.f;
+		float sphereOrientationX = 0.f;
+		float sphereOrientationY = 0.f;
+		float sphereOrientationZ = 0.f;
+		float sphereOrientationW = 1.f;
 	};
 
 } // namespace Engine

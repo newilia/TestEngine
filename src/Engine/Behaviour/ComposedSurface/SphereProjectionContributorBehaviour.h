@@ -2,6 +2,7 @@
 
 #include "Engine/Behaviour/ComposedSurface/ComposedSurfaceContributorBehaviour.h"
 #include "Engine/Behaviour/ComposedSurface/ComposedSurfaceTypes.h"
+#include "Engine/Behaviour/ComposedSurface/SphereOrientation.h"
 #include "Engine/Core/MetaClass.h"
 
 #include <SFML/System/Angle.hpp>
@@ -26,6 +27,10 @@ namespace Engine {
 		[[nodiscard]] SphereProjectionUnwrap GetUnwrap() const;
 		void SetUnwrap(SphereProjectionUnwrap value);
 
+		[[nodiscard]] SphereOrientationQuat GetSphereOrientation() const;
+		void SetSphereOrientation(SphereOrientationQuat value);
+		void MultiplySphereOrientation(sf::Vector3f axis, float angleRadians);
+
 		/// @getter
 		[[nodiscard]] sf::Angle GetSphereRotationYaw() const;
 		/// @setter(dragSpeed=0.1f)
@@ -36,6 +41,11 @@ namespace Engine {
 		/// @setter(dragSpeed=0.1f)
 		void SetSphereRotationPitch(sf::Angle value);
 
+		/// @getter
+		[[nodiscard]] sf::Angle GetSphereRotationRoll() const;
+		/// @setter(dragSpeed=0.1f)
+		void SetSphereRotationRoll(sf::Angle value);
+
 	private:
 		/// @property
 		bool _isEnabled = true;
@@ -43,8 +53,7 @@ namespace Engine {
 		sf::Vector2f _sphereUvOffset{};
 		/// @property
 		SphereProjectionUnwrap _unwrap = SphereProjectionUnwrap::Horizontal;
-		sf::Angle _sphereRotationYaw{};
-		sf::Angle _sphereRotationPitch{};
+		SphereOrientationQuat _sphereOrientation{};
 	};
 
 } // namespace Engine
