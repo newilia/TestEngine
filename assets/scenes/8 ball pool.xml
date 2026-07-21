@@ -2,7 +2,7 @@
 <Scene version="2">
   <Settings>
     <Simulation speedMultiplier="1" vsync="false" />
-    <View centerX="1342.56482" centerY="525.415344" scale="1.91930962" />
+    <View centerX="27.7506065" centerY="15.9999237" scale="0.0780806169" />
     <Grid visible="false" size="50" basis="10" snap="true" />
     <Physics gravityX="0" gravityY="400" gravityEnabled="false" airFriction="0" substeps="1">
       <Attraction strength="50" softening="4" massCoupling="true" />
@@ -3210,7 +3210,7 @@
                     <Property id="transform" kind="Object">
                       <Property id="get_position" kind="Vec2f" x="1270" y="1328.15002" />
                       <Property id="get_scale" kind="Vec2f" x="1" y="1" />
-                      <Property id="get_rotation" kind="Float" value="224.999802" />
+                      <Property id="get_rotation" kind="Float" value="224.999786" />
                       <Property id="get_origin" kind="Vec2f" x="0" y="0" />
                     </Property>
                   </Properties>
@@ -4112,6 +4112,61 @@
                 <Children />
               </Node>
             </Children>
+          </Node>
+          <Node entityId="1930483441">
+            <Properties>
+              <Property id="scene_node" kind="Object">
+                <Property id="name" kind="String" value="test" />
+                <Property id="is_enabled" kind="Bool" value="true" />
+                <Property id="is_visible" kind="Bool" value="true" />
+              </Property>
+            </Properties>
+            <Transform type="Engine.Transform">
+              <Properties>
+                <Property id="transform" kind="Object">
+                  <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                  <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                  <Property id="get_rotation" kind="Float" value="0" />
+                  <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                </Property>
+              </Properties>
+            </Transform>
+            <Visual type="Engine.ComposedSurfaceVisual" entityId="2879153579">
+              <Properties>
+                <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                <Property id="contributors" kind="Sequence">
+                  <Property id="0" kind="Object">
+                    <Property id="v" kind="SceneRef" value="679675849" />
+                  </Property>
+                  <Property id="1" kind="Object">
+                    <Property id="v" kind="SceneRef" value="3866846946" />
+                  </Property>
+                </Property>
+              </Properties>
+            </Visual>
+            <Behaviours>
+              <Behaviour type="Engine.TiledTextureContributorBehaviour" entityId="679675849">
+                <Properties>
+                  <Property id="tiled_texture_contributor_behaviour" kind="Object">
+                    <Property id="is_enabled" kind="Bool" value="true" />
+                    <Property id="texture_path" kind="String" value="resources/textures/planets/earth spheric grid.jpg" />
+                    <Property id="tiling" kind="Vec2f" x="1" y="1" />
+                    <Property id="uv_offset" kind="Vec2f" x="0" y="0" />
+                    <Property id="tint" kind="Color" r="255" g="255" b="255" a="255" />
+                  </Property>
+                </Properties>
+              </Behaviour>
+              <Behaviour type="Engine.SphereProjectionContributorBehaviour" entityId="3866846946">
+                <Properties>
+                  <Property id="sphere_projection_contributor_behaviour" kind="Object">
+                    <Property id="is_enabled" kind="Bool" value="true" />
+                    <Property id="rotation" kind="Float" value="0" />
+                    <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
+                  </Property>
+                </Properties>
+              </Behaviour>
+            </Behaviours>
+            <Children />
           </Node>
         </Children>
       </Node>
