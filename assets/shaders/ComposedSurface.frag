@@ -1,11 +1,10 @@
 uniform sampler2D texture;
-uniform vec2 u_bounds_min;
 uniform vec2 u_bounds_size;
+uniform mat3 u_local_from_world;
 uniform vec2 u_tiling;
 uniform vec2 u_uv_offset;
 uniform vec4 u_tint;
 uniform int u_sphere_projection_active;
-uniform float u_sphere_rotation;
 uniform vec2 u_sphere_uv_offset;
 uniform vec2 u_world_origin;
 uniform vec2 u_world_dx;
@@ -22,14 +21,20 @@ vec2 world_pos_from_frag()
     return u_world_origin + px * u_world_dx + py * u_world_dy;
 }
 
-void main()
+vec2 local_pos_from_frag()
 {
     vec2 world = world_pos_from_frag();
+    return (u_local_from_world * vec3(world, 1.0)).xy;
+}
+
+void main()
+{
+    vec2 local = local_pos_from_frag();
     vec2 uv;
 
     if (u_sphere_projection_active != 0)
     {
-        vec2 norm = (world - u_bounds_min) / u_bounds_size;
+        vec2 norm = local / u_bounds_size;
         vec2 p = norm * 2.0 - 1.0;
         float aspect = u_bounds_size.x / max(u_bounds_size.y, 1e-5);
         p.x *= aspect;
@@ -40,14 +45,14 @@ void main()
             return;
         }
         float z = sqrt(max(1.0 - r2, 0.0));
-        float lon = atan(p.x, z) + u_sphere_rotation;
+        float lon = atan(p.x, z);
         float lat = asin(clamp(p.y, -1.0, 1.0));
         uv = vec2(lon * kInvTwoPi + 0.5, lat * kInvPi + 0.5);
         uv = fract(uv * u_tiling + u_uv_offset + u_sphere_uv_offset);
     }
     else
     {
-        uv = fract((world - u_bounds_min) / u_bounds_size * u_tiling + u_uv_offset);
+        uv = fract(local / u_bounds_size * u_tiling + u_uv_offset);
     }
 
     gl_FragColor = texture2D(texture, uv) * u_tint;
