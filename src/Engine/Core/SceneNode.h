@@ -103,6 +103,8 @@ public:
 	template <typename T>
 	shared_ptr<T> FindBehaviourRec() const;
 	template <typename T>
+	void FindBehavioursRec(std::vector<shared_ptr<T>>& result) const;
+	template <typename T>
 	shared_ptr<T> RequireBehaviour();
 	template <typename T>
 	void RemoveBehaviour();
@@ -207,6 +209,18 @@ shared_ptr<T> SceneNode::FindBehaviourRec() const {
 		}
 	}
 	return nullptr;
+}
+
+template <typename T>
+void SceneNode::FindBehavioursRec(std::vector<shared_ptr<T>>& result) const {
+	for (auto& b : _behaviours) {
+		if (auto t = std::dynamic_pointer_cast<T>(b)) {
+			result.push_back(t);
+		}
+	}
+	for (auto& child : _children) {
+		child->FindBehavioursRec<T>(result);
+	}
 }
 
 template <typename T>
