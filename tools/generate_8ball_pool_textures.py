@@ -160,29 +160,23 @@ def render_numbered_ball(number: int, font: ImageFont.FreeTypeFont) -> Image.Ima
     return image
 
 
-def output_filename(ball_id: int | str) -> str:
-    if ball_id == "cue":
-        return "ball_cue.png"
-    return f"ball_{int(ball_id):02d}.png"
+def output_filename(ball_id: int) -> str:
+    return f"ball_{ball_id}.png"
 
 
-def generate_all(output_dir: Path, only: set[int | str] | None = None) -> list[Path]:
+def generate_all(output_dir: Path, only: set[int] | None = None) -> list[Path]:
     output_dir.mkdir(parents=True, exist_ok=True)
     font_path = _find_font()
     font_size = int(round(IMAGE_HEIGHT * FONT_SIZE_RATIO))
     font = ImageFont.truetype(str(font_path), font_size)
 
-    targets: list[int | str] = []
-    if only is None:
-        targets = list(range(1, 16)) + ["cue"]
-    else:
-        targets = sorted(only, key=lambda x: (x == "cue", x if isinstance(x, int) else 0))
+    targets: list[int] = list(range(0, 16)) if only is None else sorted(only)
 
     written: list[Path] = []
     for ball_id in targets:
-        if ball_id == "cue":
+        if ball_id == 0:
             image = render_cue_ball()
-        elif isinstance(ball_id, int) and 1 <= ball_id <= 15:
+        elif 1 <= ball_id <= 15:
             image = render_numbered_ball(ball_id, font)
         else:
             raise ValueError(f"Unknown ball id: {ball_id!r}")
@@ -194,18 +188,18 @@ def generate_all(output_dir: Path, only: set[int | str] | None = None) -> list[P
     return written
 
 
-def _parse_only(value: str) -> set[int | str]:
-    result: set[int | str] = set()
+def _parse_only(value: str) -> set[int]:
+    result: set[int] = set()
     for part in value.split(","):
         token = part.strip().lower()
         if not token:
             continue
         if token == "cue":
-            result.add("cue")
+            result.add(0)
             continue
         number = int(token)
-        if not 1 <= number <= 15:
-            raise argparse.ArgumentTypeError(f"Ball number must be 1-15 or 'cue', got: {token}")
+        if not 0 <= number <= 15:
+            raise argparse.ArgumentTypeError(f"Ball number must be 0-15 or 'cue', got: {token}")
         result.add(number)
     if not result:
         raise argparse.ArgumentTypeError("At least one ball id is required for --only")
@@ -224,7 +218,7 @@ def main() -> int:
         "--only",
         type=_parse_only,
         default=None,
-        help="Comma-separated ball ids to generate, e.g. 1,9,15,cue",
+        help="Comma-separated ball ids to generate, e.g. 0,1,9,15 (cue = 0)",
     )
     args = parser.parse_args()
 
