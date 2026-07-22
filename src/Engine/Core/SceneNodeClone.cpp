@@ -1,6 +1,8 @@
 #include "Engine/Core/SceneNodeClone.h"
 
 #include "Engine/Behaviour/Behaviour.h"
+#include "Engine/Core/EntityIdUtils.h"
+#include "Engine/Core/MainContext.h"
 #include "Engine/Core/PropertyNode.h"
 #include "Engine/Core/PropertyTree.h"
 #include "Engine/Core/Scene.h"
@@ -11,10 +13,15 @@
 #include "Engine/Visual/Visual.h"
 
 #include <algorithm>
+#include <functional>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace Engine {
 	namespace {
+
+		using EntityIdMap = std::unordered_map<EntityId, EntityId>;
 
 		void AlignContainerSizes(const PropertyNode& source, PropertyNode& target) {
 			if (source.kind != target.kind || source.id != target.id) {
@@ -75,25 +82,153 @@ namespace Engine {
 			}
 		}
 
-		void ClearSceneRefsOnClonedSubtree(const std::shared_ptr<SceneNode>& root) {
+		void RemapSceneRefsInPropertyNode(
+		    PropertyNode& node, const EntityIdMap& remap, const std::unordered_set<EntityId>& sourceSubtreeIds) {
+			if (node.kind == PropertyKind::SceneRef) {
+				if (auto* acc = std::get_if<PropAccessSceneRef>(&node.access)) {
+					if (acc->get && acc->set) {
+						const EntityId refId = acc->get();
+						if (refId != kInvalidEntityId && sourceSubtreeIds.contains(refId)) {
+							if (const auto it = remap.find(refId); it != remap.end()) {
+								acc->set(it->second);
+							}
+							else {
+								acc->set(0);
+							}
+						}
+						else {
+							acc->set(0);
+						}
+					}
+				}
+			}
+			for (PropertyNode& child : node.children) {
+				RemapSceneRefsInPropertyNode(child, remap, sourceSubtreeIds);
+			}
+		}
+
+		void RemapSceneRefsInProvider(IPropertiesProvider& provider, const EntityIdMap& remap,
+		    const std::unordered_set<EntityId>& sourceSubtreeIds) {
+			PropertyTree tree;
+			PropertyBuilder builder(tree);
+			provider.BuildPropertyTree(builder);
+			for (PropertyNode& root : tree.roots) {
+				RemapSceneRefsInPropertyNode(root, remap, sourceSubtreeIds);
+			}
+		}
+
+		void RemapSceneRefsOnClonedSubtree(const std::shared_ptr<SceneNode>& root, const EntityIdMap& remap,
+		    const std::unordered_set<EntityId>& sourceSubtreeIds) {
 			if (!root) {
 				return;
 			}
-			ClearSceneRefsInProvider(*root);
-			ClearSceneRefsInProvider(root->GetLocalTransform());
+			RemapSceneRefsInProvider(*root, remap, sourceSubtreeIds);
+			RemapSceneRefsInProvider(root->GetLocalTransform(), remap, sourceSubtreeIds);
 			if (const auto sorting = root->GetSortingStrategy()) {
-				ClearSceneRefsInProvider(*sorting);
+				RemapSceneRefsInProvider(*sorting, remap, sourceSubtreeIds);
 			}
 			if (const auto visual = root->GetVisual()) {
-				ClearSceneRefsInProvider(*visual);
+				RemapSceneRefsInProvider(*visual, remap, sourceSubtreeIds);
 			}
 			for (const auto& behaviour : root->GetBehaviours()) {
 				if (behaviour) {
-					ClearSceneRefsInProvider(*behaviour);
+					RemapSceneRefsInProvider(*behaviour, remap, sourceSubtreeIds);
 				}
 			}
 			for (const auto& child : root->GetChildren()) {
-				ClearSceneRefsOnClonedSubtree(child);
+				RemapSceneRefsOnClonedSubtree(child, remap, sourceSubtreeIds);
+			}
+		}
+
+		void CollectEntityId(EntityId id, std::unordered_set<EntityId>& out) {
+			if (id != kInvalidEntityId) {
+				out.insert(id);
+			}
+		}
+
+		void CollectEntityIdsInSubtree(const std::shared_ptr<SceneNode>& root, std::unordered_set<EntityId>& out) {
+			if (!root) {
+				return;
+			}
+			CollectEntityId(root->GetEntityId(), out);
+			if (const auto visual = root->GetVisual()) {
+				CollectEntityId(visual->GetEntityId(), out);
+			}
+			if (const auto sorting = root->GetSortingStrategy()) {
+				CollectEntityId(sorting->GetEntityId(), out);
+			}
+			for (const auto& behaviour : root->GetBehaviours()) {
+				if (behaviour) {
+					CollectEntityId(behaviour->GetEntityId(), out);
+				}
+			}
+			for (const auto& child : root->GetChildren()) {
+				CollectEntityIdsInSubtree(child, out);
+			}
+		}
+
+		void AssignFreshEntityId(EntityId sourceId, const std::function<void(EntityId)>& setCloneId, EntityIdMap& remap,
+		    std::unordered_set<EntityId>& claimed) {
+			EntityId newId = kInvalidEntityId;
+			EnsureUniqueEntityId(newId, claimed);
+			if (sourceId != kInvalidEntityId) {
+				remap[sourceId] = newId;
+			}
+			setCloneId(newId);
+		}
+
+		void AssignFreshEntityIdsAndBuildRemap(const std::shared_ptr<SceneNode>& source,
+		    const std::shared_ptr<SceneNode>& clone, std::unordered_set<EntityId>& claimed, EntityIdMap& remap) {
+			if (!source || !clone) {
+				return;
+			}
+
+			AssignFreshEntityId(
+			    source->GetEntityId(),
+			    [&](EntityId id) {
+				    clone->SetEntityId(id);
+			    },
+			    remap, claimed);
+
+			if (const auto sourceVisual = source->GetVisual()) {
+				if (const auto cloneVisual = clone->GetVisual()) {
+					AssignFreshEntityId(
+					    sourceVisual->GetEntityId(),
+					    [&](EntityId id) {
+						    cloneVisual->SetEntityId(id);
+					    },
+					    remap, claimed);
+				}
+			}
+			if (const auto sourceSorting = source->GetSortingStrategy()) {
+				if (const auto cloneSorting = clone->GetSortingStrategy()) {
+					AssignFreshEntityId(
+					    sourceSorting->GetEntityId(),
+					    [&](EntityId id) {
+						    cloneSorting->SetEntityId(id);
+					    },
+					    remap, claimed);
+				}
+			}
+			const auto& sourceBehaviours = source->GetBehaviours();
+			const auto& cloneBehaviours = clone->GetBehaviours();
+			const std::size_t behaviourCount = std::min(sourceBehaviours.size(), cloneBehaviours.size());
+			for (std::size_t i = 0; i < behaviourCount; ++i) {
+				if (sourceBehaviours[i] && cloneBehaviours[i]) {
+					AssignFreshEntityId(
+					    sourceBehaviours[i]->GetEntityId(),
+					    [&](EntityId id) {
+						    cloneBehaviours[i]->SetEntityId(id);
+					    },
+					    remap, claimed);
+				}
+			}
+
+			const auto& sourceChildren = source->GetChildren();
+			const auto& cloneChildren = clone->GetChildren();
+			const std::size_t childCount = std::min(sourceChildren.size(), cloneChildren.size());
+			for (std::size_t i = 0; i < childCount; ++i) {
+				AssignFreshEntityIdsAndBuildRemap(sourceChildren[i], cloneChildren[i], claimed, remap);
 			}
 		}
 
@@ -232,6 +367,74 @@ namespace Engine {
 			}
 		}
 
+		std::shared_ptr<EntityOnNode> CloneEntityImpl(
+		    const std::shared_ptr<EntityOnNode>& source, bool clearSceneRefs) {
+			if (!source) {
+				return nullptr;
+			}
+			const auto& registry = Serialization::SceneEntityRegistry::GetInstance();
+			const std::string typeId = registry.GetTypeIdForEntity(source);
+			if (typeId.empty()) {
+				return nullptr;
+			}
+			auto target = registry.CreateByTypeId(typeId);
+			if (!target) {
+				return nullptr;
+			}
+			if (!CopyReflectedProperties(*source, *target)) {
+				return nullptr;
+			}
+			if (clearSceneRefs) {
+				ClearSceneRefsInProvider(*target);
+			}
+			return target;
+		}
+
+		std::shared_ptr<SceneNode> CloneSceneNodeRecursive(const std::shared_ptr<SceneNode>& source) {
+			if (!source) {
+				return nullptr;
+			}
+			auto clone = SceneNode::Create();
+			clone->SetName(source->GetName());
+			clone->SetEnabled(source->IsEnabled());
+			clone->SetVisible(source->IsVisible());
+			clone->CopyLocalTransformFrom(source->GetLocalTransform());
+
+			if (auto visualClone = std::dynamic_pointer_cast<Visual>(CloneEntityImpl(source->GetVisual(), false))) {
+				clone->SetVisual(std::move(visualClone));
+			}
+			if (auto sortingClone =
+			        std::dynamic_pointer_cast<SortingStrategy>(CloneEntityImpl(source->GetSortingStrategy(), false))) {
+				clone->SetSortingStrategy(sortingClone);
+			}
+			for (const auto& behaviour : source->GetBehaviours()) {
+				if (auto behaviourClone = std::dynamic_pointer_cast<Behaviour>(CloneEntityImpl(behaviour, false))) {
+					clone->AddBehaviour(std::move(behaviourClone));
+				}
+			}
+			for (const auto& child : source->GetChildren()) {
+				if (auto childClone = CloneSceneNodeRecursive(child)) {
+					clone->AddChild(childClone);
+				}
+			}
+			return clone;
+		}
+
+		void RemapSceneRefsForClonedSubtree(
+		    const std::shared_ptr<SceneNode>& source, const std::shared_ptr<SceneNode>& clone) {
+			std::unordered_set<EntityId> sourceSubtreeIds;
+			CollectEntityIdsInSubtree(source, sourceSubtreeIds);
+
+			std::unordered_set<EntityId> reservedIds;
+			if (const auto scene = MainContext::GetInstance().GetScene()) {
+				CollectEntityIdsInSubtree(scene->GetRoot(), reservedIds);
+			}
+
+			EntityIdMap remap;
+			AssignFreshEntityIdsAndBuildRemap(source, clone, reservedIds, remap);
+			RemapSceneRefsOnClonedSubtree(clone, remap, sourceSubtreeIds);
+		}
+
 	} // namespace
 
 	bool CopyReflectedProperties(IPropertiesProvider& source, IPropertiesProvider& target) {
@@ -274,53 +477,15 @@ namespace Engine {
 	}
 
 	std::shared_ptr<EntityOnNode> CloneEntity(const std::shared_ptr<EntityOnNode>& source) {
-		if (!source) {
-			return nullptr;
-		}
-		const auto& registry = Serialization::SceneEntityRegistry::GetInstance();
-		const std::string typeId = registry.GetTypeIdForEntity(source);
-		if (typeId.empty()) {
-			return nullptr;
-		}
-		auto target = registry.CreateByTypeId(typeId);
-		if (!target) {
-			return nullptr;
-		}
-		if (CopyReflectedProperties(*source, *target)) {
-			ClearSceneRefsInProvider(*target);
-			return target;
-		}
-		return nullptr;
+		return CloneEntityImpl(source, true);
 	}
 
 	std::shared_ptr<SceneNode> CloneSceneNode(const std::shared_ptr<SceneNode>& source) {
-		if (!source) {
+		const auto clone = CloneSceneNodeRecursive(source);
+		if (!clone) {
 			return nullptr;
 		}
-		auto clone = SceneNode::Create();
-		clone->SetName(source->GetName());
-		clone->SetEnabled(source->IsEnabled());
-		clone->SetVisible(source->IsVisible());
-		clone->CopyLocalTransformFrom(source->GetLocalTransform());
-
-		if (auto visualClone = std::dynamic_pointer_cast<Visual>(CloneEntity(source->GetVisual()))) {
-			clone->SetVisual(std::move(visualClone));
-		}
-		if (auto sortingClone = std::dynamic_pointer_cast<SortingStrategy>(CloneEntity(source->GetSortingStrategy()))) {
-			clone->SetSortingStrategy(sortingClone);
-		}
-		for (const auto& behaviour : source->GetBehaviours()) {
-			if (auto behaviourClone = std::dynamic_pointer_cast<Behaviour>(CloneEntity(behaviour))) {
-				clone->AddBehaviour(std::move(behaviourClone));
-			}
-		}
-		for (const auto& child : source->GetChildren()) {
-			auto childClone = CloneSceneNode(child);
-			if (childClone) {
-				clone->AddChild(childClone);
-			}
-		}
-		ClearSceneRefsOnClonedSubtree(clone);
+		RemapSceneRefsForClonedSubtree(source, clone);
 		return clone;
 	}
 
@@ -330,7 +495,6 @@ namespace Engine {
 		}
 		auto clone = std::make_shared<Scene>();
 		clone->SetRoot(CloneSceneNode(source->GetRoot()));
-		ClearSceneRefsOnClonedSubtree(clone->GetRoot());
 		return clone;
 	}
 
