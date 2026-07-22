@@ -176,7 +176,56 @@
             </Properties>
           </Behaviour>
         </Behaviours>
-        <Children />
+        <Children>
+          <Node entityId="1953967384">
+            <Properties>
+              <Property id="scene_node" kind="Object">
+                <Property id="name" kind="String" value="Shadow" />
+                <Property id="is_enabled" kind="Bool" value="true" />
+                <Property id="is_visible" kind="Bool" value="true" />
+              </Property>
+            </Properties>
+            <Transform type="Engine.Transform">
+              <Properties>
+                <Property id="transform" kind="Object">
+                  <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                  <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                  <Property id="get_rotation" kind="Float" value="0" />
+                  <Property id="get_origin" kind="Vec2f" x="40" y="40" />
+                </Property>
+              </Properties>
+            </Transform>
+            <Visual type="Engine.SpriteVisual" entityId="2477804474">
+              <Properties>
+                <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                <Property id="get_texture_path" kind="String" value="resources/textures/8ball/ball_shadow.png" />
+                <Property id="get_size" kind="Vec2f" x="80" y="80" />
+                <Property id="get_texture_rect" kind="Object">
+                  <Property id="has_value" kind="Bool" value="true" />
+                  <Property id="position" kind="Vec2i" x="0" y="0" />
+                  <Property id="size" kind="Vec2i" x="128" y="128" />
+                </Property>
+                <Property id="get_color" kind="Color" r="255" g="255" b="255" a="255" />
+              </Properties>
+            </Visual>
+            <SortingStrategy type="Engine.RelativeSortingStrategy" entityId="3316725715">
+              <Properties>
+                <Property id="priority" kind="Int32" value="10" />
+              </Properties>
+            </SortingStrategy>
+            <Behaviours>
+              <Behaviour type="Billiard.TopDownShadowBehaviour" entityId="4152958700">
+                <Properties>
+                  <Property id="top_down_shadow_behaviour" kind="Object">
+                    <Property id="object" kind="SceneRef" value="1090916461" />
+                    <Property id="distance_factor" kind="Float" value="0.00200000009" />
+                  </Property>
+                </Properties>
+              </Behaviour>
+            </Behaviours>
+            <Children />
+          </Node>
+        </Children>
       </Node>
     </Children>
   </Node>
