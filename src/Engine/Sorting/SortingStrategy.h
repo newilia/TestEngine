@@ -3,6 +3,8 @@
 #include "Engine/Core/EntityOnNode.h"
 #include "Engine/Core/MetaClass.h"
 
+META_ENUM(SortingStrategyType, Relative, Absolute);
+
 class SortingStrategy : public EntityOnNode
 {
 	META_CLASS()
@@ -10,24 +12,24 @@ class SortingStrategy : public EntityOnNode
 public:
 	~SortingStrategy() override = default;
 
-	virtual int GetSortKey() const = 0;
+	virtual int GetSortKey() const;
+	virtual void SetSortKey(int sortKey);
+	virtual SortingStrategyType GetType() const;
+	virtual void SetType(SortingStrategyType type);
+
+private:
+	/// @property
+	int _sortKey = 0;
+	/// @property
+	SortingStrategyType _type = SortingStrategyType::Relative;
 };
 
-class RelativeSortingStrategy : public SortingStrategy
+// Temp dummy, TODO refactor serialization and deserialization
+class DefaultSortingStrategy : public SortingStrategy
 {
 	META_CLASS()
 	META_PROPERTY_BASE(SortingStrategy)
 
 public:
-	~RelativeSortingStrategy() override = default;
-
-	int GetSortKey() const override;
-
-public:
-	int GetPriority() const;
-	void SetPriority(int priority);
-
-private:
-	/// @property
-	int _priority = 0;
+	~DefaultSortingStrategy() override = default;
 };

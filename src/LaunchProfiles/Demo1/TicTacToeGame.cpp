@@ -59,8 +59,9 @@ namespace Demo1 {
 			rect->GetShape()->setSize(size);
 			rect->GetShape()->setFillColor(sf::Color(220, 220, 220));
 			node->SetVisual(std::move(rect));
-			auto sorting = std::make_shared<RelativeSortingStrategy>();
-			sorting->SetPriority(0);
+			auto sorting = std::make_shared<DefaultSortingStrategy>();
+			sorting->SetType(SortingStrategyType::Relative);
+			sorting->SetSortKey(0);
 			node->SetSortingStrategy(std::move(sorting));
 			root->AddChild(node);
 		}
@@ -119,15 +120,17 @@ namespace Demo1 {
 			hit->Configure(i, ticTacToe);
 			cellNode->SetVisual(std::move(hit));
 
-			auto cellSort = std::make_shared<RelativeSortingStrategy>();
-			cellSort->SetPriority(10);
+			auto cellSort = std::make_shared<DefaultSortingStrategy>();
+			cellSort->SetType(SortingStrategyType::Relative);
+			cellSort->SetSortKey(10);
 			cellNode->SetSortingStrategy(std::move(cellSort));
 
 			auto markerNode = SceneNode::Create();
 			markerNode->SetLocalPosition({kCell * 0.5f, kCell * 0.5f});
 			markerNode->SetVisual(std::shared_ptr<TextVisual>(cellTexts[static_cast<std::size_t>(i)]));
-			auto markerSort = std::make_shared<RelativeSortingStrategy>();
-			markerSort->SetPriority(20);
+			auto markerSort = std::make_shared<DefaultSortingStrategy>();
+			markerSort->SetType(SortingStrategyType::Relative);
+			markerSort->SetSortKey(20);
 			markerNode->SetSortingStrategy(std::move(markerSort));
 			cellNode->AddChild(markerNode);
 

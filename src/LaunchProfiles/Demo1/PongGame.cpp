@@ -167,8 +167,9 @@ namespace Demo1 {
 			sh->setOrigin({size.x * 0.5f, size.y * 0.5f});
 			sh->setFillColor(sf::Color::Transparent);
 			node->SetVisual(std::move(rv));
-			auto sorting = make_shared<RelativeSortingStrategy>();
-			sorting->SetPriority(-5);
+			auto sorting = make_shared<DefaultSortingStrategy>();
+			sorting->SetType(SortingStrategyType::Relative);
+			sorting->SetSortKey(-5);
 			node->SetSortingStrategy(std::move(sorting));
 			return node;
 		}
@@ -349,8 +350,9 @@ namespace Demo1 {
 			aiScore = 0;
 
 			auto node = SceneNode::Create();
-			auto sorting = std::make_shared<RelativeSortingStrategy>();
-			sorting->SetPriority(-1);
+			auto sorting = std::make_shared<DefaultSortingStrategy>();
+			sorting->SetType(SortingStrategyType::Relative);
+			sorting->SetSortKey(-1);
 			node->SetSortingStrategy(sorting);
 			node->SetName("Score");
 

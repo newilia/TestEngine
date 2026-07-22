@@ -149,19 +149,13 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 		return;
 	}
 
+	if (!_visual) {
+		return;
+	}
+
 	sf::RenderStates nodeStates = states;
-	nodeStates.transform *= GetLocalTransform().GetTransform();
-
-	if (_visual) {
-		_visual->Draw(target, nodeStates);
-	}
-
-	std::vector<shared_ptr<SceneNode>> sorted = _children;
-	Utils::SortSceneNodesByDrawOrder(sorted);
-
-	for (auto& child : sorted) {
-		child->draw(target, nodeStates);
-	}
+	nodeStates.transform *= GetWorldTransform();
+	_visual->Draw(target, nodeStates);
 }
 
 void SceneNode::Update(const sf::Time& dt) {
@@ -413,12 +407,30 @@ void SceneNode::DetachBehaviourForRemove(const shared_ptr<Behaviour>& b) {
 
 void SceneNode::FindNodesAtPoint(
     const sf::Vector2f& worldPoint, std::vector<shared_ptr<SceneNode>>& result, bool tapResponsiveOnly) {
-	std::vector<shared_ptr<SceneNode>> sorted = _children;
-	Utils::SortSceneNodesByDrawOrder(sorted);
-	for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
-		(*it)->FindNodesAtPoint(worldPoint, result, tapResponsiveOnly);
+	const auto scene = GetScene();
+	if (!scene) {
+		return;
 	}
-	if (_visual && _visual->HitTest(worldPoint) && (!tapResponsiveOnly || _visual->IsTapHandlingEnabled())) {
-		result.push_back(shared_from_this());
+
+	std::vector<SceneNodeDrawEntry> entries;
+	Utils::CollectSceneNodesForDraw(scene->GetRoot(), entries);
+
+	std::vector<SceneNodeDrawEntry> hits;
+	for (const auto& entry : entries) {
+		const auto visual = entry.node->GetVisual();
+		if (visual && visual->HitTest(worldPoint) && (!tapResponsiveOnly || visual->IsTapHandlingEnabled())) {
+			hits.push_back(entry);
+		}
+	}
+
+	std::stable_sort(hits.begin(), hits.end(), [](const SceneNodeDrawEntry& a, const SceneNodeDrawEntry& b) -> bool {
+		if (a.sortKey != b.sortKey) {
+			return a.sortKey < b.sortKey;
+		}
+		return a.traversalIndex > b.traversalIndex;
+	});
+
+	for (const auto& entry : hits) {
+		result.push_back(entry.node);
 	}
 }

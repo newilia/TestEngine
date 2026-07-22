@@ -7,7 +7,6 @@
 #include "Engine/Core/SceneNodeUtils.h"
 #include "Engine/Core/SfmlWindowUtils.h"
 #include "Engine/Core/Transform.h"
-#include "Engine/Sorting/SortingStrategy.h"
 #include "Engine/Visual/Visual.h"
 
 #include <algorithm>
@@ -19,23 +18,23 @@
 namespace {
 	using std::shared_ptr;
 
-	shared_ptr<SceneNode> FindTopMostInSubtree(
-	    const shared_ptr<SceneNode>& node, const sf::Vector2f& worldPoint, bool tapResponsiveOnly) {
-		if (!node) {
-			return nullptr;
-		}
-		std::vector<shared_ptr<SceneNode>> sorted = node->GetChildren();
-		Utils::SortSceneNodesByDrawOrder(sorted);
-		for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
-			if (auto hit = FindTopMostInSubtree(*it, worldPoint, tapResponsiveOnly)) {
-				return hit;
+	shared_ptr<SceneNode> FindTopMostNodeAtPointImpl(
+	    const shared_ptr<SceneNode>& root, const sf::Vector2f& worldPoint, bool tapResponsiveOnly) {
+		std::vector<SceneNodeDrawEntry> entries;
+		Utils::CollectSceneNodesForDraw(root, entries);
+
+		const SceneNodeDrawEntry* best = nullptr;
+		for (const auto& entry : entries) {
+			const auto visual = entry.node->GetVisual();
+			if (!visual || !visual->HitTest(worldPoint) || (tapResponsiveOnly && !visual->IsTapHandlingEnabled())) {
+				continue;
+			}
+			if (!best || entry.sortKey < best->sortKey ||
+			    (entry.sortKey == best->sortKey && entry.traversalIndex > best->traversalIndex)) {
+				best = &entry;
 			}
 		}
-		if (auto visual = node->GetVisual();
-		    visual && visual->HitTest(worldPoint) && (!tapResponsiveOnly || visual->IsTapHandlingEnabled())) {
-			return node;
-		}
-		return nullptr;
+		return best ? best->node : nullptr;
 	}
 
 	sf::FloatRect NormalizeRect(const sf::FloatRect& rect) {
@@ -116,8 +115,22 @@ void Scene::OnEvent(const sf::Event& event) {
 }
 
 void Scene::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-	if (_root) {
-		_root->draw(target, states);
+	if (!_root) {
+		return;
+	}
+
+	std::vector<SceneNodeDrawEntry> entries;
+	Utils::CollectSceneNodesForDraw(_root, entries);
+	Utils::StableSortDrawEntriesAscending(entries);
+
+	for (const auto& entry : entries) {
+		const auto visual = entry.node->GetVisual();
+		if (!visual) {
+			continue;
+		}
+		sf::RenderStates nodeStates = states;
+		nodeStates.transform *= entry.node->GetWorldTransform();
+		visual->Draw(target, nodeStates);
 	}
 }
 
@@ -167,7 +180,7 @@ bool Scene::DispatchTapAt(const sf::Vector2f& worldPoint) {
 }
 
 std::shared_ptr<SceneNode> Scene::FindTopMostNodeAtPoint(const sf::Vector2f& worldPoint, bool tapResponsiveOnly) {
-	return FindTopMostInSubtree(_root, worldPoint, tapResponsiveOnly);
+	return FindTopMostNodeAtPointImpl(_root, worldPoint, tapResponsiveOnly);
 }
 
 std::vector<std::shared_ptr<SceneNode>> Scene::FindNodesInRect(
