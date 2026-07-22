@@ -55,8 +55,9 @@ namespace Demo1 {
 			sprite->SetTexture(*texture);
 		}
 		node->SetVisual(std::move(sprite));
-		auto sorting = make_shared<RelativeSortingStrategy>();
-		sorting->SetPriority(-10);
+		auto sorting = make_shared<DefaultSortingStrategy>();
+		sorting->SetType(SortingStrategyType::Relative);
+		sorting->SetSortKey(-10);
 		node->SetSortingStrategy(std::move(sorting));
 		node->SetLocalScale({2.f, 2.f});
 		return node;

@@ -2,14 +2,18 @@
 
 #include "SortingStrategy.generated.hpp"
 
-int RelativeSortingStrategy::GetSortKey() const {
-	return _priority;
+int SortingStrategy::GetSortKey() const {
+	return _sortKey;
 }
 
-int RelativeSortingStrategy::GetPriority() const {
-	return _priority;
+SortingStrategyType SortingStrategy::GetType() const {
+	return _type;
 }
 
-void RelativeSortingStrategy::SetPriority(int priority) {
-	_priority = priority;
+void SortingStrategy::SetSortKey(int sortKey) {
+	_sortKey = sortKey;
+}
+
+void SortingStrategy::SetType(SortingStrategyType type) {
+	_type = type;
 }

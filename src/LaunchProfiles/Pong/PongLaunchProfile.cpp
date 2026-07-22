@@ -264,8 +264,9 @@ void PongLaunchProfile::AddScoreboard(Scene* scene) {
 	_aiScore = 0;
 
 	auto node = SceneNode::Create();
-	auto sorting = std::make_shared<RelativeSortingStrategy>();
-	sorting->SetPriority(-1);
+	auto sorting = std::make_shared<DefaultSortingStrategy>();
+	sorting->SetType(SortingStrategyType::Relative);
+	sorting->SetSortKey(-1);
 	node->SetSortingStrategy(sorting);
 	node->SetName("Score");
 

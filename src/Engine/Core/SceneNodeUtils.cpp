@@ -66,18 +66,46 @@ namespace Utils {
 		recv->SetEaseInCirc(true);
 	}
 
-	void SortSceneNodesByDrawOrder(std::vector<std::shared_ptr<SceneNode>>& nodes) {
-		std::stable_sort(nodes.begin(), nodes.end(),
-		    [](const std::shared_ptr<SceneNode>& a, const std::shared_ptr<SceneNode>& b) -> bool {
-			    int la = 0;
-			    int lb = 0;
-			    if (auto sa = a->GetSortingStrategy()) {
-				    la = sa->GetSortKey();
-			    }
-			    if (auto sb = b->GetSortingStrategy()) {
-				    lb = sb->GetSortKey();
-			    }
-			    return la < lb;
+	namespace {
+		void CollectSceneNodesForDrawRec(
+		    const std::shared_ptr<SceneNode>& node, int parentSortKey, std::vector<SceneNodeDrawEntry>& out) {
+			if (!node || !node->IsEnabled() || !node->IsVisible()) {
+				return;
+			}
+
+			int sortKey = 0;
+			if (const auto sorting = node->GetSortingStrategy()) {
+				if (sorting->GetType() == SortingStrategyType::Absolute) {
+					sortKey = sorting->GetSortKey();
+				}
+				else {
+					sortKey += sorting->GetSortKey();
+				}
+			}
+			else {
+				sortKey = parentSortKey + 1;
+			}
+
+			out.push_back({node, sortKey, out.size()});
+
+			for (const auto& child : node->GetChildren()) {
+				CollectSceneNodesForDrawRec(child, sortKey, out);
+			}
+		}
+	} // namespace
+
+	void CollectSceneNodesForDraw(const std::shared_ptr<SceneNode>& root, std::vector<SceneNodeDrawEntry>& out) {
+		out.clear();
+		if (!root) {
+			return;
+		}
+		CollectSceneNodesForDrawRec(root, -1, out);
+	}
+
+	void StableSortDrawEntriesAscending(std::vector<SceneNodeDrawEntry>& entries) {
+		std::stable_sort(
+		    entries.begin(), entries.end(), [](const SceneNodeDrawEntry& a, const SceneNodeDrawEntry& b) -> bool {
+			    return a.sortKey < b.sortKey;
 		    });
 	}
 

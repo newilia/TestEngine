@@ -11,8 +11,6 @@ class SceneNode;
 ///
 /// - **Constructor**: store dependencies and default field values only; avoid `MainContext` and
 ///   other globals that may depend on scene activation order.
-/// - **OnAttached**: the behaviour is on a node (`GetNode()` works). Use for wiring to other
-///   components on the **same** node (e.g. find a collider). Do not register with global subsystems here.
 /// - **OnInit**: the node subtree is under the active scene root (`MainContext::GetScene()`). Use for
 ///   `PhysicsProcessor`, fonts, and other engine-wide setup.
 /// - **OnDeinit**: reverse of `OnInit` (unregister from subsystems). Only runs if `OnInit` ran.

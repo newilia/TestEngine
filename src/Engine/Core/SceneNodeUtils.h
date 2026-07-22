@@ -8,6 +8,13 @@
 
 class SceneNode;
 
+struct SceneNodeDrawEntry
+{
+	std::shared_ptr<SceneNode> node;
+	int sortKey = 0;
+	std::size_t traversalIndex = 0;
+};
+
 namespace Utils {
 	template <typename T, typename U>
 	std::shared_ptr<T> SharedPtrCast(const U* ptr) {
@@ -27,7 +34,8 @@ namespace Utils {
 	void AddLightSource(SceneNode* node, float intensity, float radius, sf::Color color);
 	void AddLightReceiver(SceneNode* node, float diffusion, bool isBevelEmboss, float bevelWidth = 0.f);
 
-	void SortSceneNodesByDrawOrder(std::vector<std::shared_ptr<SceneNode>>& nodes);
+	void CollectSceneNodesForDraw(const std::shared_ptr<SceneNode>& root, std::vector<SceneNodeDrawEntry>& out);
+	void StableSortDrawEntriesAscending(std::vector<SceneNodeDrawEntry>& entries);
 
 	sf::Vector2f GetShapePointWorldPos(sf::Shape const* shape, SceneNode const* node, size_t pointIndex);
 } // namespace Utils
