@@ -25,10 +25,10 @@ IMAGE_SIZE = (IMAGE_WIDTH, IMAGE_HEIGHT)
 
 # --- Geometry (ratios relative to IMAGE_HEIGHT) ---
 STRIPE_HEIGHT_RATIO = 0.46
-CIRCLE_DIAMETER_RATIO = 3 / 8
+CIRCLE_DIAMETER_RATIO = 0.3 #3 / 8
 CIRCLE_CENTER_X = IMAGE_HEIGHT / 2
 CIRCLE_CENTER_Y = IMAGE_HEIGHT / 2
-FONT_SIZE_RATIO = 0.227
+FONT_SIZE_RATIO = 0.205 #0.227
 CIRCLE_SUPERSAMPLE = 4
 
 # --- Colors (hex without #) ---
@@ -138,24 +138,27 @@ def render_numbered_ball(number: int, font: ImageFont.FreeTypeFont) -> Image.Ima
             fill=_hex_to_rgb(_stripe_color_for(number)),
         )
 
-    circle_diameter = IMAGE_HEIGHT * CIRCLE_DIAMETER_RATIO
-    circle_radius = circle_diameter / 2
-    _draw_aa_filled_circle(
-        image,
-        CIRCLE_CENTER_X,
-        CIRCLE_CENTER_Y,
-        circle_radius,
-        NUMBER_CIRCLE_COLOR,
-    )
+    for i in range(0, 1):
+        left_margin = IMAGE_HEIGHT * i
+        
+        circle_diameter = IMAGE_HEIGHT * CIRCLE_DIAMETER_RATIO
+        circle_radius = circle_diameter / 2
+        _draw_aa_filled_circle(
+            image,
+            left_margin + CIRCLE_CENTER_X,
+            CIRCLE_CENTER_Y,
+            circle_radius,
+            NUMBER_CIRCLE_COLOR,
+        )
 
-    label = str(number)
-    draw.text(
-        (CIRCLE_CENTER_X, CIRCLE_CENTER_Y),
-        label,
-        fill=_hex_to_rgb(NUMBER_COLOR),
-        font=font,
-        anchor="mm",
-    )
+        label = str(number)
+        draw.text(
+            (left_margin + CIRCLE_CENTER_X, CIRCLE_CENTER_Y),
+            label,
+            fill=_hex_to_rgb(NUMBER_COLOR),
+            font=font,
+            anchor="mm",
+        )
 
     return image
 
