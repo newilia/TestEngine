@@ -1,6 +1,7 @@
 #include "Scene.h"
 
 #include "Engine/Behaviour/Behaviour.h"
+#include "Engine/Core/EntityIdUtils.h"
 #include "Engine/Core/EntityOnNode.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/SceneNodeUtils.h"
@@ -11,9 +12,7 @@
 
 #include <algorithm>
 #include <functional>
-#include <limits>
 #include <optional>
-#include <random>
 #include <unordered_set>
 #include <vector>
 
@@ -179,28 +178,6 @@ std::vector<std::shared_ptr<SceneNode>> Scene::FindNodesInRect(
 	return result;
 }
 
-namespace {
-
-	Engine::EntityId RandomNonZeroEntityId() {
-		thread_local std::mt19937 rng{std::random_device{}()};
-		std::uniform_int_distribution<std::uint32_t> dist(1u, (std::numeric_limits<std::uint32_t>::max)());
-		return dist(rng);
-	}
-
-	void EnsureUniqueEntityId(Engine::EntityId& id, std::unordered_set<std::uint32_t>& claimed) {
-		if (id != Engine::kInvalidEntityId && !claimed.contains(id)) {
-			claimed.insert(id);
-			return;
-		}
-		do {
-			id = RandomNonZeroEntityId();
-		}
-		while (claimed.contains(id));
-		claimed.insert(id);
-	}
-
-} // namespace
-
 void Scene::MarkEntityIndexDirty() {
 	_entityIndexDirty = true;
 }
@@ -224,19 +201,19 @@ void Scene::RebuildEntityIndex() {
 			return;
 		}
 		Engine::EntityId nid = node->GetEntityId();
-		EnsureUniqueEntityId(nid, claimed);
+		Engine::EnsureUniqueEntityId(nid, claimed);
 		node->SetEntityId(nid);
 		nodeEntries.push_back({nid, node});
 
 		if (const auto visual = node->GetVisual()) {
 			Engine::EntityId vid = visual->GetEntityId();
-			EnsureUniqueEntityId(vid, claimed);
+			Engine::EnsureUniqueEntityId(vid, claimed);
 			visual->SetEntityId(vid);
 			entityEntries.push_back({vid, visual});
 		}
 		if (const auto sorting = node->GetSortingStrategy()) {
 			Engine::EntityId sid = sorting->GetEntityId();
-			EnsureUniqueEntityId(sid, claimed);
+			Engine::EnsureUniqueEntityId(sid, claimed);
 			sorting->SetEntityId(sid);
 			entityEntries.push_back({sid, sorting});
 		}
@@ -245,7 +222,7 @@ void Scene::RebuildEntityIndex() {
 				continue;
 			}
 			Engine::EntityId bid = behaviour->GetEntityId();
-			EnsureUniqueEntityId(bid, claimed);
+			Engine::EnsureUniqueEntityId(bid, claimed);
 			behaviour->SetEntityId(bid);
 			entityEntries.push_back({bid, behaviour});
 		}

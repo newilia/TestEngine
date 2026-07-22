@@ -126,6 +126,7 @@ Scanner picks classes from headers under **`src/`** (excluding **`Codegen/`**) t
 
 - One line: **`RefWrapper<SceneNode> _nodeRef;`** or **`RefWrapper<MyBehaviour> _behaviourRef;`** after `/// @property`. **`T`** must be **`SceneNode`** (possibly qualified) or a concrete type derived from **`EntityOnNode`** (behaviour, visual, transform, sorting strategy, etc.); include **`#include "Engine/Core/RefWrapper.h"`** and the full definition of **`T`** in the same header.
 - Stores **`Engine::EntityId`**; **`Resolve(const Scene&)`** returns **`std::shared_ptr<T>`** and caches a **`weak_ptr`**. Not `@getter` / `@setter` in v1.
+- **`CloneSceneNode`:** refs **within the cloned subtree** are remapped to the clone’s fresh **`EntityId`** values; refs **outside** the subtree are cleared. **`CloneEntity`** (single entity, e.g. clipboard) still clears all **`SceneRef`** fields.
 - Inspector: **`PropertyKind::SceneRef`** — **Pick…** opens a hierarchy modal (scene from **`MainContext`** unless **`PropertyTreeDrawOptions::sceneForSceneRefsOverride`** is set).
 
 ### `AssetRef<TAsset>` (external asset by content path)
@@ -134,7 +135,7 @@ Scanner picks classes from headers under **`src/`** (excluding **`Codegen/`**) t
 - Stores a **content-relative path**; **`Get()`** returns **`std::shared_ptr<TAsset>`** via **`MainContext`** asset manager (does not load files itself). Not `@getter` / `@setter` in v1.
 - Inspector: **`PropertyKind::AssetRef`** — filtered combo of known XML paths (auto **`valuesProvider`** from asset type) plus **Browse…** (scene vs scene-object folder from **`ContentPaths`**).
 - XML: `kind="AssetRef"` `value="assets/…"` `type="Engine.Scene"` or `type="Engine.SceneObject"`.
-- Do not add **`@valuesProvider`** on `AssetRef` fields (codegen sets it from **`T`**). Clone/save/load copies the path like a string (unlike **`RefWrapper`**, which is cleared on clone).
+- Do not add **`@valuesProvider`** on `AssetRef` fields (codegen sets it from **`T`**). Clone/save/load copies the path like a string (unlike **`RefWrapper`**, which is remapped on subtree clone — see above).
 - **In containers:** **`AssetRef<TAsset>`** and **`RefWrapper<T>`** are valid element types for **`std::vector`**, **`std::optional`**, **`std::pair`**, and **`std::map` / `std::set`** (same rules as top-level; inspector uses **`addAssetRef`** / **`addSceneRef`** per element or map key/value/set value). Not supported as **`@getter` / `@setter`** return/parameter types when the container holds these types.
 
 ## `std::bitset<N>` (fixed bit masks)
