@@ -35,14 +35,18 @@ namespace Engine {
 			}
 			if (!simEnabled) {
 				ImGui::SameLine();
-				static float dt = 0.01;
-				ImGui::SliderFloat("dt", &dt, 0.001, 0.0167);
+				static float dtFloat = 0.01;
+				ImGui::SliderFloat("dt", &dtFloat, 0.001, 0.0167);
 				ImGui::SameLine();
 				if (ImGui::Button("Step")) {
+					auto dt = sf::seconds(dtFloat);
 					int substeps = physicsProc->GetSimulationSubsteps();
 					physicsProc->SetSimulationSubsteps(1);
-					physicsProc->Update(sf::seconds(dt));
+					physicsProc->Update(dt);
 					physicsProc->SetSimulationSubsteps(substeps);
+					if (auto scene = mainContext.GetScene()) {
+						scene->Update(dt);
+					}
 				}
 			}
 
