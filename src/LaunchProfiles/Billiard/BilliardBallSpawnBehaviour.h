@@ -24,6 +24,9 @@ namespace Billiard {
 		void Setup();
 
 	private:
+		void SetupShadows(SceneNode& ballNode);
+
+	private:
 		void SpawnBall(int ballIndex, sf::Vector2f worldPos);
 		[[nodiscard]] std::string FormatTexturePath(int ballIndex) const;
 		[[nodiscard]] sf::FloatRect GetTableWorldBounds() const;
@@ -35,10 +38,12 @@ namespace Billiard {
 		RefWrapper<RectangleShapeVisual> _tableRectRef;
 		/// @property
 		RefWrapper<SceneNode> _ballParent;
-		/// @property(tooltip="fmt placeholder for ball id: cue for 0, {:02d} for 1-15")
+		/// @property(tooltip="fmt placeholder for ball id")
 		std::string _texturePathMask = "resources/textures/8ball/ball_{}.png";
 		/// @property(minValue=0.f)
 		float _ballRadius = 12.f;
+		/// @property
+		std::vector<RefWrapper<SceneNode>> _lightSources;
 	};
 
 } // namespace Billiard
