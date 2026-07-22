@@ -14,16 +14,18 @@ namespace Billiard {
 		META_CLASS()
 
 	public:
+		void OnInit() override;
 		void OnUpdate(const sf::Time& dt) override;
 
+	public:
 		[[nodiscard]] std::weak_ptr<SceneNode> GetLightSource() const;
 		void SetLightSource(std::weak_ptr<SceneNode> value);
-
 		[[nodiscard]] const RefWrapper<SceneNode>& GetObject() const;
 		void SetObject(RefWrapper<SceneNode> value);
-
 		[[nodiscard]] float GetDistanceFactor() const;
 		void SetDistanceFactor(float value);
+
+		void UpdateShadowPosition() const;
 
 	private:
 		/// @property
