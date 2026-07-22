@@ -7,6 +7,8 @@
 #include "Engine/Core/RefWrapper.h"
 #include "Engine/Visual/CircleShapeVisual.h"
 
+#include <SFML/System/Vector3.hpp>
+
 namespace Billiard {
 
 	class RollingBallBehaviour : public Behaviour
@@ -26,6 +28,13 @@ namespace Billiard {
 
 	private:
 		float GetRadius() const;
+
+		/// @property(minValue=0.f)
+		float _friction = 10.f;
+		/// @property
+		sf::Vector3f _spinOmega{};
+		/// @property
+		float _impulseFactor = 1.f;
 	};
 
 } // namespace Billiard
