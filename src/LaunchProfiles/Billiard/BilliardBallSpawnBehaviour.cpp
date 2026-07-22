@@ -157,6 +157,7 @@ void Billiard::BilliardBallSpawnBehaviour::SetupShadows(SceneNode& ballNode) {
 				if (const auto lightNode = _lightSources[lightIndex].Get()) {
 					shadowBehaviour->SetLightSource(lightNode);
 				}
+				shadowBehaviour->UpdateShadowPosition();
 			}
 		}
 	}

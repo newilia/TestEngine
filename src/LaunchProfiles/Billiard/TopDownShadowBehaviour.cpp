@@ -29,7 +29,15 @@ namespace Billiard {
 		_distanceFactor = value;
 	}
 
+	void TopDownShadowBehaviour::OnInit() {
+		UpdateShadowPosition();
+	}
+
 	void TopDownShadowBehaviour::OnUpdate(const sf::Time& /*dt*/) {
+		UpdateShadowPosition();
+	}
+
+	void TopDownShadowBehaviour::UpdateShadowPosition() const {
 		const auto shadowNode = GetNode();
 		const auto objectNode = _object.Get();
 		const auto lightNode = _lightSource.lock();
@@ -51,5 +59,4 @@ namespace Billiard {
 			shadowNode->SetLocalPosition(worldOffset);
 		}
 	}
-
 } // namespace Billiard

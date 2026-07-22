@@ -21,9 +21,9 @@
     <Visual type="Engine.CircleShapeVisual" entityId="3698677571">
       <Properties>
         <Property id="tap_handling_enabled" kind="Bool" value="false" />
-        <Property id="get_fill_color" kind="Color" r="248" g="240" b="220" a="255" />
-        <Property id="get_outline_color" kind="Color" r="178" g="172" b="158" a="255" />
-        <Property id="get_outline_thickness" kind="Float" value="-1" />
+        <Property id="get_fill_color" kind="Color" r="248" g="240" b="220" a="0" />
+        <Property id="get_outline_color" kind="Color" r="178" g="172" b="158" a="0" />
+        <Property id="get_outline_thickness" kind="Float" value="0" />
         <Property id="get_position" kind="Vec2f" x="0" y="0" />
         <Property id="get_rotation" kind="Float" value="0" />
         <Property id="get_scale" kind="Vec2f" x="1" y="1" />
@@ -151,6 +151,12 @@
             <Property id="origin" kind="Vec2f" x="28.6000004" y="28.6000004" />
           </Properties>
         </Visual>
+        <SortingStrategy type="Engine.DefaultSortingStrategy" entityId="1825614731">
+          <Properties>
+            <Property id="sort_key" kind="Int32" value="-2" />
+            <Property id="type" kind="Enum" value="0" name="Relative" />
+          </Properties>
+        </SortingStrategy>
         <Behaviours>
           <Behaviour type="Engine.TiledTextureContributorBehaviour" entityId="3850518943">
             <Properties>
@@ -191,26 +197,27 @@
                   <Property id="get_position" kind="Vec2f" x="0" y="0" />
                   <Property id="get_scale" kind="Vec2f" x="1" y="1" />
                   <Property id="get_rotation" kind="Float" value="0" />
-                  <Property id="get_origin" kind="Vec2f" x="40" y="40" />
+                  <Property id="get_origin" kind="Vec2f" x="29" y="29" />
                 </Property>
               </Properties>
             </Transform>
             <Visual type="Engine.SpriteVisual" entityId="2477804474">
               <Properties>
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                <Property id="get_texture_path" kind="String" value="resources/textures/8ball/ball_shadow.png" />
-                <Property id="get_size" kind="Vec2f" x="80" y="80" />
+                <Property id="get_texture_path" kind="String" value="resources/textures/8ball/ball_shadow_3.png" />
+                <Property id="get_size" kind="Vec2f" x="58" y="58" />
                 <Property id="get_texture_rect" kind="Object">
                   <Property id="has_value" kind="Bool" value="true" />
                   <Property id="position" kind="Vec2i" x="0" y="0" />
                   <Property id="size" kind="Vec2i" x="128" y="128" />
                 </Property>
-                <Property id="get_color" kind="Color" r="255" g="255" b="255" a="255" />
+                <Property id="get_color" kind="Color" r="255" g="255" b="255" a="51" />
               </Properties>
             </Visual>
-            <SortingStrategy type="Engine.RelativeSortingStrategy" entityId="3316725715">
+            <SortingStrategy type="Engine.DefaultSortingStrategy" entityId="2122310594">
               <Properties>
-                <Property id="priority" kind="Int32" value="10" />
+                <Property id="sort_key" kind="Int32" value="-2" />
+                <Property id="type" kind="Enum" value="0" name="Relative" />
               </Properties>
             </SortingStrategy>
             <Behaviours>
@@ -218,7 +225,7 @@
                 <Properties>
                   <Property id="top_down_shadow_behaviour" kind="Object">
                     <Property id="object" kind="SceneRef" value="1090916461" />
-                    <Property id="distance_factor" kind="Float" value="0.00200000009" />
+                    <Property id="distance_factor" kind="Float" value="0.00800000038" />
                   </Property>
                 </Properties>
               </Behaviour>
