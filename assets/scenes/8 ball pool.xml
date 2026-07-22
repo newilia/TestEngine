@@ -2,7 +2,7 @@
 <Scene version="2">
   <Settings>
     <Simulation speedMultiplier="1" vsync="false" />
-    <View centerX="1325.77466" centerY="617.348022" scale="1.26073229" />
+    <View centerX="1435.33179" centerY="626.582764" scale="1.44984126" />
     <Grid visible="false" size="50" basis="10" snap="true" />
     <Physics gravityX="0" gravityY="400" gravityEnabled="false" airFriction="0" substeps="1">
       <Attraction strength="50" softening="4" massCoupling="true" />
@@ -136,7 +136,7 @@
                         <Property id="softness" kind="Float" value="0" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="linear_damping" kind="Float" value="250" />
-                        <Property id="angular_damping" kind="Float" value="20" />
+                        <Property id="angular_damping" kind="Float" value="10" />
                         <Property id="collision_groups" kind="Sequence">
                           <Property id="0" kind="Object">
                             <Property id="v" kind="Bool" value="true" />
@@ -243,7 +243,7 @@
                         <Property id="softness" kind="Float" value="0" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="linear_damping" kind="Float" value="250" />
-                        <Property id="angular_damping" kind="Float" value="20" />
+                        <Property id="angular_damping" kind="Float" value="10" />
                         <Property id="collision_groups" kind="Sequence">
                           <Property id="0" kind="Object">
                             <Property id="v" kind="Bool" value="true" />
@@ -350,7 +350,7 @@
                         <Property id="softness" kind="Float" value="0" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="linear_damping" kind="Float" value="250" />
-                        <Property id="angular_damping" kind="Float" value="20" />
+                        <Property id="angular_damping" kind="Float" value="10" />
                         <Property id="collision_groups" kind="Sequence">
                           <Property id="0" kind="Object">
                             <Property id="v" kind="Bool" value="true" />
@@ -457,7 +457,7 @@
                         <Property id="softness" kind="Float" value="0" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="linear_damping" kind="Float" value="250" />
-                        <Property id="angular_damping" kind="Float" value="20" />
+                        <Property id="angular_damping" kind="Float" value="10" />
                         <Property id="collision_groups" kind="Sequence">
                           <Property id="0" kind="Object">
                             <Property id="v" kind="Bool" value="true" />
@@ -564,7 +564,7 @@
                         <Property id="softness" kind="Float" value="0" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="linear_damping" kind="Float" value="250" />
-                        <Property id="angular_damping" kind="Float" value="20" />
+                        <Property id="angular_damping" kind="Float" value="10" />
                         <Property id="collision_groups" kind="Sequence">
                           <Property id="0" kind="Object">
                             <Property id="v" kind="Bool" value="true" />
@@ -671,7 +671,7 @@
                         <Property id="softness" kind="Float" value="0" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="linear_damping" kind="Float" value="250" />
-                        <Property id="angular_damping" kind="Float" value="20" />
+                        <Property id="angular_damping" kind="Float" value="10" />
                         <Property id="collision_groups" kind="Sequence">
                           <Property id="0" kind="Object">
                             <Property id="v" kind="Bool" value="true" />
@@ -778,7 +778,7 @@
                         <Property id="softness" kind="Float" value="0" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="linear_damping" kind="Float" value="250" />
-                        <Property id="angular_damping" kind="Float" value="20" />
+                        <Property id="angular_damping" kind="Float" value="10" />
                         <Property id="collision_groups" kind="Sequence">
                           <Property id="0" kind="Object">
                             <Property id="v" kind="Bool" value="true" />
@@ -885,7 +885,7 @@
                         <Property id="softness" kind="Float" value="0" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="linear_damping" kind="Float" value="250" />
-                        <Property id="angular_damping" kind="Float" value="20" />
+                        <Property id="angular_damping" kind="Float" value="10" />
                         <Property id="collision_groups" kind="Sequence">
                           <Property id="0" kind="Object">
                             <Property id="v" kind="Bool" value="true" />
@@ -992,7 +992,7 @@
                         <Property id="softness" kind="Float" value="0" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="linear_damping" kind="Float" value="250" />
-                        <Property id="angular_damping" kind="Float" value="20" />
+                        <Property id="angular_damping" kind="Float" value="10" />
                         <Property id="collision_groups" kind="Sequence">
                           <Property id="0" kind="Object">
                             <Property id="v" kind="Bool" value="true" />
@@ -1099,7 +1099,7 @@
                         <Property id="softness" kind="Float" value="0" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="linear_damping" kind="Float" value="250" />
-                        <Property id="angular_damping" kind="Float" value="20" />
+                        <Property id="angular_damping" kind="Float" value="10" />
                         <Property id="collision_groups" kind="Sequence">
                           <Property id="0" kind="Object">
                             <Property id="v" kind="Bool" value="true" />
@@ -1206,7 +1206,7 @@
                         <Property id="softness" kind="Float" value="0" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="linear_damping" kind="Float" value="250" />
-                        <Property id="angular_damping" kind="Float" value="20" />
+                        <Property id="angular_damping" kind="Float" value="10" />
                         <Property id="collision_groups" kind="Sequence">
                           <Property id="0" kind="Object">
                             <Property id="v" kind="Bool" value="true" />
@@ -1313,7 +1313,7 @@
                         <Property id="softness" kind="Float" value="0" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="linear_damping" kind="Float" value="250" />
-                        <Property id="angular_damping" kind="Float" value="20" />
+                        <Property id="angular_damping" kind="Float" value="10" />
                         <Property id="collision_groups" kind="Sequence">
                           <Property id="0" kind="Object">
                             <Property id="v" kind="Bool" value="true" />
@@ -1420,7 +1420,7 @@
                         <Property id="softness" kind="Float" value="0" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="linear_damping" kind="Float" value="250" />
-                        <Property id="angular_damping" kind="Float" value="20" />
+                        <Property id="angular_damping" kind="Float" value="10" />
                         <Property id="collision_groups" kind="Sequence">
                           <Property id="0" kind="Object">
                             <Property id="v" kind="Bool" value="true" />
@@ -1527,7 +1527,7 @@
                         <Property id="softness" kind="Float" value="0" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="linear_damping" kind="Float" value="250" />
-                        <Property id="angular_damping" kind="Float" value="20" />
+                        <Property id="angular_damping" kind="Float" value="10" />
                         <Property id="collision_groups" kind="Sequence">
                           <Property id="0" kind="Object">
                             <Property id="v" kind="Bool" value="true" />
@@ -1634,7 +1634,7 @@
                         <Property id="softness" kind="Float" value="0" />
                         <Property id="gravity_scale" kind="Float" value="1" />
                         <Property id="linear_damping" kind="Float" value="250" />
-                        <Property id="angular_damping" kind="Float" value="20" />
+                        <Property id="angular_damping" kind="Float" value="10" />
                         <Property id="collision_groups" kind="Sequence">
                           <Property id="0" kind="Object">
                             <Property id="v" kind="Bool" value="true" />
@@ -1743,7 +1743,7 @@
                     <Property id="softness" kind="Float" value="0" />
                     <Property id="gravity_scale" kind="Float" value="1" />
                     <Property id="linear_damping" kind="Float" value="250" />
-                    <Property id="angular_damping" kind="Float" value="20" />
+                    <Property id="angular_damping" kind="Float" value="10" />
                     <Property id="collision_groups" kind="Sequence">
                       <Property id="0" kind="Object">
                         <Property id="v" kind="Bool" value="true" />
@@ -4161,7 +4161,7 @@
                     <Property id="softness" kind="Float" value="0" />
                     <Property id="gravity_scale" kind="Float" value="1" />
                     <Property id="linear_damping" kind="Float" value="250" />
-                    <Property id="angular_damping" kind="Float" value="20" />
+                    <Property id="angular_damping" kind="Float" value="10" />
                     <Property id="collision_groups" kind="Sequence">
                       <Property id="0" kind="Object">
                         <Property id="v" kind="Bool" value="true" />
@@ -4223,6 +4223,9 @@
                     <Property id="circle_ref" kind="SceneRef" value="3698677571" />
                     <Property id="sphere_projection_ref" kind="SceneRef" value="3290324261" />
                     <Property id="body_ref" kind="SceneRef" value="759259200" />
+                    <Property id="friction" kind="Float" value="200" />
+                    <Property id="spin_omega" kind="Vec3f" x="0" y="0" z="0" />
+                    <Property id="impulse_factor" kind="Float" value="0.200000003" />
                   </Property>
                 </Properties>
               </Behaviour>
