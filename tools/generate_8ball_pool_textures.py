@@ -33,9 +33,9 @@ CIRCLE_SUPERSAMPLE = 4
 
 # --- Colors (hex without #) ---
 NUMBER_COLOR = "000000"
-NUMBER_CIRCLE_COLOR = "FFFFFF"
-STRIPE_BALL_BACKGROUND = "FFFFFF"
-CUE_BALL_COLOR = "FFFFFF"
+NUMBER_CIRCLE_COLOR = "E5E3D7"
+STRIPE_BALL_BACKGROUND = "E5E3D7"
+CUE_BALL_COLOR = "E5E3D7"
 
 SOLID_COLORS: dict[int, str] = {
     1: "FFAE01",
@@ -47,6 +47,10 @@ SOLID_COLORS: dict[int, str] = {
     7: "641200",
     8: "000000",
 }
+
+# --- Brightness remapping (perceptual luminance, 0..1) ---
+COLOR_BRIGHTNESS_MIN = 0.0
+COLOR_BRIGHTNESS_MAX = 1.0
 
 # --- Output ---
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -66,6 +70,82 @@ def _hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
     return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
 
 
+def _rgb_to_hex(rgb: tuple[int, int, int]) -> str:
+    return f"{rgb[0]:02X}{rgb[1]:02X}{rgb[2]:02X}"
+
+
+def _relative_luminance(rgb: tuple[int, int, int]) -> float:
+    r, g, b = (channel / 255.0 for channel in rgb)
+    return 0.299 * r + 0.587 * g + 0.114 * b
+
+
+def _remap_color_brightness(
+    hex_color: str,
+    luminance: float,
+    dst_min: float,
+    dst_max: float,
+) -> str:
+    target = dst_min + luminance * (dst_max - dst_min)
+    target = max(0.0, min(1.0, target))
+
+    if abs(target - luminance) < 1e-9:
+        return hex_color
+
+    r, g, b = _hex_to_rgb(hex_color)
+    if luminance < 1e-9:
+        channel = int(round(target * 255))
+        return _rgb_to_hex((channel, channel, channel))
+
+    scale = target / luminance
+    return _rgb_to_hex(
+        tuple(min(255, int(round(channel * scale))) for channel in (r, g, b))
+    )
+
+
+def _all_source_colors() -> list[str]:
+    colors = [
+        NUMBER_COLOR,
+        NUMBER_CIRCLE_COLOR,
+        STRIPE_BALL_BACKGROUND,
+        CUE_BALL_COLOR,
+        *SOLID_COLORS.values(),
+    ]
+    unique: list[str] = []
+    seen: set[str] = set()
+    for color in colors:
+        if color not in seen:
+            seen.add(color)
+            unique.append(color)
+    return unique
+
+
+def _build_brightness_map(
+    colors: list[str],
+    dst_min: float,
+    dst_max: float,
+) -> dict[str, str]:
+    return {
+        color: _remap_color_brightness(
+            color,
+            _relative_luminance(_hex_to_rgb(color)),
+            dst_min,
+            dst_max,
+        )
+        for color in colors
+    }
+
+
+_BRIGHTNESS_MAP = _build_brightness_map(
+    _all_source_colors(),
+    COLOR_BRIGHTNESS_MIN,
+    COLOR_BRIGHTNESS_MAX,
+)
+
+
+def _mapped_color(hex_color: str) -> str:
+    return _BRIGHTNESS_MAP[hex_color]
+
+
 def _find_font() -> Path:
     for path in FONT_CANDIDATES:
         if path.is_file():
@@ -79,14 +159,14 @@ def _find_font() -> Path:
 
 def _stripe_color_for(number: int) -> str:
     if 9 <= number <= 15:
-        return SOLID_COLORS[number - 8]
-    return SOLID_COLORS[number]
+        return _mapped_color(SOLID_COLORS[number - 8])
+    return _mapped_color(SOLID_COLORS[number])
 
 
 def _background_color_for(number: int) -> str:
     if 9 <= number <= 15:
-        return STRIPE_BALL_BACKGROUND
-    return SOLID_COLORS[number]
+        return _mapped_color(STRIPE_BALL_BACKGROUND)
+    return _mapped_color(SOLID_COLORS[number])
 
 
 def _draw_aa_filled_circle(
@@ -120,7 +200,7 @@ def _draw_aa_filled_circle(
 
 
 def render_cue_ball() -> Image.Image:
-    image = Image.new("RGBA", IMAGE_SIZE, _hex_to_rgb(CUE_BALL_COLOR) + (255,))
+    image = Image.new("RGBA", IMAGE_SIZE, _hex_to_rgb(_mapped_color(CUE_BALL_COLOR)) + (255,))
     return image
 
 
@@ -148,14 +228,14 @@ def render_numbered_ball(number: int, font: ImageFont.FreeTypeFont) -> Image.Ima
             left_margin + CIRCLE_CENTER_X,
             CIRCLE_CENTER_Y,
             circle_radius,
-            NUMBER_CIRCLE_COLOR,
+            _mapped_color(NUMBER_CIRCLE_COLOR),
         )
 
         label = str(number)
         draw.text(
             (left_margin + CIRCLE_CENTER_X, CIRCLE_CENTER_Y),
             label,
-            fill=_hex_to_rgb(NUMBER_COLOR),
+            fill=_hex_to_rgb(_mapped_color(NUMBER_COLOR)),
             font=font,
             anchor="mm",
         )
