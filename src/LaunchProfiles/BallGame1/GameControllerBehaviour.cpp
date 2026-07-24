@@ -56,10 +56,12 @@ namespace BallGame1 {
 		if (index >= _ballAssetRefs.size()) {
 			return nullptr;
 		}
-		if (Verify(_ballAssetRefs[index])) {
-			return _ballAssetRefs[index].Get()->GetNode();
+		const auto prefab = _ballAssetRefs[index].Get();
+		const auto gunNode = _gunNodeRef.Get();
+		if (!prefab || !gunNode) {
+			return nullptr;
 		}
-		return nullptr;
+		return prefab->InstantiateOn(gunNode);
 	}
 
 	std::shared_ptr<SceneNode> GameControllerBehaviour::CreateRandomBallNode() const {
@@ -76,8 +78,10 @@ namespace BallGame1 {
 			return;
 		}
 		_ballNode = ballNode;
-		ballNode->RemoveFromParent();
-		gunNode->AddChild(ballNode);
+		if (ballNode->GetParent() != gunNode) {
+			ballNode->RemoveFromParent();
+			gunNode->AddChild(ballNode);
+		}
 		if (auto body = ballNode->FindBehaviour<PhysicsBodyBehaviour>()) {
 			body->SetFixed(true);
 		}

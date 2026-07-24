@@ -92,12 +92,11 @@ void Billiard::BilliardBallSpawnBehaviour::SpawnBall(int ballIndex, sf::Vector2f
 		return;
 	}
 
-	const auto instance = Engine::CloneSceneNode(ballPrefab->GetNode());
+	const auto instance = ballPrefab->InstantiateOn(parentNode);
 	if (!instance) {
 		return;
 	}
 
-	parentNode->AddChild(instance);
 	instance->SetName(fmt::format("Ball {}", ballIndex));
 	Utils::SetLocalPosToWorld(instance, worldPos);
 
@@ -138,12 +137,10 @@ void Billiard::BilliardBallSpawnBehaviour::SetupShadows(SceneNode& ballNode) {
 					shadowBehaviour = shadow.get();
 				}
 				else {
-					currentShadowNode = Engine::CloneSceneNode(shadowNode);
+					currentShadowNode = Engine::InstantiateSceneNodeOn(shadowNode, shadowParent);
 					if (!currentShadowNode) {
 						continue;
 					}
-					shadowParent->AddChild(currentShadowNode);
-					currentShadowNode->NotifyLifecycleInitRecursive();
 					if (auto clonedShadow = currentShadowNode->FindBehaviour<Billiard::TopDownShadowBehaviour>()) {
 						shadowBehaviour = clonedShadow.get();
 					}
@@ -154,9 +151,7 @@ void Billiard::BilliardBallSpawnBehaviour::SetupShadows(SceneNode& ballNode) {
 				}
 
 				shadowBehaviour->SetObject(objectRef);
-				if (const auto lightNode = _lightSources[lightIndex].Get()) {
-					shadowBehaviour->SetLightSource(lightNode);
-				}
+				shadowBehaviour->SetLightSource(_lightSources[lightIndex]);
 				shadowBehaviour->UpdateShadowPosition();
 			}
 		}

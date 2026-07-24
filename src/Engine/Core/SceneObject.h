@@ -13,6 +13,9 @@ public:
 	const std::shared_ptr<SceneNode>& GetNode() const;
 	operator bool() const;
 
+	/// Clones this prefab and parents it under `parent`. Returns null on failure.
+	[[nodiscard]] std::shared_ptr<SceneNode> InstantiateOn(const std::shared_ptr<SceneNode>& parent) const;
+
 private:
 	std::shared_ptr<SceneNode> _root;
 };
