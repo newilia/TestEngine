@@ -25,5 +25,6 @@ private:
 	sf::Vector2f _grabOffset{};
 	bool _dragging = false;
 	bool _wasBodyFixed = false;
+	bool _isSelectOnTap = false;
 	std::optional<sf::Vector2f> _dragStartWorldPos;
 };

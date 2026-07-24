@@ -35,19 +35,28 @@ bool MoveTool::ProcessEvent(const sf::Event& event) {
 	};
 
 	auto tryGrab = [&](const sf::Vector2f& pos) -> bool {
-		auto scene = Engine::MainContext::GetInstance().GetScene();
-		auto picked = scene ? scene->FindTopMostNodeAtPoint(pos) : nullptr;
-		if (!picked) {
-			_dragging = false;
-			_grabbedNode.reset();
-			_dragStartWorldPos.reset();
-			if (_onSelect) {
-				_onSelect(nullptr);
+		std::shared_ptr<SceneNode> picked;
+		if (_isSelectOnTap) {
+			auto scene = Engine::MainContext::GetInstance().GetScene();
+			picked = scene ? scene->FindTopMostNodeAtPoint(pos) : nullptr;
+			if (!picked) {
+				_dragging = false;
+				_grabbedNode.reset();
+				_dragStartWorldPos.reset();
+				if (_onSelect) {
+					_onSelect(nullptr);
+				}
+				return true;
 			}
-			return true;
+			if (_onSelect) {
+				_onSelect(picked);
+			}
 		}
-		if (_onSelect) {
-			_onSelect(picked);
+		else {
+			picked = Engine::Editor::GetInstance().GetSelectedNode();
+			if (!picked) {
+				return true;
+			}
 		}
 		const sf::Vector2f nodePos = Utils::GetWorldPos(picked);
 		_grabOffset = nodePos - pos;
@@ -130,5 +139,6 @@ bool MoveTool::ProcessEvent(const sf::Event& event) {
 }
 
 void MoveTool::DrawToolParametersUi() {
+	ImGui::Checkbox("Select on tap", &_isSelectOnTap);
 	ImGui::TextUnformatted("Drag physical bodies with LMB; velocity is cleared while moving.");
 }
