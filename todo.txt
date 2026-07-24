@@ -54,7 +54,3 @@ Disable snap by honding Alt
 импульс системы увеличивается после столкновения шаров
 
 ctrl+z изменения свойств
-
-add AssetRef::InstantiateToTree()
-
-! пустой optional неправильно сериализуется и десериализуется

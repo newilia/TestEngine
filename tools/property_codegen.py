@@ -3174,6 +3174,19 @@ def emit_std_pair_property(
     out.append("\tb.pop();")
 
 
+def _optional_object_meta(meta_arg: str) -> str:
+    if meta_arg == "Engine::PropertyMeta{}":
+        return (
+            "[&]() -> Engine::PropertyMeta { "
+            "Engine::PropertyMeta _m; _m.optionalContainer = true; return _m; }()"
+        )
+    if "return _m;" in meta_arg:
+        return meta_arg.replace(
+            "return _m;", "_m.optionalContainer = true; return _m;", 1
+        )
+    raise ValueError(f"unexpected optional object meta: {meta_arg}")
+
+
 def _optional_storage_expr(p: PropSpec) -> str:
     if p.is_getter:
         return f"this->{p.member}()"
@@ -3340,7 +3353,7 @@ def emit_std_optional_property(
     label_esc = cpp_escape_string(default_label(p))
     leaf_meta = "Engine::PropertyMeta{}"
 
-    out.append(f'\tb.pushObject("{fid}", "{label_esc}", {meta_arg});')
+    out.append(f'\tb.pushObject("{fid}", "{label_esc}", {_optional_object_meta(meta_arg)});')
     g_has = _optional_has_value_get(storage)
     s_has = _optional_has_value_set(p, storage, el, readonly, setter_name)
     out.append(f'\t\tb.addBool("has_value", "Set", {g_has}, {s_has}, {leaf_meta});')

@@ -27,6 +27,8 @@ namespace Engine {
 		bool readOnly = false;
 		/// When true, `PropertyTreeSerializer` skips this node on save and load.
 		bool dontSave = false;
+		/// `std::optional` property group: empty runtime value serializes as an object with no children.
+		bool optionalContainer = false;
 		bool hasMixedValues = false;
 
 		std::optional<double> numericMin;
