@@ -461,45 +461,27 @@ namespace {
 		return DynamicTypeTitle(*firstEntity);
 	}
 
-	std::vector<std::pair<std::type_index, std::string>> FindCommonBehaviourTypes(
+	std::vector<std::pair<std::type_index, std::string>> CollectBehaviourTypesInSelection(
 	    const std::vector<std::shared_ptr<SceneNode>>& nodes) {
-		std::vector<std::pair<std::type_index, std::string>> common;
-		if (nodes.empty()) {
-			return common;
-		}
-		const auto& firstBehaviours = nodes.front()->GetBehaviours();
-		for (const auto& behaviour : firstBehaviours) {
-			if (!behaviour) {
+		std::vector<std::pair<std::type_index, std::string>> types;
+		for (const auto& node : nodes) {
+			if (!node) {
 				continue;
 			}
-			const Behaviour* behaviourRaw = behaviour.get();
-			const auto type = std::type_index(typeid(*behaviourRaw));
-			bool existsInAll = true;
-			for (std::size_t i = 1; i < nodes.size(); ++i) {
-				bool found = false;
-				for (const auto& candidate : nodes[i]->GetBehaviours()) {
-					const Behaviour* candidateRaw = candidate.get();
-					if (candidateRaw && std::type_index(typeid(*candidateRaw)) == type) {
-						found = true;
-						break;
-					}
+			for (const auto& behaviour : node->GetBehaviours()) {
+				if (!behaviour) {
+					continue;
 				}
-				if (!found) {
-					existsInAll = false;
-					break;
+				const auto type = std::type_index(typeid(*behaviour));
+				const bool alreadyAdded = std::any_of(types.begin(), types.end(), [type](const auto& item) {
+					return item.first == type;
+				});
+				if (!alreadyAdded) {
+					types.emplace_back(type, BehaviourTitle(*behaviour));
 				}
-			}
-			if (!existsInAll) {
-				continue;
-			}
-			const bool alreadyAdded = std::any_of(common.begin(), common.end(), [type](const auto& item) {
-				return item.first == type;
-			});
-			if (!alreadyAdded) {
-				common.emplace_back(type, BehaviourTitle(*behaviour));
 			}
 		}
-		return common;
+		return types;
 	}
 
 	bool IsSceneEntityRegistrationAddable(const Engine::Serialization::SceneEntityRegistration& registration,
@@ -587,7 +569,7 @@ namespace {
 		mergeState.sortingMerged.reset();
 		mergeState.visualMerged.reset();
 		mergeState.behaviourMerged.clear();
-		mergeState.commonBehaviourTitles = FindCommonBehaviourTypes(validNodes);
+		mergeState.behaviourTypeTitles = CollectBehaviourTypesInSelection(validNodes);
 	}
 
 	void RefreshMergeStateForFingerprint(
@@ -645,14 +627,20 @@ namespace {
 	void DrawMergedProviderBlockCached(Engine::EditorVisualTheme::InspectorSectionHeaderStyle sectionStyle,
 	    const char* sectionKey, const char* title, const std::vector<Engine::IPropertiesProvider*>& inspectables,
 	    const Engine::PropertyTreeDrawer& drawer, std::optional<Engine::PropertyTree>& mergedCache,
-	    std::unordered_set<std::string>& expandedSections, std::function<void()> onPropertyEdited = nullptr,
-	    const MultiEntityDeleteContext* deleteContext = nullptr) {
+	    std::unordered_set<std::string>& expandedSections, float headerAlpha = 1.f,
+	    std::function<void()> onPropertyEdited = nullptr, const MultiEntityDeleteContext* deleteContext = nullptr) {
 		if (inspectables.empty()) {
 			return;
 		}
 		ImGui::PushID(sectionKey);
-		Engine::EditorVisualTheme::PushInspectorSectionHeaderColors(sectionStyle);
+		Engine::EditorVisualTheme::PushInspectorSectionHeaderColors(sectionStyle, headerAlpha);
+		if (headerAlpha < 1.f) {
+			Engine::EditorVisualTheme::PushInspectorSectionHeaderTextAlpha(headerAlpha);
+		}
 		const bool open = DrawCollapsingHeaderWithPersistedOpen(sectionKey, title, expandedSections);
+		if (headerAlpha < 1.f) {
+			Engine::EditorVisualTheme::PopInspectorSectionHeaderTextAlpha();
+		}
 		Engine::EditorVisualTheme::PopInspectorSectionHeaderColors();
 		if (deleteContext && deleteContext->nodes && !deleteContext->nodes->empty() &&
 		    deleteContext->slot != Engine::EntitySlot::Transform) {
@@ -841,7 +829,7 @@ namespace Engine {
 		    _expandedInspectorSections);
 		DrawMergedProviderBlockCached(EditorVisualTheme::InspectorSectionHeaderStyle::Transform,
 		    kInspectorSectionTransform, "Transform", transformProviders, _propertyDrawer, _mergeState.transformMerged,
-		    _expandedInspectorSections, [nodes = validNodes]() {
+		    _expandedInspectorSections, 1.f, [nodes = validNodes]() {
 			    for (const auto& node : nodes) {
 				    if (node) {
 					    node->MarkWorldTransformSubtreeDirty();
@@ -849,20 +837,25 @@ namespace Engine {
 			    }
 		    });
 
-		bool hasCommonSorting = true;
+		bool hasAnySorting = false;
+		std::vector<std::shared_ptr<SceneNode>> nodesWithSorting;
 		std::vector<IPropertiesProvider*> sortingProviders;
+		nodesWithSorting.reserve(validNodes.size());
 		sortingProviders.reserve(validNodes.size());
 		for (const auto& node : validNodes) {
 			const auto sorting = node->GetSortingStrategy();
 			if (!sorting) {
-				hasCommonSorting = false;
-				break;
+				continue;
 			}
+			hasAnySorting = true;
+			nodesWithSorting.push_back(node);
 			sortingProviders.push_back(dynamic_cast<IPropertiesProvider*>(sorting.get()));
 		}
-		if (hasCommonSorting) {
+		if (hasAnySorting) {
+			const bool onAllNodes = nodesWithSorting.size() == validNodes.size();
+			const float headerAlpha = onAllNodes ? 1.f : Engine::EditorVisualTheme::kInspectorPartialEntityHeaderAlpha;
 			const std::string sortingTitle = CommonEntityTypeTitleOrFallback(
-			    validNodes,
+			    nodesWithSorting,
 			    [](const std::shared_ptr<SceneNode>& node) {
 				    return std::static_pointer_cast<EntityOnNode>(node->GetSortingStrategy());
 			    },
@@ -871,23 +864,28 @@ namespace Engine {
 			const MultiEntityDeleteContext deleteContext{EntitySlot::SortingStrategy, &validNodes, std::nullopt};
 			DrawMergedProviderBlockCached(EditorVisualTheme::InspectorSectionHeaderStyle::SortingStrategy,
 			    sortingKey.c_str(), sortingTitle.c_str(), sortingProviders, _propertyDrawer, _mergeState.sortingMerged,
-			    _expandedInspectorSections, nullptr, &deleteContext);
+			    _expandedInspectorSections, headerAlpha, nullptr, &deleteContext);
 		}
 
-		bool hasCommonVisual = true;
+		bool hasAnyVisual = false;
+		std::vector<std::shared_ptr<SceneNode>> nodesWithVisual;
 		std::vector<IPropertiesProvider*> visualProviders;
+		nodesWithVisual.reserve(validNodes.size());
 		visualProviders.reserve(validNodes.size());
 		for (const auto& node : validNodes) {
 			const auto visual = node->GetVisual();
 			if (!visual) {
-				hasCommonVisual = false;
-				break;
+				continue;
 			}
+			hasAnyVisual = true;
+			nodesWithVisual.push_back(node);
 			visualProviders.push_back(dynamic_cast<IPropertiesProvider*>(visual.get()));
 		}
-		if (hasCommonVisual) {
+		if (hasAnyVisual) {
+			const bool onAllNodes = nodesWithVisual.size() == validNodes.size();
+			const float headerAlpha = onAllNodes ? 1.f : Engine::EditorVisualTheme::kInspectorPartialEntityHeaderAlpha;
 			const std::string visualTitle = CommonEntityTypeTitleOrFallback(
-			    validNodes,
+			    nodesWithVisual,
 			    [](const std::shared_ptr<SceneNode>& node) {
 				    return std::static_pointer_cast<EntityOnNode>(node->GetVisual());
 			    },
@@ -896,18 +894,13 @@ namespace Engine {
 			const MultiEntityDeleteContext deleteContext{EntitySlot::Visual, &validNodes, std::nullopt};
 			DrawMergedProviderBlockCached(EditorVisualTheme::InspectorSectionHeaderStyle::Visual, visualKey.c_str(),
 			    visualTitle.c_str(), visualProviders, _propertyDrawer, _mergeState.visualMerged,
-			    _expandedInspectorSections, nullptr, &deleteContext);
+			    _expandedInspectorSections, headerAlpha, nullptr, &deleteContext);
 		}
 
-		const auto& commonBehaviours = _mergeState.commonBehaviourTitles;
-		if (commonBehaviours.empty()) {
-			ImGui::TextUnformatted("No common behaviour types across selected nodes");
-			return;
-		}
-		for (const auto& [type, title] : commonBehaviours) {
+		const auto& behaviourTypes = _mergeState.behaviourTypeTitles;
+		for (const auto& [type, title] : behaviourTypes) {
 			std::vector<IPropertiesProvider*> behaviourProviders;
 			behaviourProviders.reserve(validNodes.size());
-			bool foundInAll = true;
 			for (const auto& node : validNodes) {
 				IPropertiesProvider* provider = nullptr;
 				for (const auto& behaviour : node->GetBehaviours()) {
@@ -918,20 +911,21 @@ namespace Engine {
 					}
 				}
 				if (!provider) {
-					foundInAll = false;
-					break;
+					continue;
 				}
 				behaviourProviders.push_back(provider);
 			}
-			if (!foundInAll) {
+			if (behaviourProviders.empty()) {
 				continue;
 			}
+			const bool onAllNodes = behaviourProviders.size() == validNodes.size();
+			const float headerAlpha = onAllNodes ? 1.f : Engine::EditorVisualTheme::kInspectorPartialEntityHeaderAlpha;
 			const std::string behaviourKey = InspectorSectionKeyBehaviour(type, 0);
 			ImGui::PushID(behaviourKey.c_str());
 			const MultiEntityDeleteContext deleteContext{EntitySlot::Behaviour, &validNodes, type};
 			DrawMergedProviderBlockCached(EditorVisualTheme::InspectorSectionHeaderStyle::Behaviour,
 			    behaviourKey.c_str(), title.c_str(), behaviourProviders, _propertyDrawer,
-			    _mergeState.behaviourMerged[type], _expandedInspectorSections, nullptr, &deleteContext);
+			    _mergeState.behaviourMerged[type], _expandedInspectorSections, headerAlpha, nullptr, &deleteContext);
 			ImGui::PopID();
 		}
 	}

@@ -30,8 +30,11 @@ namespace Engine::EditorVisualTheme {
 	inline constexpr ImVec4 kInspectorSectionHeaderVisual{0.48f, 0.28f, 0.55f, 1.f};
 	inline constexpr ImVec4 kInspectorSectionHeaderBehaviour{0.5f, 0.5f, 0.05f, 1.f};
 	inline constexpr ImVec4 kInspectorSectionHeaderFallback{0.26f, 0.26f, 0.28f, 1.f};
+	inline constexpr float kInspectorPartialEntityHeaderAlpha = 0.5f;
 
-	void PushInspectorSectionHeaderColors(InspectorSectionHeaderStyle section);
+	void PushInspectorSectionHeaderColors(InspectorSectionHeaderStyle section, float alpha = 1.f);
 	void PopInspectorSectionHeaderColors();
+	void PushInspectorSectionHeaderTextAlpha(float alpha);
+	void PopInspectorSectionHeaderTextAlpha();
 
 } // namespace Engine::EditorVisualTheme

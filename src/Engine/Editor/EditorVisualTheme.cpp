@@ -28,10 +28,14 @@ namespace Engine::EditorVisualTheme {
 			    std::clamp(c.z + delta, 0.f, 1.f), c.w);
 		}
 
+		ImVec4 WithAlpha(const ImVec4& c, float alpha) {
+			return ImVec4(c.x, c.y, c.z, c.w * alpha);
+		}
+
 	} // namespace
 
-	void PushInspectorSectionHeaderColors(InspectorSectionHeaderStyle section) {
-		const ImVec4 base = BaseHeaderColor(section);
+	void PushInspectorSectionHeaderColors(InspectorSectionHeaderStyle section, float alpha) {
+		const ImVec4 base = WithAlpha(BaseHeaderColor(section), alpha);
 		ImGui::PushStyleColor(ImGuiCol_Header, base);
 		ImGui::PushStyleColor(ImGuiCol_HeaderHovered, AdjustRgb(base, 0.12f));
 		ImGui::PushStyleColor(ImGuiCol_HeaderActive, AdjustRgb(base, -0.08f));
@@ -39,6 +43,16 @@ namespace Engine::EditorVisualTheme {
 
 	void PopInspectorSectionHeaderColors() {
 		ImGui::PopStyleColor(3);
+	}
+
+	void PushInspectorSectionHeaderTextAlpha(float alpha) {
+		ImVec4 textColor = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+		textColor.w *= alpha;
+		ImGui::PushStyleColor(ImGuiCol_Text, textColor);
+	}
+
+	void PopInspectorSectionHeaderTextAlpha() {
+		ImGui::PopStyleColor(1);
 	}
 
 } // namespace Engine::EditorVisualTheme
