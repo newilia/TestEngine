@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <string>
 #include <vector>
@@ -43,6 +44,8 @@ namespace Engine {
 		const std::string kULightPos{"u_light_pos"};
 		const std::string kULightColor{"u_light_color"};
 		const std::string kULightRadius{"u_light_radius"};
+		const std::string kULightHeight{"u_light_height"};
+		const std::string kUHeightWorldScale{"u_height_world_scale"};
 		const std::string kUModeBevel{"u_mode_bevel"};
 		const std::string kUBevelWidth{"u_bevel_width"};
 		const std::string kUEaseCirc{"u_ease_circ"};
@@ -174,13 +177,22 @@ namespace Engine {
 		std::array<sf::Glsl::Vec2, kMaxLights> lightPos{};
 		std::array<sf::Glsl::Vec3, kMaxLights> lightCol{};
 		std::array<float, kMaxLights> lightRad{};
+		std::array<float, kMaxLights> lightHeight{};
 
 		const std::size_t n = tlsLights.size();
 		for (std::size_t i = 0; i < n; ++i) {
 			lightPos[i] = sf::Glsl::Vec2(tlsLights[i].position.x, tlsLights[i].position.y);
 			lightCol[i] = tlsLights[i].color;
 			lightRad[i] = tlsLights[i].radius;
+			lightHeight[i] = tlsLights[i].height;
 		}
+
+		const sf::Vector2f worldScaleX =
+		    worldFromShapeLocal.transformPoint({1.f, 0.f}) - worldFromShapeLocal.transformPoint({});
+		const sf::Vector2f worldScaleY =
+		    worldFromShapeLocal.transformPoint({0.f, 1.f}) - worldFromShapeLocal.transformPoint({});
+		const float heightWorldScale =
+		    (std::hypot(worldScaleX.x, worldScaleX.y) + std::hypot(worldScaleY.x, worldScaleY.y)) * 0.5f;
 
 		const sf::Color fill = visual.GetFillColor();
 		const sf::Glsl::Vec4 fillV(static_cast<float>(fill.r) / 255.f, static_cast<float>(fill.g) / 255.f,
@@ -237,7 +249,10 @@ namespace Engine {
 			shader->setUniformArray(kULightPos, lightPos.data(), n);
 			shader->setUniformArray(kULightColor, lightCol.data(), n);
 			shader->setUniformArray(kULightRadius, lightRad.data(), n);
+			shader->setUniformArray(kULightHeight, lightHeight.data(), n);
 		}
+
+		shader->setUniform(kUHeightWorldScale, heightWorldScale);
 
 		shader->setUniform(kUModeBevel, recv->IsBevelEmbossMode() ? 1 : 0);
 		shader->setUniform(kUBevelWidth, recv->GetBevelWidth());
