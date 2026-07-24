@@ -32,20 +32,16 @@ namespace Engine {
 		const std::string kUWorldDx{"u_world_dx"};
 		const std::string kUWorldDy{"u_world_dy"};
 		const std::string kUTargetHeight{"u_target_height"};
-		const std::string kULocalFromWorld{"u_local_from_world"};
 		const std::string kUShapeKind{"u_shape_kind"};
 		const std::string kUVertexCount{"u_vertex_count"};
 		const std::string kUVertices{"u_vertices"};
 		const std::string kUCircleCenter{"u_circle_center"};
 		const std::string kUCircleRadius{"u_circle_radius"};
-		const std::string kURectMin{"u_rect_min"};
-		const std::string kURectMax{"u_rect_max"};
 		const std::string kULightCount{"u_light_count"};
 		const std::string kULightPos{"u_light_pos"};
 		const std::string kULightColor{"u_light_color"};
 		const std::string kULightRadius{"u_light_radius"};
 		const std::string kULightHeight{"u_light_height"};
-		const std::string kUHeightWorldScale{"u_height_world_scale"};
 		const std::string kUModeBevel{"u_mode_bevel"};
 		const std::string kUBevelWidth{"u_bevel_width"};
 		const std::string kUEaseCirc{"u_ease_circ"};
@@ -90,20 +86,18 @@ namespace Engine {
 
 		struct ShapeFragUniforms
 		{
-			int shapeKind = 2;
+			int shapeKind = 0;
 			int vertCount = 0;
 			std::array<sf::Vector2f, kMaxConvexVerts> convexVerts{};
 			sf::Vector2f circleCenter{};
 			float circleRadius = 1.f;
-			sf::Vector2f rectMin{};
-			sf::Vector2f rectMax{1.f, 1.f};
 		};
 
 		void FillShapeFragUniformsFromSfShape(const sf::Shape* shape, ShapeFragUniforms& out) {
 			if (!shape) {
 				return;
 			}
-			out.shapeKind = 2;
+			out.shapeKind = 0;
 			out.vertCount = 0;
 			if (const auto* convex = dynamic_cast<const sf::ConvexShape*>(shape)) {
 				out.shapeKind = 0;
@@ -119,15 +113,39 @@ namespace Engine {
 				out.circleRadius = circle->getRadius();
 			}
 			else if (const auto* rect = dynamic_cast<const sf::RectangleShape*>(shape)) {
-				out.shapeKind = 2;
+				out.shapeKind = 0;
 				const sf::Vector2f size = rect->getSize();
-				out.rectMin = {0.f, 0.f};
-				out.rectMax = {size.x, size.y};
+				out.vertCount = 4;
+				out.convexVerts[0] = {0.f, 0.f};
+				out.convexVerts[1] = {size.x, 0.f};
+				out.convexVerts[2] = {size.x, size.y};
+				out.convexVerts[3] = {0.f, size.y};
 			}
 			else {
 				const sf::FloatRect lb = shape->getLocalBounds();
-				out.rectMin = lb.position;
-				out.rectMax = {lb.position.x + lb.size.x, lb.position.y + lb.size.y};
+				out.shapeKind = 0;
+				out.vertCount = 4;
+				out.convexVerts[0] = lb.position;
+				out.convexVerts[1] = {lb.position.x + lb.size.x, lb.position.y};
+				out.convexVerts[2] = {lb.position.x + lb.size.x, lb.position.y + lb.size.y};
+				out.convexVerts[3] = {lb.position.x, lb.position.y + lb.size.y};
+			}
+		}
+
+		void TransformShapeFragUniformsToWorld(const sf::Transform& worldFromShapeLocal, ShapeFragUniforms& gpu) {
+			if (gpu.shapeKind == 1) {
+				const sf::Vector2f localCenter = gpu.circleCenter;
+				const float localRadius = gpu.circleRadius;
+				gpu.circleCenter = worldFromShapeLocal.transformPoint(localCenter);
+				const sf::Vector2f rim =
+				    worldFromShapeLocal.transformPoint(localCenter + sf::Vector2f{localRadius, 0.f});
+				gpu.circleRadius = std::hypot(rim.x - gpu.circleCenter.x, rim.y - gpu.circleCenter.y);
+				return;
+			}
+
+			for (int i = 0; i < gpu.vertCount; ++i) {
+				gpu.convexVerts[static_cast<std::size_t>(i)] =
+				    worldFromShapeLocal.transformPoint(gpu.convexVerts[static_cast<std::size_t>(i)]);
 			}
 		}
 
@@ -167,7 +185,6 @@ namespace Engine {
 
 		// Match SFML draw: states.transform * shape.getTransform() (see Utils::IsWorldPointInsideOfShape).
 		const sf::Transform worldFromShapeLocal = states.transform * shape->getTransform();
-		const sf::Glsl::Mat3 localFromWorld = worldFromShapeLocal.getInverse();
 
 		const sf::Vector2u targetSize = target.getSize();
 		const sf::Vector2f w00 = target.mapPixelToCoords({0, 0});
@@ -200,6 +217,9 @@ namespace Engine {
 
 		ShapeFragUniforms gpu{};
 		FillShapeFragUniformsFromSfShape(shape, gpu);
+		TransformShapeFragUniformsToWorld(worldFromShapeLocal, gpu);
+
+		const float worldBevelWidth = recv->GetBevelWidth() * heightWorldScale;
 
 		std::array<sf::Glsl::Vec2, kMaxConvexVerts> verts{};
 		for (int i = 0; i < gpu.vertCount; ++i) {
@@ -208,8 +228,6 @@ namespace Engine {
 		}
 
 		const sf::Glsl::Vec2 circleCenter(gpu.circleCenter.x, gpu.circleCenter.y);
-		const sf::Glsl::Vec2 rectMin(gpu.rectMin.x, gpu.rectMin.y);
-		const sf::Glsl::Vec2 rectMax(gpu.rectMax.x, gpu.rectMax.y);
 
 		shader->setUniform(kUFillColor, fillV);
 
@@ -232,7 +250,6 @@ namespace Engine {
 			s_haveCamUniforms = true;
 		}
 
-		shader->setUniform(kULocalFromWorld, localFromWorld);
 		shader->setUniform(kUShapeKind, gpu.shapeKind);
 		shader->setUniform(kUVertexCount, gpu.vertCount);
 		if (gpu.shapeKind == 0 && gpu.vertCount > 0) {
@@ -241,8 +258,6 @@ namespace Engine {
 
 		shader->setUniform(kUCircleCenter, circleCenter);
 		shader->setUniform(kUCircleRadius, gpu.circleRadius);
-		shader->setUniform(kURectMin, rectMin);
-		shader->setUniform(kURectMax, rectMax);
 
 		shader->setUniform(kULightCount, static_cast<int>(n));
 		if (n > 0) {
@@ -252,10 +267,8 @@ namespace Engine {
 			shader->setUniformArray(kULightHeight, lightHeight.data(), n);
 		}
 
-		shader->setUniform(kUHeightWorldScale, heightWorldScale);
-
 		shader->setUniform(kUModeBevel, recv->IsBevelEmbossMode() ? 1 : 0);
-		shader->setUniform(kUBevelWidth, recv->GetBevelWidth());
+		shader->setUniform(kUBevelWidth, worldBevelWidth);
 		shader->setUniform(kUEaseCirc, recv->IsEaseInCirc() ? 1 : 0);
 		shader->setUniform(kUDiffusion, recv->GetDiffusion());
 		shader->setUniform(kULightingStrength, recv->GetLightingStrength());
