@@ -98,6 +98,40 @@ namespace Engine::Serialization {
 			return result;
 		}
 
+		bool TryGetOptionalHasValue(const PropertyNode& objectNode) {
+			for (const PropertyNode& child : objectNode.children) {
+				if (child.id != "has_value" || child.kind != PropertyKind::Bool) {
+					continue;
+				}
+				const auto* access = std::get_if<PropAccessBool>(&child.access);
+				return access && access->get && access->get();
+			}
+			return false;
+		}
+
+		bool TrySetOptionalHasValue(PropertyNode& objectNode, bool value) {
+			for (PropertyNode& child : objectNode.children) {
+				if (child.id != "has_value" || child.kind != PropertyKind::Bool) {
+					continue;
+				}
+				auto* access = std::get_if<PropAccessBool>(&child.access);
+				if (access && access->set) {
+					access->set(value);
+					return true;
+				}
+				return false;
+			}
+			return false;
+		}
+
+		bool TryReadOptionalHasValueFromXml(const pugi::xml_node& xmlNode) {
+			const pugi::xml_node hasValueXml = FindChildPropertyById(xmlNode, "has_value");
+			if (!hasValueXml) {
+				return CountXmlPropertyChildren(xmlNode) > 0;
+			}
+			return hasValueXml.attribute(kValueAttr).as_bool();
+		}
+
 		template <typename TInt>
 		bool ParseInt(const std::string& text, TInt& outValue) {
 			const char* begin = text.data();
@@ -282,8 +316,12 @@ namespace Engine::Serialization {
 						}
 					}
 				}
-				for (const PropertyNode& child : node.children) {
-					SavePropertyNode(child, xmlProperty, result);
+				const bool skipOptionalChildren =
+				    node.kind == PropertyKind::Object && node.meta.optionalContainer && !TryGetOptionalHasValue(node);
+				if (!skipOptionalChildren) {
+					for (const PropertyNode& child : node.children) {
+						SavePropertyNode(child, xmlProperty, result);
+					}
 				}
 				return;
 			}
@@ -549,6 +587,12 @@ namespace Engine::Serialization {
 		    SerializationResult& result) {
 			if (targetNode.meta.dontSave) {
 				return;
+			}
+			if (targetNode.kind == PropertyKind::Object && targetNode.meta.optionalContainer) {
+				if (!TryReadOptionalHasValueFromXml(xmlNode)) {
+					TrySetOptionalHasValue(targetNode, false);
+					return;
+				}
 			}
 			LoadLeafValue(xmlNode, targetNode, path, result);
 

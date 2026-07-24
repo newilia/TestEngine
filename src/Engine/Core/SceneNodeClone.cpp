@@ -232,6 +232,17 @@ namespace Engine {
 			}
 		}
 
+		bool TryGetOptionalHasValue(const PropertyNode& objectNode) {
+			for (const PropertyNode& child : objectNode.children) {
+				if (child.id != "has_value" || child.kind != PropertyKind::Bool) {
+					continue;
+				}
+				const auto* access = std::get_if<PropAccessBool>(&child.access);
+				return access && access->get && access->get();
+			}
+			return false;
+		}
+
 		void CopyLeafValue(const PropertyNode& source, PropertyNode& target) {
 			if (source.kind != target.kind || source.id != target.id) {
 				return;
@@ -361,6 +372,17 @@ namespace Engine {
 				return;
 			}
 			CopyLeafValue(source, target);
+			if (source.kind == PropertyKind::Object && source.meta.optionalContainer &&
+			    !TryGetOptionalHasValue(source)) {
+				const std::size_t count = std::min(source.children.size(), target.children.size());
+				for (std::size_t i = 0; i < count; ++i) {
+					if (source.children[i].id == "has_value") {
+						CopyLeafValuesRecursive(source.children[i], target.children[i]);
+						break;
+					}
+				}
+				return;
+			}
 			const std::size_t count = std::min(source.children.size(), target.children.size());
 			for (std::size_t i = 0; i < count; ++i) {
 				CopyLeafValuesRecursive(source.children[i], target.children[i]);
