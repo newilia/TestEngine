@@ -5,11 +5,11 @@
 
 namespace Billiard {
 
-	std::weak_ptr<SceneNode> TopDownShadowBehaviour::GetLightSource() const {
+	const RefWrapper<SceneNode>& TopDownShadowBehaviour::GetLightSource() const {
 		return _lightSource;
 	}
 
-	void TopDownShadowBehaviour::SetLightSource(std::weak_ptr<SceneNode> value) {
+	void TopDownShadowBehaviour::SetLightSource(RefWrapper<SceneNode> value) {
 		_lightSource = std::move(value);
 	}
 
@@ -40,7 +40,7 @@ namespace Billiard {
 	void TopDownShadowBehaviour::UpdateShadowPosition() const {
 		const auto shadowNode = GetNode();
 		const auto objectNode = _object.Get();
-		const auto lightNode = _lightSource.lock();
+		const auto lightNode = _lightSource.Get();
 		if (!shadowNode || !objectNode || !lightNode) {
 			return;
 		}

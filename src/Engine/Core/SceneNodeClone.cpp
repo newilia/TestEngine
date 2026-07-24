@@ -489,6 +489,22 @@ namespace Engine {
 		return clone;
 	}
 
+	std::shared_ptr<SceneNode> InstantiateSceneNodeOn(
+	    const std::shared_ptr<SceneNode>& source, const std::shared_ptr<SceneNode>& parent) {
+		if (!source || !parent) {
+			return nullptr;
+		}
+		const auto instance = CloneSceneNode(source);
+		if (!instance) {
+			return nullptr;
+		}
+		parent->AddChild(instance);
+		if (const auto scene = parent->GetScene()) {
+			scene->FlushEntityIndexIfDirty();
+		}
+		return instance;
+	}
+
 	std::shared_ptr<Scene> CloneScene(const std::shared_ptr<Scene>& source) {
 		if (!source) {
 			return nullptr;

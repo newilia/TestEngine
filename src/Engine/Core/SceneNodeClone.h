@@ -16,6 +16,10 @@ namespace Engine {
 	std::shared_ptr<SceneNode> CloneSceneNode(const std::shared_ptr<SceneNode>& source);
 	std::shared_ptr<Scene> CloneScene(const std::shared_ptr<Scene>& source);
 
+	/// Clones `source` and parents it under `parent`. Returns null on failure.
+	[[nodiscard]] std::shared_ptr<SceneNode> InstantiateSceneNodeOn(
+	    const std::shared_ptr<SceneNode>& source, const std::shared_ptr<SceneNode>& parent);
+
 	/// Applies source provider values onto target provider for reflected properties.
 	bool CopyReflectedProperties(IPropertiesProvider& source, IPropertiesProvider& target);
 
