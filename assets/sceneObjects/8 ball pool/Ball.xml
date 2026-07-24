@@ -110,7 +110,7 @@
             <Property id="circle_ref" kind="SceneRef" value="3698677571" />
             <Property id="sphere_projection_ref" kind="SceneRef" value="3290324261" />
             <Property id="body_ref" kind="SceneRef" value="759259200" />
-            <Property id="friction" kind="Float" value="200" />
+            <Property id="friction" kind="Float" value="100" />
             <Property id="spin_omega" kind="Vec3f" x="0" y="0" z="0" />
             <Property id="impulse_factor" kind="Float" value="0.200000003" />
           </Property>
@@ -121,7 +121,7 @@
           <Property id="shape_light_receiver_behaviour" kind="Object">
             <Property id="receiver_lighting_enabled" kind="Bool" value="true" />
             <Property id="bevel_emboss" kind="Bool" value="true" />
-            <Property id="bevel_width" kind="Float" value="28.6000004" />
+            <Property id="bevel_width" kind="Float" value="30" />
             <Property id="ease_in_circ" kind="Bool" value="true" />
             <Property id="diffusion" kind="Float" value="0.25999999" />
             <Property id="lighting_strength" kind="Float" value="0.430000007" />
