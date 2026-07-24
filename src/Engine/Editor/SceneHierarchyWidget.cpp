@@ -172,9 +172,9 @@ namespace Engine {
 		}
 	}
 
-	void SceneHierarchyWidget::Select(std::shared_ptr<SceneNode> node) {
+	void SceneHierarchyWidget::Select(std::shared_ptr<SceneNode> node, const bool scrollIntoView) {
 		PruneExpiredSelection();
-		_scrollSelectionIntoViewPending = (node != nullptr);
+		_scrollSelectionIntoViewPending = scrollIntoView && (node != nullptr);
 		_selectionOrder.clear();
 		_selectionByRawPtr.clear();
 		if (node) {
@@ -207,7 +207,7 @@ namespace Engine {
 		return false;
 	}
 
-	void SceneHierarchyWidget::ToggleSelection(std::shared_ptr<SceneNode> node) {
+	void SceneHierarchyWidget::ToggleSelection(std::shared_ptr<SceneNode> node, const bool scrollIntoView) {
 		PruneExpiredSelection();
 		if (!node) {
 			return;
@@ -220,18 +220,22 @@ namespace Engine {
 		else {
 			_selectionByRawPtr.emplace(static_cast<const SceneNode*>(target), node);
 			_selectionOrder.push_back(node);
-			_scrollSelectionIntoViewPending = true;
+			if (scrollIntoView) {
+				_scrollSelectionIntoViewPending = true;
+			}
 		}
 		_selectionAnchor = std::move(node);
 		CancelRenamingIfSelectionChanged();
 	}
 
-	void SceneHierarchyWidget::AddToSelection(std::shared_ptr<SceneNode> node) {
+	void SceneHierarchyWidget::AddToSelection(std::shared_ptr<SceneNode> node, const bool scrollIntoView) {
 		PruneExpiredSelection();
 		if (!node || ContainsNode(*node)) {
 			return;
 		}
-		_scrollSelectionIntoViewPending = true;
+		if (scrollIntoView) {
+			_scrollSelectionIntoViewPending = true;
+		}
 		_selectionAnchor = node;
 		const auto* raw = static_cast<const SceneNode*>(node.get());
 		_selectionByRawPtr.emplace(raw, node);
@@ -239,7 +243,7 @@ namespace Engine {
 		CancelRenamingIfSelectionChanged();
 	}
 
-	void SceneHierarchyWidget::SetSelection(std::vector<std::shared_ptr<SceneNode>> nodes) {
+	void SceneHierarchyWidget::SetSelection(std::vector<std::shared_ptr<SceneNode>> nodes, const bool scrollIntoView) {
 		_selectionOrder.clear();
 		_selectionByRawPtr.clear();
 		std::unordered_set<const SceneNode*> seen;
@@ -263,25 +267,25 @@ namespace Engine {
 			return;
 		}
 		_selectionAnchor = _selectionOrder.back().lock();
-		_scrollSelectionIntoViewPending = true;
+		_scrollSelectionIntoViewPending = scrollIntoView;
 		CancelRenamingIfSelectionChanged();
 	}
 
-	void SceneHierarchyWidget::SelectRangeTo(
-	    std::shared_ptr<SceneNode> targetNode, const std::vector<std::shared_ptr<SceneNode>>& treeOrder) {
+	void SceneHierarchyWidget::SelectRangeTo(std::shared_ptr<SceneNode> targetNode,
+	    const std::vector<std::shared_ptr<SceneNode>>& treeOrder, const bool scrollIntoView) {
 		PruneExpiredSelection();
 		if (!targetNode) {
 			return;
 		}
 		auto anchor = _selectionAnchor.lock();
 		if (!anchor) {
-			Select(std::move(targetNode));
+			Select(std::move(targetNode), scrollIntoView);
 			return;
 		}
 		auto anchorIt = std::find(treeOrder.begin(), treeOrder.end(), anchor);
 		auto targetIt = std::find(treeOrder.begin(), treeOrder.end(), targetNode);
 		if (anchorIt == treeOrder.end() || targetIt == treeOrder.end()) {
-			Select(std::move(targetNode));
+			Select(std::move(targetNode), scrollIntoView);
 			return;
 		}
 		auto [rangeBegin, rangeEnd] = std::minmax(anchorIt, targetIt);
@@ -295,7 +299,9 @@ namespace Engine {
 			_selectionByRawPtr.emplace(raw, *it);
 			_selectionOrder.push_back(*it);
 		}
-		_scrollSelectionIntoViewPending = true;
+		if (scrollIntoView) {
+			_scrollSelectionIntoViewPending = true;
+		}
 		CancelRenamingIfSelectionChanged();
 	}
 
@@ -542,13 +548,13 @@ namespace Engine {
 					if (root) {
 						BuildTreeOrder(*root, treeOrder);
 					}
-					SelectRangeTo(std::move(clickedNode), treeOrder);
+					SelectRangeTo(std::move(clickedNode), treeOrder, false);
 				}
 				else if (io.KeyCtrl) {
-					ToggleSelection(std::move(clickedNode));
+					ToggleSelection(std::move(clickedNode), false);
 				}
 				else if (!isSelected) {
-					Select(std::move(clickedNode));
+					Select(std::move(clickedNode), false);
 				}
 				else {
 					_selectionAnchor = clickedNode;

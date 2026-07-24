@@ -20,12 +20,12 @@ namespace Engine {
 		std::vector<std::shared_ptr<SceneNode>> GetSelectedNodes() const;
 		bool IsNodeSelected(const SceneNode& node) const;
 		void ClearSelection();
-		void Select(std::shared_ptr<SceneNode> node);
-		void ToggleSelection(std::shared_ptr<SceneNode> node);
-		void AddToSelection(std::shared_ptr<SceneNode> node);
-		void SelectRangeTo(
-		    std::shared_ptr<SceneNode> targetNode, const std::vector<std::shared_ptr<SceneNode>>& treeOrder);
-		void SetSelection(std::vector<std::shared_ptr<SceneNode>> nodes);
+		void Select(std::shared_ptr<SceneNode> node, bool scrollIntoView = true);
+		void ToggleSelection(std::shared_ptr<SceneNode> node, bool scrollIntoView = true);
+		void AddToSelection(std::shared_ptr<SceneNode> node, bool scrollIntoView = true);
+		void SelectRangeTo(std::shared_ptr<SceneNode> targetNode,
+		    const std::vector<std::shared_ptr<SceneNode>>& treeOrder, bool scrollIntoView = true);
+		void SetSelection(std::vector<std::shared_ptr<SceneNode>> nodes, bool scrollIntoView = true);
 		void TryStartRenamingSelectedNode();
 		void CancelRenaming();
 		/// Renders the hierarchy and optional "no scene" state; may clear selection when `scene` is null.
