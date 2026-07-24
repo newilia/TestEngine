@@ -128,6 +128,13 @@
           </Property>
         </Properties>
       </Behaviour>
+      <Behaviour type="Billiard.BilliardBallBehaviour" entityId="3369227746">
+        <Properties>
+          <Property id="billiard_ball_behaviour" kind="Object">
+            <Property id="ball_number" kind="Int32" value="0" />
+          </Property>
+        </Properties>
+      </Behaviour>
     </Behaviours>
     <Children>
       <Node entityId="2298085435">
