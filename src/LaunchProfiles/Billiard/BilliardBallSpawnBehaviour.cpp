@@ -7,6 +7,7 @@
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/SceneNodeClone.h"
 #include "Engine/Core/SceneNodeUtils.h"
+#include "LaunchProfiles/Billiard/BilliardBallBehaviour.h"
 #include "LaunchProfiles/Billiard/TopDownShadowBehaviour.h"
 
 #include <SFML/Graphics/RectangleShape.hpp>
@@ -102,6 +103,10 @@ void Billiard::BilliardBallSpawnBehaviour::SpawnBall(int ballIndex, sf::Vector2f
 
 	if (auto tiledTexture = instance->FindBehaviourRec<Engine::TiledTextureContributorBehaviour>()) {
 		tiledTexture->SetTexturePath(FormatTexturePath(ballIndex));
+	}
+
+	if (auto ballBehaviour = instance->FindBehaviourRec<BilliardBallBehaviour>()) {
+		ballBehaviour->SetBallNumber(ballIndex);
 	}
 
 	if (!_lightSources.empty()) {
