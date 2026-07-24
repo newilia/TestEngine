@@ -151,12 +151,6 @@
             <Property id="origin" kind="Vec2f" x="28.6000004" y="28.6000004" />
           </Properties>
         </Visual>
-        <SortingStrategy type="Engine.DefaultSortingStrategy" entityId="1825614731">
-          <Properties>
-            <Property id="sort_key" kind="Int32" value="-2" />
-            <Property id="type" kind="Enum" value="0" name="Relative" />
-          </Properties>
-        </SortingStrategy>
         <Behaviours>
           <Behaviour type="Engine.TiledTextureContributorBehaviour" entityId="3850518943">
             <Properties>
@@ -206,17 +200,13 @@
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
                 <Property id="get_texture_path" kind="String" value="resources/textures/8ball/ball_shadow_3.png" />
                 <Property id="get_size" kind="Vec2f" x="58" y="58" />
-                <Property id="get_texture_rect" kind="Object">
-                  <Property id="has_value" kind="Bool" value="true" />
-                  <Property id="position" kind="Vec2i" x="0" y="0" />
-                  <Property id="size" kind="Vec2i" x="128" y="128" />
-                </Property>
-                <Property id="get_color" kind="Color" r="255" g="255" b="255" a="51" />
+                <Property id="get_texture_rect" kind="Object" />
+                <Property id="get_color" kind="Color" r="255" g="255" b="255" a="64" />
               </Properties>
             </Visual>
             <SortingStrategy type="Engine.DefaultSortingStrategy" entityId="2122310594">
               <Properties>
-                <Property id="sort_key" kind="Int32" value="-2" />
+                <Property id="sort_key" kind="Int32" value="1" />
                 <Property id="type" kind="Enum" value="0" name="Relative" />
               </Properties>
             </SortingStrategy>
@@ -225,6 +215,7 @@
                 <Properties>
                   <Property id="top_down_shadow_behaviour" kind="Object">
                     <Property id="object" kind="SceneRef" value="1090916461" />
+                    <Property id="light_source" kind="SceneRef" value="0" />
                     <Property id="distance_factor" kind="Float" value="0.00800000038" />
                   </Property>
                 </Properties>
