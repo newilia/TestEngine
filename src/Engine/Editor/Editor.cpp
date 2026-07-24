@@ -76,6 +76,23 @@ namespace {
 	using Engine::EditorVisualTheme::kHierarchySelectionOutlinePadPx;
 	using Engine::EditorVisualTheme::kHierarchySelectionOutlineThickness;
 
+	[[nodiscard]] std::string RecentDocumentMenuLabel(const std::filesystem::path& recentPath) {
+		const std::string fileName = recentPath.filename().string();
+		const std::string parentPath = recentPath.parent_path().generic_string();
+		constexpr std::string_view kAssetsPrefix = "assets/";
+		std::string directoryRelativeToAssets;
+		if (parentPath == "assets") {
+			directoryRelativeToAssets = "";
+		}
+		else if (parentPath.starts_with(kAssetsPrefix)) {
+			directoryRelativeToAssets = parentPath.substr(kAssetsPrefix.size());
+		}
+		else {
+			directoryRelativeToAssets = parentPath;
+		}
+		return fmt::format("{} [{}]", fileName, directoryRelativeToAssets);
+	}
+
 	[[nodiscard]] std::optional<Engine::EntitySlot> TrySlotForSceneEntityKind(
 	    Engine::Serialization::SceneEntityKind kind) {
 		using Engine::EntitySlot;
@@ -200,6 +217,26 @@ namespace Engine {
 				if (ImGui::MenuItem("Open", "Ctrl+O")) {
 					(void)LoadScene();
 				}
+				EditorPreferences& editorPreferences = EditorPreferences::GetInstance();
+				const std::vector<std::filesystem::path>& recentDocuments = editorPreferences.GetRecentDocuments();
+				if (!recentDocuments.empty()) {
+					ImGui::Separator();
+					for (std::size_t i = 0; i < recentDocuments.size(); ++i) {
+						const std::filesystem::path& recentPath = recentDocuments[i];
+						const std::filesystem::path absolutePath = ResolveContentPath(recentPath);
+						const bool exists = std::filesystem::exists(absolutePath);
+						const std::string label = RecentDocumentMenuLabel(recentPath);
+						ImGui::PushID(static_cast<int>(i));
+						if (ImGui::MenuItem(label.c_str(), nullptr, false, exists)) {
+							(void)LoadScene(absolutePath);
+						}
+						if (ImGui::IsItemHovered(ImGuiHoveredFlags_None) && !exists) {
+							ImGui::SetTooltip("%s", recentPath.generic_string().c_str());
+						}
+						ImGui::PopID();
+					}
+					ImGui::Separator();
+				}
 				if (ImGui::MenuItem("Save", "Ctrl+S")) {
 					(void)SaveScene();
 				}
@@ -210,7 +247,6 @@ namespace Engine {
 					(void)ReloadScene();
 				}
 				ImGui::Separator();
-				EditorPreferences& editorPreferences = EditorPreferences::GetInstance();
 				if (ImGui::MenuItem(
 				        "Load last scene on startup", nullptr, &editorPreferences.LoadLastSceneOnStartupMutable())) {
 					editorPreferences.Save();
@@ -618,7 +654,7 @@ namespace Engine {
 			}
 			const auto entity = FindDeletableEntityOnNode(node, slot, behaviourType);
 			if (!entity) {
-				return false;
+				continue;
 			}
 			EditorCommands::DeleteEntityBatchCommand::Entry entry;
 			entry.node = node;
@@ -956,9 +992,12 @@ namespace Engine {
 		else {
 			_currentScenePath.reset();
 		}
-		if (kind == Serialization::SceneDocumentKind::Scene && _currentScenePath) {
+		if (_currentScenePath) {
 			EditorPreferences& editorPreferences = EditorPreferences::GetInstance();
-			editorPreferences.SetLastScenePath(*_currentScenePath);
+			editorPreferences.AddRecentDocument(*_currentScenePath);
+			if (kind == Serialization::SceneDocumentKind::Scene) {
+				editorPreferences.SetLastScenePath(*_currentScenePath);
+			}
 			editorPreferences.Save();
 		}
 		MainContext::GetInstance().UpdateMainWindowTitle(_currentScenePath, _documentKind);

@@ -24,7 +24,7 @@ namespace Engine {
 		std::optional<PropertyTree> sortingMerged;
 		std::optional<PropertyTree> visualMerged;
 		std::unordered_map<std::type_index, std::optional<PropertyTree>> behaviourMerged;
-		std::vector<std::pair<std::type_index, std::string>> commonBehaviourTitles;
+		std::vector<std::pair<std::type_index, std::string>> behaviourTypeTitles;
 	};
 
 	/// ImGui widget: read-only view of a selected `SceneNode` (name, parent, transform, ...).
