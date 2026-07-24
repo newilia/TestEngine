@@ -46,6 +46,14 @@ void PointLightBehaviour::SetRadius(float value) {
 	_radius = value;
 }
 
+float PointLightBehaviour::GetHeight() const {
+	return _height;
+}
+
+void PointLightBehaviour::SetHeight(float value) {
+	_height = value;
+}
+
 bool PointLightBehaviour::IsLightEnabled() const {
 	return _lightEnabled;
 }

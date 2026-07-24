@@ -128,6 +128,7 @@ namespace Engine {
 			light.color = sf::Glsl::Vec3(static_cast<float>(c.r) / 255.f * intensity,
 			    static_cast<float>(c.g) / 255.f * intensity, static_cast<float>(c.b) / 255.f * intensity);
 			light.radius = std::max(pl->GetRadius() * _distanceRangeScale, 1.f);
+			light.height = pl->GetHeight();
 			light.sourceNode = node.get();
 			_lights.push_back(light);
 		}

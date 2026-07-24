@@ -28,6 +28,7 @@ namespace Engine {
 		sf::Vector2f position{};
 		sf::Glsl::Vec3 color{};
 		float radius = 1.f;
+		float height = 0.f;
 		const SceneNode* sourceNode = nullptr;
 	};
 

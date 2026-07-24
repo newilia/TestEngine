@@ -25,6 +25,9 @@ public:
 	float GetRadius() const;
 	void SetRadius(float value);
 
+	float GetHeight() const;
+	void SetHeight(float value);
+
 	bool IsLightEnabled() const;
 	void SetLightEnabled(bool value);
 
@@ -37,4 +40,6 @@ private:
 	float _intensity = 1.f;
 	/// @property(minValue=1.f, dragSpeed=0.05f)
 	float _radius = 400.f;
+	/// @property(minValue=0.f, dragSpeed=1.f, tooltip="Height above the scene plane (top-down Z)")
+	float _height = 0.f;
 };

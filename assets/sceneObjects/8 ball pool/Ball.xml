@@ -116,6 +116,18 @@
           </Property>
         </Properties>
       </Behaviour>
+      <Behaviour type="Engine.ShapeLightReceiverBehaviour" entityId="2467484209">
+        <Properties>
+          <Property id="shape_light_receiver_behaviour" kind="Object">
+            <Property id="receiver_lighting_enabled" kind="Bool" value="true" />
+            <Property id="bevel_emboss" kind="Bool" value="true" />
+            <Property id="bevel_width" kind="Float" value="28.6000004" />
+            <Property id="ease_in_circ" kind="Bool" value="true" />
+            <Property id="diffusion" kind="Float" value="0.25999999" />
+            <Property id="lighting_strength" kind="Float" value="0.430000007" />
+          </Property>
+        </Properties>
+      </Behaviour>
     </Behaviours>
     <Children>
       <Node entityId="2298085435">
@@ -151,6 +163,12 @@
             <Property id="origin" kind="Vec2f" x="28.6000004" y="28.6000004" />
           </Properties>
         </Visual>
+        <SortingStrategy type="Engine.DefaultSortingStrategy" entityId="4224520210">
+          <Properties>
+            <Property id="sort_key" kind="Int32" value="2" />
+            <Property id="type" kind="Enum" value="0" name="Relative" />
+          </Properties>
+        </SortingStrategy>
         <Behaviours>
           <Behaviour type="Engine.TiledTextureContributorBehaviour" entityId="3850518943">
             <Properties>
