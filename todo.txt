@@ -47,8 +47,6 @@ snap to guides
 
 Disable snap by honding Alt
 
-F2 to rename node
-
 Добавить чекбокс Select on click в move tool
 
 не работает выделение текста при переименовании ноды

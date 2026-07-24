@@ -26,6 +26,8 @@ namespace Engine {
 		void SelectRangeTo(
 		    std::shared_ptr<SceneNode> targetNode, const std::vector<std::shared_ptr<SceneNode>>& treeOrder);
 		void SetSelection(std::vector<std::shared_ptr<SceneNode>> nodes);
+		void TryStartRenamingSelectedNode();
+		void CancelRenaming();
 		/// Renders the hierarchy and optional "no scene" state; may clear selection when `scene` is null.
 		void Draw(const std::shared_ptr<Scene>& scene);
 
@@ -55,8 +57,8 @@ namespace Engine {
 
 		[[nodiscard]] bool IsRenaming(const SceneNode& node) const;
 		void StartRenaming(SceneNode& node);
-		void CancelRenaming();
 		void CommitRenaming(SceneNode& node);
+		void CancelRenamingIfSelectionChanged();
 
 		static constexpr std::size_t kRenameBufferSize = 256;
 
