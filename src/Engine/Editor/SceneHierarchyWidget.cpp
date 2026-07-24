@@ -116,6 +116,9 @@ namespace Engine {
 	}
 
 	void SceneHierarchyWidget::StartRenaming(SceneNode& node) {
+		if (!Editor::GetInstance().IsOpen()) {
+			return;
+		}
 		_renamingNode = node.shared_from_this();
 		_renameEditBuffer.assign(kRenameBufferSize, '\0');
 		const std::string& name = node.GetName();
@@ -134,6 +137,21 @@ namespace Engine {
 		_renamePlaceCursorAtEnd = false;
 	}
 
+	void SceneHierarchyWidget::CancelRenamingIfSelectionChanged() {
+		const auto renaming = _renamingNode.lock();
+		if (!renaming) {
+			return;
+		}
+		if (_selectionOrder.size() != 1) {
+			CancelRenaming();
+			return;
+		}
+		const auto soleSelection = _selectionOrder.front().lock();
+		if (!soleSelection || soleSelection.get() != renaming.get()) {
+			CancelRenaming();
+		}
+	}
+
 	void SceneHierarchyWidget::CommitRenaming(SceneNode& node) {
 		const auto nodePtr = _renamingNode.lock();
 		if (!nodePtr || nodePtr.get() != &node) {
@@ -143,6 +161,15 @@ namespace Engine {
 		const std::string newName(_renameEditBuffer.data());
 		CancelRenaming();
 		(void)Editor::GetInstance().RenameNode(nodePtr, newName);
+	}
+
+	void SceneHierarchyWidget::TryStartRenamingSelectedNode() {
+		if (_renamingNode.lock()) {
+			return;
+		}
+		if (const auto node = GetSelectedNode()) {
+			StartRenaming(*node);
+		}
 	}
 
 	void SceneHierarchyWidget::Select(std::shared_ptr<SceneNode> node) {
@@ -159,6 +186,7 @@ namespace Engine {
 		else {
 			_selectionAnchor.reset();
 		}
+		CancelRenamingIfSelectionChanged();
 	}
 
 	bool SceneHierarchyWidget::IsOnPathToRevealSelectionTarget(const SceneNode& node) const {
@@ -195,6 +223,7 @@ namespace Engine {
 			_scrollSelectionIntoViewPending = true;
 		}
 		_selectionAnchor = std::move(node);
+		CancelRenamingIfSelectionChanged();
 	}
 
 	void SceneHierarchyWidget::AddToSelection(std::shared_ptr<SceneNode> node) {
@@ -207,6 +236,7 @@ namespace Engine {
 		const auto* raw = static_cast<const SceneNode*>(node.get());
 		_selectionByRawPtr.emplace(raw, node);
 		_selectionOrder.push_back(std::move(node));
+		CancelRenamingIfSelectionChanged();
 	}
 
 	void SceneHierarchyWidget::SetSelection(std::vector<std::shared_ptr<SceneNode>> nodes) {
@@ -229,10 +259,12 @@ namespace Engine {
 		if (_selectionOrder.empty()) {
 			_selectionAnchor.reset();
 			_scrollSelectionIntoViewPending = false;
+			CancelRenamingIfSelectionChanged();
 			return;
 		}
 		_selectionAnchor = _selectionOrder.back().lock();
 		_scrollSelectionIntoViewPending = true;
+		CancelRenamingIfSelectionChanged();
 	}
 
 	void SceneHierarchyWidget::SelectRangeTo(
@@ -264,6 +296,7 @@ namespace Engine {
 			_selectionOrder.push_back(*it);
 		}
 		_scrollSelectionIntoViewPending = true;
+		CancelRenamingIfSelectionChanged();
 	}
 
 	void SceneHierarchyWidget::BuildTreeOrder(
@@ -439,13 +472,16 @@ namespace Engine {
 			}
 			const ImGuiInputTextFlags renameFlags =
 			    ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackAlways;
-			(void)ImGui::InputText("##hierarchy_rename", _renameEditBuffer.data(), _renameEditBuffer.size(),
-			    renameFlags, HierarchyRenameInputCallback, &_renamePlaceCursorAtEnd);
+			const bool renameCommitted = ImGui::InputText("##hierarchy_rename", _renameEditBuffer.data(),
+			    _renameEditBuffer.size(), renameFlags, HierarchyRenameInputCallback, &_renamePlaceCursorAtEnd);
 			if (ImGui::IsKeyPressed(ImGuiKey_Escape, false)) {
 				CancelRenaming();
 			}
-			else if (ImGui::IsItemDeactivated()) {
+			else if (renameCommitted) {
 				CommitRenaming(node);
+			}
+			else if (ImGui::IsItemDeactivated()) {
+				CancelRenaming();
 			}
 		}
 		else if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
@@ -523,7 +559,7 @@ namespace Engine {
 		if (ImGui::BeginPopupContextItem("hierarchy_node_ctx", ImGuiPopupFlags_MouseButtonRight)) {
 			auto nodePtr = node.shared_from_this();
 			Editor& editor = Editor::GetInstance();
-			if (ImGui::MenuItem("Rename")) {
+			if (ImGui::MenuItem("Rename", "F2")) {
 				StartRenaming(node);
 			}
 			ImGui::Separator();

@@ -139,9 +139,15 @@ namespace Engine {
 
 	void Editor::Toggle() {
 		_isOpen = !_isOpen;
+		if (!_isOpen) {
+			_sceneHierarchyWidget.CancelRenaming();
+		}
 	}
 
 	void Editor::SetIsOpen(bool isOpen) {
+		if (_isOpen && !isOpen) {
+			_sceneHierarchyWidget.CancelRenaming();
+		}
 		_isOpen = isOpen;
 	}
 
@@ -914,6 +920,10 @@ namespace Engine {
 			}
 			if (e.code == sf::Keyboard::Key::Delete) {
 				(void)DeleteSelectedNodes();
+				return;
+			}
+			if (_isOpen && e.code == sf::Keyboard::Key::F2) {
+				_sceneHierarchyWidget.TryStartRenamingSelectedNode();
 				return;
 			}
 		}
