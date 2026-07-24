@@ -61,7 +61,7 @@ Scanner picks classes from headers under **`src/`** (excluding **`Codegen/`**) t
 
 ## `@property` argument syntax
 
-- Comma-separated `key=value`. Keys (v1): `name` / `label` (display label), `readonly`, `setter` (method name; **`bool` fields only** — forwards writes to `this->MethodName(bool)`), `minValue`, `maxValue`, `dragSpeed`, `tooltip`.
+- Comma-separated `key=value`. Keys (v1): `name` / `label` (display label), `readonly` / `readOnly`, `dontSave` (skip in scene XML save/load), `setter` (method name; **`bool` fields only** — forwards writes to `this->MethodName(bool)`), `minValue`, `maxValue`, `dragSpeed`, `tooltip`.
 - Strings in double quotes. Booleans `true` / `false`. Numbers may use a trailing `f`.
 - Parser errors include `file:line:col:` messages; fix the tag or the following field line.
 - The key `name` (and `label`) sets the **inspector display string** only. The **property id** in the tree is still derived from the C++ field or method name (e.g. `GetPropValue` → `get_prop_value`).
@@ -76,6 +76,7 @@ Scanner picks classes from headers under **`src/`** (excluding **`Codegen/`**) t
 | **`name` vs `label`** | The first **non-empty** string among `name`, then `label`, wins (`_explicit_display_name`). | Supplying **both** with the same text is redundant; `label` after a non-empty `name` is ignored. The two keys are aliases for one UI string. |
 | **Read-only on `@getter`** | If there is no `setter=` on the getter and no paired `@setter`, the property is already **read-only**. | `readonly=true` in that situation is redundant (still allowed). |
 | **Writable plain `@property` fields** | Direct member read/write unless `readonly=true`. | Omitting `readonly` means writable; `readonly=false` would be redundant. |
+| **`dontSave=true`** | `PropertyTreeSerializer` skips the node on save and load (inspector still shows it). | Not implied by `readonly`; set both when a computed/runtime field must stay out of XML. |
 | **Getter ↔ setter pairing** | Matching `GetXxx` / `SetXxx` (or `getXxx` / `setXxx` with the same suffix) without any `name` / `label` on the tags. | Explicit `name="..."` / `label="..."` for pairing is redundant when this naming pattern already matches. |
 | **`minCount` / `maxCount`** | Only emitted into `PropertyMeta` for **`std::vector`** properties (`p.is_vector` in the generator). | On scalars, `std::pair`, maps/sets, `std::bitset`, etc., these keys are **ignored** for emitted meta — omit them. |
 | **`minValue` / `maxValue` / `dragSpeed`** | Applied to `PropertyMeta` for any property that lists them; the **inspector** uses them for numeric-like controls (float/double/integers, angles, component drags). | On types where the UI does not use numeric hints (`std::string`, `sf::Color`, bool, …), they are **clutter** and have little or no effect — omit unless you know the drawer uses them for that leaf. |

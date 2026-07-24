@@ -112,6 +112,9 @@ namespace Engine::Serialization {
 		}
 
 		void SavePropertyNode(const PropertyNode& node, pugi::xml_node parentNode, SerializationResult& result) {
+			if (node.meta.dontSave) {
+				return;
+			}
 			pugi::xml_node xmlProperty = parentNode.append_child(kPropertyElement);
 			xmlProperty.append_attribute(kIdAttr).set_value(node.id.c_str());
 			xmlProperty.append_attribute(kKindAttr).set_value(PropertyKindToString(node.kind).c_str());
@@ -288,6 +291,9 @@ namespace Engine::Serialization {
 		}
 
 		void AdjustContainersByXml(const pugi::xml_node& xmlNode, PropertyNode& targetNode) {
+			if (targetNode.meta.dontSave) {
+				return;
+			}
 			if (targetNode.kind == PropertyKind::Sequence) {
 				if (auto* polyAccess = std::get_if<PropAccessPolymorphicSequence>(&targetNode.access)) {
 					const std::vector<pugi::xml_node> xmlChildren = GatherXmlChildren(xmlNode);
@@ -541,6 +547,9 @@ namespace Engine::Serialization {
 
 		void LoadPropertyNode(const pugi::xml_node& xmlNode, PropertyNode& targetNode, const std::string& path,
 		    SerializationResult& result) {
+			if (targetNode.meta.dontSave) {
+				return;
+			}
 			LoadLeafValue(xmlNode, targetNode, path, result);
 
 			if (targetNode.kind == PropertyKind::Object || targetNode.kind == PropertyKind::Sequence ||

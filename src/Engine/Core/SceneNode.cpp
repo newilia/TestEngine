@@ -434,3 +434,7 @@ void SceneNode::FindNodesAtPoint(
 		result.push_back(entry.node);
 	}
 }
+
+void SceneNode::SetDrawOrder(int drawOrder) const {
+	_drawOrder = drawOrder;
+}
