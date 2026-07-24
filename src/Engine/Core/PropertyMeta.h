@@ -18,13 +18,15 @@ namespace Engine {
 		Entity,
 	};
 
-	/// UI hints separate from value type; used by the editor drawer only.
+	/// Inspector / serialization hints separate from value type.
 	struct PropertyMeta
 	{
 		std::string displayName;
 		std::string tooltip;
 		std::string mixedValueMarker = "mixed";
 		bool readOnly = false;
+		/// When true, `PropertyTreeSerializer` skips this node on save and load.
+		bool dontSave = false;
 		bool hasMixedValues = false;
 
 		std::optional<double> numericMin;

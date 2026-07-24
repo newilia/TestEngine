@@ -1799,13 +1799,36 @@ def validate_values_provider_tag(p: PropSpec, path: Path) -> None:
         )
 
 
+def attr_is_true(a: dict[str, Any], *keys: str) -> bool:
+    return any(a.get(k) is True for k in keys)
+
+
+def attrs_need_formatted_meta(a: dict[str, Any], *, readonly: bool) -> bool:
+    if readonly or attr_is_true(a, "dontSave"):
+        return True
+    return any(
+        k in a
+        for k in (
+            "tooltip",
+            "minValue",
+            "maxValue",
+            "dragSpeed",
+            "valuesProvider",
+            "minCount",
+            "maxCount",
+        )
+    )
+
+
 def format_meta_inline(p: PropSpec) -> str:
     a = p.attrs
     has_setter = isinstance(a.get("setter"), str) and bool(a.get("setter"))
-    ro = (a.get("readonly") is True) or (p.is_getter and not has_setter)
+    ro = attr_is_true(a, "readonly", "readOnly") or (p.is_getter and not has_setter)
     parts: list[str] = ["Engine::PropertyMeta _m;"]
     if ro:
         parts.append("_m.readOnly = true;")
+    if attr_is_true(a, "dontSave"):
+        parts.append("_m.dontSave = true;")
     if isinstance(a.get("tooltip"), str):
         parts.append(f'_m.tooltip = "{cpp_escape_string(a["tooltip"])}";')
     for key, mk in (
@@ -3439,6 +3462,8 @@ def emit_polymorphic_vector_property(
     out.append("\t\tEngine::PropertyMeta _pm{};")
     if readonly:
         out.append("\t\t_pm.readOnly = true;")
+    if attr_is_true(p.attrs, "dontSave"):
+        out.append("\t\t_pm.dontSave = true;")
     out.append(f'\t\t_pm.metaClassBaseTypeId = "{base_esc}";')
     out.append(
         f"\t\t_pm.metaClassDerivedTypeIdsProvider = []() -> std::vector<std::string> {{ "
@@ -3639,6 +3664,7 @@ def _emit_asset_ref_leaf(
     col: int,
     *,
     tooltip: str | None = None,
+    dont_save: bool = False,
     indent: str = "\t",
 ) -> None:
     asset_type_id, values_provider = asset_ref_config(inner, path, line, col)
@@ -3647,6 +3673,8 @@ def _emit_asset_ref_leaf(
     out.append(f"{body}Engine::PropertyMeta _sm{{}};")
     if readonly:
         out.append(f"{body}_sm.readOnly = true;")
+    if dont_save:
+        out.append(f"{body}_sm.dontSave = true;")
     if tooltip:
         out.append(f'{body}_sm.tooltip = "{cpp_escape_string(tooltip)}";')
     out.append(f'{body}_sm.assetTypeId = "{cpp_escape_string(asset_type_id)}";')
@@ -3675,6 +3703,7 @@ def _emit_scene_ref_leaf(
     col: int,
     *,
     tooltip: str | None = None,
+    dont_save: bool = False,
     indent: str = "\t",
 ) -> None:
     filter_kind = (
@@ -3687,6 +3716,8 @@ def _emit_scene_ref_leaf(
     out.append(f"{body}Engine::PropertyMeta _sm{{}};")
     if readonly:
         out.append(f"{body}_sm.readOnly = true;")
+    if dont_save:
+        out.append(f"{body}_sm.dontSave = true;")
     if tooltip:
         out.append(f'{body}_sm.tooltip = "{cpp_escape_string(tooltip)}";')
     out.append(f"{body}_sm.sceneRefFilterKind = {filter_kind};")
@@ -3979,7 +4010,9 @@ def generate_file_content(
             a = p.attrs
             setter_name = a.get("setter")
             has_setter_method = isinstance(setter_name, str) and bool(setter_name)
-            readonly = (a.get("readonly") is True) or (p.is_getter and not has_setter_method)
+            readonly = attr_is_true(a, "readonly", "readOnly") or (
+                p.is_getter and not has_setter_method
+            )
 
             if _prop_is_top_level_ref(p) and p.is_asset_ref:
                 if p.is_getter:
@@ -4000,7 +4033,12 @@ def generate_file_content(
                     if readonly
                     else f"[this](std::string v) {{ this->{p.member}.SetPath(std::move(v)); }}"
                 )
-                meta_arg = format_meta_inline(p) if readonly or tooltip else "Engine::PropertyMeta{}"
+                dont_save = attr_is_true(a, "dontSave")
+                meta_arg = (
+                    format_meta_inline(p)
+                    if attrs_need_formatted_meta(a, readonly=readonly)
+                    else "Engine::PropertyMeta{}"
+                )
                 _emit_asset_ref_leaf(
                     out,
                     fid,
@@ -4014,6 +4052,7 @@ def generate_file_content(
                     p.line,
                     p.col,
                     tooltip=tooltip,
+                    dont_save=dont_save,
                     indent="\t",
                 )
                 continue
@@ -4035,7 +4074,12 @@ def generate_file_content(
                     if readonly
                     else f"[this](std::uint32_t v) {{ this->{p.member}.SetId(static_cast<Engine::EntityId>(v)); }}"
                 )
-                meta_arg = format_meta_inline(p) if readonly or tooltip else "Engine::PropertyMeta{}"
+                dont_save = attr_is_true(a, "dontSave")
+                meta_arg = (
+                    format_meta_inline(p)
+                    if attrs_need_formatted_meta(a, readonly=readonly)
+                    else "Engine::PropertyMeta{}"
+                )
                 _emit_scene_ref_leaf(
                     out,
                     fid,
@@ -4049,6 +4093,7 @@ def generate_file_content(
                     p.line,
                     p.col,
                     tooltip=tooltip,
+                    dont_save=dont_save,
                     indent="\t",
                 )
                 continue
@@ -4061,10 +4106,11 @@ def generate_file_content(
                         p.line,
                         p.col,
                     )
-                has_meta = readonly or any(
-                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed", "valuesProvider")
+                meta_arg = (
+                    format_meta_inline(p)
+                    if attrs_need_formatted_meta(a, readonly=readonly)
+                    else "Engine::PropertyMeta{}"
                 )
-                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
                 emit_bitset_property(out, p, meta_arg, readonly)
                 continue
 
@@ -4076,10 +4122,11 @@ def generate_file_content(
                         p.line,
                         p.col,
                     )
-                has_meta = readonly or any(
-                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed", "valuesProvider")
+                meta_arg = (
+                    format_meta_inline(p)
+                    if attrs_need_formatted_meta(a, readonly=readonly)
+                    else "Engine::PropertyMeta{}"
                 )
-                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
                 if p.is_map:
                     emit_assoc_map_property(out, p, path, meta_arg, readonly)
                 else:
@@ -4094,26 +4141,29 @@ def generate_file_content(
                         p.line,
                         p.col,
                     )
-                has_meta = readonly or any(
-                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed", "valuesProvider")
+                meta_arg = (
+                    format_meta_inline(p)
+                    if attrs_need_formatted_meta(a, readonly=readonly)
+                    else "Engine::PropertyMeta{}"
                 )
-                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
                 emit_std_pair_property(out, p, path, meta_arg, readonly)
                 continue
 
             if p.is_optional:
-                has_meta = readonly or any(
-                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed", "valuesProvider")
+                meta_arg = (
+                    format_meta_inline(p)
+                    if attrs_need_formatted_meta(a, readonly=readonly)
+                    else "Engine::PropertyMeta{}"
                 )
-                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
                 emit_std_optional_property(out, p, path, meta_arg, readonly)
                 continue
 
             if p.enum_enumerators is not None:
-                has_meta = readonly or any(
-                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed", "valuesProvider")
+                meta_arg = (
+                    format_meta_inline(p)
+                    if attrs_need_formatted_meta(a, readonly=readonly)
+                    else "Engine::PropertyMeta{}"
                 )
-                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
                 canon = p.cpp_type
                 if p.is_getter:
                     get_lambda = f"[this]() {{ return static_cast<int>(this->{p.member}()); }}"
@@ -4155,10 +4205,11 @@ def generate_file_content(
                         p.line,
                         p.col,
                     )
-                has_meta = readonly or any(
-                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed", "valuesProvider")
+                meta_arg = (
+                    format_meta_inline(p)
+                    if attrs_need_formatted_meta(a, readonly=readonly)
+                    else "Engine::PropertyMeta{}"
                 )
-                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
                 fid = member_to_field_id(p.member)
                 label_esc = cpp_escape_string(default_label(p))
                 out.append(f'\tb.pushObject("{fid}", "{label_esc}", {meta_arg});')
@@ -4174,27 +4225,20 @@ def generate_file_content(
                         p.line,
                         p.col,
                     )
-                has_meta = readonly or any(
-                    k in a for k in ("tooltip", "minCount", "maxCount", "valuesProvider")
+                meta_arg = (
+                    format_meta_inline(p)
+                    if attrs_need_formatted_meta(a, readonly=readonly)
+                    else "Engine::PropertyMeta{}"
                 )
-                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
                 emit_polymorphic_vector_property(out, p, path, meta_arg, readonly)
                 continue
 
             if p.is_vector:
-                has_meta = readonly or any(
-                    k in a
-                    for k in (
-                        "tooltip",
-                        "minValue",
-                        "maxValue",
-                        "dragSpeed",
-                        "minCount",
-                        "maxCount",
-                        "valuesProvider",
-                    )
+                meta_arg = (
+                    format_meta_inline(p)
+                    if attrs_need_formatted_meta(a, readonly=readonly)
+                    else "Engine::PropertyMeta{}"
                 )
-                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
                 emit_std_vector_property(out, p, path, meta_arg, readonly)
                 continue
 
@@ -4202,18 +4246,20 @@ def generate_file_content(
                 raise ParseError(f"unsupported type `{p.cpp_type}`", path, p.line, p.col)
 
             if _is_rect_type(p.cpp_type):
-                has_meta = readonly or any(
-                    k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed", "valuesProvider")
+                meta_arg = (
+                    format_meta_inline(p)
+                    if attrs_need_formatted_meta(a, readonly=readonly)
+                    else "Engine::PropertyMeta{}"
                 )
-                meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
                 sn = setter_name if isinstance(setter_name, str) else ""
                 emit_rect_property(out, p, path, meta_arg, readonly, sn)
                 continue
 
-            has_meta = readonly or any(
-                k in a for k in ("tooltip", "minValue", "maxValue", "dragSpeed", "valuesProvider")
+            meta_arg = (
+                format_meta_inline(p)
+                if attrs_need_formatted_meta(a, readonly=readonly)
+                else "Engine::PropertyMeta{}"
             )
-            meta_arg = "Engine::PropertyMeta{}" if not has_meta else format_meta_inline(p)
             t = p.cpp_type
             if p.is_getter:
                 read_expr = f"this->{p.member}()"

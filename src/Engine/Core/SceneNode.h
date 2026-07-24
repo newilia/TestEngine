@@ -93,6 +93,7 @@ public:
 	void SetSortingStrategy(const shared_ptr<SortingStrategy>& sorting);
 	template <typename TSorting>
 	shared_ptr<TSorting> GetSortingStrategy() const;
+	void SetDrawOrder(int drawOrder) const;
 
 	// Behaviours
 	const std::vector<shared_ptr<Behaviour>>& GetBehaviours() const;
@@ -138,6 +139,8 @@ private:
 	bool _isEnabled = true;
 	/// @property(setter=SetVisible)
 	bool _isVisible = true;
+	/// @property(readOnly=true, dontSave=true)
+	mutable int _drawOrder = 0;
 
 private:
 	weak_ptr<SceneNode> _parent;

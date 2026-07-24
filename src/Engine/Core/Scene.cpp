@@ -123,6 +123,7 @@ void Scene::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	Utils::CollectSceneNodesForDraw(_root, entries);
 	Utils::StableSortDrawEntriesAscending(entries);
 
+	int drawOrder = 0;
 	for (const auto& entry : entries) {
 		const auto visual = entry.node->GetVisual();
 		if (!visual) {
@@ -131,6 +132,7 @@ void Scene::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 		sf::RenderStates nodeStates = states;
 		nodeStates.transform *= entry.node->GetWorldTransform();
 		visual->Draw(target, nodeStates);
+		entry.node->SetDrawOrder(drawOrder++);
 	}
 }
 
