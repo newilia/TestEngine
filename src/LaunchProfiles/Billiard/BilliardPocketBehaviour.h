@@ -19,10 +19,10 @@ namespace Billiard {
 		void OnUpdate(const sf::Time& dt) override;
 
 	public:
+		void Reset();
 		void RegisterBall(const BilliardBallBehaviour& ball);
 		Signal<int>& GetOnBallFallSignal() const;
 
-	private:
 	private:
 		/// @property
 		RefWrapper<CircleShapeVisual> _pocketShape;
@@ -31,6 +31,8 @@ namespace Billiard {
 
 	private:
 		mutable Signal<int> _onBallFallSignal;
+		int _nextBallCollisionGroup = 1;
+		std::set<int> _fallenBalls;
 	};
 
 } // namespace Billiard

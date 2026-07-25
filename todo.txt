@@ -56,3 +56,5 @@ Disable snap by honding Alt
 ctrl+z изменения свойств
 
 make RefWrapper getter (Entity::GetRefWrapper) and constructor (RefWrapper<T>(T))
+
+сериализация не убирает префикс get_ если используется @getter
