@@ -47,6 +47,32 @@ namespace Billiard {
 				}
 			}
 		}
+
+		SpawnCue();
+	}
+
+	void EightBallPoolBehaviour::SpawnCue() {
+		if (auto cue = _cue.Get()) {
+			if (auto node = cue->GetNode()) {
+				node->RemoveFromParent();
+			}
+		}
+		if (auto cueAsset = _cueAsset.Get()) {
+			auto cueParent = GetNode(); // temp
+			auto cue = cueAsset->InstantiateOn(cueParent);
+			if (auto cueBehaviour = cue->FindBehaviour<BilliardCueBehaviour>()) {
+				RefWrapper<BilliardCueBehaviour> cueRef;
+				cueRef.SetId(cue->GetEntityId());
+				_cue = cueRef;
+				SetCueOnBall(0);
+			}
+		}
+	}
+
+	void EightBallPoolBehaviour::SetCueOnBall(int ballNumber) {
+		if (auto cue = _cue.Get()) {
+			//todo
+		}
 	}
 
 	void EightBallPoolBehaviour::WirePocketSignals() {
