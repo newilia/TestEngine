@@ -425,7 +425,7 @@ namespace Editor::Themes {
 
 		// Misc
 		colors[ImGuiCol_PlotLines] = ImVec4(0.55f, 0.91f, 0.99f, 1.00f); // #8be9fd (Cyan)
-		colors[ImGuiCol_TextSelectedBg] = ImVec4(0.27f, 0.28f, 0.35f, 1.00f);
+		colors[ImGuiCol_TextSelectedBg] = colors[ImGuiCol_TextLink];
 		colors[ImGuiCol_NavHighlight] = ImVec4(0.74f, 0.58f, 0.98f, 1.00f);
 
 #ifdef IMGUI_HAS_DOCK
