@@ -10,8 +10,6 @@
 #include <optional>
 
 namespace {
-
-	constexpr int kFallenBallCollisionGroup = 2;
 	constexpr float kPocketPullSpeed = 5000.f;
 
 	struct WorldCircle
@@ -87,19 +85,16 @@ namespace Billiard {
 			if (!ballBehaviour) {
 				continue;
 			}
-
 			const auto ballNode = ballBehaviour->GetNode();
 			if (!ballNode) {
 				continue;
 			}
-
 			const auto ballBounds = Utils::TryGetNodeVisualWorldBounds(ballNode);
 			if (!ballBounds || !pocketBounds->findIntersection(*ballBounds)) {
 				continue;
 			}
 
-			const auto body = ballNode->FindBehaviour<PhysicsBodyBehaviour>();
-			if (!body || body->GetCollisionGroups().test(kFallenBallCollisionGroup)) {
+			if (_fallenBalls.contains(ballBehaviour->GetBallNumber())) {
 				continue;
 			}
 
@@ -113,10 +108,20 @@ namespace Billiard {
 				continue;
 			}
 
+			const auto body = ballNode->FindBehaviour<PhysicsBodyBehaviour>();
+			if (!body) {
+				continue;
+			}
 			if (IsCircleCompletelyInsideCircle(
 			        ballCenter, ballRadius, pocketGeometry->center, pocketGeometry->radius)) {
-				body->GetCollisionGroups().set(kFallenBallCollisionGroup, true);
+				body->GetCollisionGroups().set(0, false);
+				body->GetCollisionGroups().set(_nextBallCollisionGroup, true);
+				_nextBallCollisionGroup =
+				    _nextBallCollisionGroup == PhysicsBodyBehaviour::kGroupsCount - 1 ? 1 : _nextBallCollisionGroup + 1;
+
 				_onBallFallSignal.Emit(ballBehaviour->GetBallNumber());
+				_fallenBalls.insert(ballBehaviour->GetBallNumber());
+				ballBehaviour->PlayFallAnimation();
 			}
 			else {
 				const sf::Vector2f toPocket = pocketGeometry->center - ballCenter;
@@ -128,6 +133,12 @@ namespace Billiard {
 				}
 			}
 		}
+	}
+
+	void BilliardPocketBehaviour::Reset() {
+		_balls.clear();
+		_fallenBalls.clear();
+		_nextBallCollisionGroup = 1;
 	}
 
 	void BilliardPocketBehaviour::RegisterBall(const BilliardBallBehaviour& ball) {

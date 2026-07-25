@@ -23,6 +23,12 @@ namespace Billiard {
 			scoreboard->ShowMessage("");
 		}
 
+		for (auto& pocket : _pockets) {
+			if (auto pocketBehaviour = pocket.Get()) {
+				pocketBehaviour->Reset();
+			}
+		}
+
 		if (auto ballSpawn = _ballSpawn.Get()) {
 			auto spawnedBalls = ballSpawn->SpawnBalls();
 

@@ -24,4 +24,31 @@ namespace Billiard {
 		return _ballNumber >= 9 && _ballNumber <= 15;
 	}
 
+	void BilliardBallBehaviour::PlayFallAnimation() {
+		_isFalling = true;
+		_fallAnimationProgress = 0.f;
+
+		if (auto lightReceiver = _lightReceiver.Get()) {
+			_initialLightingStrength = lightReceiver->GetLightingStrength();
+		}
+	}
+
+	void BilliardBallBehaviour::OnUpdate(const sf::Time& dt) {
+		if (_isFalling) {
+			_fallAnimationProgress += dt.asSeconds() / _fallAnimationDuration;
+
+			if (_fallAnimationProgress >= 1.f) {
+				_fallAnimationProgress = 1.f;
+				_isFalling = false;
+				GetNode()->SetEnabled(false);
+			}
+
+			if (auto lightReceiver = _lightReceiver.Get()) {
+				lightReceiver->SetLightingStrength(_initialLightingStrength * (1.f - _fallAnimationProgress));
+			}
+			if (auto textureContributor = _textureContributor.Get()) {
+				textureContributor->SetTint(sf::Color(255, 255, 255, 255 * (1.f - _fallAnimationProgress)));
+			}
+		}
+	}
 } // namespace Billiard

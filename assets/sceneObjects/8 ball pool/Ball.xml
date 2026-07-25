@@ -132,6 +132,9 @@
         <Properties>
           <Property id="billiard_ball_behaviour" kind="Object">
             <Property id="ball_number" kind="Int32" value="0" />
+            <Property id="texture_contributor" kind="SceneRef" value="3850518943" />
+            <Property id="light_receiver" kind="SceneRef" value="2467484209" />
+            <Property id="fall_animation_duration" kind="Float" value="0.150000006" />
           </Property>
         </Properties>
       </Behaviour>
