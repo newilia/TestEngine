@@ -20,14 +20,12 @@ namespace Billiard {
 		}
 	}
 
-	void BilliardCueBehaviour::PositionOn(const RefWrapper<SceneNode>& anchor) {
-		_anchorRef = anchor;
-		const auto anchorNode = anchor.Get();
+	void BilliardCueBehaviour::PositionOnNode(const std::shared_ptr<SceneNode>& node) {
 		const auto cueNode = GetNode();
-		if (!anchorNode || !cueNode) {
+		if (!cueNode) {
 			return;
 		}
-		Utils::SetLocalPosToWorld(cueNode, Utils::GetWorldPos(anchorNode));
+		Utils::SetLocalPosToWorld(cueNode, Utils::GetWorldPos(node));
 	}
 
 	void BilliardCueBehaviour::SetRotation(sf::Angle angle) {
@@ -36,16 +34,32 @@ namespace Billiard {
 		}
 	}
 
+	void BilliardCueBehaviour::SetLongitudinalPosition(float position) {
+		if (auto cueNode = GetNode()) {
+			cueNode->SetLocalOrigin(sf::Vector2f{position, cueNode->GetLocalOrigin().y});
+		}
+	}
+
 	void BilliardCueBehaviour::MoveLongitudinal(float delta) {
 		if (auto cueNode = GetNode()) {
-			cueNode->SetLocalPosition(cueNode->GetLocalPosition() + sf::Vector2f{delta, 0.f});
+			cueNode->SetLocalOrigin(cueNode->GetLocalOrigin() + sf::Vector2f{delta, 0.f});
+		}
+	}
+
+	void BilliardCueBehaviour::SetLateralPosition(float position) {
+		if (auto cueNode = GetNode()) {
+			cueNode->SetLocalOrigin(sf::Vector2f{cueNode->GetLocalOrigin().x, position});
 		}
 	}
 
 	void BilliardCueBehaviour::MoveLateral(float delta) {
 		if (auto cueNode = GetNode()) {
-			cueNode->SetLocalPosition(cueNode->GetLocalPosition() + sf::Vector2f{0.f, delta});
+			cueNode->SetLocalOrigin(cueNode->GetLocalOrigin() + sf::Vector2f{0.f, delta});
 		}
+	}
+
+	void BilliardCueBehaviour::SetVerticalSpin(float spin) {
+		_verticalSpin = spin;
 	}
 
 } // namespace Billiard

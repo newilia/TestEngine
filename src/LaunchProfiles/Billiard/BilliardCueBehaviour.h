@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BilliardBallBehaviour.h"
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/MetaClass.h"
@@ -18,17 +19,21 @@ namespace Billiard {
 		void Activate();
 		void Deactivate();
 
-		void PositionOn(const RefWrapper<SceneNode>& anchor);
+		void PositionOnNode(const std::shared_ptr<SceneNode>& node);
 		void SetRotation(sf::Angle angle);
+		void SetLongitudinalPosition(float position);
 		void MoveLongitudinal(float delta);
+		void SetLateralPosition(float position);
 		void MoveLateral(float delta);
+		void SetVerticalSpin(float spin);
 
 	private:
 		/// @property
 		RefWrapper<PhysicsBodyBehaviour> _bodyRef;
 
-		RefWrapper<SceneNode> _anchorRef;
+	private:
 		bool _isActive = false;
+		float _verticalSpin = 0.f;
 	};
 
 } // namespace Billiard

@@ -29,11 +29,15 @@ namespace Billiard {
 		void StartNewGame();
 
 	private:
+		void SpawnCue();
+		void SetCueOnBall(int ballNumber);
 		void WirePocketSignals();
 		void OnBallFellInPocket(int ballNumber);
 		void StartTurn(int playerIndex);
 		void EndTurn();
 
+		/// @property
+		AssetRef<SceneObject> _cueAsset;
 		/// @property
 		RefWrapper<BilliardCueBehaviour> _cue;
 		/// @property
