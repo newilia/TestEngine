@@ -54,3 +54,5 @@ Disable snap by honding Alt
 импульс системы увеличивается после столкновения шаров
 
 ctrl+z изменения свойств
+
+make RefWrapper getter (Entity::GetRefWrapper) and constructor (RefWrapper<T>(T))

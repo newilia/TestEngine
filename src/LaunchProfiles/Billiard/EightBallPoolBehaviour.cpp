@@ -24,7 +24,22 @@ namespace Billiard {
 		}
 
 		if (auto ballSpawn = _ballSpawn.Get()) {
-			ballSpawn->Setup();
+			auto spawnedBalls = ballSpawn->SpawnBalls();
+
+			for (auto& ball : spawnedBalls) {
+				if (auto ballBehaviour = ball->FindBehaviour<BilliardBallBehaviour>()) {
+					// todo make RefWrapper getter and constructor
+					auto ballRef = RefWrapper<BilliardBallBehaviour>();
+					ballRef.SetId(ball->GetEntityId());
+					_balls.push_back(ballRef);
+
+					for (auto& pocket : _pockets) {
+						if (auto pocketBehaviour = pocket.Get()) {
+							pocketBehaviour->RegisterBall(*ballBehaviour);
+						}
+					}
+				}
+			}
 		}
 	}
 
