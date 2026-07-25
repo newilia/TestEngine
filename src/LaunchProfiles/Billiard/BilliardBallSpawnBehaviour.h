@@ -20,14 +20,13 @@ namespace Billiard {
 		META_CLASS()
 
 	public:
-		/// @method
-		void Setup();
+		std::vector<shared_ptr<SceneNode>> SpawnBalls();
 
 	private:
 		void SetupShadows(SceneNode& ballNode);
 
 	private:
-		void SpawnBall(int ballIndex, sf::Vector2f worldPos);
+		shared_ptr<SceneNode> SpawnBall(int ballIndex, sf::Vector2f worldPos);
 		[[nodiscard]] std::string FormatTexturePath(int ballIndex) const;
 		[[nodiscard]] sf::FloatRect GetTableWorldBounds() const;
 		[[nodiscard]] std::array<int, 15> BuildRackBallNumbers() const;

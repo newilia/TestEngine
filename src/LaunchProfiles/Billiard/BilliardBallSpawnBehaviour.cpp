@@ -50,12 +50,12 @@ namespace {
 
 } // namespace
 
-void Billiard::BilliardBallSpawnBehaviour::Setup() {
+std::vector<shared_ptr<SceneNode>> Billiard::BilliardBallSpawnBehaviour::SpawnBalls() {
 	const auto ballPrefab = _ballPrefab.Get();
 	const auto tableRect = _tableRectRef.Get();
 	const auto ballParent = _ballParent.Get();
 	if (!ballPrefab || !tableRect || !ballParent || _ballRadius <= 0.f) {
-		return;
+		return {};
 	}
 
 	auto children = ballParent->GetChildren();
@@ -65,7 +65,7 @@ void Billiard::BilliardBallSpawnBehaviour::Setup() {
 
 	const sf::FloatRect tableBounds = GetTableWorldBounds();
 	if (tableBounds.size.x <= 0.f || tableBounds.size.y <= 0.f) {
-		return;
+		return {};
 	}
 
 	const sf::Vector2f leftHalfCenter = {
@@ -77,25 +77,28 @@ void Billiard::BilliardBallSpawnBehaviour::Setup() {
 	    tableBounds.position.y + tableBounds.size.y * 0.5f,
 	};
 
-	SpawnBall(0, leftHalfCenter);
+	std::vector<shared_ptr<SceneNode>> spawnedBalls;
+	spawnedBalls.push_back(SpawnBall(0, leftHalfCenter));
 
 	const std::array<int, 15> rackNumbers = BuildRackBallNumbers();
 	for (int slot = 0; slot < 15; ++slot) {
 		const sf::Vector2f worldPos = rightHalfCenter + RackSlotLocalOffset(slot, _ballRadius);
-		SpawnBall(rackNumbers[static_cast<size_t>(slot)], worldPos);
+		spawnedBalls.push_back(SpawnBall(rackNumbers[static_cast<size_t>(slot)], worldPos));
 	}
+
+	return spawnedBalls;
 }
 
-void Billiard::BilliardBallSpawnBehaviour::SpawnBall(int ballIndex, sf::Vector2f worldPos) {
+shared_ptr<SceneNode> Billiard::BilliardBallSpawnBehaviour::SpawnBall(int ballIndex, sf::Vector2f worldPos) {
 	const auto ballPrefab = _ballPrefab.Get();
 	const auto parentNode = _ballParent.Get();
 	if (!ballPrefab || !parentNode) {
-		return;
+		return nullptr;
 	}
 
 	const auto instance = ballPrefab->InstantiateOn(parentNode);
 	if (!instance) {
-		return;
+		return nullptr;
 	}
 
 	instance->SetName(fmt::format("Ball {}", ballIndex));
@@ -123,6 +126,8 @@ void Billiard::BilliardBallSpawnBehaviour::SpawnBall(int ballIndex, sf::Vector2f
 		Engine::SphereOrientationQuat orientation = Engine::SphereOrientationFromEulerYxz(yaw, pitch, roll);
 		projection->SetSphereOrientation(orientation);
 	}
+
+	return instance;
 }
 
 void Billiard::BilliardBallSpawnBehaviour::SetupShadows(SceneNode& ballNode) {

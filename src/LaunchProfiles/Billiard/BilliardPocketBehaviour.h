@@ -4,7 +4,7 @@
 #include "Engine/Core/MetaClass.h"
 #include "Engine/Core/RefWrapper.h"
 #include "Engine/Core/Signal.h"
-#include "Engine/Visual/ShapeVisualBase.h"
+#include "Engine/Visual/CircleShapeVisual.h"
 #include "LaunchProfiles/Billiard/BilliardBallBehaviour.h"
 
 #include <vector>
@@ -16,17 +16,21 @@ namespace Billiard {
 		META_CLASS()
 
 	public:
-		void RegisterBallFall(BilliardBallBehaviour& ball);
+		void OnUpdate(const sf::Time& dt) override;
 
+	public:
+		void RegisterBall(const BilliardBallBehaviour& ball);
 		Signal<int>& GetOnBallFallSignal() const;
 
 	private:
+	private:
 		/// @property
-		RefWrapper<ShapeVisualBase> _pocketShape;
+		RefWrapper<CircleShapeVisual> _pocketShape;
 		/// @property
-		std::vector<RefWrapper<BilliardBallBehaviour>> _ballsInPocket;
+		std::vector<RefWrapper<BilliardBallBehaviour>> _balls;
 
-		mutable Signal<int> _onBallFall;
+	private:
+		mutable Signal<int> _onBallFallSignal;
 	};
 
 } // namespace Billiard
