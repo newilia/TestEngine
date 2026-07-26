@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import math
+import random
 import sys
 from pathlib import Path
 
@@ -36,6 +37,11 @@ NUMBER_COLOR = "000000"
 NUMBER_CIRCLE_COLOR = "E5E3D7"
 STRIPE_BALL_BACKGROUND = "E5E3D7"
 CUE_BALL_COLOR = "E5E3D7"
+CUE_DOT_RADIUS = 10
+CUE_DOT_COLOR = "F40010"
+
+# Equator (v=0.5): back, left, front, right in horizontal equirect UV.
+CUE_EQUATOR_DOT_U: tuple[float, ...] = (0.0, 0.25, 0.5, 0.75)
 
 SOLID_COLORS: dict[int, str] = {
     1: "FFAE01",
@@ -51,6 +57,7 @@ SOLID_COLORS: dict[int, str] = {
 # --- Brightness remapping (perceptual luminance, 0..1) ---
 COLOR_BRIGHTNESS_MIN = 0.0
 COLOR_BRIGHTNESS_MAX = 1.0
+NOISE_INTENSITY = 0.02
 
 # --- Output ---
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -108,6 +115,7 @@ def _all_source_colors() -> list[str]:
         NUMBER_CIRCLE_COLOR,
         STRIPE_BALL_BACKGROUND,
         CUE_BALL_COLOR,
+        CUE_DOT_COLOR,
         *SOLID_COLORS.values(),
     ]
     unique: list[str] = []
@@ -201,6 +209,20 @@ def _draw_aa_filled_circle(
 
 def render_cue_ball() -> Image.Image:
     image = Image.new("RGBA", IMAGE_SIZE, _hex_to_rgb(_mapped_color(CUE_BALL_COLOR)) + (255,))
+    dot_color = _mapped_color(CUE_DOT_COLOR)
+    dot_rgb = _hex_to_rgb(dot_color) + (255,)
+    equator_y = IMAGE_HEIGHT / 2
+
+    for u in CUE_EQUATOR_DOT_U:
+        center_x = u * IMAGE_WIDTH
+        _draw_aa_filled_circle(image, center_x, equator_y, CUE_DOT_RADIUS, dot_color)
+        if u == 0.0:
+            _draw_aa_filled_circle(image, IMAGE_WIDTH, equator_y, CUE_DOT_RADIUS, dot_color)
+
+    band_height = CUE_DOT_RADIUS
+    draw = ImageDraw.Draw(image)
+    draw.rectangle((0, 0, IMAGE_WIDTH, band_height), fill=dot_rgb)
+    draw.rectangle((0, IMAGE_HEIGHT - band_height, IMAGE_WIDTH, IMAGE_HEIGHT), fill=dot_rgb)
     return image
 
 
@@ -243,6 +265,38 @@ def render_numbered_ball(number: int, font: ImageFont.FreeTypeFont) -> Image.Ima
     return image
 
 
+def _apply_monochrome_noise(image: Image.Image, intensity: float, *, seed: int) -> None:
+    if intensity <= 0.0:
+        return
+
+    pixels = image.load()
+    rng = random.Random(seed)
+    amplitude = intensity * 255.0
+    width, height = image.size
+
+    for y in range(height):
+        for x in range(width):
+            pixel = pixels[x, y]
+            if len(pixel) == 4 and pixel[3] == 0:
+                continue
+            delta = (rng.random() * 2.0 - 1.0) * amplitude
+            if len(pixel) == 4:
+                r, g, b, a = pixel
+                pixels[x, y] = (
+                    max(0, min(255, int(round(r + delta)))),
+                    max(0, min(255, int(round(g + delta)))),
+                    max(0, min(255, int(round(b + delta)))),
+                    a,
+                )
+            else:
+                r, g, b = pixel
+                pixels[x, y] = (
+                    max(0, min(255, int(round(r + delta)))),
+                    max(0, min(255, int(round(g + delta)))),
+                    max(0, min(255, int(round(b + delta)))),
+                )
+
+
 def output_filename(ball_id: int) -> str:
     return f"ball_{ball_id}.png"
 
@@ -263,6 +317,8 @@ def generate_all(output_dir: Path, only: set[int] | None = None) -> list[Path]:
             image = render_numbered_ball(ball_id, font)
         else:
             raise ValueError(f"Unknown ball id: {ball_id!r}")
+
+        _apply_monochrome_noise(image, NOISE_INTENSITY, seed=ball_id)
 
         out_path = output_dir / output_filename(ball_id)
         image.save(out_path, format="PNG")
