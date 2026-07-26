@@ -21,7 +21,6 @@ using std::shared_ptr;
 using std::weak_ptr;
 
 class Scene;
-class PhysicsBodyBehaviour;
 
 class SceneNode final : public enable_shared_from_this<SceneNode>,
                         public Updatable,
