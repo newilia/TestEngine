@@ -1,36 +1,43 @@
 #pragma once
 
-#include "Engine/Behaviour/Behaviour.h"
+#include "Engine/Behaviour/EventHandlerBehaviourBase.h"
 #include "Engine/Core/MetaClass.h"
 #include "Engine/Core/RefWrapper.h"
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Core/Signal.h"
+#include "Engine/Visual/CircleShapeVisual.h"
 
 #include <SFML/System/Time.hpp>
 #include <SFML/System/Vector2.hpp>
 
 namespace Billiard {
 
-	class BilliardBallAimDisplayBehaviour : public Behaviour
+	class BilliardBallAimDisplayBehaviour : public EventHandlerBehaviourBase
 	{
 		META_CLASS()
 
 	public:
-		void OnUpdate(const sf::Time& dt) override;
+		void OnEvent(const sf::Event& event) override;
 
+	public:
 		void Show();
 		void Hide();
-
-		void SetAimPoint(const RefWrapper<SceneNode>& aimPoint, float aimRadius);
-		void SetAimOffset(sf::Vector2f offset);
-		[[nodiscard]] sf::Vector2f GetAimOffset() const;
+		[[nodiscard]] Signal<sf::Vector2f>& GetAimPointChangedSignal();
 
 	private:
 		void UpdateAimPointPosition();
+		void TrySetAimPoint(const sf::Vector2f& worldPoint);
 
-		RefWrapper<SceneNode> _aimPoint;
-		float _aimRadius = 1.f;
-		sf::Vector2f _aimOffset{};
-		bool _isVisible = false;
+	private:
+		/// @property
+		RefWrapper<CircleShapeVisual> _circleArea;
+		/// @property
+		RefWrapper<SceneNode> _aimPointNode;
+
+	private:
+		bool _isPointerDown = false;
+		sf::Vector2f _aimPoint;
+		Signal<sf::Vector2f> _aimPointChangedSignal;
 	};
 
 } // namespace Billiard

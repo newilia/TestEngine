@@ -33,6 +33,13 @@ namespace Billiard {
 		}
 	}
 
+	float BilliardBallBehaviour::GetRadius() const {
+		if (auto ballShape = _ballShape.Get()) {
+			return ballShape->GetRadius();
+		}
+		return 0.f;
+	}
+
 	void BilliardBallBehaviour::OnUpdate(const sf::Time& dt) {
 		if (_isFalling) {
 			_fallAnimationProgress += dt.asSeconds() / _fallAnimationDuration;

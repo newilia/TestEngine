@@ -5,6 +5,7 @@
 #include "Engine/Behaviour/ShapeLightReceiverBehaviour.h"
 #include "Engine/Core/MetaClass.h"
 #include "Engine/Core/RefWrapper.h"
+#include "Engine/Visual/CircleShapeVisual.h"
 
 namespace Billiard {
 
@@ -21,6 +22,7 @@ namespace Billiard {
 		[[nodiscard]] bool IsCue() const;
 		[[nodiscard]] bool IsEight() const;
 		[[nodiscard]] bool IsStriped() const;
+		[[nodiscard]] float GetRadius() const;
 
 		void PlayFallAnimation();
 
@@ -31,6 +33,9 @@ namespace Billiard {
 		RefWrapper<Engine::TiledTextureContributorBehaviour> _textureContributor;
 		/// @property
 		RefWrapper<ShapeLightReceiverBehaviour> _lightReceiver;
+		/// @property
+		RefWrapper<CircleShapeVisual> _ballShape;
+
 		/// @property
 		float _fallAnimationDuration = 0.3f;
 

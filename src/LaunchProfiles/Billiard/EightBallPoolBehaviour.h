@@ -36,6 +36,7 @@ namespace Billiard {
 		void OnBallFellInPocket(int ballNumber);
 		void StartTurn(int playerIndex);
 		void EndTurn();
+		void OnAimPointChanged(const sf::Vector2f& aimPoint);
 
 		/// @property
 		AssetRef<SceneObject> _cueAsset;
@@ -57,6 +58,9 @@ namespace Billiard {
 		GamePhase _phase = GamePhase::Break;
 		/// @property
 		int _activePlayerIndex = 0;
+
+	private:
+		Signal<sf::Vector2f>::Subscription _aimPointChangedSubscription;
 	};
 
 } // namespace Billiard

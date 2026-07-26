@@ -39,8 +39,6 @@ namespace Billiard {
 		RefWrapper<SceneNode> _ballParent;
 		/// @property(tooltip="fmt placeholder for ball id")
 		std::string _texturePathMask = "resources/textures/8ball/ball_{}.png";
-		/// @property(minValue=0.f)
-		float _ballRadius = 12.f;
 		/// @property
 		std::vector<RefWrapper<SceneNode>> _lightSources;
 	};

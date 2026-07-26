@@ -54,7 +54,7 @@ std::vector<shared_ptr<SceneNode>> Billiard::BilliardBallSpawnBehaviour::SpawnBa
 	const auto ballPrefab = _ballPrefab.Get();
 	const auto tableRect = _tableRectRef.Get();
 	const auto ballParent = _ballParent.Get();
-	if (!ballPrefab || !tableRect || !ballParent || _ballRadius <= 0.f) {
+	if (!ballPrefab || !tableRect || !ballParent) {
 		return {};
 	}
 
@@ -80,9 +80,11 @@ std::vector<shared_ptr<SceneNode>> Billiard::BilliardBallSpawnBehaviour::SpawnBa
 	std::vector<shared_ptr<SceneNode>> spawnedBalls;
 	spawnedBalls.push_back(SpawnBall(0, leftHalfCenter));
 
+	const float ballRadius = spawnedBalls.front()->FindBehaviour<BilliardBallBehaviour>()->GetRadius();
+
 	const std::array<int, 15> rackNumbers = BuildRackBallNumbers();
 	for (int slot = 0; slot < 15; ++slot) {
-		const sf::Vector2f worldPos = rightHalfCenter + RackSlotLocalOffset(slot, _ballRadius);
+		const sf::Vector2f worldPos = rightHalfCenter + RackSlotLocalOffset(slot, ballRadius);
 		spawnedBalls.push_back(SpawnBall(rackNumbers[static_cast<size_t>(slot)], worldPos));
 	}
 

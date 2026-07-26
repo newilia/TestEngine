@@ -110,7 +110,7 @@
             <Property id="circle_ref" kind="SceneRef" value="3698677571" />
             <Property id="sphere_projection_ref" kind="SceneRef" value="3290324261" />
             <Property id="body_ref" kind="SceneRef" value="759259200" />
-            <Property id="friction" kind="Float" value="50" />
+            <Property id="friction" kind="Float" value="20" />
             <Property id="spin_omega" kind="Vec3f" x="0" y="0" z="0" />
             <Property id="impulse_factor" kind="Float" value="0.200000003" />
           </Property>
@@ -134,6 +134,7 @@
             <Property id="ball_number" kind="Int32" value="0" />
             <Property id="texture_contributor" kind="SceneRef" value="3850518943" />
             <Property id="light_receiver" kind="SceneRef" value="2467484209" />
+            <Property id="ball_shape" kind="SceneRef" value="3698677571" />
             <Property id="fall_animation_duration" kind="Float" value="0.150000006" />
           </Property>
         </Properties>
