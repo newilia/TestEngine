@@ -97,3 +97,14 @@ float Billiard::RollingBallBehaviour::GetRadius() const {
 	}
 	return _circleRef.Get()->GetRadius();
 }
+
+void Billiard::RollingBallBehaviour::SetVerticalSpin(sf::Angle direction, float value) {
+	const float radius = GetRadius();
+	if (radius <= 0.f) {
+		return;
+	}
+
+	const float angleRadians = direction.asRadians();
+	const sf::Vector2f rollVelocity{std::cos(angleRadians) * value, std::sin(angleRadians) * value};
+	_spinOmega = OmegaFromVelocity(rollVelocity, 1.f / radius);
+}

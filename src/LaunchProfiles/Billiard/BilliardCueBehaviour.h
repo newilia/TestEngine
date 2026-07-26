@@ -34,6 +34,7 @@ namespace Billiard {
 		void MoveLateral(float delta);
 		void SetVerticalSpin(float spin);
 		void SetCuePosition(const sf::Vector2f& cuePosition);
+		void SetBallRadius(float radius);
 
 	private:
 		void Release();
@@ -54,15 +55,18 @@ namespace Billiard {
 		/// @property(setter=SetCuePosition)
 		sf::Vector2f _cuePosition{};
 		/// @property(setter=SetDirection)
-		sf::Angle _direction{};
+		sf::Angle _directionAngle{};
 		/// @property
 		float _shootAcceleration = 5.f;
 		/// @property
 		float _velocityDampingAfterHit = 1000.f;
 		/// @property
 		float _maxDistanceFromTarget = 500.f;
+		/// @property
+		float _verticalSpinMultiplier = 1.f;
 
 	private:
+		float _ballRadius = 0.f;
 		bool _isDragging = false;
 		bool _isShooting = false;
 		float _verticalSpin = 0.f;

@@ -6,6 +6,13 @@ namespace Billiard {
 
 	void EightBallPoolBehaviour::OnInit() {
 		WirePocketSignals();
+
+		if (auto aimDisplay = _aimDisplayBehaviour.Get()) {
+			_aimPointChangedSubscription =
+			    aimDisplay->GetAimPointChangedSignal().Subscribe([this](const sf::Vector2f& aimPoint) {
+				    OnAimPointChanged(aimPoint);
+			    });
+		}
 	}
 
 	void EightBallPoolBehaviour::OnDeinit() {
@@ -78,6 +85,7 @@ namespace Billiard {
 			if (auto ball = _ballsBehaviours[ballNumber].Get()) {
 				if (auto ballNode = ball->GetNode()) {
 					cueBehaviour->SetTargetNode(ballNode);
+					cueBehaviour->SetBallRadius(ball->GetRadius());
 					cueBehaviour->SetDistanceFromTarget(50);
 				}
 			}
@@ -107,6 +115,13 @@ namespace Billiard {
 
 	void EightBallPoolBehaviour::EndTurn() {
 		StartTurn(1 - _activePlayerIndex);
+	}
+
+	void EightBallPoolBehaviour::OnAimPointChanged(const sf::Vector2f& aimPoint) {
+		if (auto cueBehaviour = _cueBehaviour.Get()) {
+			cueBehaviour->SetLateralPosition(aimPoint.x);
+			cueBehaviour->SetVerticalSpin(aimPoint.y);
+		}
 	}
 
 } // namespace Billiard

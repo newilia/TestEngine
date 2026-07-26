@@ -3,62 +3,86 @@
 #include "BilliardBallAimDisplayBehaviour.generated.hpp"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/SceneNodeUtils.h"
+#include "Engine/Core/SfmlWindowUtils.h"
 
 #include <algorithm>
 #include <cmath>
 
 namespace Billiard {
 
-	void BilliardBallAimDisplayBehaviour::OnUpdate(const sf::Time& /*dt*/) {
-		if (_isVisible) {
-			UpdateAimPointPosition();
+	void BilliardBallAimDisplayBehaviour::OnEvent(const sf::Event& event) {
+		auto window = Engine::MainContext::GetInstance().GetMainWindow();
+		if (!window) {
+			return;
+		}
+		const auto toWorld = [&](sf::Vector2i pixel) -> sf::Vector2f {
+			return Utils::MapWindowPixelToWorld(*window, pixel);
+		};
+
+		if (const auto* clicked = event.getIf<sf::Event::MouseButtonPressed>()) {
+			if (clicked->button == sf::Mouse::Button::Left) {
+				_isPointerDown = true;
+				TrySetAimPoint(toWorld(clicked->position));
+			}
+		}
+		if (const auto* released = event.getIf<sf::Event::MouseButtonReleased>()) {
+			if (released->button == sf::Mouse::Button::Left) {
+				_isPointerDown = false;
+			}
+		}
+		if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
+			if (_isPointerDown) {
+				TrySetAimPoint(toWorld(moved->position));
+			}
 		}
 	}
 
 	void BilliardBallAimDisplayBehaviour::Show() {
-		_isVisible = true;
-		if (auto aimPointNode = _aimPoint.Get()) {
-			aimPointNode->SetVisible(true);
+		if (auto node = GetNode()) {
+			node->SetVisible(true);
 		}
 		UpdateAimPointPosition();
 	}
 
 	void BilliardBallAimDisplayBehaviour::Hide() {
-		_isVisible = false;
-		if (auto aimPointNode = _aimPoint.Get()) {
-			aimPointNode->SetVisible(false);
+		if (auto node = GetNode()) {
+			node->SetVisible(false);
 		}
-	}
-
-	void BilliardBallAimDisplayBehaviour::SetAimPoint(const RefWrapper<SceneNode>& aimPoint, float aimRadius) {
-		_aimPoint = aimPoint;
-		_aimRadius = aimRadius;
-		UpdateAimPointPosition();
-	}
-
-	void BilliardBallAimDisplayBehaviour::SetAimOffset(sf::Vector2f offset) {
-		offset.x = std::clamp(offset.x, -1.f, 1.f);
-		offset.y = std::clamp(offset.y, -1.f, 1.f);
-		const float length = std::sqrt(offset.x * offset.x + offset.y * offset.y);
-		if (length > 1.f) {
-			offset /= length;
-		}
-		_aimOffset = offset;
-		UpdateAimPointPosition();
-	}
-
-	sf::Vector2f BilliardBallAimDisplayBehaviour::GetAimOffset() const {
-		return _aimOffset;
 	}
 
 	void BilliardBallAimDisplayBehaviour::UpdateAimPointPosition() {
-		const auto aimPointNode = _aimPoint.Get();
+		const auto aimPointNode = _aimPointNode.Get();
 		const auto ownerNode = GetNode();
-		if (!aimPointNode || !ownerNode) {
+		const auto circleArea = _circleArea.Get();
+		if (!aimPointNode || !ownerNode || !circleArea) {
 			return;
 		}
-		const sf::Vector2f worldPos = Utils::GetWorldPos(ownerNode) + _aimOffset * _aimRadius;
+		auto radius = circleArea->GetRadius();
+
+		const sf::Vector2f worldPos = Utils::GetWorldPos(ownerNode) + _aimPoint * radius;
 		Utils::SetLocalPosToWorld(aimPointNode, worldPos);
+	}
+
+	void BilliardBallAimDisplayBehaviour::TrySetAimPoint(const sf::Vector2f& worldPoint) {
+		auto area = _circleArea.Get();
+		auto aimPointNode = _aimPointNode.Get();
+		if (!area) {
+			return;
+		}
+		if (!area->HitTest(worldPoint)) {
+			return;
+		}
+		const float radius = area->GetRadius();
+		if (radius <= 0.f) {
+			return;
+		}
+		_aimPoint = (worldPoint - Utils::GetWorldPos(area->GetNode())) / radius;
+		UpdateAimPointPosition();
+		_aimPointChangedSignal.Emit(_aimPoint);
+	}
+
+	Signal<sf::Vector2f>& BilliardBallAimDisplayBehaviour::GetAimPointChangedSignal() {
+		return _aimPointChangedSignal;
 	}
 
 } // namespace Billiard

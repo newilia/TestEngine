@@ -18,6 +18,12 @@ namespace Billiard {
 	public:
 		void OnUpdate(const sf::Time& dt) override;
 
+	public:
+		void SetVerticalSpin(sf::Angle direction, float value);
+
+	private:
+		float GetRadius() const;
+
 	private:
 		/// @property
 		RefWrapper<CircleShapeVisual> _circleRef;
@@ -25,9 +31,6 @@ namespace Billiard {
 		RefWrapper<Engine::SphereProjectionContributorBehaviour> _sphereProjectionRef;
 		/// @property
 		RefWrapper<PhysicsBodyBehaviour> _bodyRef;
-
-	private:
-		float GetRadius() const;
 
 		/// @property(minValue=0.f)
 		float _friction = 10.f;
