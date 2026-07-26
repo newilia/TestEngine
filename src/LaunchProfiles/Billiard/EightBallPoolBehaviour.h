@@ -11,6 +11,7 @@
 #include "LaunchProfiles/Billiard/BilliardPocketBehaviour.h"
 #include "LaunchProfiles/Billiard/BilliardScoreboardBehaviour.h"
 
+#include <map>
 #include <vector>
 
 namespace Billiard {
@@ -39,20 +40,22 @@ namespace Billiard {
 		/// @property
 		AssetRef<SceneObject> _cueAsset;
 		/// @property
-		RefWrapper<BilliardCueBehaviour> _cue;
+		RefWrapper<BilliardCueBehaviour> _cueBehaviour;
 		/// @property
-		RefWrapper<BilliardScoreboardBehaviour> _scoreboard;
+		RefWrapper<SceneNode> _cueParent;
 		/// @property
-		RefWrapper<BilliardBallAimDisplayBehaviour> _aimDisplay;
+		RefWrapper<BilliardScoreboardBehaviour> _scoreboardBehaviour;
 		/// @property
-		RefWrapper<BilliardBallSpawnBehaviour> _ballSpawn;
+		RefWrapper<BilliardBallAimDisplayBehaviour> _aimDisplayBehaviour;
 		/// @property
-		std::vector<RefWrapper<BilliardPocketBehaviour>> _pockets;
+		RefWrapper<BilliardBallSpawnBehaviour> _ballSpawnBehaviour;
 		/// @property
-		std::vector<RefWrapper<BilliardBallBehaviour>> _balls;
-
+		std::vector<RefWrapper<BilliardPocketBehaviour>> _pocketsBehaviours;
+		/// @property
+		std::map<int, RefWrapper<BilliardBallBehaviour>> _ballsBehaviours;
 		/// @property
 		GamePhase _phase = GamePhase::Break;
+		/// @property
 		int _activePlayerIndex = 0;
 	};
 

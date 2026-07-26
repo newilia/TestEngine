@@ -16,30 +16,30 @@ namespace Billiard {
 		_phase = GamePhase::Break;
 		_activePlayerIndex = 0;
 
-		if (auto scoreboard = _scoreboard.Get()) {
+		if (auto scoreboard = _scoreboardBehaviour.Get()) {
 			scoreboard->SetPlayerScore(0, 0);
 			scoreboard->SetPlayerScore(1, 0);
 			scoreboard->SetActivePlayer(_activePlayerIndex);
 			scoreboard->ShowMessage("");
 		}
 
-		for (auto& pocket : _pockets) {
+		for (auto& pocket : _pocketsBehaviours) {
 			if (auto pocketBehaviour = pocket.Get()) {
 				pocketBehaviour->Reset();
 			}
 		}
 
-		if (auto ballSpawn = _ballSpawn.Get()) {
+		if (auto ballSpawn = _ballSpawnBehaviour.Get()) {
 			auto spawnedBalls = ballSpawn->SpawnBalls();
 
 			for (auto& ball : spawnedBalls) {
 				if (auto ballBehaviour = ball->FindBehaviour<BilliardBallBehaviour>()) {
 					// todo make RefWrapper getter and constructor
 					auto ballRef = RefWrapper<BilliardBallBehaviour>();
-					ballRef.SetId(ball->GetEntityId());
-					_balls.push_back(ballRef);
+					ballRef.SetId(ballBehaviour->GetEntityId());
+					_ballsBehaviours[ballBehaviour->GetBallNumber()] = ballRef;
 
-					for (auto& pocket : _pockets) {
+					for (auto& pocket : _pocketsBehaviours) {
 						if (auto pocketBehaviour = pocket.Get()) {
 							pocketBehaviour->RegisterBall(*ballBehaviour);
 						}
@@ -52,31 +52,40 @@ namespace Billiard {
 	}
 
 	void EightBallPoolBehaviour::SpawnCue() {
-		if (auto cue = _cue.Get()) {
-			if (auto node = cue->GetNode()) {
+		if (auto cueBehaviour = _cueBehaviour.Get()) {
+			if (auto node = cueBehaviour->GetNode()) {
 				node->RemoveFromParent();
 			}
+			_cueBehaviour.Clear();
 		}
+
 		if (auto cueAsset = _cueAsset.Get()) {
-			auto cueParent = GetNode(); // temp
-			auto cue = cueAsset->InstantiateOn(cueParent);
-			if (auto cueBehaviour = cue->FindBehaviour<BilliardCueBehaviour>()) {
-				RefWrapper<BilliardCueBehaviour> cueRef;
-				cueRef.SetId(cue->GetEntityId());
-				_cue = cueRef;
-				SetCueOnBall(0);
+			if (auto cueParent = _cueParent.Get()) {
+				if (auto cueNode = cueAsset->InstantiateOn(cueParent)) {
+					if (auto cueBehaviour = cueNode->FindBehaviour<BilliardCueBehaviour>()) {
+						RefWrapper<BilliardCueBehaviour> cueRef;
+						cueRef.SetId(cueBehaviour->GetEntityId());
+						_cueBehaviour = cueRef;
+						SetCueOnBall(0);
+					}
+				}
 			}
 		}
 	}
 
 	void EightBallPoolBehaviour::SetCueOnBall(int ballNumber) {
-		if (auto cue = _cue.Get()) {
-			//todo
+		if (auto cueBehaviour = _cueBehaviour.Get()) {
+			if (auto ball = _ballsBehaviours[ballNumber].Get()) {
+				if (auto ballNode = ball->GetNode()) {
+					cueBehaviour->SetTargetNode(ballNode);
+					cueBehaviour->SetDistanceFromTarget(50);
+				}
+			}
 		}
 	}
 
 	void EightBallPoolBehaviour::WirePocketSignals() {
-		for (auto& pocketRef : _pockets) {
+		for (auto& pocketRef : _pocketsBehaviours) {
 			if (auto pocket = pocketRef.Get()) {
 				Subscribe(pocket->GetOnBallFallSignal(), [this](int ballNumber) {
 					OnBallFellInPocket(ballNumber);
@@ -91,7 +100,7 @@ namespace Billiard {
 
 	void EightBallPoolBehaviour::StartTurn(int playerIndex) {
 		_activePlayerIndex = playerIndex;
-		if (auto scoreboard = _scoreboard.Get()) {
+		if (auto scoreboard = _scoreboardBehaviour.Get()) {
 			scoreboard->SetActivePlayer(_activePlayerIndex);
 		}
 	}
