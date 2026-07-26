@@ -193,6 +193,34 @@ namespace Engine {
 			return MainContext::GetInstance().GetScene();
 		}
 
+		bool IsOnPathToNode(const SceneNode& node, const SceneNode& target) {
+			if (std::addressof(node) == std::addressof(target)) {
+				return true;
+			}
+			for (auto ancestor = target.GetParent(); ancestor != nullptr; ancestor = ancestor->GetParent()) {
+				if (ancestor.get() == std::addressof(node)) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		bool IsOnPathToAnySelectedNode(const SceneNode& node) {
+			for (const auto& selected : Engine::Editor::GetInstance().GetSelectedNodes()) {
+				if (selected && IsOnPathToNode(node, *selected)) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		bool ShouldHighlightNodeInPicker(const SceneNode& node, const std::uint32_t refId) {
+			if (refId != 0) {
+				return node.GetEntityId() == refId;
+			}
+			return Engine::Editor::GetInstance().IsNodeSelected(node);
+		}
+
 		void DrawSceneRefEntityLeaf(const char* label, const std::shared_ptr<EntityOnNode>& entity,
 		    const PropAccessSceneRef* access, std::uint32_t selectedId,
 		    bool (*predicate)(const std::shared_ptr<EntityOnNode>&)) {
@@ -217,6 +245,8 @@ namespace Engine {
 			}
 
 			const std::uint32_t selectedId = access->get();
+			const bool revealSelection = (selectedId == 0) && ImGui::IsWindowAppearing();
+			bool scrollPending = revealSelection;
 			const std::function<void(const std::shared_ptr<SceneNode>&, int)> visit =
 			    [&](const std::shared_ptr<SceneNode>& node, int depth) {
 				    if (!node) {
@@ -226,10 +256,15 @@ namespace Engine {
 				    const std::string& nm = node->GetName();
 				    const char* disp = nm.empty() ? "<unnamed>" : nm.c_str();
 				    const std::uint32_t nodeEntityId = node->GetEntityId();
+				    const bool highlightNode = ShouldHighlightNodeInPicker(*node, selectedId);
+
+				    if (revealSelection && IsOnPathToAnySelectedNode(*node)) {
+					    ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+				    }
 
 				    if (n.meta.sceneRefFilterKind == SceneRefFilterKind::SceneNode) {
 					    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-					    if (nodeEntityId == selectedId) {
+					    if (highlightNode) {
 						    flags |= ImGuiTreeNodeFlags_Selected;
 					    }
 					    if (depth == 0) {
@@ -240,6 +275,10 @@ namespace Engine {
 						    flags |= ImGuiTreeNodeFlags_Leaf;
 					    }
 					    const bool open = ImGui::TreeNodeEx("##sn", flags, "%s", disp);
+					    if (scrollPending && highlightNode) {
+						    ImGui::SetScrollHereY(0.5f);
+						    scrollPending = false;
+					    }
 					    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
 						    access->set(nodeEntityId);
 						    ImGui::CloseCurrentPopup();
@@ -253,6 +292,9 @@ namespace Engine {
 				    }
 				    else {
 					    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+					    if (highlightNode) {
+						    flags |= ImGuiTreeNodeFlags_Selected;
+					    }
 					    if (depth == 0) {
 						    flags |= ImGuiTreeNodeFlags_DefaultOpen;
 					    }
@@ -270,6 +312,10 @@ namespace Engine {
 						    flags |= ImGuiTreeNodeFlags_Leaf;
 					    }
 					    const bool open = ImGui::TreeNodeEx("##sn", flags, "%s", disp);
+					    if (scrollPending && highlightNode) {
+						    ImGui::SetScrollHereY(0.5f);
+						    scrollPending = false;
+					    }
 					    if (open) {
 						    if (const auto visual = node->GetVisual()) {
 							    DrawSceneRefEntityLeaf("Visual", std::static_pointer_cast<EntityOnNode>(visual), access,
