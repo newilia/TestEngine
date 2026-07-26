@@ -61,7 +61,7 @@ Scanner picks classes from headers under **`src/`** (excluding **`Codegen/`**) t
 
 ## `@property` argument syntax
 
-- Comma-separated `key=value`. Keys (v1): `name` / `label` (display label), `readonly` / `readOnly`, `dontSave` (skip in scene XML save/load), `setter` (method name; **`bool` fields only** — forwards writes to `this->MethodName(bool)`), `minValue`, `maxValue`, `dragSpeed`, `tooltip`.
+- Comma-separated `key=value`. Keys (v1): `name` / `label` (display label), `readonly` / `readOnly`, `dontSave` (skip in scene XML save/load), `setter` (method name — forwards writes to `this->MethodName(value)` instead of assigning the field directly; supported on **scalar** `@property` fields), `minValue`, `maxValue`, `dragSpeed`, `tooltip`.
 - Strings in double quotes. Booleans `true` / `false`. Numbers may use a trailing `f`.
 - Parser errors include `file:line:col:` messages; fix the tag or the following field line.
 - The key `name` (and `label`) sets the **inspector display string** only. The **property id** in the tree is still derived from the C++ field or method name (e.g. `GetPropValue` → `get_prop_value`).
@@ -80,7 +80,7 @@ Scanner picks classes from headers under **`src/`** (excluding **`Codegen/`**) t
 | **Getter ↔ setter pairing** | Matching `GetXxx` / `SetXxx` (or `getXxx` / `setXxx` with the same suffix) without any `name` / `label` on the tags. | Explicit `name="..."` / `label="..."` for pairing is redundant when this naming pattern already matches. |
 | **`minCount` / `maxCount`** | Only emitted into `PropertyMeta` for **`std::vector`** properties (`p.is_vector` in the generator). | On scalars, `std::pair`, maps/sets, `std::bitset`, etc., these keys are **ignored** for emitted meta — omit them. |
 | **`minValue` / `maxValue` / `dragSpeed`** | Applied to `PropertyMeta` for any property that lists them; the **inspector** uses them for numeric-like controls (float/double/integers, angles, component drags). | On types where the UI does not use numeric hints (`std::string`, `sf::Color`, bool, …), they are **clutter** and have little or no effect — omit unless you know the drawer uses them for that leaf. |
-| **`setter=MethodName` on `@property`** | Only implemented for **`bool`** fields (forwards writes to `this->MethodName(bool)`). | On non-bool fields the attribute is not used for that path — do not add it except on bool. |
+| **`setter=MethodName` on `@property`** | Forwards writes to `this->MethodName(value)` on **scalar** fields (same type conversions as `@getter` / `@setter`, e.g. `sf::Angle` as degrees in the UI). | Not supported on containers, `RefWrapper`, `AssetRef`, `std::bitset`, etc. — use `@getter` / `@setter` for those. |
 | **Duplicate meta on paired `@setter`** | For keys merged from setter into the property (`dragSpeed`, `minValue`, `maxValue`, `tooltip`, `readonly`), the **getter** wins if both specify the same key. | Repeating the same key on `@setter` as on `@getter` is redundant (and the getter value is kept). |
 
 **Caveat:** Inferred labels are **not** always identical to “what a human would title-case by hand” (edge cases: empty word lists fall back to a title-cased snake id). Use `name="..."` / `label="..."` when the default string is wrong or ambiguous (e.g. disambiguating two `@method` entries).
