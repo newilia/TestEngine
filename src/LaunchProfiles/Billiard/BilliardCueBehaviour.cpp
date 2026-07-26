@@ -1,65 +1,184 @@
 #include "BilliardCueBehaviour.h"
 
 #include "BilliardCueBehaviour.generated.hpp"
+#include "Engine/Core/MathUtils.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/SceneNodeUtils.h"
+#include "Engine/Core/SfmlWindowUtils.h"
+
+#include <SFML/Window/Event.hpp>
+
+#include <cmath>
 
 namespace Billiard {
 
-	void BilliardCueBehaviour::Activate() {
-		_isActive = true;
-		if (auto body = _bodyRef.Get()) {
-			body->SetFixed(false);
+	void BilliardCueBehaviour::OnUpdate(const sf::Time& deltaTime) {
+		if (auto tipPhysicsBody = _tipPhysicsBody.Get()) {
+			if (_isShooting) {
+				sf::Vector2f accVec(std::cos(_direction.asRadians()), std::sin(_direction.asRadians()));
+				tipPhysicsBody->AddVelocity(accVec * _shootAcceleration * deltaTime.asSeconds());
+			}
+			tipPhysicsBody->GetNode()->SetLocalRotation(_direction);
 		}
+	}
+
+	void BilliardCueBehaviour::OnEvent(const sf::Event& event) {
+		auto window = Engine::MainContext::GetInstance().GetMainWindow();
+		if (!window) {
+			return;
+		}
+		const auto toWorld = [&](sf::Vector2i pixel) -> sf::Vector2f {
+			return Utils::MapWindowPixelToWorld(*window, pixel);
+		};
+
+		if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
+			if (pressed->button == sf::Mouse::Button::Left) {
+				if (HitTestWorld(toWorld(pressed->position))) {
+					_isDragging = true;
+				}
+			}
+			return;
+		}
+
+		if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
+			if (_isDragging) {
+				Aim(toWorld(moved->position));
+			}
+			return;
+		}
+
+		if (const auto* released = event.getIf<sf::Event::MouseButtonReleased>()) {
+			if (released->button == sf::Mouse::Button::Left) {
+				if (_isDragging) {
+					Release();
+				}
+			}
+			return;
+		}
+
+		return;
+	}
+
+	void BilliardCueBehaviour::Activate() {
+		GetNode()->SetEnabled(true);
 	}
 
 	void BilliardCueBehaviour::Deactivate() {
-		_isActive = false;
-		if (auto body = _bodyRef.Get()) {
-			body->SetFixed(true);
-		}
+		GetNode()->SetEnabled(false);
 	}
 
-	void BilliardCueBehaviour::PositionOnNode(const std::shared_ptr<SceneNode>& node) {
+	void BilliardCueBehaviour::SetTargetNode(const std::shared_ptr<SceneNode>& node) {
 		const auto cueNode = GetNode();
 		if (!cueNode) {
 			return;
 		}
-		Utils::SetLocalPosToWorld(cueNode, Utils::GetWorldPos(node));
+		_targetNode.SetId(node->GetEntityId());
+		_cuePosition = sf::Vector2f{};
+		ApplyCueTransform();
 	}
 
-	void BilliardCueBehaviour::SetRotation(sf::Angle angle) {
-		if (auto cueNode = GetNode()) {
-			cueNode->SetLocalRotation(angle);
-		}
+	void BilliardCueBehaviour::SetDirection(sf::Angle angle) {
+		_direction = angle;
+		ApplyCueTransform();
 	}
 
-	void BilliardCueBehaviour::SetLongitudinalPosition(float position) {
-		if (auto cueNode = GetNode()) {
-			cueNode->SetLocalOrigin(sf::Vector2f{position, cueNode->GetLocalOrigin().y});
-		}
+	void BilliardCueBehaviour::SetDistanceFromTarget(float distance) {
+		_cuePosition.x = std::min(distance, _maxDistanceFromTarget);
+		ApplyCueTransform();
 	}
 
 	void BilliardCueBehaviour::MoveLongitudinal(float delta) {
-		if (auto cueNode = GetNode()) {
-			cueNode->SetLocalOrigin(cueNode->GetLocalOrigin() + sf::Vector2f{delta, 0.f});
-		}
+		_cuePosition.x += delta;
+		ApplyCueTransform();
 	}
 
 	void BilliardCueBehaviour::SetLateralPosition(float position) {
-		if (auto cueNode = GetNode()) {
-			cueNode->SetLocalOrigin(sf::Vector2f{cueNode->GetLocalOrigin().x, position});
-		}
+		_cuePosition.y = position;
+		ApplyCueTransform();
 	}
 
 	void BilliardCueBehaviour::MoveLateral(float delta) {
-		if (auto cueNode = GetNode()) {
-			cueNode->SetLocalOrigin(cueNode->GetLocalOrigin() + sf::Vector2f{0.f, delta});
+		_cuePosition.y += delta;
+		ApplyCueTransform();
+	}
+
+	void BilliardCueBehaviour::SetCuePosition(const sf::Vector2f& cuePosition) {
+		_cuePosition = cuePosition;
+		ApplyCueTransform();
+	}
+
+	void BilliardCueBehaviour::ApplyCueTransform() {
+		const auto cueNode = GetNode();
+		const auto targetNode = _targetNode.Get();
+		if (!cueNode || !targetNode) {
+			return;
 		}
+
+		const sf::Vector2f cueOffset{-_cuePosition.x, -_cuePosition.y};
+		const sf::Vector2f worldOffset = Utils::Rotate(cueOffset, _direction.asRadians());
+		const sf::Vector2f targetWorld = Utils::GetWorldPos(targetNode);
+
+		cueNode->SetLocalRotation(_direction);
+		Utils::SetLocalPosToWorld(cueNode, targetWorld + worldOffset);
 	}
 
 	void BilliardCueBehaviour::SetVerticalSpin(float spin) {
 		_verticalSpin = spin;
 	}
 
+	bool BilliardCueBehaviour::HitTestWorld(const sf::Vector2f& worldPoint) const {
+		if (auto visual = _visual.Get()) {
+			return visual->HitTest(worldPoint);
+		}
+		return false;
+	}
+
+	void BilliardCueBehaviour::Release() {
+		_isDragging = false;
+		_isShooting = true;
+
+		if (auto tipPhysicsBody = _tipPhysicsBody.Get()) {
+			_tipCollideSubscription =
+			    tipPhysicsBody->GetOnCollideSignal().Subscribe([this](const IntersectionDetails& intersection) {
+				    OnTipCollide(intersection);
+			    });
+		}
+		if (auto targetNode = _targetNode.Get()) {
+			if (auto targetPhysicsBody = targetNode->FindBehaviour<PhysicsBodyBehaviour>()) {
+				targetPhysicsBody->GetCollisionGroups().set(_collisionGroupOnShoot, true);
+			}
+		}
+		if (auto tipPhysicsBody = _tipPhysicsBody.Get()) {
+			tipPhysicsBody->SetLinearDamping(0.f);
+		}
+	}
+
+	void BilliardCueBehaviour::Aim(const sf::Vector2f& worldPoint) {
+		const auto targetNode = _targetNode.Get();
+		if (!targetNode) {
+			return;
+		}
+
+		const sf::Vector2f delta = Utils::GetWorldPos(targetNode) - worldPoint;
+		const float distance = Utils::Length(delta);
+		if (distance <= std::numeric_limits<float>::epsilon()) {
+			return;
+		}
+
+		SetDirection(sf::radians(std::atan2(delta.y, delta.x)));
+		SetDistanceFromTarget(distance);
+	}
+
+	void BilliardCueBehaviour::OnTipCollide(const IntersectionDetails& intersection) {
+		if (auto targetNode = _targetNode.Get()) {
+			if (auto targetPhysicsBody = targetNode->FindBehaviour<PhysicsBodyBehaviour>()) {
+				targetPhysicsBody->GetCollisionGroups().set(_collisionGroupOnShoot, false);
+			}
+		}
+		if (auto tipPhysicsBody = _tipPhysicsBody.Get()) {
+			tipPhysicsBody->SetLinearDamping(_velocityDampingAfterHit);
+		}
+		_isShooting = false;
+		_targetNode.Clear();
+	}
 } // namespace Billiard
