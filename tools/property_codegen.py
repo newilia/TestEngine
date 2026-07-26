@@ -4298,9 +4298,14 @@ def generate_file_content(
                 and setter_method
                 and not readonly
                 and not p.is_getter
-                and t == "bool"
             ):
-                set_lambda = f"[this](bool v) {{ this->{setter_method}(v); }}"
+                set_lambda = _scalar_set_lambda(
+                    t,
+                    mode="call_setter",
+                    capture="[this]",
+                    setter_name=setter_method,
+                    move_policy="string_only",
+                )
             elif readonly:
                 set_lambda = _scalar_set_lambda(t, mode="readonly", capture="[this]")
             else:
