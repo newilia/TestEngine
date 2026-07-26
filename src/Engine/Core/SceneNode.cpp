@@ -1,6 +1,5 @@
 #include "SceneNode.h"
 
-#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/Scene.h"
 #include "Engine/Core/SceneNodeUtils.h"
