@@ -29,7 +29,7 @@ namespace {
 			if (!visual || !visual->HitTest(worldPoint) || (tapResponsiveOnly && !visual->IsTapHandlingEnabled())) {
 				continue;
 			}
-			if (!best || entry.sortKey < best->sortKey ||
+			if (!best || entry.sortKey > best->sortKey ||
 			    (entry.sortKey == best->sortKey && entry.traversalIndex > best->traversalIndex)) {
 				best = &entry;
 			}
