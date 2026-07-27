@@ -41,10 +41,7 @@ namespace Billiard {
 
 			for (auto& ball : spawnedBalls) {
 				if (auto ballBehaviour = ball->FindBehaviour<BilliardBallBehaviour>()) {
-					// todo make RefWrapper getter and constructor
-					auto ballRef = RefWrapper<BilliardBallBehaviour>();
-					ballRef.SetId(ballBehaviour->GetEntityId());
-					_ballsBehaviours[ballBehaviour->GetBallNumber()] = ballRef;
+					_ballsBehaviours[ballBehaviour->GetBallNumber()] = ballBehaviour;
 
 					for (auto& pocket : _pocketsBehaviours) {
 						if (auto pocketBehaviour = pocket.Get()) {
@@ -70,9 +67,7 @@ namespace Billiard {
 			if (auto cueParent = _cueParent.Get()) {
 				if (auto cueNode = cueAsset->InstantiateOn(cueParent)) {
 					if (auto cueBehaviour = cueNode->FindBehaviour<BilliardCueBehaviour>()) {
-						RefWrapper<BilliardCueBehaviour> cueRef;
-						cueRef.SetId(cueBehaviour->GetEntityId());
-						_cueBehaviour = cueRef;
+						_cueBehaviour = cueBehaviour;
 						SetCueOnBall(0);
 					}
 				}

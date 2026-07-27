@@ -74,7 +74,7 @@ namespace Billiard {
 		if (!cueNode) {
 			return;
 		}
-		_targetNode.SetId(node->GetEntityId());
+		_targetNode = node;
 		_cuePosition = sf::Vector2f{};
 		ApplyCueTransform();
 	}
