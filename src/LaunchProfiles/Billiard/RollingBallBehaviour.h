@@ -33,11 +33,11 @@ namespace Billiard {
 		RefWrapper<PhysicsBodyBehaviour> _bodyRef;
 
 		/// @property(minValue=0.f)
-		float _friction = 10.f;
+		float _friction = 1.f;
 		/// @property
 		sf::Vector3f _spinOmega{};
-		/// @property
-		float _impulseFactor = 1.f;
+		/// @property(minValue=0.f, dragSpeed=0.05f)
+		float _inertiaFactor = 1.f;
 	};
 
 } // namespace Billiard

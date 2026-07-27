@@ -58,27 +58,32 @@ void Billiard::RollingBallBehaviour::OnUpdate(const sf::Time& dt) {
 	const float invRadius = 1.f / radius;
 
 	sf::Vector2f velocity = body->GetVelocity();
-	const sf::Vector2f slip = velocity - VelocityFromOmega(_spinOmega, radius);
+	sf::Vector2f rollVelocity = VelocityFromOmega(_spinOmega, radius);
+	sf::Vector2f slip = velocity - rollVelocity;
+	const float slipLength = slip.length();
 
-	if (_friction > 0.f && dtSeconds > 0.f) {
-		sf::Vector2f correction = slip * (_friction * dtSeconds);
-		const float slipLenSq = slip.x * slip.x + slip.y * slip.y;
-		const float correctionLenSq = correction.x * correction.x + correction.y * correction.y;
-		if (correctionLenSq > slipLenSq && slipLenSq > 0.f) {
-			const float scale = std::sqrt(slipLenSq / correctionLenSq);
-			correction *= scale;
+	if (slipLength > 1e-6f && _inertiaFactor > 0.f) {
+		constexpr float massFactor = 1.f;
+		const float slipCorrectionMagnitude = _friction * (1.f / massFactor + 1.f / _inertiaFactor) * dtSeconds;
+
+		sf::Vector2f deltaVelocity;
+		sf::Vector2f deltaRollVelocity;
+
+		if (slipCorrectionMagnitude < slipLength) {
+			const sf::Vector2f slipDir = slip.normalized();
+			const sf::Vector2f deltaU = -slipDir * slipCorrectionMagnitude;
+			deltaVelocity = deltaU * (_inertiaFactor / (1 + _inertiaFactor));
+			deltaRollVelocity = -deltaU * (1.f / (1 + _inertiaFactor));
+		}
+		else {
+			const sf::Vector2f commonVelocity =
+			    (velocity * massFactor + rollVelocity * _inertiaFactor) / (1 + _inertiaFactor);
+			deltaVelocity = commonVelocity - velocity;
+			deltaRollVelocity = commonVelocity - rollVelocity;
 		}
 
-		const float inertiaFactor = std::max(_impulseFactor, 0.f);
-		const float invInertiaPlusOne = 1.f / (inertiaFactor + 1.f);
-		const sf::Vector2f linearCorrection = correction * (inertiaFactor * invInertiaPlusOne);
-		const sf::Vector2f spinVelocityCorrection = correction * invInertiaPlusOne;
-
-		velocity -= linearCorrection;
-		_spinOmega += OmegaFromVelocity(spinVelocityCorrection, invRadius);
-		_spinOmega.z = 0.f;
-
-		body->SetVelocity(velocity);
+		body->SetVelocity(velocity + deltaVelocity);
+		_spinOmega = OmegaFromVelocity(rollVelocity + deltaRollVelocity, invRadius);
 	}
 
 	const sf::Vector3f localOmegaDt = WorldOmegaToLocal(_spinOmega * dtSeconds, worldRotation);
