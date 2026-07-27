@@ -13,6 +13,16 @@ template <typename T>
 class RefWrapper
 {
 public:
+	RefWrapper() = default;
+
+	RefWrapper(Engine::EntityId id) : _id(id) {}
+
+	RefWrapper(const std::shared_ptr<T>& ptr) : _cached(ptr) {
+		if (ptr) {
+			_id = ptr->GetEntityId();
+		}
+	}
+
 	[[nodiscard]] Engine::EntityId GetId() const {
 		return _id;
 	}

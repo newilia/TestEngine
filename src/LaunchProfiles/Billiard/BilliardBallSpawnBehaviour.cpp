@@ -137,9 +137,6 @@ void Billiard::BilliardBallSpawnBehaviour::SetupShadows(SceneNode& ballNode) {
 		const auto shadowNode = shadow->GetNode();
 		const auto shadowParent = shadowNode ? shadowNode->GetParent() : nullptr;
 		if (shadowNode && shadowParent) {
-			RefWrapper<SceneNode> objectRef;
-			objectRef.SetId(ballNode.GetEntityId());
-
 			for (std::size_t lightIndex = 0; lightIndex < _lightSources.size(); ++lightIndex) {
 				std::shared_ptr<SceneNode> currentShadowNode;
 				Billiard::TopDownShadowBehaviour* shadowBehaviour = nullptr;
@@ -162,7 +159,7 @@ void Billiard::BilliardBallSpawnBehaviour::SetupShadows(SceneNode& ballNode) {
 					continue;
 				}
 
-				shadowBehaviour->SetObject(objectRef);
+				shadowBehaviour->SetObject(ballNode.shared_from_this());
 				shadowBehaviour->SetLightSource(_lightSources[lightIndex]);
 				shadowBehaviour->UpdateShadowPosition();
 			}
