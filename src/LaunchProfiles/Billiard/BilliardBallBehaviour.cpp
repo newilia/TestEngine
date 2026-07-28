@@ -33,11 +33,27 @@ namespace Billiard {
 		}
 	}
 
+	void BilliardBallBehaviour::Appear() {
+		_isFalling = false;
+		_fallAnimationProgress = 0.f;
+		GetNode()->SetEnabled(true);
+		if (auto lightReceiver = _lightReceiver.Get()) {
+			lightReceiver->SetLightingStrength(_initialLightingStrength);
+		}
+		if (auto textureContributor = _textureContributor.Get()) {
+			textureContributor->SetTint(sf::Color(255, 255, 255, 255));
+		}
+	}
+
 	float BilliardBallBehaviour::GetRadius() const {
 		if (auto ballShape = _ballShape.Get()) {
 			return ballShape->GetRadius();
 		}
 		return 0.f;
+	}
+
+	std::shared_ptr<PhysicsBodyBehaviour> BilliardBallBehaviour::GetPhysicsBody() const {
+		return _physicsBody.Get();
 	}
 
 	void BilliardBallBehaviour::OnUpdate(const sf::Time& dt) {

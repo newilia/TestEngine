@@ -24,6 +24,26 @@ namespace Billiard {
 			}
 			tipPhysicsBody->GetNode()->SetLocalRotation(_directionAngle);
 		}
+
+		if (_isHiding) {
+			_animationProgress += deltaTime.asSeconds() / _hideAnimationDuration;
+			if (auto visual = _visual.Get()) {
+				visual->SetColor(sf::Color(255, 255, 255, 255 * (1.f - _animationProgress)));
+			}
+			if (_animationProgress >= 1.f) {
+				_isHiding = false;
+				GetNode()->SetEnabled(false);
+			}
+		}
+		else if (_isShowing) {
+			_animationProgress += deltaTime.asSeconds() / _showAnimationDuration;
+			if (auto visual = _visual.Get()) {
+				visual->SetColor(sf::Color(255, 255, 255, 255 * _animationProgress));
+			}
+			if (_animationProgress >= 1.f) {
+				_isShowing = false;
+			}
+		}
 	}
 
 	void BilliardCueBehaviour::OnEvent(const sf::Event& event) {
@@ -37,7 +57,7 @@ namespace Billiard {
 
 		if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
 			if (pressed->button == sf::Mouse::Button::Left) {
-				if (HitTestWorld(toWorld(pressed->position))) {
+				if (!_isShooting && HitTestWorld(toWorld(pressed->position))) {
 					_isDragging = true;
 				}
 			}
@@ -61,14 +81,6 @@ namespace Billiard {
 		}
 
 		return;
-	}
-
-	void BilliardCueBehaviour::Activate() {
-		GetNode()->SetEnabled(true);
-	}
-
-	void BilliardCueBehaviour::Deactivate() {
-		GetNode()->SetEnabled(false);
 	}
 
 	void BilliardCueBehaviour::SetTargetNode(const std::shared_ptr<SceneNode>& node) {
@@ -141,7 +153,6 @@ namespace Billiard {
 		_distanceBeforeShoot = _cuePosition.x;
 		_isDragging = false;
 		_isShooting = true;
-
 		if (auto tipPhysicsBody = _tipPhysicsBody.Get()) {
 			_tipCollideSubscription =
 			    tipPhysicsBody->GetOnOverlapSignal().Subscribe([this](const IntersectionDetails& intersection) {
@@ -157,6 +168,8 @@ namespace Billiard {
 			tipPhysicsBody->SetLinearDamping(0.f);
 			tipPhysicsBody->GetOverlapGroups().set(_overlapGroupOnShoot, true);
 		}
+
+		_onReleaseSignal.Emit();
 	}
 
 	void BilliardCueBehaviour::Aim(const sf::Vector2f& worldPoint) {
@@ -209,9 +222,35 @@ namespace Billiard {
 
 		_isShooting = false;
 		_targetNode.Clear();
+
+		_onHitSignal.Emit();
 	}
 
 	void BilliardCueBehaviour::SetBallRadius(float radius) {
 		_ballRadius = radius;
+	}
+
+	Signal<>& BilliardCueBehaviour::GetOnReleaseSignal() const {
+		return _onReleaseSignal;
+	}
+
+	Signal<>& BilliardCueBehaviour::GetOnHitSignal() const {
+		return _onHitSignal;
+	}
+
+	void BilliardCueBehaviour::PlayHideAnimation() {
+		_isHiding = true;
+		_isShowing = false;
+		_animationProgress = 0.f;
+	}
+
+	void BilliardCueBehaviour::PlayShowAnimation() {
+		_isShowing = true;
+		_isHiding = false;
+		_animationProgress = 0.f;
+		GetNode()->SetEnabled(true);
+		if (auto visual = _visual.Get()) {
+			visual->SetColor(sf::Color(255, 255, 255, 0));
+		}
 	}
 } // namespace Billiard

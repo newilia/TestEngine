@@ -8,6 +8,7 @@
 #include "Engine/Core/RefWrapper.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/Signal.h"
+#include "Engine/Visual/SpriteVisual.h"
 
 #include <SFML/System/Angle.hpp>
 
@@ -22,8 +23,6 @@ namespace Billiard {
 		void OnEvent(const sf::Event& event) override;
 
 	public:
-		void Activate();
-		void Deactivate();
 		void SetTargetNode(const std::shared_ptr<SceneNode>& node);
 		void Aim(const sf::Vector2f& pointerWorldPoint);
 
@@ -35,6 +34,11 @@ namespace Billiard {
 		void SetVerticalSpin(float spin);
 		void SetCuePosition(const sf::Vector2f& cuePosition);
 		void SetBallRadius(float radius);
+		Signal<>& GetOnReleaseSignal() const;
+		Signal<>& GetOnHitSignal() const;
+
+		void PlayHideAnimation();
+		void PlayShowAnimation();
 
 	private:
 		void Release();
@@ -47,7 +51,7 @@ namespace Billiard {
 		/// @property
 		RefWrapper<PhysicsBodyBehaviour> _tipPhysicsBody;
 		/// @property
-		RefWrapper<Visual> _visual;
+		RefWrapper<SpriteVisual> _visual;
 		/// @property(minValue=0, maxValue=7)
 		int _overlapGroupOnShoot = 0;
 		/// @property
@@ -68,6 +72,10 @@ namespace Billiard {
 		float _sideSpinBallDeflectionFactor = 1.f;
 		/// @property
 		float _sideSpinBallRotationFactor = 1.f;
+		/// @property
+		float _hideAnimationDuration = 1.5f;
+		/// @property
+		float _showAnimationDuration = 0.3f;
 
 	private:
 		float _ballRadius = 0.f;
@@ -76,6 +84,11 @@ namespace Billiard {
 		float _verticalSpin = 0.f;
 		float _distanceBeforeShoot = 0.f;
 		Signal<const IntersectionDetails&>::Subscription _tipCollideSubscription;
+		mutable Signal<> _onReleaseSignal;
+		mutable Signal<> _onHitSignal;
+		float _animationProgress = 0.f;
+		bool _isHiding = false;
+		bool _isShowing = false;
 	};
 
 } // namespace Billiard

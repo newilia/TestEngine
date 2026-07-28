@@ -2,6 +2,7 @@
 
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Behaviour/ComposedSurface/TiledTextureContributorBehaviour.h"
+#include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Behaviour/ShapeLightReceiverBehaviour.h"
 #include "Engine/Core/MetaClass.h"
 #include "Engine/Core/RefWrapper.h"
@@ -23,7 +24,9 @@ namespace Billiard {
 		[[nodiscard]] bool IsEight() const;
 		[[nodiscard]] bool IsStriped() const;
 		[[nodiscard]] float GetRadius() const;
+		std::shared_ptr<PhysicsBodyBehaviour> GetPhysicsBody() const;
 
+		void Appear();
 		void PlayFallAnimation();
 
 	private:
@@ -35,6 +38,8 @@ namespace Billiard {
 		RefWrapper<ShapeLightReceiverBehaviour> _lightReceiver;
 		/// @property
 		RefWrapper<CircleShapeVisual> _ballShape;
+		/// @property
+		RefWrapper<PhysicsBodyBehaviour> _physicsBody;
 
 		/// @property
 		float _fallAnimationDuration = 0.3f;
