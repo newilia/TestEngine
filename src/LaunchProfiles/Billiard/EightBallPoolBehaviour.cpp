@@ -5,18 +5,37 @@
 namespace Billiard {
 
 	void EightBallPoolBehaviour::OnInit() {
-		WirePocketSignals();
+		for (auto& pocketRef : _pocketsBehaviours) {
+			if (auto pocket = pocketRef.Get()) {
+				Subscribe(pocket->GetOnBallFallSignal(), [this](int ballNumber) {
+					OnBallFellInPocket(ballNumber);
+				});
+			}
+		}
 
 		if (auto aimDisplay = _aimDisplayBehaviour.Get()) {
-			_aimPointChangedSubscription =
-			    aimDisplay->GetAimPointChangedSignal().Subscribe([this](const sf::Vector2f& aimPoint) {
-				    OnAimPointChanged(aimPoint);
-			    });
+			Subscribe(aimDisplay->GetAimPointChangedSignal(), [this](const sf::Vector2f& aimPoint) {
+				OnAimPointChanged(aimPoint);
+			});
+		}
+
+		if (auto cueBehaviour = _cueBehaviour.Get()) {
+			Subscribe(cueBehaviour->GetOnHitSignal(), [this]() {
+				OnCueHit();
+			});
 		}
 	}
 
 	void EightBallPoolBehaviour::OnDeinit() {
 		UnsubscribeAll();
+	}
+
+	void EightBallPoolBehaviour::OnUpdate(const sf::Time& deltaTime) {
+		if (_isWaitingForBallsToStop) {
+			if (!AreBallsMoving()) {
+				OnBallsStopped();
+			}
+		}
 	}
 
 	void EightBallPoolBehaviour::StartNewGame() {
@@ -87,18 +106,9 @@ namespace Billiard {
 		}
 	}
 
-	void EightBallPoolBehaviour::WirePocketSignals() {
-		for (auto& pocketRef : _pocketsBehaviours) {
-			if (auto pocket = pocketRef.Get()) {
-				Subscribe(pocket->GetOnBallFallSignal(), [this](int ballNumber) {
-					OnBallFellInPocket(ballNumber);
-				});
-			}
-		}
-	}
-
-	void EightBallPoolBehaviour::OnBallFellInPocket(int /*ballNumber*/) {
+	void EightBallPoolBehaviour::OnBallFellInPocket(int ballNumber) {
 		// 8-ball rules: fouls, scoring, and turn changes will be implemented here.
+		_pocketedBalls.insert(ballNumber);
 	}
 
 	void EightBallPoolBehaviour::StartTurn(int playerIndex) {
@@ -116,6 +126,51 @@ namespace Billiard {
 		if (auto cueBehaviour = _cueBehaviour.Get()) {
 			cueBehaviour->SetLateralPosition(aimPoint.x);
 			cueBehaviour->SetVerticalSpin(aimPoint.y);
+		}
+	}
+
+	void EightBallPoolBehaviour::OnCueHit() {
+		_isWaitingForBallsToStop = true;
+		if (auto cueBehaviour = _cueBehaviour.Get()) {
+			cueBehaviour->PlayHideAnimation();
+		}
+	}
+
+	void EightBallPoolBehaviour::OnBallsStopped() {
+		_isWaitingForBallsToStop = false;
+		if (_pocketedBalls.contains(0)) {
+			RestoreCueBall();
+		}
+		if (auto cueBehaviour = _cueBehaviour.Get()) {
+			cueBehaviour->PlayShowAnimation();
+		}
+		SetCueOnBall(0);
+	}
+
+	bool EightBallPoolBehaviour::AreBallsMoving() const {
+		for (const auto& [_, ball] : _ballsBehaviours) {
+			if (auto ballBehaviour = ball.Get()) {
+				if (!ballBehaviour->GetNode()->IsEnabled()) {
+					continue;
+				}
+				if (auto physicsBody = ballBehaviour->GetPhysicsBody()) {
+					if (physicsBody->GetVelocity().length() > 0.1f || physicsBody->GetAngularSpeed() > 0.01f) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	void EightBallPoolBehaviour::RestoreCueBall() {
+		if (auto cueBall = _ballsBehaviours[0].Get()) {
+			cueBall->Appear();
+			cueBall->GetNode()->SetLocalPosition(sf::Vector2f(0, 0));
+			if (auto physicsBody = cueBall->GetPhysicsBody()) {
+				physicsBody->SetVelocity(sf::Vector2f(0, 0));
+				physicsBody->SetAngularSpeed(0.f);
+			}
 		}
 	}
 

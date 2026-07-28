@@ -25,6 +25,7 @@ namespace Billiard {
 	public:
 		void OnInit() override;
 		void OnDeinit() override;
+		void OnUpdate(const sf::Time& deltaTime) override;
 
 		/// @method
 		void StartNewGame();
@@ -32,11 +33,14 @@ namespace Billiard {
 	private:
 		void SpawnCue();
 		void SetCueOnBall(int ballNumber);
-		void WirePocketSignals();
 		void OnBallFellInPocket(int ballNumber);
 		void StartTurn(int playerIndex);
 		void EndTurn();
 		void OnAimPointChanged(const sf::Vector2f& aimPoint);
+		bool AreBallsMoving() const;
+		void OnCueHit();
+		void OnBallsStopped();
+		void RestoreCueBall();
 
 		/// @property
 		AssetRef<SceneObject> _cueAsset;
@@ -60,7 +64,11 @@ namespace Billiard {
 		int _activePlayerIndex = 0;
 
 	private:
-		Signal<sf::Vector2f>::Subscription _aimPointChangedSubscription;
+		bool _isWaitingForBallsToStop = false;
+		std::set<int> _pocketedBalls;
+		//Signal<sf::Vector2f>::Subscription _aimPointChangedSubscription;
+		//Signal<>::Subscription _onCueReleaseSubscription;
+		//Signal<int>::Subscription _onBallFellInPocketSubscription;
 	};
 
 } // namespace Billiard
