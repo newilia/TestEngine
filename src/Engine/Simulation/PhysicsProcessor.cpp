@@ -92,9 +92,40 @@ void PhysicsProcessor::IntergateVelocity(PhysicsBodyBehaviour* body, float dtSec
 	if (body->IsFixed()) {
 		return;
 	}
+	ApplyLinearDamping(body, dtSec);
 	const auto force = EvaluateExternalForces(body);
 	body->AddVelocity(force * dtSec);
 	ApplyAngularDamping(body, dtSec);
+}
+
+void PhysicsProcessor::ApplyLinearDamping(PhysicsBodyBehaviour* body, float dtSec) {
+	auto vel = body->GetVelocity();
+	constexpr float eps = 1e-5f;
+	auto applyCorrection = [&](const sf::Vector2f& correction) {
+		if (std::abs(correction.x) > std::abs(vel.x)) {
+			vel = {};
+		}
+		else {
+			vel += correction;
+		}
+	};
+
+	if (vel.lengthSquared() <= eps) {
+		vel = {};
+	}
+	else {
+		if (_airFriction != 0.f) {
+			auto correction = -vel.normalized() * vel.lengthSquared() * _airFriction * dtSec;
+			applyCorrection(correction);
+		}
+
+		if (const float k = body->GetLinearDamping(); k > 0.f) {
+			auto correction = -vel.normalized() * k * dtSec;
+			applyCorrection(correction);
+		}
+	}
+
+	body->SetVelocity(vel);
 }
 
 void PhysicsProcessor::ApplyAngularDamping(PhysicsBodyBehaviour* body, float dtSec) {
@@ -135,20 +166,6 @@ sf::Vector2f PhysicsProcessor::EvaluateExternalForces(PhysicsBodyBehaviour* body
 	if (auto attractive = node->FindBehaviour<AttractiveBehaviour>()) {
 		if (attractive->IsEnabled()) {
 			result += _attractionField->EvaluateForce(attractive);
-		}
-	}
-	if (_airFriction != 0.f) {
-		const auto vel = body->GetVelocity();
-		if (vel.x + vel.y > 1e-10) {
-			result -= vel.normalized() * vel.lengthSquared() * _airFriction;
-		}
-	}
-	if (const float k = body->GetLinearDamping(); k > 0.f) {
-		const sf::Vector2f vel = body->GetVelocity();
-		const float speed = Utils::Length(vel);
-		if (speed > 1e-10f) {
-			// F = -k * mass * v/|v|  =>  a = -k * v/|v|  (constant deceleration magnitude)
-			result -= Utils::Normalize(vel) * k;
 		}
 	}
 	assert(!Utils::IsNan(result));
