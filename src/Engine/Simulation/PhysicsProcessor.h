@@ -41,6 +41,7 @@ public:
 
 private:
 	void IntergateVelocity(PhysicsBodyBehaviour* body, float dtSec);
+	void ApplyLinearDamping(PhysicsBodyBehaviour* body, float dtSec);
 	void ApplyAngularDamping(PhysicsBodyBehaviour* body, float dtSec);
 	void IntegratePosition(PhysicsBodyBehaviour* body, float dtSec);
 	void DetactAndResolveCollisions(float dtSec);
