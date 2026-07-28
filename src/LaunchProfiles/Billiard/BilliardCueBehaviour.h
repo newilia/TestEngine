@@ -49,7 +49,7 @@ namespace Billiard {
 		/// @property
 		RefWrapper<Visual> _visual;
 		/// @property(minValue=0, maxValue=7)
-		int _collisionGroupOnShoot = 0;
+		int _overlapGroupOnShoot = 0;
 		/// @property
 		RefWrapper<SceneNode> _targetNode;
 		/// @property(setter=SetCuePosition)
@@ -59,17 +59,22 @@ namespace Billiard {
 		/// @property
 		float _shootAcceleration = 5.f;
 		/// @property
-		float _velocityDampingAfterHit = 1000.f;
+		float _velocityDampingAfterHit = 500.f;
 		/// @property
 		float _maxDistanceFromTarget = 500.f;
 		/// @property
 		float _verticalSpinMultiplier = 1.f;
+		/// @property
+		float _sideSpinBallDeflectionFactor = 1.f;
+		/// @property
+		float _sideSpinBallRotationFactor = 1.f;
 
 	private:
 		float _ballRadius = 0.f;
 		bool _isDragging = false;
 		bool _isShooting = false;
 		float _verticalSpin = 0.f;
+		float _distanceBeforeShoot = 0.f;
 		Signal<const IntersectionDetails&>::Subscription _tipCollideSubscription;
 	};
 
