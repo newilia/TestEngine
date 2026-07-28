@@ -18,7 +18,9 @@ namespace Billiard {
 		if (auto tipPhysicsBody = _tipPhysicsBody.Get()) {
 			if (_isShooting) {
 				sf::Vector2f accVec(std::cos(_directionAngle.asRadians()), std::sin(_directionAngle.asRadians()));
-				tipPhysicsBody->AddVelocity(accVec * _shootAcceleration * deltaTime.asSeconds());
+				const float accFactor =
+				    (_cuePosition.x / _distanceBeforeShoot) * (_distanceBeforeShoot / _maxDistanceFromTarget);
+				tipPhysicsBody->AddVelocity(accVec * _shootAcceleration * accFactor * deltaTime.asSeconds());
 			}
 			tipPhysicsBody->GetNode()->SetLocalRotation(_directionAngle);
 		}
@@ -136,22 +138,24 @@ namespace Billiard {
 	}
 
 	void BilliardCueBehaviour::Release() {
+		_distanceBeforeShoot = _cuePosition.x;
 		_isDragging = false;
 		_isShooting = true;
 
 		if (auto tipPhysicsBody = _tipPhysicsBody.Get()) {
 			_tipCollideSubscription =
-			    tipPhysicsBody->GetOnCollideSignal().Subscribe([this](const IntersectionDetails& intersection) {
+			    tipPhysicsBody->GetOnOverlapSignal().Subscribe([this](const IntersectionDetails& intersection) {
 				    OnTipCollide(intersection);
 			    });
 		}
 		if (auto targetNode = _targetNode.Get()) {
 			if (auto targetPhysicsBody = targetNode->FindBehaviour<PhysicsBodyBehaviour>()) {
-				targetPhysicsBody->GetCollisionGroups().set(_collisionGroupOnShoot, true);
+				targetPhysicsBody->GetOverlapGroups().set(_overlapGroupOnShoot, true);
 			}
 		}
 		if (auto tipPhysicsBody = _tipPhysicsBody.Get()) {
 			tipPhysicsBody->SetLinearDamping(0.f);
+			tipPhysicsBody->GetOverlapGroups().set(_overlapGroupOnShoot, true);
 		}
 	}
 
@@ -183,11 +187,25 @@ namespace Billiard {
 			return;
 		}
 
-		targetPhysicsBody->GetCollisionGroups().set(_collisionGroupOnShoot, false);
+		targetPhysicsBody->GetOverlapGroups().set(_overlapGroupOnShoot, false);
+		tipPhysicsBody->GetOverlapGroups().set(_overlapGroupOnShoot, false);
 		tipPhysicsBody->SetLinearDamping(_velocityDampingAfterHit);
-		float cueVelocity = tipPhysicsBody->GetVelocity().length();
-		float spinValue = _verticalSpin * _verticalSpinMultiplier * cueVelocity;
+
+		auto m1 = tipPhysicsBody->GetMass();
+		auto m2 = targetPhysicsBody->GetMass();
+		auto v1 = tipPhysicsBody->GetVelocity();
+		constexpr auto v2 = sf::Vector2f();
+		auto restitution = std::min(targetPhysicsBody->GetRestitution(), tipPhysicsBody->GetRestitution());
+		auto v1_final = v1 - ((1 + restitution) * m2) / (m1 + m2) * (v1 - v2);
+		auto v2_final = v2 - ((1 + restitution) * m1) / (m1 + m2) * (v2 - v1);
+		const auto ballDeflectionVector =
+		    sf::Vector2f(v1.y, -v1.x).normalized() * _sideSpinBallDeflectionFactor * v1.length() * _cuePosition.y;
+		tipPhysicsBody->SetVelocity(v1_final);
+		targetPhysicsBody->SetVelocity(v2_final + ballDeflectionVector);
+
+		float spinValue = _verticalSpin * _verticalSpinMultiplier * v1.length();
 		rollingBallBehaviour->SetVerticalSpin(_directionAngle, -spinValue);
+		targetPhysicsBody->SetAngularSpeed(-_cuePosition.y * _sideSpinBallRotationFactor);
 
 		_isShooting = false;
 		_targetNode.Clear();
