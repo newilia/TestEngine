@@ -23,17 +23,13 @@ namespace Billiard {
 		void OnEvent(const sf::Event& event) override;
 
 	public:
-		void SetTargetNode(const std::shared_ptr<SceneNode>& node);
+		void SetTargetBall(const std::shared_ptr<BilliardBallBehaviour>& ballBehaviour);
 		void Aim(const sf::Vector2f& pointerWorldPoint);
 
 		void SetDirection(sf::Angle direction);
 		void SetDistanceFromTarget(float distance);
-		void MoveLongitudinal(float delta);
 		void SetLateralPosition(float position);
-		void MoveLateral(float delta);
 		void SetVerticalSpin(float spin);
-		void SetCuePosition(const sf::Vector2f& cuePosition);
-		void SetBallRadius(float radius);
 		Signal<>& GetOnReleaseSignal() const;
 		Signal<>& GetOnHitSignal() const;
 
@@ -44,6 +40,7 @@ namespace Billiard {
 		void Release();
 		bool HitTestWorld(const sf::Vector2f& worldPoint) const;
 		void OnTipCollide(const IntersectionDetails& intersection);
+		std::shared_ptr<SceneNode> GetTargetBallNode() const;
 
 		void ApplyCueTransform();
 
@@ -55,9 +52,11 @@ namespace Billiard {
 		/// @property(minValue=0, maxValue=7)
 		int _overlapGroupOnShoot = 0;
 		/// @property
-		RefWrapper<SceneNode> _targetNode;
-		/// @property(setter=SetCuePosition)
-		sf::Vector2f _cuePosition{};
+		RefWrapper<BilliardBallBehaviour> _targetBall;
+		/// @property
+		float _lateralPosition = 0.f;
+		/// @property
+		float _distanceFromTarget = 0.f;
 		/// @property(setter=SetDirection)
 		sf::Angle _directionAngle{};
 		/// @property
@@ -71,14 +70,15 @@ namespace Billiard {
 		/// @property
 		float _sideSpinBallDeflectionFactor = 1.f;
 		/// @property
-		float _sideSpinBallRotationFactor = 1.f;
+		float _sideSpinBallRotationFactor = 0.5f;
 		/// @property
-		float _hideAnimationDuration = 1.5f;
+		float _hideAnimationDuration = 0.75f;
 		/// @property
 		float _showAnimationDuration = 0.3f;
+		/// @property
+		float _ballRadius = 0.f;
 
 	private:
-		float _ballRadius = 0.f;
 		bool _isDragging = false;
 		bool _isShooting = false;
 		float _verticalSpin = 0.f;

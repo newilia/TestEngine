@@ -22,7 +22,7 @@ namespace Billiard {
 		if (const auto* clicked = event.getIf<sf::Event::MouseButtonPressed>()) {
 			if (clicked->button == sf::Mouse::Button::Left) {
 				_isPointerDown = true;
-				TrySetAimPoint(toWorld(clicked->position));
+				OnTap(toWorld(clicked->position));
 			}
 		}
 		if (const auto* released = event.getIf<sf::Event::MouseButtonReleased>()) {
@@ -32,7 +32,7 @@ namespace Billiard {
 		}
 		if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
 			if (_isPointerDown) {
-				TrySetAimPoint(toWorld(moved->position));
+				OnTap(toWorld(moved->position));
 			}
 		}
 	}
@@ -50,6 +50,11 @@ namespace Billiard {
 		}
 	}
 
+	void BilliardBallAimDisplayBehaviour::ResetAimPoint() {
+		_aimPoint = sf::Vector2f();
+		UpdateAimPointPosition();
+	}
+
 	void BilliardBallAimDisplayBehaviour::UpdateAimPointPosition() {
 		const auto aimPointNode = _aimPointNode.Get();
 		const auto ownerNode = GetNode();
@@ -63,7 +68,7 @@ namespace Billiard {
 		Utils::SetLocalPosToWorld(aimPointNode, worldPos);
 	}
 
-	void BilliardBallAimDisplayBehaviour::TrySetAimPoint(const sf::Vector2f& worldPoint) {
+	void BilliardBallAimDisplayBehaviour::OnTap(const sf::Vector2f& worldPoint) {
 		auto area = _circleArea.Get();
 		auto aimPointNode = _aimPointNode.Get();
 		if (!area) {

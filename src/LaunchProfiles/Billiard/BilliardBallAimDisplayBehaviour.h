@@ -23,10 +23,11 @@ namespace Billiard {
 		void Show();
 		void Hide();
 		[[nodiscard]] Signal<sf::Vector2f>& GetAimPointChangedSignal();
+		void ResetAimPoint();
 
 	private:
 		void UpdateAimPointPosition();
-		void TrySetAimPoint(const sf::Vector2f& worldPoint);
+		void OnTap(const sf::Vector2f& worldPoint);
 
 	private:
 		/// @property
