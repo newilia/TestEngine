@@ -108,6 +108,8 @@ private:
 	GroupSet _collisionGroups = {{true}};
 	/// @property(tooltip="Bodies with common groups will trigger overlap signal, but won't interact in a physical way")
 	GroupSet _overlapGroups;
+	/// @property
+	float _inertiaMultiplier = 1.f;
 
 private:
 	mutable Signal<const IntersectionDetails&> _onCollideSignal;

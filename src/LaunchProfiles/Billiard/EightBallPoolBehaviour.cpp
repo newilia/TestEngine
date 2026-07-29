@@ -5,6 +5,16 @@
 namespace Billiard {
 
 	void EightBallPoolBehaviour::OnInit() {
+		InitSubscriptions();
+	}
+
+	void EightBallPoolBehaviour::OnDeinit() {
+		UnsubscribeAll();
+	}
+
+	void EightBallPoolBehaviour::InitSubscriptions() {
+		UnsubscribeAll();
+
 		for (auto& pocketRef : _pocketsBehaviours) {
 			if (auto pocket = pocketRef.Get()) {
 				Subscribe(pocket->GetOnBallFallSignal(), [this](int ballNumber) {
@@ -24,10 +34,6 @@ namespace Billiard {
 				OnCueHit();
 			});
 		}
-	}
-
-	void EightBallPoolBehaviour::OnDeinit() {
-		UnsubscribeAll();
 	}
 
 	void EightBallPoolBehaviour::OnUpdate(const sf::Time& deltaTime) {
@@ -72,6 +78,7 @@ namespace Billiard {
 		}
 
 		SpawnCue();
+		InitSubscriptions();
 	}
 
 	void EightBallPoolBehaviour::SpawnCue() {

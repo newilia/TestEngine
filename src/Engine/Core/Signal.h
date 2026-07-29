@@ -2,6 +2,7 @@
 
 // Multicast signal with explicit unsubscribe handles. Single-threaded (expected: main / game thread).
 // Subscribers are stored as IDelegate instances; use createDelegate(...) for weak bindings to shared owners.
+// Subscriptions hold a weak_ptr to shared slot storage so Unsubscribe() is safe after the Signal object is destroyed.
 
 #include "Engine/Core/Delegates.h"
 
@@ -20,36 +21,40 @@ public:
 	class Subscription;
 	friend class Subscription;
 
+private:
+	struct State;
+
+public:
 	class Subscription
 	{
 	public:
 		Subscription() = default;
 
 		void Unsubscribe() {
-			if (_signal && _id != 0) {
-				_signal->RemoveSlot(_id);
-				_signal = nullptr;
+			if (_id != 0) {
+				if (const auto state = _state.lock()) {
+					state->RemoveSlot(_id);
+				}
+				_state.reset();
 				_id = 0;
 			}
 		}
 
 		[[nodiscard]] explicit operator bool() const {
-			return _signal != nullptr && _id != 0;
+			return _id != 0 && !_state.expired();
 		}
 
 		Subscription(const Subscription&) = delete;
 		Subscription& operator=(const Subscription&) = delete;
 
-		Subscription(Subscription&& o) noexcept : _signal(o._signal), _id(o._id) {
-			o._signal = nullptr;
+		Subscription(Subscription&& o) noexcept : _state(std::move(o._state)), _id(o._id) {
 			o._id = 0;
 		}
 
 		Subscription& operator=(Subscription&& o) noexcept {
 			if (this != &o) {
-				_signal = o._signal;
+				_state = std::move(o._state);
 				_id = o._id;
-				o._signal = nullptr;
 				o._id = 0;
 			}
 			return *this;
@@ -58,9 +63,9 @@ public:
 	private:
 		friend class Signal<Args...>;
 
-		Subscription(Signal* sig, std::uint64_t id) : _signal(sig), _id(id) {}
+		Subscription(std::weak_ptr<State> state, std::uint64_t id) : _state(std::move(state)), _id(id) {}
 
-		Signal* _signal{};
+		std::weak_ptr<State> _state;
 		std::uint64_t _id{};
 	};
 
@@ -107,9 +112,9 @@ public:
 	Signal& operator=(Signal&&) = delete;
 
 	[[nodiscard]] Subscription Subscribe(DelegatePtr&& delegate) {
-		const std::uint64_t id = _nextId++;
-		_slots.push_back(Slot{id, std::move(delegate)});
-		return Subscription(this, id);
+		const std::uint64_t id = _state->nextId++;
+		_state->slots.push_back(Slot{id, std::move(delegate)});
+		return Subscription(_state, id);
 	}
 
 	[[nodiscard]] Subscription Subscribe(std::function<void(Args...)> func) {
@@ -125,8 +130,8 @@ public:
 	template <class... UArgs>
 	void Emit(UArgs&&... args) {
 		std::vector<IDelegate<Args...>*> snapshot;
-		snapshot.reserve(_slots.size());
-		for (auto& slot : _slots) {
+		snapshot.reserve(_state->slots.size());
+		for (auto& slot : _state->slots) {
 			if (!slot.delegate->expired()) {
 				snapshot.push_back(slot.delegate.get());
 			}
@@ -143,33 +148,38 @@ public:
 	}
 
 	[[nodiscard]] std::size_t SubscriberCount() const {
-		return _slots.size();
+		return _state->slots.size();
 	}
 
 private:
-	void RemoveSlot(std::uint64_t id) {
-		const auto it = std::find_if(_slots.begin(), _slots.end(), [id](const Slot& s) {
-			return s.id == id;
-		});
-		if (it != _slots.end()) {
-			_slots.erase(it);
-		}
-	}
-
-	void RemoveExpiredSlots() {
-		_slots.erase(std::remove_if(_slots.begin(), _slots.end(),
-		                 [](const Slot& s) {
-			                 return s.delegate->expired();
-		                 }),
-		    _slots.end());
-	}
-
 	struct Slot
 	{
 		std::uint64_t id{};
 		DelegatePtr delegate;
 	};
 
-	std::vector<Slot> _slots;
-	std::uint64_t _nextId = 1;
+	struct State
+	{
+		std::vector<Slot> slots;
+		std::uint64_t nextId = 1;
+
+		void RemoveSlot(std::uint64_t id) {
+			const auto it = std::find_if(slots.begin(), slots.end(), [id](const Slot& s) {
+				return s.id == id;
+			});
+			if (it != slots.end()) {
+				slots.erase(it);
+			}
+		}
+	};
+
+	void RemoveExpiredSlots() {
+		_state->slots.erase(std::remove_if(_state->slots.begin(), _state->slots.end(),
+		                        [](const Slot& s) {
+			                        return s.delegate->expired();
+		                        }),
+		    _state->slots.end());
+	}
+
+	std::shared_ptr<State> _state = std::make_shared<State>();
 };
