@@ -38,7 +38,7 @@ public:
 	}
 
 	[[nodiscard]] explicit operator bool() const {
-		return _id != Engine::kInvalidEntityId;
+		return Get() != nullptr;
 	}
 
 	[[nodiscard]] std::shared_ptr<T> Get(const Scene& scene) const {
