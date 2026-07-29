@@ -367,6 +367,7 @@ float PhysicsBodyBehaviour::EstimateCollisionInertiaWorld(float mass, const sf::
 		break;
 	}
 
-	StoreInertiaWorldCache(mass, T, result);
+	result *= _inertiaMultiplier;
+	StoreInertiaWorldCache(mass, T, result * _inertiaMultiplier);
 	return result;
 }

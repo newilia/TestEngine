@@ -31,6 +31,7 @@ namespace Billiard {
 		void StartNewGame();
 
 	private:
+		void InitSubscriptions();
 		void SpawnCue();
 		void SetCueOnBall(int ballNumber);
 		void OnBallFellInPocket(int ballNumber);
