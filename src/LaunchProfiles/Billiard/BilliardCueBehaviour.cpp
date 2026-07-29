@@ -26,7 +26,7 @@ namespace Billiard {
 		}
 
 		if (_isHiding) {
-			_animationProgress += deltaTime.asSeconds() / _hideAnimationDuration;
+			_animationProgress = std::min(_animationProgress + deltaTime.asSeconds() / _hideAnimationDuration, 1.f);
 			if (auto visual = _visual.Get()) {
 				visual->SetColor(sf::Color(255, 255, 255, 255 * (1.f - _animationProgress)));
 			}
@@ -36,7 +36,7 @@ namespace Billiard {
 			}
 		}
 		else if (_isShowing) {
-			_animationProgress += deltaTime.asSeconds() / _showAnimationDuration;
+			_animationProgress = std::min(_animationProgress + deltaTime.asSeconds() / _showAnimationDuration, 1.f);
 			if (auto visual = _visual.Get()) {
 				visual->SetColor(sf::Color(255, 255, 255, 255 * _animationProgress));
 			}
@@ -57,7 +57,7 @@ namespace Billiard {
 
 		if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
 			if (pressed->button == sf::Mouse::Button::Left) {
-				if (!_isShooting && HitTestWorld(toWorld(pressed->position))) {
+				if (!_isShooting && !_isHiding && !_isShowing && HitTestWorld(toWorld(pressed->position))) {
 					_isDragging = true;
 				}
 			}
@@ -204,21 +204,23 @@ namespace Billiard {
 		tipPhysicsBody->GetOverlapGroups().set(_overlapGroupOnShoot, false);
 		tipPhysicsBody->SetLinearDamping(_velocityDampingAfterHit);
 
-		auto m1 = tipPhysicsBody->GetMass();
-		auto m2 = targetPhysicsBody->GetMass();
 		auto v1 = tipPhysicsBody->GetVelocity();
-		constexpr auto v2 = sf::Vector2f();
-		auto restitution = std::min(targetPhysicsBody->GetRestitution(), tipPhysicsBody->GetRestitution());
-		auto v1_final = v1 - ((1 + restitution) * m2) / (m1 + m2) * (v1 - v2);
-		auto v2_final = v2 - ((1 + restitution) * m1) / (m1 + m2) * (v2 - v1);
-		const auto ballDeflectionVector =
-		    sf::Vector2f(v1.y, -v1.x).normalized() * _sideSpinBallDeflectionFactor * v1.length() * _cuePosition.y;
-		tipPhysicsBody->SetVelocity(v1_final);
-		targetPhysicsBody->SetVelocity(v2_final + ballDeflectionVector);
+		if (v1.lengthSquared() > 1e-6) {
+			auto m1 = tipPhysicsBody->GetMass();
+			auto m2 = targetPhysicsBody->GetMass();
+			constexpr auto v2 = sf::Vector2f();
+			auto restitution = std::min(targetPhysicsBody->GetRestitution(), tipPhysicsBody->GetRestitution());
+			auto v1_final = v1 - ((1 + restitution) * m2) / (m1 + m2) * (v1 - v2);
+			auto v2_final = v2 - ((1 + restitution) * m1) / (m1 + m2) * (v2 - v1);
+			const auto ballDeflectionVector =
+			    sf::Vector2f(v1.y, -v1.x).normalized() * _sideSpinBallDeflectionFactor * v1.length() * _cuePosition.y;
+			tipPhysicsBody->SetVelocity(v1_final);
+			targetPhysicsBody->SetVelocity(v2_final + ballDeflectionVector);
 
-		float spinValue = _verticalSpin * _verticalSpinMultiplier * v1.length();
-		rollingBallBehaviour->SetVerticalSpin(_directionAngle, -spinValue);
-		targetPhysicsBody->SetAngularSpeed(-_cuePosition.y * _sideSpinBallRotationFactor);
+			float spinValue = _verticalSpin * _verticalSpinMultiplier * v1.length();
+			rollingBallBehaviour->SetVerticalSpin(_directionAngle, -spinValue);
+			targetPhysicsBody->SetAngularSpeed(-_cuePosition.y * _sideSpinBallRotationFactor);
+		}
 
 		_isShooting = false;
 		_targetNode.Clear();

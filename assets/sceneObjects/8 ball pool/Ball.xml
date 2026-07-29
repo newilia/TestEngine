@@ -112,7 +112,7 @@
             <Property id="body_ref" kind="SceneRef" value="759259200" />
             <Property id="friction" kind="Float" value="4000" />
             <Property id="spin_omega" kind="Vec3f" x="0" y="0" z="0" />
-            <Property id="inertia_factor" kind="Float" value="0.300000012" />
+            <Property id="inertia_factor" kind="Float" value="0.230000003" />
           </Property>
         </Properties>
       </Behaviour>

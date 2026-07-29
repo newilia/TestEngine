@@ -170,7 +170,10 @@ namespace Billiard {
 			if (auto physicsBody = cueBall->GetPhysicsBody()) {
 				physicsBody->SetVelocity(sf::Vector2f(0, 0));
 				physicsBody->SetAngularSpeed(0.f);
+				physicsBody->GetCollisionGroups().reset();
+				physicsBody->GetCollisionGroups().set(0, true);
 			}
+			_pocketedBalls.erase(0);
 		}
 	}
 
