@@ -45,7 +45,7 @@
             <Property id="angular_speed" kind="Float" value="0" />
             <Property id="restitution" kind="Float" value="0.899999976" />
             <Property id="friction" kind="Float" value="0.25" />
-            <Property id="softness" kind="Float" value="0" />
+            <Property id="softness" kind="Float" value="0.00999999978" />
             <Property id="gravity_scale" kind="Float" value="1" />
             <Property id="linear_damping" kind="Float" value="250" />
             <Property id="angular_damping" kind="Float" value="10" />
@@ -113,7 +113,7 @@
             <Property id="body_ref" kind="SceneRef" value="759259200" />
             <Property id="friction" kind="Float" value="4000" />
             <Property id="spin_omega" kind="Vec3f" x="0" y="0" z="0" />
-            <Property id="inertia_factor" kind="Float" value="0.230000004" />
+            <Property id="inertia_factor" kind="Float" value="0.150000006" />
           </Property>
         </Properties>
       </Behaviour>

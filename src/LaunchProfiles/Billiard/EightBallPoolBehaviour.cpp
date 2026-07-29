@@ -104,11 +104,8 @@ namespace Billiard {
 	void EightBallPoolBehaviour::SetCueOnBall(int ballNumber) {
 		if (auto cueBehaviour = _cueBehaviour.Get()) {
 			if (auto ball = _ballsBehaviours[ballNumber].Get()) {
-				if (auto ballNode = ball->GetNode()) {
-					cueBehaviour->SetTargetNode(ballNode);
-					cueBehaviour->SetBallRadius(ball->GetRadius());
-					cueBehaviour->SetDistanceFromTarget(50);
-				}
+				cueBehaviour->SetTargetBall(ball);
+				cueBehaviour->SetDistanceFromTarget(50);
 			}
 		}
 	}
@@ -161,7 +158,7 @@ namespace Billiard {
 					continue;
 				}
 				if (auto physicsBody = ballBehaviour->GetPhysicsBody()) {
-					if (physicsBody->GetVelocity().length() > 0.1f || physicsBody->GetAngularSpeed() > 0.01f) {
+					if (physicsBody->GetVelocity().length() > 1.f || std::abs(physicsBody->GetAngularSpeed()) > 0.1f) {
 						return true;
 					}
 				}

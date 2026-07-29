@@ -19,7 +19,7 @@ namespace Billiard {
 			if (_isShooting) {
 				sf::Vector2f accVec(std::cos(_directionAngle.asRadians()), std::sin(_directionAngle.asRadians()));
 				const float accFactor =
-				    (_cuePosition.x / _distanceBeforeShoot) * (_distanceBeforeShoot / _maxDistanceFromTarget);
+				    (_distanceFromTarget / _distanceBeforeShoot) * (_distanceBeforeShoot / _maxDistanceFromTarget);
 				tipPhysicsBody->AddVelocity(accVec * _shootAcceleration * accFactor * deltaTime.asSeconds());
 			}
 			tipPhysicsBody->GetNode()->SetLocalRotation(_directionAngle);
@@ -83,13 +83,9 @@ namespace Billiard {
 		return;
 	}
 
-	void BilliardCueBehaviour::SetTargetNode(const std::shared_ptr<SceneNode>& node) {
-		const auto cueNode = GetNode();
-		if (!cueNode) {
-			return;
-		}
-		_targetNode = node;
-		_cuePosition = sf::Vector2f{};
+	void BilliardCueBehaviour::SetTargetBall(const std::shared_ptr<BilliardBallBehaviour>& ballBehaviour) {
+		_targetBall = ballBehaviour;
+		_ballRadius = ballBehaviour->GetRadius();
 		ApplyCueTransform();
 	}
 
@@ -99,38 +95,23 @@ namespace Billiard {
 	}
 
 	void BilliardCueBehaviour::SetDistanceFromTarget(float distance) {
-		_cuePosition.x = std::min(distance, _maxDistanceFromTarget);
-		ApplyCueTransform();
-	}
-
-	void BilliardCueBehaviour::MoveLongitudinal(float delta) {
-		_cuePosition.x += delta;
+		_distanceFromTarget = std::min(distance, _maxDistanceFromTarget);
 		ApplyCueTransform();
 	}
 
 	void BilliardCueBehaviour::SetLateralPosition(float position) {
-		_cuePosition.y = position;
-		ApplyCueTransform();
-	}
-
-	void BilliardCueBehaviour::MoveLateral(float delta) {
-		_cuePosition.y += delta;
-		ApplyCueTransform();
-	}
-
-	void BilliardCueBehaviour::SetCuePosition(const sf::Vector2f& cuePosition) {
-		_cuePosition = cuePosition;
+		_lateralPosition = position;
 		ApplyCueTransform();
 	}
 
 	void BilliardCueBehaviour::ApplyCueTransform() {
 		const auto cueNode = GetNode();
-		const auto targetNode = _targetNode.Get();
+		const auto targetNode = GetTargetBallNode();
 		if (!cueNode || !targetNode) {
 			return;
 		}
 
-		const sf::Vector2f cueOffset{-_cuePosition.x, _cuePosition.y * _ballRadius};
+		const sf::Vector2f cueOffset{-_distanceFromTarget, _lateralPosition * _ballRadius};
 		const sf::Vector2f worldOffset = Utils::Rotate(cueOffset, _directionAngle.asRadians());
 		const sf::Vector2f targetWorld = Utils::GetWorldPos(targetNode);
 
@@ -150,7 +131,7 @@ namespace Billiard {
 	}
 
 	void BilliardCueBehaviour::Release() {
-		_distanceBeforeShoot = _cuePosition.x;
+		_distanceBeforeShoot = _distanceFromTarget;
 		_isDragging = false;
 		_isShooting = true;
 		if (auto tipPhysicsBody = _tipPhysicsBody.Get()) {
@@ -159,7 +140,7 @@ namespace Billiard {
 				    OnTipCollide(intersection);
 			    });
 		}
-		if (auto targetNode = _targetNode.Get()) {
+		if (auto targetNode = GetTargetBallNode()) {
 			if (auto targetPhysicsBody = targetNode->FindBehaviour<PhysicsBodyBehaviour>()) {
 				targetPhysicsBody->GetOverlapGroups().set(_overlapGroupOnShoot, true);
 			}
@@ -173,7 +154,7 @@ namespace Billiard {
 	}
 
 	void BilliardCueBehaviour::Aim(const sf::Vector2f& worldPoint) {
-		const auto targetNode = _targetNode.Get();
+		const auto targetNode = GetTargetBallNode();
 		if (!targetNode) {
 			return;
 		}
@@ -190,7 +171,7 @@ namespace Billiard {
 
 	void BilliardCueBehaviour::OnTipCollide(const IntersectionDetails& intersection) {
 		auto tipPhysicsBody = _tipPhysicsBody.Get();
-		auto targetNode = _targetNode.Get();
+		auto targetNode = GetTargetBallNode();
 		if (!tipPhysicsBody || !targetNode) {
 			return;
 		}
@@ -213,23 +194,19 @@ namespace Billiard {
 			auto v1_final = v1 - ((1 + restitution) * m2) / (m1 + m2) * (v1 - v2);
 			auto v2_final = v2 - ((1 + restitution) * m1) / (m1 + m2) * (v2 - v1);
 			const auto ballDeflectionVector =
-			    sf::Vector2f(v1.y, -v1.x).normalized() * _sideSpinBallDeflectionFactor * v1.length() * _cuePosition.y;
+			    sf::Vector2f(v1.y, -v1.x).normalized() * _sideSpinBallDeflectionFactor * v1.length() * _lateralPosition;
 			tipPhysicsBody->SetVelocity(v1_final);
 			targetPhysicsBody->SetVelocity(v2_final + ballDeflectionVector);
 
 			float spinValue = _verticalSpin * _verticalSpinMultiplier * v1.length();
 			rollingBallBehaviour->SetVerticalSpin(_directionAngle, -spinValue);
-			targetPhysicsBody->SetAngularSpeed(-_cuePosition.y * _sideSpinBallRotationFactor);
+			targetPhysicsBody->SetAngularSpeed(-_lateralPosition * _sideSpinBallRotationFactor);
 		}
 
 		_isShooting = false;
-		_targetNode.Clear();
+		_targetBall.Clear();
 
 		_onHitSignal.Emit();
-	}
-
-	void BilliardCueBehaviour::SetBallRadius(float radius) {
-		_ballRadius = radius;
 	}
 
 	Signal<>& BilliardCueBehaviour::GetOnReleaseSignal() const {
@@ -254,5 +231,12 @@ namespace Billiard {
 		if (auto visual = _visual.Get()) {
 			visual->SetColor(sf::Color(255, 255, 255, 0));
 		}
+	}
+
+	std::shared_ptr<SceneNode> BilliardCueBehaviour::GetTargetBallNode() const {
+		if (!_targetBall) {
+			return nullptr;
+		}
+		return _targetBall.Get()->GetNode();
 	}
 } // namespace Billiard
