@@ -13,6 +13,7 @@ class Visual : public EntityOnNode
 public:
 	~Visual() override = default;
 
+	virtual void OnInit();
 	virtual void Draw(sf::RenderTarget& target, sf::RenderStates states) const = 0;
 	virtual bool HitTest(const sf::Vector2f& worldPoint) const = 0;
 	virtual void OnTap(const sf::Vector2f& worldPoint); // TODO Remove, I guess this is not a Visual's responsibility
@@ -22,8 +23,11 @@ public:
 
 	void SetTapHandlingEnabled(bool enabled);
 	bool IsTapHandlingEnabled() const;
+	bool IsInited() const;
 
 private:
+	bool _isInited = false;
+
 	/// @property
 	bool _tapHandlingEnabled = false;
 };

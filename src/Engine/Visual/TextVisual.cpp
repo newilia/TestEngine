@@ -10,6 +10,31 @@
 
 #include <string>
 
+TextVisual::TextVisual() {
+	auto defaultFont = Engine::MainContext::GetInstance().GetFontManager()->GetDefaultFont();
+	_text = std::make_shared<sf::Text>(*defaultFont);
+}
+
+void TextVisual::OnInit() {
+	SetFontFamily(_fontFamily);
+}
+
+void TextVisual::SetFontFamily(const std::string& name) {
+	_fontFamily = name;
+	auto& context = Engine::MainContext::GetInstance();
+	auto* font = context.GetFontManager()->GetDefaultFont(); // todo: use the font family
+	if (!font) {
+		return;
+	}
+
+	if (_text) {
+		_text->setFont(*font);
+	}
+	else {
+		_text = std::make_shared<sf::Text>(*font);
+	}
+}
+
 void TextVisual::Draw(sf::RenderTarget& target, sf::RenderStates states) const {
 	if (_text) {
 		target.draw(*_text, states);
@@ -23,7 +48,10 @@ bool TextVisual::HitTest(const sf::Vector2f& worldPoint) const {
 }
 
 const sf::Transform* TextVisual::GetTransform() const {
-	return &_text->getTransform();
+	if (_text) {
+		return &_text->getTransform();
+	}
+	return nullptr;
 }
 
 const sf::Font* TextVisual::GetFont() const {
@@ -38,6 +66,7 @@ void TextVisual::Init(const sf::Font& font, const std::string& string, int chara
 		_text->setFont(font);
 		_text->setString(string);
 		_text->setCharacterSize(static_cast<unsigned>(characterSize));
+		_fontFamily = font.getInfo().family;
 	}
 	else {
 		_text = std::make_shared<sf::Text>(font, string, static_cast<unsigned>(characterSize));
@@ -150,5 +179,18 @@ float TextVisual::GetOutlineThickness() const {
 void TextVisual::SetOutlineThickness(const float thickness) {
 	if (_text) {
 		_text->setOutlineThickness(thickness);
+	}
+}
+
+TextAlignment TextVisual::GetTextAlignment() const {
+	if (_text) {
+		return static_cast<TextAlignment>(_text->getLineAlignment());
+	}
+	return TextAlignment::Default;
+}
+
+void TextVisual::SetTextAlignment(TextAlignment alignment) {
+	if (_text) {
+		_text->setLineAlignment(static_cast<sf::Text::LineAlignment>(alignment));
 	}
 }
