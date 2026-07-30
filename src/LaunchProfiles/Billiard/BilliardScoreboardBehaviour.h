@@ -4,6 +4,7 @@
 #include "Engine/Core/MetaClass.h"
 #include "Engine/Core/RefWrapper.h"
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Visual/TextVisual.h"
 
 #include <SFML/System/Time.hpp>
 
@@ -18,11 +19,10 @@ namespace Billiard {
 	public:
 		void OnUpdate(const sf::Time& dt) override;
 
-		void SetPlayerScore(int playerIndex, int score);
-		void AddPlayerScore(int playerIndex, int delta);
+	public:
+		void Reset();
 		void ShowMessage(const std::string& message);
-		void SetTimer(float seconds);
-		void SetActivePlayer(int playerIndex);
+		void SetActivePlayerIndex(int playerIndex);
 
 	private:
 		void UpdateTimer(const sf::Time& dt);
@@ -32,10 +32,8 @@ namespace Billiard {
 		/// @property
 		RefWrapper<SceneNode> _messagePanelRef;
 		/// @property
-		RefWrapper<SceneNode> _timerPanelRef;
+		RefWrapper<TextVisual> _timerPanelRef;
 
-		int _player1Score = 0;
-		int _player2Score = 0;
 		int _activePlayerIndex = 0;
 		std::string _message;
 		float _timerSeconds = 0.f;

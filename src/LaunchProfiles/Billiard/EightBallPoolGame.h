@@ -1,0 +1,69 @@
+#pragma once
+#include "Engine/Core/MetaClass.h"
+
+#include <array>
+#include <optional>
+#include <set>
+#include <vector>
+
+namespace Billiard {
+
+	enum class GamePhase
+	{
+		Aiming,
+		WaitingForBallsToStop,
+		GameOver,
+	};
+
+	enum class BallType
+	{
+		Striped,
+		Solid,
+		Cue,
+		Eight,
+		Undefined,
+	};
+
+	class EightBallPoolGame
+	{
+	public:
+		void StartNewGame();
+		void OnShoot();
+		void OnBallFellInPocket(int ballNumber);
+		void OnBallRemovedFromPocket(int ballNumber);
+		void OnBallCollideRail(int ballNumber);
+		void OnCueBallCollideBall(int ballNumber);
+		void OnBallsStopped();
+		void StartNewTurn();
+
+		bool IsBallInHand() const;
+		bool IsBallInKitchen() const;
+		int GetActivePlayerIndex() const;
+		std::optional<BallType> GetPlayerBallType(int playerIndex) const;
+		const std::set<int>& GetPocketedSolids() const;
+		const std::set<int>& GetPocketedStripes() const;
+		bool IsCueBallPocketed() const;
+		bool IsEightBallPocketed() const;
+		bool IsGameOver() const;
+		int GetWinnerIndex() const;
+
+	private:
+		bool MayPocketEightBall() const;
+
+		GamePhase _phase = GamePhase::Aiming;
+		int _activePlayerIndex = 0;
+		bool _isBreakShot = true;
+		std::set<int> _pocketedSolids;
+		std::set<int> _pocketedStripes;
+		std::vector<int> _pocketedBallsOnCurrentTurn;
+		std::set<int> _ballsHitRailOnCurrentTurn;
+		bool _isCueBallPocketed = false;
+		bool _isEightBallPocketed = false;
+		bool _isFoul = false;
+		bool _isBallInHand = false;
+		std::array<BallType, 2> _playerBallTypes = {BallType::Undefined, BallType::Undefined};
+		std::optional<int> _winnerIndex;
+		bool _isCueBallCollideBall = false;
+	};
+
+} // namespace Billiard

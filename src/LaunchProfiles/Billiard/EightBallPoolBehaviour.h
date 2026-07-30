@@ -10,14 +10,12 @@
 #include "LaunchProfiles/Billiard/BilliardCueBehaviour.h"
 #include "LaunchProfiles/Billiard/BilliardPocketBehaviour.h"
 #include "LaunchProfiles/Billiard/BilliardScoreboardBehaviour.h"
+#include "LaunchProfiles/Billiard/EightBallPoolGame.h"
 
 #include <map>
 #include <vector>
 
 namespace Billiard {
-
-	META_ENUM(GamePhase, Break, OpenTable, Solids, Stripes, EightBall, GameOver);
-
 	class EightBallPoolBehaviour : public Behaviour, public SubscriptionsHolderBase
 	{
 		META_CLASS()
@@ -35,13 +33,19 @@ namespace Billiard {
 		void SpawnCue();
 		void SetCueOnBall(int ballNumber);
 		void OnBallFellInPocket(int ballNumber);
-		void StartTurn(int playerIndex);
-		void EndTurn();
 		void OnAimPointChanged(const sf::Vector2f& aimPoint);
 		bool AreBallsMoving() const;
+		void OnCueRelease();
 		void OnCueHit();
 		void OnBallsStopped();
-		void RestoreCueBall();
+		void RestoreBall(int ballNumber);
+		void UpdateScoreboard();
+		void OnBallCollision(
+		    std::shared_ptr<PhysicsBodyBehaviour> ballBody, int ballIndex, const IntersectionDetails& intersection);
+
+		float GetBallRadius() const;
+		sf::FloatRect GetBallInHandRect() const;
+		sf::FloatRect GetKitchenRect() const;
 
 		/// @property
 		AssetRef<SceneObject> _cueAsset;
@@ -60,13 +64,12 @@ namespace Billiard {
 		/// @property
 		std::map<int, RefWrapper<BilliardBallBehaviour>> _ballsBehaviours;
 		/// @property
-		GamePhase _phase = GamePhase::Break;
-		/// @property
-		int _activePlayerIndex = 0;
+		RefWrapper<RectangleShapeVisual> _tableRect;
 
 	private:
 		bool _isWaitingForBallsToStop = false;
-		std::set<int> _pocketedBalls;
+
+		EightBallPoolGame _gameState;
 		//Signal<sf::Vector2f>::Subscription _aimPointChangedSubscription;
 		//Signal<>::Subscription _onCueReleaseSubscription;
 		//Signal<int>::Subscription _onBallFellInPocketSubscription;
