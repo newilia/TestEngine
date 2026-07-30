@@ -2,7 +2,7 @@
 <Scene version="2">
   <Settings>
     <Simulation speedMultiplier="1" vsync="false" />
-    <View centerX="6.443573" centerY="-90.8818359" scale="1.46606302" />
+    <View centerX="-125.814735" centerY="-981.671326" scale="0.935614705" />
     <Grid visible="false" size="50" basis="10" snap="true" />
     <Physics gravityX="0" gravityY="400" gravityEnabled="false" airFriction="0" substeps="4">
       <Attraction strength="50" softening="4" massCoupling="true" />
@@ -94,7 +94,7 @@
                 <Property id="cue_asset" kind="AssetRef" value="assets/sceneobjects/8 ball pool/cue.xml" type="Engine.SceneObject" />
                 <Property id="cue_behaviour" kind="SceneRef" value="2141177378" />
                 <Property id="cue_parent" kind="SceneRef" value="3927536882" />
-                <Property id="scoreboard_behaviour" kind="SceneRef" value="0" />
+                <Property id="scoreboard_behaviour" kind="SceneRef" value="3074770674" />
                 <Property id="aim_display_behaviour" kind="SceneRef" value="2812427044" />
                 <Property id="ball_spawn_behaviour" kind="SceneRef" value="519174997" />
                 <Property id="pockets_behaviours" kind="Sequence">
@@ -184,6 +184,7 @@
                   </Property>
                 </Property>
                 <Property id="table_rect" kind="SceneRef" value="50035901" />
+                <Property id="turn_time_limit" kind="Float" value="30" />
               </Property>
             </Properties>
           </Behaviour>
@@ -7787,9 +7788,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-97.8062134" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="0.808084249" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="-115.801537" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-179.973907" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-0.0126179485" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="-64.2012253" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -8184,9 +8185,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="159.228027" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-65.3549652" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="106.966431" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-179.971786" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="0.0034618536" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="83.0106735" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -8581,9 +8582,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-98.7535629" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="38.757618" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="-28.0870705" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-169.342178" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="10.6290855" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="-134.425125" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -8978,9 +8979,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="86.1483917" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="0.985395491" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="-159.269333" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-0.266967386" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-0.704982519" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="-159.258377" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -9375,9 +9376,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="90.4593658" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-35.0379601" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="179.357513" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-178.998932" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="35.0051765" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="1.74471116" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -9772,9 +9773,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-85.1795197" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-46.5221405" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="135.351181" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-3.74199414" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="2.10599041" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="119.330406" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -10169,9 +10170,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="179.641922" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="16.6390705" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="70.3925476" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="179.825806" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="0.059147615" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="108.755035" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -10566,9 +10567,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="28.5960979" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-7.36851883" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="105.969688" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-0.0395378731" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="0.0112136612" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="105.834297" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -10963,9 +10964,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-160.195679" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="58.2662086" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="-69.7663727" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-179.895447" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="0.0193343293" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="-100.480858" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -11360,9 +11361,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-57.4463959" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="31.568737" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="105.294624" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="0.0884159282" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-0.0203928631" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="102.987953" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -11757,9 +11758,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="90.4466095" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="61.5194283" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="-6.27419329" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-150.417725" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="19.2407131" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="-120.135559" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -12154,9 +12155,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-159.39566" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-27.6421566" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="59.1376038" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-178.817444" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-0.603404343" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="117.029778" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -12551,9 +12552,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-128.310776" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="28.3107662" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="119.920982" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="178.931259" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-0.522479534" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="63.9496651" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -12948,9 +12949,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-62.0863762" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="14.1324253" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="-153.309677" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-4.19063568" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-7.57405186" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="-150.930527" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -13345,9 +13346,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-99.4105682" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="32.8629112" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="174.641556" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="173.557648" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-31.127533" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="12.3215952" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -13742,9 +13743,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="144.894272" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="45.77388" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="31.9052429" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="171.350052" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="6.48206806" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="126.578712" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -14977,7 +14978,7 @@
         <Transform type="Engine.Transform">
           <Properties>
             <Property id="transform" kind="Object">
-              <Property id="get_position" kind="Vec2f" x="452.47934" y="-932.583618" />
+              <Property id="get_position" kind="Vec2f" x="873.239502" y="-925.253235" />
               <Property id="get_scale" kind="Vec2f" x="1" y="1" />
               <Property id="get_rotation" kind="Float" value="0" />
               <Property id="get_origin" kind="Vec2f" x="0" y="0" />
@@ -15045,6 +15046,373 @@
                 <Property id="get_point_count" kind="Int32" value="64" />
                 <Property id="get_draw_sector" kind="Bool" value="false" />
                 <Property id="get_sector_color" kind="Color" r="0" g="0" b="0" a="255" />
+              </Properties>
+            </Visual>
+            <Behaviours />
+            <Children />
+          </Node>
+        </Children>
+      </Node>
+      <Node entityId="1398359122">
+        <Properties>
+          <Property id="scene_node" kind="Object">
+            <Property id="name" kind="String" value="Scoreboard" />
+            <Property id="is_enabled" kind="Bool" value="true" />
+            <Property id="is_visible" kind="Bool" value="true" />
+          </Property>
+        </Properties>
+        <Transform type="Engine.Transform">
+          <Properties>
+            <Property id="transform" kind="Object">
+              <Property id="get_position" kind="Vec2f" x="-1082.71289" y="-1049.55359" />
+              <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+              <Property id="get_rotation" kind="Float" value="0" />
+              <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+            </Property>
+          </Properties>
+        </Transform>
+        <Visual type="Engine.RectangleShapeVisual" entityId="2051304383">
+          <Properties>
+            <Property id="tap_handling_enabled" kind="Bool" value="false" />
+            <Property id="get_fill_color" kind="Color" r="196" g="196" b="196" a="255" />
+            <Property id="get_outline_color" kind="Color" r="255" g="255" b="255" a="255" />
+            <Property id="get_outline_thickness" kind="Float" value="0" />
+            <Property id="get_position" kind="Vec2f" x="0" y="0" />
+            <Property id="get_rotation" kind="Float" value="0" />
+            <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+            <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+            <Property id="get_miter_limit" kind="Float" value="10" />
+            <Property id="get_size" kind="Vec2f" x="1600" y="215" />
+          </Properties>
+        </Visual>
+        <Behaviours>
+          <Behaviour type="Billiard.BilliardScoreboardBehaviour" entityId="3074770674">
+            <Properties>
+              <Property id="billiard_scoreboard_behaviour" kind="Object">
+                <Property id="player1active_node_ref" kind="SceneRef" value="2074093917" />
+                <Property id="player2active_node_ref" kind="SceneRef" value="144030581" />
+                <Property id="message_text_ref" kind="SceneRef" value="4281615962" />
+                <Property id="timer_text_ref" kind="SceneRef" value="3489218946" />
+                <Property id="player1ball_type_text_ref" kind="SceneRef" value="807900618" />
+                <Property id="player2ball_type_text_ref" kind="SceneRef" value="1521273579" />
+              </Property>
+            </Properties>
+          </Behaviour>
+        </Behaviours>
+        <Children>
+          <Node entityId="707975622">
+            <Properties>
+              <Property id="scene_node" kind="Object">
+                <Property id="name" kind="String" value="Player1" />
+                <Property id="is_enabled" kind="Bool" value="true" />
+                <Property id="is_visible" kind="Bool" value="true" />
+              </Property>
+            </Properties>
+            <Transform type="Engine.Transform">
+              <Properties>
+                <Property id="transform" kind="Object">
+                  <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                  <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                  <Property id="get_rotation" kind="Float" value="0" />
+                  <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                </Property>
+              </Properties>
+            </Transform>
+            <Behaviours />
+            <Children>
+              <Node entityId="2074093917">
+                <Properties>
+                  <Property id="scene_node" kind="Object">
+                    <Property id="name" kind="String" value="Active" />
+                    <Property id="is_enabled" kind="Bool" value="true" />
+                    <Property id="is_visible" kind="Bool" value="true" />
+                  </Property>
+                </Properties>
+                <Transform type="Engine.Transform">
+                  <Properties>
+                    <Property id="transform" kind="Object">
+                      <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                      <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                      <Property id="get_rotation" kind="Float" value="0" />
+                      <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    </Property>
+                  </Properties>
+                </Transform>
+                <Visual type="Engine.RectangleShapeVisual" entityId="3900616004">
+                  <Properties>
+                    <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                    <Property id="get_fill_color" kind="Color" r="61" g="202" b="123" a="255" />
+                    <Property id="get_outline_color" kind="Color" r="255" g="255" b="255" a="255" />
+                    <Property id="get_outline_thickness" kind="Float" value="0" />
+                    <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_rotation" kind="Float" value="0" />
+                    <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                    <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_miter_limit" kind="Float" value="10" />
+                    <Property id="get_size" kind="Vec2f" x="550" y="215" />
+                  </Properties>
+                </Visual>
+                <Behaviours />
+                <Children />
+              </Node>
+              <Node entityId="1153986517">
+                <Properties>
+                  <Property id="scene_node" kind="Object">
+                    <Property id="name" kind="String" value="Name" />
+                    <Property id="is_enabled" kind="Bool" value="true" />
+                    <Property id="is_visible" kind="Bool" value="true" />
+                  </Property>
+                </Properties>
+                <Transform type="Engine.Transform">
+                  <Properties>
+                    <Property id="transform" kind="Object">
+                      <Property id="get_position" kind="Vec2f" x="50" y="20" />
+                      <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                      <Property id="get_rotation" kind="Float" value="0" />
+                      <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    </Property>
+                  </Properties>
+                </Transform>
+                <Visual type="Engine.TextVisual" entityId="2520766451">
+                  <Properties>
+                    <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                    <Property id="get_string" kind="String" value="Player1" />
+                    <Property id="get_fill_color" kind="Color" r="0" g="0" b="0" a="255" />
+                    <Property id="get_outline_color" kind="Color" r="0" g="0" b="0" a="255" />
+                    <Property id="get_character_size" kind="Int32" value="60" />
+                    <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_outline_thickness" kind="Float" value="0" />
+                    <Property id="get_text_alignment" kind="Enum" value="0" name="Default" />
+                  </Properties>
+                </Visual>
+                <Behaviours />
+                <Children />
+              </Node>
+              <Node entityId="3545073907">
+                <Properties>
+                  <Property id="scene_node" kind="Object">
+                    <Property id="name" kind="String" value="BallType" />
+                    <Property id="is_enabled" kind="Bool" value="true" />
+                    <Property id="is_visible" kind="Bool" value="true" />
+                  </Property>
+                </Properties>
+                <Transform type="Engine.Transform">
+                  <Properties>
+                    <Property id="transform" kind="Object">
+                      <Property id="get_position" kind="Vec2f" x="500" y="20" />
+                      <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                      <Property id="get_rotation" kind="Float" value="0" />
+                      <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    </Property>
+                  </Properties>
+                </Transform>
+                <Visual type="Engine.TextVisual" entityId="807900618">
+                  <Properties>
+                    <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                    <Property id="get_string" kind="String" value="Striped" />
+                    <Property id="get_fill_color" kind="Color" r="0" g="0" b="0" a="255" />
+                    <Property id="get_outline_color" kind="Color" r="0" g="0" b="0" a="255" />
+                    <Property id="get_character_size" kind="Int32" value="60" />
+                    <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_outline_thickness" kind="Float" value="0" />
+                    <Property id="get_text_alignment" kind="Enum" value="3" name="Right" />
+                  </Properties>
+                </Visual>
+                <Behaviours />
+                <Children />
+              </Node>
+            </Children>
+          </Node>
+          <Node entityId="2969172349">
+            <Properties>
+              <Property id="scene_node" kind="Object">
+                <Property id="name" kind="String" value="Player2" />
+                <Property id="is_enabled" kind="Bool" value="true" />
+                <Property id="is_visible" kind="Bool" value="true" />
+              </Property>
+            </Properties>
+            <Transform type="Engine.Transform">
+              <Properties>
+                <Property id="transform" kind="Object">
+                  <Property id="get_position" kind="Vec2f" x="1050" y="0" />
+                  <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                  <Property id="get_rotation" kind="Float" value="0" />
+                  <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                </Property>
+              </Properties>
+            </Transform>
+            <Behaviours />
+            <Children>
+              <Node entityId="144030581">
+                <Properties>
+                  <Property id="scene_node" kind="Object">
+                    <Property id="name" kind="String" value="Active" />
+                    <Property id="is_enabled" kind="Bool" value="true" />
+                    <Property id="is_visible" kind="Bool" value="true" />
+                  </Property>
+                </Properties>
+                <Transform type="Engine.Transform">
+                  <Properties>
+                    <Property id="transform" kind="Object">
+                      <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                      <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                      <Property id="get_rotation" kind="Float" value="0" />
+                      <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    </Property>
+                  </Properties>
+                </Transform>
+                <Visual type="Engine.RectangleShapeVisual" entityId="779326769">
+                  <Properties>
+                    <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                    <Property id="get_fill_color" kind="Color" r="61" g="202" b="123" a="255" />
+                    <Property id="get_outline_color" kind="Color" r="255" g="255" b="255" a="255" />
+                    <Property id="get_outline_thickness" kind="Float" value="0" />
+                    <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_rotation" kind="Float" value="0" />
+                    <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                    <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_miter_limit" kind="Float" value="10" />
+                    <Property id="get_size" kind="Vec2f" x="550" y="215" />
+                  </Properties>
+                </Visual>
+                <Behaviours />
+                <Children />
+              </Node>
+              <Node entityId="1333630788">
+                <Properties>
+                  <Property id="scene_node" kind="Object">
+                    <Property id="name" kind="String" value="Name" />
+                    <Property id="is_enabled" kind="Bool" value="true" />
+                    <Property id="is_visible" kind="Bool" value="true" />
+                  </Property>
+                </Properties>
+                <Transform type="Engine.Transform">
+                  <Properties>
+                    <Property id="transform" kind="Object">
+                      <Property id="get_position" kind="Vec2f" x="50" y="20" />
+                      <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                      <Property id="get_rotation" kind="Float" value="0" />
+                      <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    </Property>
+                  </Properties>
+                </Transform>
+                <Visual type="Engine.TextVisual" entityId="1667256532">
+                  <Properties>
+                    <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                    <Property id="get_string" kind="String" value="Player2" />
+                    <Property id="get_fill_color" kind="Color" r="0" g="0" b="0" a="255" />
+                    <Property id="get_outline_color" kind="Color" r="0" g="0" b="0" a="255" />
+                    <Property id="get_character_size" kind="Int32" value="60" />
+                    <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_outline_thickness" kind="Float" value="0" />
+                    <Property id="get_text_alignment" kind="Enum" value="0" name="Default" />
+                  </Properties>
+                </Visual>
+                <Behaviours />
+                <Children />
+              </Node>
+              <Node entityId="2171981177">
+                <Properties>
+                  <Property id="scene_node" kind="Object">
+                    <Property id="name" kind="String" value="BallType" />
+                    <Property id="is_enabled" kind="Bool" value="true" />
+                    <Property id="is_visible" kind="Bool" value="true" />
+                  </Property>
+                </Properties>
+                <Transform type="Engine.Transform">
+                  <Properties>
+                    <Property id="transform" kind="Object">
+                      <Property id="get_position" kind="Vec2f" x="500" y="20" />
+                      <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                      <Property id="get_rotation" kind="Float" value="0" />
+                      <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    </Property>
+                  </Properties>
+                </Transform>
+                <Visual type="Engine.TextVisual" entityId="1521273579">
+                  <Properties>
+                    <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                    <Property id="get_string" kind="String" value="Solid" />
+                    <Property id="get_fill_color" kind="Color" r="0" g="0" b="0" a="255" />
+                    <Property id="get_outline_color" kind="Color" r="0" g="0" b="0" a="255" />
+                    <Property id="get_character_size" kind="Int32" value="60" />
+                    <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_outline_thickness" kind="Float" value="0" />
+                    <Property id="get_text_alignment" kind="Enum" value="3" name="Right" />
+                  </Properties>
+                </Visual>
+                <Behaviours />
+                <Children />
+              </Node>
+            </Children>
+          </Node>
+          <Node entityId="1986835700">
+            <Properties>
+              <Property id="scene_node" kind="Object">
+                <Property id="name" kind="String" value="Timer" />
+                <Property id="is_enabled" kind="Bool" value="true" />
+                <Property id="is_visible" kind="Bool" value="true" />
+              </Property>
+            </Properties>
+            <Transform type="Engine.Transform">
+              <Properties>
+                <Property id="transform" kind="Object">
+                  <Property id="get_position" kind="Vec2f" x="800" y="20" />
+                  <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                  <Property id="get_rotation" kind="Float" value="0" />
+                  <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                </Property>
+              </Properties>
+            </Transform>
+            <Visual type="Engine.TextVisual" entityId="3489218946">
+              <Properties>
+                <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                <Property id="get_string" kind="String" value="30 s" />
+                <Property id="get_fill_color" kind="Color" r="0" g="0" b="0" a="255" />
+                <Property id="get_outline_color" kind="Color" r="0" g="0" b="0" a="255" />
+                <Property id="get_character_size" kind="Int32" value="60" />
+                <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                <Property id="get_outline_thickness" kind="Float" value="0" />
+                <Property id="get_text_alignment" kind="Enum" value="2" name="Center" />
+              </Properties>
+            </Visual>
+            <Behaviours />
+            <Children />
+          </Node>
+          <Node entityId="4180730455">
+            <Properties>
+              <Property id="scene_node" kind="Object">
+                <Property id="name" kind="String" value="Message" />
+                <Property id="is_enabled" kind="Bool" value="true" />
+                <Property id="is_visible" kind="Bool" value="true" />
+              </Property>
+            </Properties>
+            <Transform type="Engine.Transform">
+              <Properties>
+                <Property id="transform" kind="Object">
+                  <Property id="get_position" kind="Vec2f" x="800" y="100" />
+                  <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                  <Property id="get_rotation" kind="Float" value="0" />
+                  <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                </Property>
+              </Properties>
+            </Transform>
+            <Visual type="Engine.TextVisual" entityId="4281615962">
+              <Properties>
+                <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                <Property id="get_string" kind="String" value="Message" />
+                <Property id="get_fill_color" kind="Color" r="0" g="0" b="0" a="255" />
+                <Property id="get_outline_color" kind="Color" r="0" g="0" b="0" a="255" />
+                <Property id="get_character_size" kind="Int32" value="60" />
+                <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                <Property id="get_outline_thickness" kind="Float" value="0" />
+                <Property id="get_text_alignment" kind="Enum" value="2" name="Center" />
               </Properties>
             </Visual>
             <Behaviours />
