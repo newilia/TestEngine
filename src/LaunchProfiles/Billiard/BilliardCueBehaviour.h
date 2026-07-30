@@ -24,25 +24,26 @@ namespace Billiard {
 
 	public:
 		void SetTargetBall(const std::shared_ptr<BilliardBallBehaviour>& ballBehaviour);
-		void Aim(const sf::Vector2f& pointerWorldPoint);
+		void AbortAiming();
 
-		void SetDirection(sf::Angle direction);
-		void SetDistanceFromTarget(float distance);
-		void SetLateralPosition(float position);
-		void SetVerticalSpin(float spin);
 		Signal<>& GetOnReleaseSignal() const;
 		Signal<>& GetOnHitSignal() const;
+		void SetLateralPosition(float position);
+		void SetVerticalSpin(float spin);
+		void SetDistanceFromTarget(float distance);
+		void ResetDistanceFromTarget();
+		void ApplyCueTransform();
 
 		void PlayHideAnimation();
 		void PlayShowAnimation();
 
 	private:
+		void Aim(const sf::Vector2f& pointerWorldPoint);
+		void SetDirection(sf::Angle direction);
 		void Release();
 		bool HitTestWorld(const sf::Vector2f& worldPoint) const;
 		void OnTipCollide(const IntersectionDetails& intersection);
 		std::shared_ptr<SceneNode> GetTargetBallNode() const;
-
-		void ApplyCueTransform();
 
 	private:
 		/// @property
@@ -77,6 +78,8 @@ namespace Billiard {
 		float _showAnimationDuration = 0.3f;
 		/// @property
 		float _ballRadius = 0.f;
+		/// @property
+		float _minDistanceFromTarget = 50.f;
 
 	private:
 		bool _isDragging = false;

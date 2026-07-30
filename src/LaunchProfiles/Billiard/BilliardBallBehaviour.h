@@ -29,8 +29,10 @@ namespace Billiard {
 		[[nodiscard]] float GetRadius() const;
 		std::shared_ptr<PhysicsBodyBehaviour> GetPhysicsBody() const;
 		std::shared_ptr<RollingBallBehaviour> GetRollingBallBehaviour() const;
-		void SetAllowedFreeMoveArea(const sf::FloatRect& allowedFreeMoveArea);
-		void ResetAllowedFreeMoveArea();
+		void SetBallInHand(const sf::FloatRect& allowedFreeMoveArea);
+		void ResetBallInHand();
+		Signal<>& GetOnGrabSignal() const;
+		Signal<>& GetOnReleaseSignal() const;
 
 		void Appear();
 		void PlayFallAnimation();
@@ -52,11 +54,19 @@ namespace Billiard {
 		float _fallAnimationDuration = 0.3f;
 
 	private:
+		void OnMouseButtonPressed(const sf::Vector2i& position, sf::Mouse::Button button);
+		void OnMouseButtonReleased(const sf::Vector2i& position);
+		void OnMouseMoved(const sf::Vector2i& position);
+
 		bool _isFalling = false;
 		float _fallAnimationProgress = 0.f;
 		float _initialLightingStrength = 1.f;
 		std::optional<sf::Vector2f> _dragStartPosition;
-		std::optional<sf::FloatRect> _allowedFreeMoveArea;
+		std::optional<sf::FloatRect> _ballInHandArea;
+		PhysicsBodyBehaviour::GroupSet _overlapGroupsBeforeGrab;
+		PhysicsBodyBehaviour::GroupSet _collisionGroupsBeforeGrab;
+		mutable Signal<> _onGrabSignal;
+		mutable Signal<> _onReleaseSignal;
 	};
 
 } // namespace Billiard
