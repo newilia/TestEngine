@@ -48,6 +48,12 @@ namespace Billiard {
 						    OnBallCollision(weakBallBody.lock(), ballIndex, intersection);
 					    });
 				}
+				Subscribe(ballBehaviour->GetOnGrabSignal(), [this]() {
+					OnBallInHandGrab();
+				});
+				Subscribe(ballBehaviour->GetOnReleaseSignal(), [this]() {
+					OnBallInHandRelease();
+				});
 			}
 		}
 	}
@@ -65,6 +71,9 @@ namespace Billiard {
 					_gameState.OnTurnTimeOver();
 					StartNewTurn();
 					UpdateScoreboard();
+					if (auto cueBehaviour = _cueBehaviour.Get()) {
+						cueBehaviour->AbortAiming();
+					}
 				}
 				else {
 					UpdateScoreboardTimer();
@@ -100,7 +109,7 @@ namespace Billiard {
 					}
 
 					if (ballBehaviour->GetBallNumber() == 0) {
-						ballBehaviour->SetAllowedFreeMoveArea(GetKitchenRect());
+						ballBehaviour->SetBallInHand(GetKitchenRect());
 					}
 				}
 			}
@@ -134,7 +143,6 @@ namespace Billiard {
 		if (auto cueBehaviour = _cueBehaviour.Get()) {
 			if (auto ball = _ballsBehaviours[ballNumber].Get()) {
 				cueBehaviour->SetTargetBall(ball);
-				cueBehaviour->SetDistanceFromTarget(50);
 			}
 		}
 		if (auto aimDisplay = _aimDisplayBehaviour.Get()) {
@@ -155,7 +163,7 @@ namespace Billiard {
 
 	void EightBallPoolBehaviour::OnCueRelease() {
 		if (auto ball = _ballsBehaviours[0].Get()) {
-			ball->ResetAllowedFreeMoveArea();
+			ball->ResetBallInHand();
 		}
 		if (auto scoreboard = _scoreboardBehaviour.Get()) {
 			scoreboard->ShowMessage("");
@@ -174,21 +182,21 @@ namespace Billiard {
 		_isWaitingForBallsToStop = false;
 		_gameState.OnBallsStopped();
 
+		UpdateScoreboard();
 		if (_gameState.IsGameOver()) {
 			return;
 		}
-		UpdateScoreboard();
 
 		if (_gameState.IsCueBallPocketed()) {
 			RestoreBall(0);
 		}
 		if (_gameState.IsEightBallPocketed()) {
-			RestoreBall(8);
+			RestoreBall(8); // TODO: restore 8 ball to proper position
 		}
 
 		if (_gameState.IsBallInHand()) {
 			if (auto ball = _ballsBehaviours[0].Get()) {
-				ball->SetAllowedFreeMoveArea(GetBallInHandRect());
+				ball->SetBallInHand(GetBallInHandRect());
 			}
 		}
 
@@ -225,13 +233,15 @@ namespace Billiard {
 	void EightBallPoolBehaviour::RestoreBall(int ballNumber) {
 		if (auto ball = _ballsBehaviours[ballNumber].Get()) {
 			ball->Appear();
-			ball->GetNode()->SetLocalPosition(sf::Vector2f(0, 0)); // TODO: set to proper position for 8 ball
+			ball->GetNode()->SetLocalPosition(GetTableCenter()); // TODO: set to proper position for 8 ball
+
 			if (auto physicsBody = ball->GetPhysicsBody()) {
 				physicsBody->SetVelocity(sf::Vector2f(0, 0));
 				physicsBody->SetAngularSpeed(0.f);
 				physicsBody->GetCollisionGroups().reset();
 				physicsBody->GetCollisionGroups().set(0, true);
 			}
+
 			if (auto rollingBall = ball->GetRollingBallBehaviour()) {
 				rollingBall->ResetOmega();
 			}
@@ -314,5 +324,25 @@ namespace Billiard {
 			return 0.f;
 		}
 		return ball->GetRadius();
+	}
+
+	sf::Vector2f EightBallPoolBehaviour::GetTableCenter() const {
+		if (auto tableRect = _tableRect.Get()) {
+			return tableRect->GetGlobalBounds().size * 0.5f;
+		}
+		return sf::Vector2f();
+	}
+
+	void EightBallPoolBehaviour::OnBallInHandGrab() {
+		if (auto cueBehaviour = _cueBehaviour.Get()) {
+			cueBehaviour->PlayHideAnimation();
+		}
+	}
+
+	void EightBallPoolBehaviour::OnBallInHandRelease() {
+		if (auto cueBehaviour = _cueBehaviour.Get()) {
+			cueBehaviour->PlayShowAnimation();
+			cueBehaviour->ApplyCueTransform();
+		}
 	}
 } // namespace Billiard

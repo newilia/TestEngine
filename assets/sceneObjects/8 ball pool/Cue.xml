@@ -42,8 +42,9 @@
             <Property id="tip_physics_body" kind="SceneRef" value="3776500843" />
             <Property id="visual" kind="SceneRef" value="4141744000" />
             <Property id="overlap_group_on_shoot" kind="Int32" value="0" />
-            <Property id="target_node" kind="SceneRef" value="0" />
-            <Property id="cue_position" kind="Vec2f" x="0" y="0" />
+            <Property id="target_ball" kind="SceneRef" value="0" />
+            <Property id="lateral_position" kind="Float" value="0" />
+            <Property id="distance_from_target" kind="Float" value="0" />
             <Property id="direction_angle" kind="Float" value="0" />
             <Property id="shoot_acceleration" kind="Float" value="100000" />
             <Property id="velocity_damping_after_hit" kind="Float" value="50000" />
@@ -51,8 +52,10 @@
             <Property id="vertical_spin_multiplier" kind="Float" value="1" />
             <Property id="side_spin_ball_deflection_factor" kind="Float" value="0.00999999978" />
             <Property id="side_spin_ball_rotation_factor" kind="Float" value="100" />
-            <Property id="hide_animation_duration" kind="Float" value="1.5" />
+            <Property id="hide_animation_duration" kind="Float" value="0.300000012" />
             <Property id="show_animation_duration" kind="Float" value="0.300000012" />
+            <Property id="ball_radius" kind="Float" value="0" />
+            <Property id="min_distance_from_target" kind="Float" value="50" />
           </Property>
         </Properties>
       </Behaviour>
@@ -121,6 +124,7 @@
                 <Property id="v" kind="Bool" value="false" />
               </Property>
             </Property>
+            <Property id="inertia_multiplier" kind="Float" value="1" />
           </Property>
         </Properties>
       </Behaviour>

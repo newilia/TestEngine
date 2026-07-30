@@ -48,6 +48,9 @@ namespace Billiard {
 		float GetBallRadius() const;
 		sf::FloatRect GetBallInHandRect() const;
 		sf::FloatRect GetKitchenRect() const;
+		sf::Vector2f GetTableCenter() const;
+		void OnBallInHandGrab();
+		void OnBallInHandRelease();
 
 		/// @property
 		AssetRef<SceneObject> _cueAsset;

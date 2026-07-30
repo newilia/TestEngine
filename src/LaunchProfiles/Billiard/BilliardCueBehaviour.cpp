@@ -86,7 +86,7 @@ namespace Billiard {
 	void BilliardCueBehaviour::SetTargetBall(const std::shared_ptr<BilliardBallBehaviour>& ballBehaviour) {
 		_targetBall = ballBehaviour;
 		_ballRadius = ballBehaviour->GetRadius();
-		ApplyCueTransform();
+		ResetDistanceFromTarget();
 	}
 
 	void BilliardCueBehaviour::SetDirection(sf::Angle angle) {
@@ -95,7 +95,7 @@ namespace Billiard {
 	}
 
 	void BilliardCueBehaviour::SetDistanceFromTarget(float distance) {
-		_distanceFromTarget = std::min(distance, _maxDistanceFromTarget);
+		_distanceFromTarget = std::clamp(distance, _minDistanceFromTarget, _maxDistanceFromTarget);
 		ApplyCueTransform();
 	}
 
@@ -131,8 +131,12 @@ namespace Billiard {
 	}
 
 	void BilliardCueBehaviour::Release() {
-		_distanceBeforeShoot = _distanceFromTarget;
 		_isDragging = false;
+		if (_distanceFromTarget <= _minDistanceFromTarget) {
+			return;
+		}
+
+		_distanceBeforeShoot = _distanceFromTarget;
 		_isShooting = true;
 		if (auto tipPhysicsBody = _tipPhysicsBody.Get()) {
 			_tipCollideSubscription =
@@ -239,4 +243,15 @@ namespace Billiard {
 		}
 		return _targetBall.Get()->GetNode();
 	}
+
+	void BilliardCueBehaviour::AbortAiming() {
+		_isDragging = false;
+		_isShooting = false;
+		SetDistanceFromTarget(_minDistanceFromTarget);
+	}
+
+	void BilliardCueBehaviour::ResetDistanceFromTarget() {
+		SetDistanceFromTarget(_minDistanceFromTarget);
+	}
+
 } // namespace Billiard
