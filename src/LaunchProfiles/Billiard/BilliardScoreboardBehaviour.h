@@ -1,12 +1,11 @@
 #pragma once
 
+#include "BallType.h"
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Core/MetaClass.h"
 #include "Engine/Core/RefWrapper.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Visual/TextVisual.h"
-
-#include <SFML/System/Time.hpp>
 
 #include <string>
 
@@ -17,26 +16,25 @@ namespace Billiard {
 		META_CLASS()
 
 	public:
-		void OnUpdate(const sf::Time& dt) override;
-
-	public:
 		void Reset();
-		void ShowMessage(const std::string& message);
 		void SetActivePlayerIndex(int playerIndex);
+		void ShowMessage(const std::string& message);
+		void SetRemainingTurnTime(float seconds);
+		void SetPlayerBallType(int playerIndex, BallType ballType);
 
 	private:
-		void UpdateTimer(const sf::Time& dt);
-
 		/// @property
-		RefWrapper<SceneNode> _scorePanelRef;
+		RefWrapper<SceneNode> _player1activeNodeRef;
 		/// @property
-		RefWrapper<SceneNode> _messagePanelRef;
+		RefWrapper<SceneNode> _player2activeNodeRef;
 		/// @property
-		RefWrapper<TextVisual> _timerPanelRef;
-
-		int _activePlayerIndex = 0;
-		std::string _message;
-		float _timerSeconds = 0.f;
+		RefWrapper<TextVisual> _messageTextRef;
+		/// @property
+		RefWrapper<TextVisual> _timerTextRef;
+		/// @property
+		RefWrapper<TextVisual> _player1ballTypeTextRef;
+		/// @property
+		RefWrapper<TextVisual> _player2ballTypeTextRef;
 	};
 
 } // namespace Billiard

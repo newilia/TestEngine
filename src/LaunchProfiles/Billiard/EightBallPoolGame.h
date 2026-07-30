@@ -1,4 +1,5 @@
 #pragma once
+#include "BallType.h"
 #include "Engine/Core/MetaClass.h"
 
 #include <array>
@@ -15,15 +16,6 @@ namespace Billiard {
 		GameOver,
 	};
 
-	enum class BallType
-	{
-		Striped,
-		Solid,
-		Cue,
-		Eight,
-		Undefined,
-	};
-
 	class EightBallPoolGame
 	{
 	public:
@@ -35,11 +27,12 @@ namespace Billiard {
 		void OnCueBallCollideBall(int ballNumber);
 		void OnBallsStopped();
 		void StartNewTurn();
+		void OnTurnTimeOver();
 
 		bool IsBallInHand() const;
 		bool IsBallInKitchen() const;
 		int GetActivePlayerIndex() const;
-		std::optional<BallType> GetPlayerBallType(int playerIndex) const;
+		BallType GetPlayerBallType(int playerIndex) const;
 		const std::set<int>& GetPocketedSolids() const;
 		const std::set<int>& GetPocketedStripes() const;
 		bool IsCueBallPocketed() const;

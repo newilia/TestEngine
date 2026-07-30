@@ -7,16 +7,18 @@ namespace Billiard {
 			if (ballNumber == 0) {
 				return BallType::Cue;
 			}
+			if (ballNumber >= 1 && ballNumber <= 7) {
+				return BallType::Solid;
+			}
 			if (ballNumber == 8) {
 				return BallType::Eight;
 			}
-			if (ballNumber >= 1 && ballNumber <= 7) {
+			if (ballNumber >= 9 && ballNumber <= 15) {
 				return BallType::Striped;
 			}
-			if (ballNumber >= 9 && ballNumber <= 15) {
-				return BallType::Solid;
-			}
+			return BallType::Undefined;
 		}
+
 	} // namespace
 
 	void EightBallPoolGame::StartNewGame() {
@@ -118,24 +120,27 @@ namespace Billiard {
 			if (_ballsHitRailOnCurrentTurn.empty()) {
 				_isFoul = true;
 			}
-		}
 
-		/* try assign ball types */
-		if (_playerBallTypes[_activePlayerIndex] == BallType::Undefined && !_isFoul) {
-			if (!_pocketedBallsOnCurrentTurn.empty()) {
-				auto ballType = GetBallType(_pocketedBallsOnCurrentTurn.front());
-				_playerBallTypes[_activePlayerIndex] = ballType;
-				_playerBallTypes[1 - _activePlayerIndex] =
-				    ballType == BallType::Striped ? BallType::Solid : BallType::Striped;
+			/* try assign ball types */
+			if (_playerBallTypes[_activePlayerIndex] == BallType::Undefined && !_isFoul) {
+				if (!_pocketedBallsOnCurrentTurn.empty()) {
+					auto ballType = GetBallType(_pocketedBallsOnCurrentTurn.front());
+					_playerBallTypes[_activePlayerIndex] = ballType;
+					_playerBallTypes[1 - _activePlayerIndex] =
+					    ballType == BallType::Striped ? BallType::Solid : BallType::Striped;
+				}
 			}
 		}
-		_isBreakShot = false;
 
+		/* TODO move to StartNewTurn() ? */
 		if (_isFoul) {
 			_activePlayerIndex = 1 - _activePlayerIndex;
 			_isBallInHand = true;
 		}
 		else {
+			if (_pocketedBallsOnCurrentTurn.empty()) {
+				_activePlayerIndex = 1 - _activePlayerIndex;
+			}
 			_isBallInHand = false;
 		}
 	}
@@ -188,11 +193,27 @@ namespace Billiard {
 	}
 
 	void EightBallPoolGame::StartNewTurn() {
+		if (_phase == GamePhase::GameOver) {
+			return;
+		}
 		_phase = GamePhase::Aiming;
 		_isFoul = false;
 		_pocketedBallsOnCurrentTurn.clear();
 		_ballsHitRailOnCurrentTurn.clear();
 		_isCueBallCollideBall = false;
+	}
+
+	void EightBallPoolGame::OnTurnTimeOver() {
+		if (_phase != GamePhase::Aiming) {
+			return;
+		}
+		_isFoul = true;
+		_isBallInHand = true;
+		_activePlayerIndex = 1 - _activePlayerIndex;
+	}
+
+	BallType EightBallPoolGame::GetPlayerBallType(int playerIndex) const {
+		return _playerBallTypes[playerIndex];
 	}
 
 } // namespace Billiard

@@ -40,8 +40,10 @@ namespace Billiard {
 		void OnBallsStopped();
 		void RestoreBall(int ballNumber);
 		void UpdateScoreboard();
+		void UpdateScoreboardTimer();
 		void OnBallCollision(
 		    std::shared_ptr<PhysicsBodyBehaviour> ballBody, int ballIndex, const IntersectionDetails& intersection);
+		void StartNewTurn();
 
 		float GetBallRadius() const;
 		sf::FloatRect GetBallInHandRect() const;
@@ -65,9 +67,12 @@ namespace Billiard {
 		std::map<int, RefWrapper<BilliardBallBehaviour>> _ballsBehaviours;
 		/// @property
 		RefWrapper<RectangleShapeVisual> _tableRect;
+		/// @property
+		float _turnTimeLimit = 30.f;
 
 	private:
 		bool _isWaitingForBallsToStop = false;
+		float _remainingTurnTime = 0.f;
 
 		EightBallPoolGame _gameState;
 		//Signal<sf::Vector2f>::Subscription _aimPointChangedSubscription;

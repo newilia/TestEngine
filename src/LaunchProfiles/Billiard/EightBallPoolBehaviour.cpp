@@ -58,6 +58,19 @@ namespace Billiard {
 				OnBallsStopped();
 			}
 		}
+		else {
+			if (_remainingTurnTime > 0.f) {
+				_remainingTurnTime = std::max(0.f, _remainingTurnTime - deltaTime.asSeconds());
+				if (_remainingTurnTime == 0.f) {
+					_gameState.OnTurnTimeOver();
+					StartNewTurn();
+					UpdateScoreboard();
+				}
+				else {
+					UpdateScoreboardTimer();
+				}
+			}
+		}
 	}
 
 	void EightBallPoolBehaviour::StartNewGame() {
@@ -144,14 +157,17 @@ namespace Billiard {
 		if (auto ball = _ballsBehaviours[0].Get()) {
 			ball->ResetAllowedFreeMoveArea();
 		}
+		if (auto scoreboard = _scoreboardBehaviour.Get()) {
+			scoreboard->ShowMessage("");
+		}
 		_gameState.OnShoot();
 	}
 
 	void EightBallPoolBehaviour::OnCueHit() {
-		_isWaitingForBallsToStop = true;
 		if (auto cueBehaviour = _cueBehaviour.Get()) {
 			cueBehaviour->PlayHideAnimation();
 		}
+		_isWaitingForBallsToStop = true;
 	}
 
 	void EightBallPoolBehaviour::OnBallsStopped() {
@@ -180,7 +196,14 @@ namespace Billiard {
 			cueBehaviour->PlayShowAnimation();
 		}
 		SetCueOnBall(0);
+
+		StartNewTurn();
+	}
+
+	void EightBallPoolBehaviour::StartNewTurn() {
+		_remainingTurnTime = _turnTimeLimit;
 		_gameState.StartNewTurn();
+		UpdateScoreboard();
 	}
 
 	bool EightBallPoolBehaviour::AreBallsMoving() const {
@@ -219,9 +242,23 @@ namespace Billiard {
 	void EightBallPoolBehaviour::UpdateScoreboard() {
 		if (auto scoreboard = _scoreboardBehaviour.Get()) {
 			scoreboard->SetActivePlayerIndex(_gameState.GetActivePlayerIndex());
-			//scoreboard->SetPlayerBallType(0, _gameState.GetPlayerBallType(0));
-			//scoreboard->SetPlayerBallType(1, _gameState.GetPlayerBallType(1));
-			//scoreboard->SetWinnerIndex(_gameState.GetWinnerIndex());
+			if (_gameState.IsBallInHand() && !_isWaitingForBallsToStop) {
+				scoreboard->ShowMessage("Foul! Ball in hand");
+			}
+			else {
+				scoreboard->ShowMessage("");
+			}
+			scoreboard->SetPlayerBallType(0, _gameState.GetPlayerBallType(0));
+			scoreboard->SetPlayerBallType(1, _gameState.GetPlayerBallType(1));
+			if (_gameState.IsGameOver()) {
+				scoreboard->ShowMessage(fmt::format("Player {} wins", _gameState.GetWinnerIndex() + 1));
+			}
+		}
+	}
+
+	void EightBallPoolBehaviour::UpdateScoreboardTimer() {
+		if (auto scoreboard = _scoreboardBehaviour.Get()) {
+			scoreboard->SetRemainingTurnTime(_remainingTurnTime);
 		}
 	}
 
