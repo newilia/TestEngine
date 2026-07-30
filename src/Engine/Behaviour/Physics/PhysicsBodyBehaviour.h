@@ -83,6 +83,9 @@ public:
 	[[nodiscard]] sf::Vector2f GetCollisionComWorld(const sf::Transform& shapeToWorld) const;
 	[[nodiscard]] float EstimateCollisionInertiaWorld(float mass, const sf::Transform& shapeToWorld) const;
 
+	float GetInertiaMultiplier() const;
+	void SetInertiaMultiplier(float multiplier);
+
 private:
 	/// @property
 	float _mass = 1.f;

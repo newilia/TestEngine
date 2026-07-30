@@ -30,6 +30,7 @@ namespace Billiard {
 		std::shared_ptr<PhysicsBodyBehaviour> GetPhysicsBody() const;
 		std::shared_ptr<RollingBallBehaviour> GetRollingBallBehaviour() const;
 		void SetBallInHand(const sf::FloatRect& allowedFreeMoveArea);
+		bool IsBallInHand() const;
 		void ResetBallInHand();
 		Signal<>& GetOnGrabSignal() const;
 		Signal<>& GetOnReleaseSignal() const;
