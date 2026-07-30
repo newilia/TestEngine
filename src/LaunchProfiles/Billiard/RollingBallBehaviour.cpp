@@ -11,7 +11,6 @@
 #include <cmath>
 
 namespace {
-
 	[[nodiscard]] sf::Angle WorldRotationFromTransform(const sf::Transform& worldTransform) {
 		const sf::Vector2f origin = worldTransform.transformPoint(sf::Vector2f{});
 		const sf::Vector2f xAxis = worldTransform.transformPoint(sf::Vector2f{1.f, 0.f}) - origin;
@@ -37,79 +36,86 @@ namespace {
 		const sf::Vector2f localXY = RotateInverse2D({worldOmega.x, worldOmega.y}, worldRotation);
 		return {localXY.x, localXY.y, 0.f};
 	}
-
 } // namespace
 
-void Billiard::RollingBallBehaviour::OnUpdate(const sf::Time& dt) {
-	const auto sphereProjection = _sphereProjectionRef.Get();
-	const auto body = _bodyRef.Get();
-	const auto node = GetNode();
-	if (!sphereProjection || !body || !node) {
-		return;
-	}
+namespace Billiard {
 
-	const float radius = GetRadius();
-	if (radius <= 0.f) {
-		return;
-	}
-
-	const float dtSeconds = dt.asSeconds();
-	const sf::Angle worldRotation = WorldRotationFromTransform(node->GetWorldTransform());
-	const float invRadius = 1.f / radius;
-
-	sf::Vector2f velocity = body->GetVelocity();
-	sf::Vector2f rollVelocity = VelocityFromOmega(_spinOmega, radius);
-	sf::Vector2f slip = velocity - rollVelocity;
-	const float slipLength = slip.length();
-
-	if (slipLength > 1e-6f && _inertiaFactor > 0.f) {
-		constexpr float massFactor = 1.f;
-		const float slipCorrectionMagnitude = _friction * (1.f / massFactor + 1.f / _inertiaFactor) * dtSeconds;
-
-		sf::Vector2f deltaVelocity;
-		sf::Vector2f deltaRollVelocity;
-
-		if (slipCorrectionMagnitude < slipLength) {
-			const sf::Vector2f slipDir = slip.normalized();
-			const sf::Vector2f deltaU = -slipDir * slipCorrectionMagnitude;
-			deltaVelocity = deltaU * (_inertiaFactor / (1 + _inertiaFactor));
-			deltaRollVelocity = -deltaU * (1.f / (1 + _inertiaFactor));
-		}
-		else {
-			const sf::Vector2f commonVelocity =
-			    (velocity * massFactor + rollVelocity * _inertiaFactor) / (1 + _inertiaFactor);
-			deltaVelocity = commonVelocity - velocity;
-			deltaRollVelocity = commonVelocity - rollVelocity;
+	void RollingBallBehaviour::OnUpdate(const sf::Time& dt) {
+		const auto sphereProjection = _sphereProjectionRef.Get();
+		const auto body = _bodyRef.Get();
+		const auto node = GetNode();
+		if (!sphereProjection || !body || !node) {
+			return;
 		}
 
-		body->SetVelocity(velocity + deltaVelocity);
-		_spinOmega = OmegaFromVelocity(rollVelocity + deltaRollVelocity, invRadius);
+		const float radius = GetRadius();
+		if (radius <= 0.f) {
+			return;
+		}
+
+		const float dtSeconds = dt.asSeconds();
+		const sf::Angle worldRotation = WorldRotationFromTransform(node->GetWorldTransform());
+		const float invRadius = 1.f / radius;
+
+		sf::Vector2f velocity = body->GetVelocity();
+		sf::Vector2f rollVelocity = VelocityFromOmega(_spinOmega, radius);
+		sf::Vector2f slip = velocity - rollVelocity;
+		const float slipLength = slip.length();
+
+		if (slipLength > 1e-6f && _inertiaFactor > 0.f) {
+			constexpr float massFactor = 1.f;
+			const float slipCorrectionMagnitude = _friction * (1.f / massFactor + 1.f / _inertiaFactor) * dtSeconds;
+
+			sf::Vector2f deltaVelocity;
+			sf::Vector2f deltaRollVelocity;
+
+			if (slipCorrectionMagnitude < slipLength) {
+				const sf::Vector2f slipDir = slip.normalized();
+				const sf::Vector2f deltaU = -slipDir * slipCorrectionMagnitude;
+				deltaVelocity = deltaU * (_inertiaFactor / (1 + _inertiaFactor));
+				deltaRollVelocity = -deltaU * (1.f / (1 + _inertiaFactor));
+			}
+			else {
+				const sf::Vector2f commonVelocity =
+				    (velocity * massFactor + rollVelocity * _inertiaFactor) / (1 + _inertiaFactor);
+				deltaVelocity = commonVelocity - velocity;
+				deltaRollVelocity = commonVelocity - rollVelocity;
+			}
+
+			body->SetVelocity(velocity + deltaVelocity);
+			_spinOmega = OmegaFromVelocity(rollVelocity + deltaRollVelocity, invRadius);
+		}
+
+		const sf::Vector3f localOmegaDt = WorldOmegaToLocal(_spinOmega * dtSeconds, worldRotation);
+		const float angle = std::sqrt(
+		    localOmegaDt.x * localOmegaDt.x + localOmegaDt.y * localOmegaDt.y + localOmegaDt.z * localOmegaDt.z);
+		if (angle < 1e-8f) {
+			return;
+		}
+
+		sphereProjection->MultiplySphereOrientation(localOmegaDt / angle, angle);
 	}
 
-	const sf::Vector3f localOmegaDt = WorldOmegaToLocal(_spinOmega * dtSeconds, worldRotation);
-	const float angle =
-	    std::sqrt(localOmegaDt.x * localOmegaDt.x + localOmegaDt.y * localOmegaDt.y + localOmegaDt.z * localOmegaDt.z);
-	if (angle < 1e-8f) {
-		return;
+	float RollingBallBehaviour::GetRadius() const {
+		if (!_circleRef) {
+			return 0.f;
+		}
+		return _circleRef.Get()->GetRadius();
 	}
 
-	sphereProjection->MultiplySphereOrientation(localOmegaDt / angle, angle);
-}
+	void RollingBallBehaviour::SetVerticalSpin(sf::Angle direction, float value) {
+		const float radius = GetRadius();
+		if (radius <= 0.f) {
+			return;
+		}
 
-float Billiard::RollingBallBehaviour::GetRadius() const {
-	if (!_circleRef) {
-		return 0.f;
-	}
-	return _circleRef.Get()->GetRadius();
-}
-
-void Billiard::RollingBallBehaviour::SetVerticalSpin(sf::Angle direction, float value) {
-	const float radius = GetRadius();
-	if (radius <= 0.f) {
-		return;
+		const float angleRadians = direction.asRadians();
+		const sf::Vector2f rollVelocity{std::cos(angleRadians) * value, std::sin(angleRadians) * value};
+		_spinOmega = OmegaFromVelocity(rollVelocity, 1.f / radius);
 	}
 
-	const float angleRadians = direction.asRadians();
-	const sf::Vector2f rollVelocity{std::cos(angleRadians) * value, std::sin(angleRadians) * value};
-	_spinOmega = OmegaFromVelocity(rollVelocity, 1.f / radius);
-}
+	void RollingBallBehaviour::ResetOmega() {
+		_spinOmega = {0.f, 0.f, 0.f};
+	}
+
+} // namespace Billiard

@@ -2,20 +2,23 @@
 
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Behaviour/ComposedSurface/TiledTextureContributorBehaviour.h"
+#include "Engine/Behaviour/EventHandlerBehaviourBase.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Behaviour/ShapeLightReceiverBehaviour.h"
 #include "Engine/Core/MetaClass.h"
 #include "Engine/Core/RefWrapper.h"
 #include "Engine/Visual/CircleShapeVisual.h"
+#include "RollingBallBehaviour.h"
 
 namespace Billiard {
 
-	class BilliardBallBehaviour : public Behaviour
+	class BilliardBallBehaviour : public EventHandlerBehaviourBase
 	{
 		META_CLASS()
 
 	public:
 		void OnUpdate(const sf::Time& dt) override;
+		void OnEvent(const sf::Event& event) override;
 
 	public:
 		void SetBallNumber(int ballNumber);
@@ -25,6 +28,9 @@ namespace Billiard {
 		[[nodiscard]] bool IsStriped() const;
 		[[nodiscard]] float GetRadius() const;
 		std::shared_ptr<PhysicsBodyBehaviour> GetPhysicsBody() const;
+		std::shared_ptr<RollingBallBehaviour> GetRollingBallBehaviour() const;
+		void SetAllowedFreeMoveArea(const sf::FloatRect& allowedFreeMoveArea);
+		void ResetAllowedFreeMoveArea();
 
 		void Appear();
 		void PlayFallAnimation();
@@ -40,7 +46,8 @@ namespace Billiard {
 		RefWrapper<CircleShapeVisual> _ballShape;
 		/// @property
 		RefWrapper<PhysicsBodyBehaviour> _physicsBody;
-
+		/// @property
+		RefWrapper<RollingBallBehaviour> _rollingBall;
 		/// @property
 		float _fallAnimationDuration = 0.3f;
 
@@ -48,6 +55,8 @@ namespace Billiard {
 		bool _isFalling = false;
 		float _fallAnimationProgress = 0.f;
 		float _initialLightingStrength = 1.f;
+		std::optional<sf::Vector2f> _dragStartPosition;
+		std::optional<sf::FloatRect> _allowedFreeMoveArea;
 	};
 
 } // namespace Billiard

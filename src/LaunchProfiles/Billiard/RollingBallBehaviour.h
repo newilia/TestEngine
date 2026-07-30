@@ -20,6 +20,7 @@ namespace Billiard {
 
 	public:
 		void SetVerticalSpin(sf::Angle direction, float value);
+		void ResetOmega();
 
 	private:
 		float GetRadius() const;

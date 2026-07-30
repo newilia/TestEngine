@@ -2,6 +2,8 @@
 
 #include "BilliardBallBehaviour.generated.hpp"
 
+#include <Engine/Core/SfmlWindowUtils.h>
+
 namespace Billiard {
 
 	void BilliardBallBehaviour::SetBallNumber(int ballNumber) {
@@ -56,6 +58,10 @@ namespace Billiard {
 		return _physicsBody.Get();
 	}
 
+	std::shared_ptr<RollingBallBehaviour> BilliardBallBehaviour::GetRollingBallBehaviour() const {
+		return _rollingBall.Get();
+	}
+
 	void BilliardBallBehaviour::OnUpdate(const sf::Time& dt) {
 		if (_isFalling) {
 			_fallAnimationProgress += dt.asSeconds() / _fallAnimationDuration;
@@ -73,5 +79,50 @@ namespace Billiard {
 				textureContributor->SetTint(sf::Color(255, 255, 255, 255 * (1.f - _fallAnimationProgress)));
 			}
 		}
+	}
+
+	void BilliardBallBehaviour::OnEvent(const sf::Event& event) {
+		auto window = Engine::MainContext::GetInstance().GetMainWindow();
+		if (!window) {
+			return;
+		}
+		const auto toWorld = [&](sf::Vector2i pixel) -> sf::Vector2f {
+			return Utils::MapWindowPixelToWorld(*window, pixel);
+		};
+
+		if (auto e = event.getIf<sf::Event::MouseButtonPressed>()) {
+			auto worldPos = toWorld(e->position);
+			if (auto visual = _ballShape.Get()) {
+				if (visual->HitTest(worldPos)) {
+					_dragStartPosition = worldPos;
+				}
+			}
+		}
+		else if (auto e = event.getIf<sf::Event::MouseMoved>()) {
+			if (_dragStartPosition && _allowedFreeMoveArea.has_value()) {
+				auto newPos = GetNode()->GetLocalPosition();
+				auto pointerWorldPos = toWorld(e->position);
+				auto delta = pointerWorldPos - *_dragStartPosition;
+				newPos += delta;
+				auto radius = GetRadius();
+				newPos.x = std::clamp(newPos.x, _allowedFreeMoveArea->position.x + radius,
+				    _allowedFreeMoveArea->position.x + _allowedFreeMoveArea->size.x - radius);
+				newPos.y = std::clamp(newPos.y, _allowedFreeMoveArea->position.y + radius,
+				    _allowedFreeMoveArea->position.y + _allowedFreeMoveArea->size.y - radius);
+				GetNode()->SetLocalPosition(newPos);
+				_dragStartPosition = pointerWorldPos;
+			}
+		}
+		else if (auto e = event.getIf<sf::Event::MouseButtonReleased>()) {
+			_dragStartPosition.reset();
+		}
+	}
+
+	void BilliardBallBehaviour::SetAllowedFreeMoveArea(const sf::FloatRect& allowedFreeMoveArea) {
+		_allowedFreeMoveArea = allowedFreeMoveArea;
+	}
+
+	void BilliardBallBehaviour::ResetAllowedFreeMoveArea() {
+		_allowedFreeMoveArea.reset();
 	}
 } // namespace Billiard

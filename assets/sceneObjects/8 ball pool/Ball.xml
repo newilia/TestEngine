@@ -137,6 +137,7 @@
             <Property id="light_receiver" kind="SceneRef" value="2467484209" />
             <Property id="ball_shape" kind="SceneRef" value="3698677571" />
             <Property id="physics_body" kind="SceneRef" value="759259200" />
+            <Property id="rolling_ball" kind="SceneRef" value="1604605174" />
             <Property id="fall_animation_duration" kind="Float" value="0.150000006" />
           </Property>
         </Properties>

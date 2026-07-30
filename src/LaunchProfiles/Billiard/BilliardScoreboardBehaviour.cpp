@@ -10,33 +10,16 @@ namespace Billiard {
 		UpdateTimer(dt);
 	}
 
-	void BilliardScoreboardBehaviour::SetPlayerScore(int playerIndex, int score) {
-		if (playerIndex == 0) {
-			_player1Score = score;
-		}
-		else if (playerIndex == 1) {
-			_player2Score = score;
-		}
-	}
-
-	void BilliardScoreboardBehaviour::AddPlayerScore(int playerIndex, int delta) {
-		if (playerIndex == 0) {
-			_player1Score += delta;
-		}
-		else if (playerIndex == 1) {
-			_player2Score += delta;
-		}
+	void BilliardScoreboardBehaviour::Reset() {
+		_timerSeconds = 0.f;
+		_activePlayerIndex = 0;
 	}
 
 	void BilliardScoreboardBehaviour::ShowMessage(const std::string& message) {
 		_message = message;
 	}
 
-	void BilliardScoreboardBehaviour::SetTimer(float seconds) {
-		_timerSeconds = seconds;
-	}
-
-	void BilliardScoreboardBehaviour::SetActivePlayer(int playerIndex) {
+	void BilliardScoreboardBehaviour::SetActivePlayerIndex(int playerIndex) {
 		_activePlayerIndex = playerIndex;
 	}
 
