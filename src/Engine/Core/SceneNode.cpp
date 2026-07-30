@@ -192,6 +192,9 @@ void SceneNode::SetVisual(shared_ptr<Visual>&& visual) {
 	_visual = std::move(visual);
 	if (_visual) {
 		_visual->AttachTo(shared_from_this());
+		if (!_visual->IsInited()) {
+			_visual->OnInit();
+		}
 	}
 	NotifySceneEntityIndexDirty();
 }
@@ -377,6 +380,9 @@ void SceneNode::NotifyLifecycleInitRecursive() {
 			b->_wasInited = true;
 		}
 	});
+	if (_visual && !_visual->IsInited()) {
+		_visual->OnInit();
+	}
 }
 
 void SceneNode::NotifyLifecycleDeinitRecursive() {

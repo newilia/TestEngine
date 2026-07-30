@@ -12,14 +12,17 @@ namespace sf {
 	class Text;
 }
 
+META_ENUM(TextAlignment, Default, Left, Center, Right);
+
 class TextVisual : public Visual
 {
 	META_CLASS()
 	META_PROPERTY_BASE(Visual)
 
 public:
-	TextVisual() = default;
+	TextVisual();
 
+	void OnInit() override;
 	void Draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 	bool HitTest(const sf::Vector2f& worldPoint) const override;
 	sf::FloatRect GetLocalBounds() const override;
@@ -60,6 +63,17 @@ public:
 	float GetOutlineThickness() const;
 	/// @setter
 	void SetOutlineThickness(float thickness);
+	/// @getter
+	TextAlignment GetTextAlignment() const;
+	/// @setter
+	void SetTextAlignment(TextAlignment alignment);
+
+	void SetFontFamily(const std::string& name);
+	const std::string& GetFontFamily() const;
+
+private:
+	/// property(setter=SetFontFamily)
+	std::string _fontFamily;
 
 private:
 	std::shared_ptr<sf::Text> _text;

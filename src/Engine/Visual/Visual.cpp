@@ -11,3 +11,11 @@ void Visual::SetTapHandlingEnabled(bool enabled) {
 bool Visual::IsTapHandlingEnabled() const {
 	return _tapHandlingEnabled;
 }
+
+bool Visual::IsInited() const {
+	return _isInited;
+}
+
+void Visual::OnInit() {
+	_isInited = true;
+}
