@@ -136,12 +136,16 @@ void PhysicsProcessor::ApplyAngularDamping(PhysicsBodyBehaviour* body, float dtS
 	if (k <= 0.f) {
 		return;
 	}
+	const float inertiaMultiplier = body->GetInertiaMultiplier();
+	if (inertiaMultiplier <= 1e-6f) {
+		return;
+	}
 	float w = body->GetAngularSpeed();
 	if (w == 0.f) {
 		return;
 	}
 	const float sign = w > 0.f ? 1.f : -1.f;
-	const float dw = -sign * k * dtSec;
+	const float dw = -sign * k * dtSec / inertiaMultiplier;
 	if (std::abs(dw) >= std::abs(w)) {
 		body->SetAngularSpeed(0.f);
 	}

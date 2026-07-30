@@ -371,3 +371,11 @@ float PhysicsBodyBehaviour::EstimateCollisionInertiaWorld(float mass, const sf::
 	StoreInertiaWorldCache(mass, T, result * _inertiaMultiplier);
 	return result;
 }
+
+float PhysicsBodyBehaviour::GetInertiaMultiplier() const {
+	return _inertiaMultiplier;
+}
+
+void PhysicsBodyBehaviour::SetInertiaMultiplier(float multiplier) {
+	_inertiaMultiplier = multiplier;
+}

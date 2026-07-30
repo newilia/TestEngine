@@ -1278,13 +1278,15 @@ namespace Engine {
 	}
 
 	void Editor::OnMouseButtonPressed(const sf::Event::MouseButtonPressed& e) {
-		if (e.button == sf::Mouse::Button::Middle || e.button == sf::Mouse::Button::Right) {
+		if (e.button == sf::Mouse::Button::Middle ||
+		    (e.button == sf::Mouse::Button::Right && _cameraPanOnRightClickEnabled)) {
 			_cameraMoveMouseOriginPos = e.position;
 		}
 	}
 
 	void Editor::OnMouseButtonReleased(const sf::Event::MouseButtonReleased& e) {
-		if (e.button == sf::Mouse::Button::Middle || e.button == sf::Mouse::Button::Right) {
+		if (e.button == sf::Mouse::Button::Middle ||
+		    (e.button == sf::Mouse::Button::Right && _cameraPanOnRightClickEnabled)) {
 			_cameraMoveMouseOriginPos.reset();
 		}
 	}
@@ -1394,5 +1396,9 @@ namespace Engine {
 			}
 		}
 		CollectHierarchyFallbackMarker(node, kHierarchySelectionOutlineColor, fallbackMarkers);
+	}
+
+	void Editor::SetCameraPanOnRightClickEnabled(bool isEnabled) {
+		_cameraPanOnRightClickEnabled = isEnabled;
 	}
 } // namespace Engine

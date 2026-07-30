@@ -99,12 +99,16 @@ namespace Billiard {
 		}
 	}
 
-	void BilliardBallBehaviour::SetBallInHand(const sf::FloatRect& allowedFreeMoveArea) {
-		_ballInHandArea = allowedFreeMoveArea;
+	void BilliardBallBehaviour::SetBallInHand(const sf::FloatRect& allowedMoveArea) {
+		_ballInHandArea = allowedMoveArea;
 	}
 
 	void BilliardBallBehaviour::ResetBallInHand() {
 		_ballInHandArea.reset();
+	}
+
+	bool BilliardBallBehaviour::IsBallInHand() const {
+		return _ballInHandArea.has_value();
 	}
 
 	Signal<>& BilliardBallBehaviour::GetOnGrabSignal() const {
@@ -116,7 +120,7 @@ namespace Billiard {
 	}
 
 	void BilliardBallBehaviour::OnMouseButtonPressed(const sf::Vector2i& position, sf::Mouse::Button /*button*/) {
-		if (_ballInHandArea.has_value()) {
+		if (IsBallInHand()) {
 			auto worldPos = toWorld(position);
 			if (auto visual = _ballShape.Get()) {
 				if (visual->HitTest(worldPos)) {
@@ -134,7 +138,7 @@ namespace Billiard {
 	}
 
 	void BilliardBallBehaviour::OnMouseMoved(const sf::Vector2i& position) {
-		if (_dragStartPosition && _ballInHandArea.has_value()) {
+		if (_dragStartPosition && IsBallInHand()) {
 			auto newPos = GetNode()->GetLocalPosition();
 			auto pointerWorldPos = toWorld(position);
 			auto delta = pointerWorldPos - *_dragStartPosition;

@@ -1,6 +1,7 @@
 #include "EightBallPoolBehaviour.h"
 
 #include "EightBallPoolBehaviour.generated.hpp"
+#include "Engine/Editor/Editor.h"
 #include "RollingBallBehaviour.h"
 
 namespace Billiard {
@@ -83,6 +84,8 @@ namespace Billiard {
 	}
 
 	void EightBallPoolBehaviour::StartNewGame() {
+		Engine::Editor::GetInstance().SetCameraPanOnRightClickEnabled(false);
+
 		_gameState.StartNewGame();
 
 		if (auto scoreboard = _scoreboardBehaviour.Get()) {

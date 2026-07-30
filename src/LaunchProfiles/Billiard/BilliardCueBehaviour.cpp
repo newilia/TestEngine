@@ -55,25 +55,39 @@ namespace Billiard {
 			return Utils::MapWindowPixelToWorld(*window, pixel);
 		};
 
+		const bool canInteract = !_isShooting && !_isHiding && !_isShowing;
+
 		if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
 			if (pressed->button == sf::Mouse::Button::Left) {
-				if (!_isShooting && !_isHiding && !_isShowing && HitTestWorld(toWorld(pressed->position))) {
-					_isDragging = true;
+				if (canInteract && HitTestWorld(toWorld(pressed->position))) {
+					_isAiming = true;
+				}
+			}
+			else if (pressed->button == sf::Mouse::Button::Right) {
+				if (canInteract && GetTargetBallNode() && HitTestWorld(toWorld(pressed->position))) {
+					BeginPullBack(toWorld(pressed->position));
 				}
 			}
 			return;
 		}
 
 		if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
-			if (_isDragging) {
-				Aim(toWorld(moved->position));
+			const sf::Vector2f worldPoint = toWorld(moved->position);
+			if (_isAiming) {
+				Aim(worldPoint);
+			}
+			if (_isPullingBack) {
+				PullBack(worldPoint);
 			}
 			return;
 		}
 
 		if (const auto* released = event.getIf<sf::Event::MouseButtonReleased>()) {
 			if (released->button == sf::Mouse::Button::Left) {
-				if (_isDragging) {
+				_isAiming = false;
+			}
+			else if (released->button == sf::Mouse::Button::Right) {
+				if (_isPullingBack) {
 					Release();
 				}
 			}
@@ -131,7 +145,7 @@ namespace Billiard {
 	}
 
 	void BilliardCueBehaviour::Release() {
-		_isDragging = false;
+		_isPullingBack = false;
 		if (_distanceFromTarget <= _minDistanceFromTarget) {
 			return;
 		}
@@ -164,13 +178,23 @@ namespace Billiard {
 		}
 
 		const sf::Vector2f delta = Utils::GetWorldPos(targetNode) - worldPoint;
-		const float distance = Utils::Length(delta);
-		if (distance <= std::numeric_limits<float>::epsilon()) {
+		if (Utils::Length(delta) <= std::numeric_limits<float>::epsilon()) {
 			return;
 		}
 
 		SetDirection(sf::radians(std::atan2(delta.y, delta.x)));
-		SetDistanceFromTarget(distance);
+	}
+
+	void BilliardCueBehaviour::BeginPullBack(const sf::Vector2f& worldPoint) {
+		_isPullingBack = true;
+		_pullBackGrabWorldPoint = worldPoint;
+		_pullBackDistanceAtGrab = _distanceFromTarget;
+	}
+
+	void BilliardCueBehaviour::PullBack(const sf::Vector2f& worldPoint) {
+		const sf::Vector2f cueDir(std::cos(_directionAngle.asRadians()), std::sin(_directionAngle.asRadians()));
+		const sf::Vector2f pointerDelta = worldPoint - _pullBackGrabWorldPoint;
+		SetDistanceFromTarget(_pullBackDistanceAtGrab - Utils::Dot(pointerDelta, cueDir));
 	}
 
 	void BilliardCueBehaviour::OnTipCollide(const IntersectionDetails& intersection) {
@@ -245,7 +269,8 @@ namespace Billiard {
 	}
 
 	void BilliardCueBehaviour::AbortAiming() {
-		_isDragging = false;
+		_isAiming = false;
+		_isPullingBack = false;
 		_isShooting = false;
 		SetDistanceFromTarget(_minDistanceFromTarget);
 	}

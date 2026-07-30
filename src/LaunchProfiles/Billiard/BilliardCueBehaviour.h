@@ -39,6 +39,8 @@ namespace Billiard {
 
 	private:
 		void Aim(const sf::Vector2f& pointerWorldPoint);
+		void BeginPullBack(const sf::Vector2f& pointerWorldPoint);
+		void PullBack(const sf::Vector2f& pointerWorldPoint);
 		void SetDirection(sf::Angle direction);
 		void Release();
 		bool HitTestWorld(const sf::Vector2f& worldPoint) const;
@@ -82,10 +84,13 @@ namespace Billiard {
 		float _minDistanceFromTarget = 50.f;
 
 	private:
-		bool _isDragging = false;
+		bool _isAiming = false;
+		bool _isPullingBack = false;
 		bool _isShooting = false;
 		float _verticalSpin = 0.f;
 		float _distanceBeforeShoot = 0.f;
+		sf::Vector2f _pullBackGrabWorldPoint{};
+		float _pullBackDistanceAtGrab = 0.f;
 		Signal<const IntersectionDetails&>::Subscription _tipCollideSubscription;
 		mutable Signal<> _onReleaseSignal;
 		mutable Signal<> _onHitSignal;

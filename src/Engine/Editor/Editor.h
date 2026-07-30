@@ -116,6 +116,7 @@ namespace Engine {
 		bool& DrawDescendantsSelectionEnabledMutable();
 
 		bool TryLoadLastSceneOnStartup();
+		void SetCameraPanOnRightClickEnabled(bool isEnabled);
 
 	private:
 		Editor() = default;
@@ -174,6 +175,7 @@ namespace Engine {
 		bool _showSaveDocumentKindModal = false;
 		bool _pendingSaveAs = false;
 		int _saveKindModalSelection = 0;
+		bool _cameraPanOnRightClickEnabled = true;
 	};
 
 } // namespace Engine
