@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package billiard;
+
+message CreateSessionRequest {
+  string player_name = 1;
+}
+
+message CreateSessionResponse {
+  uint32 session_id = 1;
+  uint32 client_id = 2;
+  bool success = 3;
+  string error_message = 4;
+}
+
+message JoinSessionRequest {
+  uint32 session_id = 1;
+  string player_name = 2;
+}
+
+message JoinSessionResponse {
+  uint32 session_id = 1;
+  uint32 client_id = 2;
+  bool success = 3;
+  string error_message = 4;
+}
+
+message Envelope {
+  oneof payload {
+    CreateSessionRequest create_session_request = 1;
+    CreateSessionResponse create_session_response = 2;
+    JoinSessionRequest join_session_request = 3;
+    JoinSessionResponse join_session_response = 4;
+  }
+}

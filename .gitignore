@@ -11,6 +11,9 @@ imgui.ini
 # Generated property trees (tools/property_codegen.py)
 src/Codegen/
 
+# Generated protobuf (proto/ + tools/gen_proto.cmd / CMake)
+src/proto_generated/
+
 # CMake build artifacts
 build/
 build-ninja/

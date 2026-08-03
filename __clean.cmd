@@ -36,4 +36,8 @@ if exist "src\Codegen" (
   )
 )
 
+if exist "src\proto_generated" (
+  rmdir /s /q "src\proto_generated"
+)
+
 exit /b 0

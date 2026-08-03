@@ -48,6 +48,7 @@ add_custom_target(
 )
 
 file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/**.cpp")
+list(FILTER ENGINE_SOURCES EXCLUDE REGEX "/proto_generated/")
 file(GLOB_RECURSE ENGINE_HEADERS CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/**.h")
 file(GLOB_RECURSE ENGINE_CODEGEN CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/Codegen/*.generated.hpp")
 
@@ -96,6 +97,7 @@ target_include_directories(
 	PRIVATE
 		${CMAKE_CURRENT_SOURCE_DIR}/src
 		${CMAKE_CURRENT_SOURCE_DIR}/src/Codegen
+		${CMAKE_CURRENT_SOURCE_DIR}/src/proto_generated
 )
 
 target_precompile_headers(TestEngine PRIVATE <pch.h>)
@@ -133,6 +135,32 @@ target_link_libraries(TestEngine PRIVATE
     pugixml::pugixml
     ImGui-SFML::ImGui-SFML
 )
+
+# protobuf submodule: third-party/protobuf (BilliardSession protocol)
+set(protobuf_INSTALL OFF CACHE BOOL "" FORCE)
+set(protobuf_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(protobuf_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(protobuf_BUILD_CONFORMANCE OFF CACHE BOOL "" FORCE)
+set(protobuf_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(protobuf_MSVC_STATIC_RUNTIME OFF CACHE BOOL "" FORCE)
+add_subdirectory(third-party/protobuf EXCLUDE_FROM_ALL)
+
+include(${CMAKE_SOURCE_DIR}/third-party/protobuf/cmake/protobuf-generate.cmake)
+
+set(TESTENGINE_PROTO_DIR "${CMAKE_SOURCE_DIR}/proto")
+set(TESTENGINE_PROTO_GEN_DIR "${CMAKE_SOURCE_DIR}/src/proto_generated")
+file(MAKE_DIRECTORY "${TESTENGINE_PROTO_GEN_DIR}")
+
+protobuf_generate(
+	OUT_VAR TESTENGINE_PROTO_SRCS
+	PROTOS "${TESTENGINE_PROTO_DIR}/BilliardSession.proto"
+	IMPORT_DIRS "${TESTENGINE_PROTO_DIR}"
+	PROTOC_OUT_DIR "${TESTENGINE_PROTO_GEN_DIR}"
+)
+
+target_sources(TestEngine PRIVATE ${TESTENGINE_PROTO_SRCS})
+target_link_libraries(TestEngine PRIVATE protobuf::libprotobuf)
+add_dependencies(TestEngine libprotobuf protoc)
 
 if(WIN32)
 	target_link_libraries(TestEngine PRIVATE ole32)

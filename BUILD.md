@@ -13,7 +13,9 @@
 | `_cmake_ninja.cmd` | `build-ninja/` + Ninja (только `compile_commands.json` для clangd) |
 | `_build_release.cmd` / `_build_debug.cmd` | `cmake --build build` с `Release` или `Debug` |
 | `_run_release.cmd` / `_run_debug.cmd` | Запуск exe; **рабочий каталог = корень репо** |
-| `__clean.cmd` | Удаляет `build`, `build-ninja`, `.vs`, `src/Codegen` |
+| `_run_billiards_server.cmd` | Python BilliardSession-сервер (`127.0.0.1:7777`) |
+| `_gen_proto.cmd` | Генерация `BilliardSession_pb2.py` (Python) и `BilliardSession.pb.*` (C++) из [`proto/BilliardSession.proto`](proto/BilliardSession.proto) |
+| `__clean.cmd` | Удаляет `build`, `build-ninja`, `.vs`, `src/Codegen`, `src/proto_generated` |
 
 Параллельная сборка: `_build_release.cmd -j 8`.
 
@@ -83,3 +85,26 @@ _cmake_ninja.cmd
 
 - Полный сброс: `__clean.cmd`, затем `_cmake.cmd` и при необходимости `_cmake_ninja.cmd`.
 - Только clean: `cmake --build build --config Release --target clean`.
+
+## BilliardSession-сервер (MVP)
+
+**Зависимости:** git submodule [`third-party/protobuf`](third-party/protobuf) (сборка вместе с `TestEngine`), Python 3 + `pip install -r server/requirements.txt` (`protobuf>=7.35.1`).
+
+**Первый раз после клона:**
+
+```text
+git submodule update --init --recursive
+_cmake.cmd
+_build_release.cmd
+_gen_proto.cmd
+```
+
+`_gen_proto.cmd` для Python вызывает `grpcio-tools.protoc` (ставится автоматически); для C++ — `protoc.exe` из `build/bin/Release/`. CMake также генерирует C++ при build в [`src/proto_generated/`](src/proto_generated/) (каталог в `.gitignore`).
+
+**Запуск:**
+
+```text
+_run_billiards_server.cmd
+```
+
+Логирует `CreateSession` / `JoinSession`. Два клиента на одной машине: два окна `TestEngine`, на сцене бильярда — [`BilliardServerBehaviour`](src/LaunchProfiles/Billiard/BilliardServerBehaviour.h) (ПКМ в inspector → **Create Session** / **Join Session**, `/// @method`). Ответы — в консоль (`fmt::print`).
