@@ -136,10 +136,7 @@ namespace Engine {
 		if (_isSimPaused) {
 			return sf::Time();
 		}
-		const auto averageDt = sf::seconds(1) / (GetCurrentTickRate() + 0.001f); // prevent sudden long ticks
-		constexpr sf::Time maxDt = sf::seconds(1) / 60.f;
-		const auto dt = _tickTime * _simSpeedMultiplier;
-		return std::min(dt, std::min(averageDt / 2.f, maxDt));
+		return _tickTime * _simSpeedMultiplier;
 	}
 
 	sf::Time MainContext::GetWallTickDt() const {
@@ -158,7 +155,7 @@ namespace Engine {
 		}
 	}
 
-	void MainContext::OnStartUpdateTick() {
+	sf::Time MainContext::OnStartUpdateTick() {
 		_tickTime = _tickClock.getElapsedTime();
 		_tickClock.restart();
 		const float dtSec = _tickTime.asSeconds();
@@ -166,6 +163,7 @@ namespace Engine {
 			const float instantaneous = 1.f / dtSec;
 			AccumulateSmoothedRate(instantaneous, _tickRate, _haveTickRate);
 		}
+		return _tickTime * _simSpeedMultiplier;
 	}
 
 	void MainContext::ApplyWindowFrameSettings() {

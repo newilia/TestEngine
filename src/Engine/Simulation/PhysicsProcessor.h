@@ -4,7 +4,6 @@
 #include "Engine/Behaviour/Physics/IntersectionDetails.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/SceneNode.h"
-#include "Engine/Core/Updatable.h"
 #include "Engine/Core/common.h"
 
 #include <SFML/Graphics/CircleShape.hpp>
@@ -13,11 +12,10 @@
 #include <memory>
 #include <optional>
 
-class PhysicsProcessor : public Updatable
+class PhysicsProcessor
 {
 public:
-	~PhysicsProcessor() override = default;
-	void Update(const sf::Time& dt) override;
+	void Update(sf::Time dt);
 
 	void RegisterBody(shared_ptr<PhysicsBodyBehaviour> body);
 	void UnregisterBody(PhysicsBodyBehaviour* body);
@@ -38,6 +36,8 @@ public:
 	std::shared_ptr<AttractionField> GetAttractionField() const;
 
 	sf::Vector2f EvaluateExternalForces(PhysicsBodyBehaviour* body) const;
+
+	void SetMaxDt(sf::Time dt);
 
 private:
 	void IntergateVelocity(PhysicsBodyBehaviour* body, float dtSec);
@@ -66,6 +66,7 @@ private:
 	bool _isGravityEnabled = false;
 	float _airFriction = 0.f;
 	int _simulationSubsteps = 1;
+	sf::Time _maxDt = sf::milliseconds(10);
 };
 
 /// Temporary debug tuning for collision resolution (see DebugSettingsWidget).

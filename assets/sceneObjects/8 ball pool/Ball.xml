@@ -47,8 +47,8 @@
             <Property id="friction" kind="Float" value="0.25" />
             <Property id="softness" kind="Float" value="0.00999999978" />
             <Property id="gravity_scale" kind="Float" value="1" />
-            <Property id="linear_damping" kind="Float" value="250" />
-            <Property id="angular_damping" kind="Float" value="10" />
+            <Property id="linear_damping" kind="Float" value="80" />
+            <Property id="angular_damping" kind="Float" value="2.5" />
             <Property id="collision_groups" kind="Sequence">
               <Property id="0" kind="Object">
                 <Property id="v" kind="Bool" value="true" />
@@ -111,9 +111,9 @@
             <Property id="circle_ref" kind="SceneRef" value="3698677571" />
             <Property id="sphere_projection_ref" kind="SceneRef" value="3290324261" />
             <Property id="body_ref" kind="SceneRef" value="759259200" />
-            <Property id="friction" kind="Float" value="4000" />
+            <Property id="friction" kind="Float" value="1000" />
             <Property id="spin_omega" kind="Vec3f" x="0" y="0" z="0" />
-            <Property id="inertia_factor" kind="Float" value="0.150000006" />
+            <Property id="inertia_factor" kind="Float" value="0.0799999982" />
           </Property>
         </Properties>
       </Behaviour>

@@ -142,14 +142,13 @@ namespace Engine {
 
 	void MainLoop::UpdateTick() {
 		auto& mainContext = Engine::MainContext::GetInstance();
-		mainContext.OnStartUpdateTick();
-		auto simulatedDt = mainContext.GetSimTickDt();
-		Editor::GetInstance().OnUpdate(simulatedDt);
+		const auto tickDt = mainContext.OnStartUpdateTick();
+		Editor::GetInstance().OnUpdate(tickDt);
 
 		if (!mainContext.IsSimPaused()) {
-			mainContext.GetPhysicsProcessor()->Update(simulatedDt);
+			mainContext.GetPhysicsProcessor()->Update(tickDt);
 			if (auto scene = mainContext.GetScene()) {
-				scene->Update(simulatedDt);
+				scene->Update(tickDt);
 			}
 		}
 		if (auto scene = mainContext.GetScene()) {

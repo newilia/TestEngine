@@ -59,7 +59,7 @@ namespace Engine {
 		void ToggleSimPaused();
 
 		void OnStartPresentFrame();
-		void OnStartUpdateTick();
+		sf::Time OnStartUpdateTick();
 
 		// in-game dt for logic update, affected by speed multiplier
 		sf::Time GetSimTickDt() const;

@@ -66,7 +66,8 @@ void PhysicsProcessor::UnregisterBody(PhysicsBodyBehaviour* body) {
 	}
 }
 
-void PhysicsProcessor::Update(const sf::Time& dt) {
+void PhysicsProcessor::Update(sf::Time dt) {
+	dt = std::min(dt, _maxDt);
 	const float substepDt = dt.asSeconds() / _simulationSubsteps;
 
 	for (int i = 0; i < _simulationSubsteps; ++i) {
@@ -86,6 +87,10 @@ void PhysicsProcessor::Update(const sf::Time& dt) {
 
 		DetactAndResolveCollisions(substepDt);
 	}
+}
+
+void PhysicsProcessor::SetMaxDt(sf::Time dt) {
+	_maxDt = dt;
 }
 
 void PhysicsProcessor::IntergateVelocity(PhysicsBodyBehaviour* body, float dtSec) {

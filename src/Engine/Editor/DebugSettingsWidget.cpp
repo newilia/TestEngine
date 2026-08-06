@@ -242,10 +242,10 @@ namespace Engine {
 			if (ImGui::Checkbox("VSync", &vsync)) {
 				mainContext.SetVerticalSyncEnabled(vsync);
 			}
-			ImGui::Text("Frame dt: %.3f s (%.1f fps)", static_cast<double>(mainContext.GetFrameDt().asSeconds()),
+			ImGui::Text("Frame dt: %.4f s (%.1f fps)", static_cast<double>(mainContext.GetFrameDt().asSeconds()),
 			    mainContext.GetCurrentFps());
 
-			ImGui::Text("Tick dt:  %.3f s (%.1f fps)", static_cast<double>(mainContext.GetSimTickDt().asSeconds()),
+			ImGui::Text("Tick dt:  %.4f s (%.1f fps)", static_cast<double>(mainContext.GetSimTickDt().asSeconds()),
 			    mainContext.GetCurrentTickRate());
 		}
 	}
