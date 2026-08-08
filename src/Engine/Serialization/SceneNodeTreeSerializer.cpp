@@ -108,7 +108,7 @@ namespace Engine::Serialization {
 
 		void LoadNodeRecursive(const pugi::xml_node& xmlNode, SceneNode& targetNode, SerializationResult& result) {
 			if (!xmlNode) {
-				result.AddError(kNodeElement, "Missing XML node");
+				result.AddWarning(kNodeElement, "Missing XML node");
 				return;
 			}
 
@@ -134,7 +134,7 @@ namespace Engine::Serialization {
 				const std::shared_ptr<EntityOnNode> created =
 				    SceneEntityRegistry::GetInstance().CreateByTypeId(visualTypeId);
 				if (!created) {
-					result.AddError(kVisualElement, "Unknown visual type id: " + visualTypeId);
+					result.AddWarning(kVisualElement, "Unknown visual type id: " + visualTypeId);
 				}
 				else if (auto visual = std::dynamic_pointer_cast<Visual>(created)) {
 					if (const pugi::xml_attribute oidAttr = visualNode.attribute(kEntityIdAttr)) {
@@ -146,7 +146,7 @@ namespace Engine::Serialization {
 					targetNode.SetVisual(std::move(visual));
 				}
 				else {
-					result.AddError(kVisualElement, "Registered type is not a Visual: " + visualTypeId);
+					result.AddWarning(kVisualElement, "Registered type is not a Visual: " + visualTypeId);
 				}
 			}
 
@@ -155,7 +155,7 @@ namespace Engine::Serialization {
 				const std::shared_ptr<EntityOnNode> created =
 				    SceneEntityRegistry::GetInstance().CreateByTypeId(sortingTypeId);
 				if (!created) {
-					result.AddError(kSortingElement, "Unknown sorting strategy type id: " + sortingTypeId);
+					result.AddWarning(kSortingElement, "Unknown sorting strategy type id: " + sortingTypeId);
 				}
 				else if (auto sorting = std::dynamic_pointer_cast<SortingStrategy>(created)) {
 					if (const pugi::xml_attribute oidAttr = sortingNode.attribute(kEntityIdAttr)) {
@@ -167,7 +167,7 @@ namespace Engine::Serialization {
 					targetNode.SetSortingStrategy(sorting);
 				}
 				else {
-					result.AddError(kSortingElement, "Registered type is not a sorting strategy: " + sortingTypeId);
+					result.AddWarning(kSortingElement, "Registered type is not a sorting strategy: " + sortingTypeId);
 				}
 			}
 
@@ -177,12 +177,12 @@ namespace Engine::Serialization {
 					const std::shared_ptr<EntityOnNode> created =
 					    SceneEntityRegistry::GetInstance().CreateByTypeId(behaviourTypeId);
 					if (!created) {
-						result.AddError(kBehaviourElement, "Unknown behaviour type id: " + behaviourTypeId);
+						result.AddWarning(kBehaviourElement, "Unknown behaviour type id: " + behaviourTypeId);
 						continue;
 					}
 					auto behaviour = std::dynamic_pointer_cast<Behaviour>(created);
 					if (!behaviour) {
-						result.AddError(kBehaviourElement, "Registered type is not a Behaviour: " + behaviourTypeId);
+						result.AddWarning(kBehaviourElement, "Registered type is not a Behaviour: " + behaviourTypeId);
 						continue;
 					}
 					if (const pugi::xml_attribute oidAttr = behaviourNode.attribute(kEntityIdAttr)) {

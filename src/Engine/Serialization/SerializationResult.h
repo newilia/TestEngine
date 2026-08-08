@@ -22,6 +22,7 @@ namespace Engine::Serialization {
 	struct SerializationResult
 	{
 		bool isSuccess = true;
+		bool hasWarnings = false;
 		std::vector<SerializationDiagnostic> diagnostics;
 
 		void AddError(std::string path, std::string message) {
@@ -31,6 +32,7 @@ namespace Engine::Serialization {
 		}
 
 		void AddWarning(std::string path, std::string message) {
+			hasWarnings = true;
 			diagnostics.push_back(
 			    SerializationDiagnostic{SerializationDiagnosticLevel::Warning, std::move(path), std::move(message)});
 		}
@@ -38,6 +40,9 @@ namespace Engine::Serialization {
 		void Merge(const SerializationResult& other) {
 			if (!other.isSuccess) {
 				isSuccess = false;
+			}
+			if (other.hasWarnings) {
+				hasWarnings = true;
 			}
 			diagnostics.insert(diagnostics.end(), other.diagnostics.begin(), other.diagnostics.end());
 		}

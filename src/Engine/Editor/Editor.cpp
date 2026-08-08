@@ -1129,11 +1129,10 @@ namespace Engine {
 		    _documentKind == Serialization::SceneDocumentKind::SceneObject
 		        ? Serialization::SceneDocumentSerializer::SaveSceneObjectDocument(*scene->GetRoot(), *_currentScenePath)
 		        : Serialization::SceneDocumentSerializer::SaveSceneDocument(*scene, *_currentScenePath);
-		if (!saveResult.isSuccess) {
+		if (!saveResult.isSuccess || saveResult.hasWarnings) {
 			ShowSerializationErrorDialog(fmt::format("Save {}", DocumentKindLabel()), saveResult);
-			return false;
 		}
-		return true;
+		return saveResult.isSuccess;
 	}
 
 	bool Editor::SaveSceneAs() {
@@ -1152,9 +1151,11 @@ namespace Engine {
 		    _documentKind == Serialization::SceneDocumentKind::SceneObject
 		        ? Serialization::SceneDocumentSerializer::SaveSceneObjectDocument(*scene->GetRoot(), *path)
 		        : Serialization::SceneDocumentSerializer::SaveSceneDocument(*scene, *path);
-		if (!saveResult.isSuccess) {
+		if (!saveResult.isSuccess || saveResult.hasWarnings) {
 			ShowSerializationErrorDialog(fmt::format("Save {}", DocumentKindLabel()), saveResult);
-			return false;
+			if (!saveResult.isSuccess) {
+				return false;
+			}
 		}
 		SetCurrentDocument(*path, _documentKind);
 		return true;
@@ -1172,9 +1173,11 @@ namespace Engine {
 		}
 		const Serialization::SerializationResult saveResult =
 		    Serialization::SceneDocumentSerializer::SaveSceneObjectDocument(*node, *path);
-		if (!saveResult.isSuccess) {
+		if (!saveResult.isSuccess || saveResult.hasWarnings) {
 			ShowSerializationErrorDialog("Save scene object", saveResult);
-			return false;
+			if (!saveResult.isSuccess) {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -1191,9 +1194,11 @@ namespace Engine {
 	bool Editor::InstantiateSceneObject(const std::filesystem::path& path) {
 		const Serialization::SceneObjectInstantiateResult loaded =
 		    Serialization::SceneObjectSerializer::InstantiateFromFile(path);
-		if (!loaded.result.isSuccess || !loaded.instance) {
+		if (!loaded.result.isSuccess || loaded.result.hasWarnings || !loaded.instance) {
 			ShowSerializationErrorDialog("Instantiate scene object", loaded.result);
-			return false;
+			if (!loaded.result.isSuccess) {
+				return false;
+			}
 		}
 		std::shared_ptr<SceneNode> parent = GetSelectedNode();
 		if (!parent) {
@@ -1249,9 +1254,11 @@ namespace Engine {
 		}
 		Serialization::SceneDocumentLoadResult loaded =
 		    Serialization::SceneDocumentSerializer::LoadDocumentFromFile(path);
-		if (!loaded.result.isSuccess || !loaded.scene) {
+		if (!loaded.result.isSuccess || loaded.result.hasWarnings || !loaded.scene) {
 			ShowSerializationErrorDialog("Load document", loaded.result);
-			return false;
+			if (!loaded.result.isSuccess) {
+				return false;
+			}
 		}
 		MainContext::GetInstance().SetScene(loaded.scene);
 		ClearNodeSelection();

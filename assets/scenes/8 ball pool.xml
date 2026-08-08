@@ -2,7 +2,7 @@
 <Scene version="2">
   <Settings>
     <Simulation speedMultiplier="1" vsync="false" />
-    <View centerX="-136.928223" centerY="-207.445007" scale="1.63639188" />
+    <View centerX="143.946716" centerY="-149.443283" scale="1.53333163" />
     <Grid visible="false" size="50" basis="10" snap="true" />
     <Physics gravityX="0" gravityY="400" gravityEnabled="false" airFriction="0" substeps="4">
       <Attraction strength="50" softening="4" massCoupling="true" />
@@ -185,6 +185,16 @@
                 </Property>
                 <Property id="table_rect" kind="SceneRef" value="50035901" />
                 <Property id="turn_time_limit" kind="Float" value="30" />
+              </Property>
+            </Properties>
+          </Behaviour>
+          <Behaviour type="Billiard.OnlineSessionBehaviour" entityId="254798189">
+            <Properties>
+              <Property id="online_session_behaviour" kind="Object">
+                <Property id="server_host" kind="String" value="127.0.0.1" />
+                <Property id="server_port" kind="Int32" value="7777" />
+                <Property id="session_id" kind="Int32" value="1" />
+                <Property id="player_name" kind="String" value="Player" />
               </Property>
             </Properties>
           </Behaviour>
@@ -7788,9 +7798,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-32.4819298" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="33.9611893" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="-2.82045269" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-1.89817905" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="33.9144516" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="-3.39928341" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -8185,9 +8195,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-115.230461" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-1.03422189" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="39.5988045" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-179.340714" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-0.796874821" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="140.396606" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -8582,9 +8592,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-140.88739" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-36.5286827" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="23.3258877" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-163.653458" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-33.1324234" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="151.781204" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -8979,9 +8989,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-26.7285461" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="38.4545097" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="37.4175148" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="25.7589073" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="29.5989132" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="44.3316383" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -9376,9 +9386,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="152.637329" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="28.5578995" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="-15.4470539" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-171.751633" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="27.4373302" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="-162.536072" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -9773,9 +9783,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-83.4878998" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-61.527359" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="-151.609131" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="41.2420349" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="50.65271" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="-131.413788" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -10170,9 +10180,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-17.1233253" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="21.354866" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="-139.253815" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-14.3163652" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-16.0143433" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="-137.229614" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -10567,9 +10577,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-84.3762512" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="28.6942005" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="-126.024986" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-23.8778763" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-16.402626" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="-122.533958" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -10964,9 +10974,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-97.2541199" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="62.0597916" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="-173.518494" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-167.984634" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-61.3769493" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="-13.6293859" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -11361,9 +11371,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="136.351181" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-23.8635292" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="-37.6335564" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="164.884018" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-18.6861305" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="-139.865295" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -11758,9 +11768,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="27.7397766" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-13.9714174" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="109.692482" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-13.1836691" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="4.66661263" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="109.152916" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -12155,9 +12165,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-111.073883" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="38.7452545" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="-38.6179848" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-153.397003" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="29.2748032" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="-134.315292" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -12552,9 +12562,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="12.4345865" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="-36.4600754" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="-96.7870636" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="36.2677002" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="4.02718782" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="-95.467659" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -12949,9 +12959,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-2.82210755" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="0.150999457" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="3.24068737" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="0.0085360948" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="0.150757983" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="3.2406981" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -13346,9 +13356,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="142.879852" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="27.1450863" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="42.3343773" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="160.9505" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="19.7105751" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="134.326385" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -13743,9 +13753,9 @@
                             <Property id="is_enabled" kind="Bool" value="true" />
                             <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
                             <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
-                            <Property id="get_sphere_rotation_yaw" kind="Float" value="40.0381584" />
-                            <Property id="get_sphere_rotation_pitch" kind="Float" value="37.7839508" />
-                            <Property id="get_sphere_rotation_roll" kind="Float" value="-83.2666702" />
+                            <Property id="get_sphere_rotation_yaw" kind="Float" value="-37.5920906" />
+                            <Property id="get_sphere_rotation_pitch" kind="Float" value="4.11947298" />
+                            <Property id="get_sphere_rotation_roll" kind="Float" value="-84.6692657" />
                           </Property>
                         </Properties>
                       </Behaviour>
@@ -15420,38 +15430,6 @@
             <Children />
           </Node>
         </Children>
-      </Node>
-      <Node entityId="908887956">
-        <Properties>
-          <Property id="scene_node" kind="Object">
-            <Property id="name" kind="String" value="Server" />
-            <Property id="is_enabled" kind="Bool" value="true" />
-            <Property id="is_visible" kind="Bool" value="true" />
-          </Property>
-        </Properties>
-        <Transform type="Engine.Transform">
-          <Properties>
-            <Property id="transform" kind="Object">
-              <Property id="get_position" kind="Vec2f" x="0" y="0" />
-              <Property id="get_scale" kind="Vec2f" x="1" y="1" />
-              <Property id="get_rotation" kind="Float" value="0" />
-              <Property id="get_origin" kind="Vec2f" x="0" y="0" />
-            </Property>
-          </Properties>
-        </Transform>
-        <Behaviours>
-          <Behaviour type="Billiard.BilliardServerBehaviour" entityId="3965234206">
-            <Properties>
-              <Property id="billiard_server_behaviour" kind="Object">
-                <Property id="server_host" kind="String" value="127.0.0.1" />
-                <Property id="server_port" kind="Int32" value="7777" />
-                <Property id="session_id" kind="Int32" value="1" />
-                <Property id="player_name" kind="String" value="Player" />
-              </Property>
-            </Properties>
-          </Behaviour>
-        </Behaviours>
-        <Children />
       </Node>
     </Children>
   </Node>
