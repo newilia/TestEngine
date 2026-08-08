@@ -16,7 +16,7 @@
 #include <vector>
 
 namespace Billiard {
-	class EightBallPoolBehaviour : public Behaviour, public SubscriptionsHolderBase
+	class EightBallPoolController : public Behaviour, public SubscriptionsHolderBase
 	{
 		META_CLASS()
 
@@ -78,9 +78,7 @@ namespace Billiard {
 		float _remainingTurnTime = 0.f;
 
 		EightBallPoolGame _gameState;
-		//Signal<sf::Vector2f>::Subscription _aimPointChangedSubscription;
-		//Signal<>::Subscription _onCueReleaseSubscription;
-		//Signal<int>::Subscription _onBallFellInPocketSubscription;
+		sf::Time _gameTimestamp;
 	};
 
 } // namespace Billiard

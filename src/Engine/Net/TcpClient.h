@@ -13,7 +13,7 @@ namespace google::protobuf {
 
 namespace Engine::Net {
 
-	class NetClient
+	class TcpClient
 	{
 	public:
 		[[nodiscard]] bool Connect(const std::string& host, unsigned short port);

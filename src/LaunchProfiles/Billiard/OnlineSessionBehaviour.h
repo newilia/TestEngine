@@ -2,14 +2,14 @@
 
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Core/MetaClass.h"
-#include "Engine/Net/NetClient.h"
+#include "Engine/Net/TcpClient.h"
 
 #include <memory>
 #include <string>
 
 namespace Billiard {
 
-	class BilliardServerBehaviour : public Behaviour
+	class OnlineSessionBehaviour : public Behaviour
 	{
 		META_CLASS()
 
@@ -44,7 +44,7 @@ namespace Billiard {
 		/// @property
 		std::string _playerName = "Player";
 
-		std::unique_ptr<Engine::Net::NetClient> _client;
+		std::unique_ptr<Engine::Net::TcpClient> _client;
 		PendingRequest _pendingRequest = PendingRequest::None;
 	};
 

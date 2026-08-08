@@ -1,10 +1,10 @@
-#include "Engine/Net/NetClient.h"
+#include "Engine/Net/TcpClient.h"
 
 #include <google/protobuf/message.h>
 
 namespace Engine::Net {
 
-	bool NetClient::Connect(const std::string& host, unsigned short port) {
+	bool TcpClient::Connect(const std::string& host, unsigned short port) {
 		Disconnect();
 
 		const auto addressOpt = sf::IpAddress::resolve(host);
@@ -22,16 +22,16 @@ namespace Engine::Net {
 		return false;
 	}
 
-	void NetClient::Disconnect() {
+	void TcpClient::Disconnect() {
 		_socket.disconnect();
 		_recvBuffer.clear();
 	}
 
-	bool NetClient::IsConnected() const {
+	bool TcpClient::IsConnected() const {
 		return _socket.getRemoteAddress().has_value();
 	}
 
-	bool NetClient::SendMessage(const google::protobuf::Message& message) {
+	bool TcpClient::SendMessage(const google::protobuf::Message& message) {
 		if (!IsConnected()) {
 			return false;
 		}
@@ -43,7 +43,7 @@ namespace Engine::Net {
 		return WriteLengthPrefixed(_socket, serialized);
 	}
 
-	bool NetClient::PollMessage(google::protobuf::Message& out) {
+	bool TcpClient::PollMessage(google::protobuf::Message& out) {
 		if (!IsConnected()) {
 			return false;
 		}

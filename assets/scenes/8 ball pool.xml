@@ -88,9 +88,9 @@
               </Property>
             </Properties>
           </Behaviour>
-          <Behaviour type="Billiard.EightBallPoolBehaviour" entityId="1285399435">
+          <Behaviour type="Billiard.EightBallPoolController" entityId="1285399435">
             <Properties>
-              <Property id="eight_ball_pool_behaviour" kind="Object">
+              <Property id="eight_ball_pool_controller" kind="Object">
                 <Property id="cue_asset" kind="AssetRef" value="assets/sceneobjects/8 ball pool/cue.xml" type="Engine.SceneObject" />
                 <Property id="cue_behaviour" kind="SceneRef" value="2568429161" />
                 <Property id="cue_parent" kind="SceneRef" value="3927536882" />

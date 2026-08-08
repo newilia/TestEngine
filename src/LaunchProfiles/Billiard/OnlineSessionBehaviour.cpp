@@ -1,15 +1,15 @@
-#include "BilliardServerBehaviour.h"
+#include "OnlineSessionBehaviour.h"
 
-#include "BilliardServerBehaviour.generated.hpp"
 #include "BilliardSession.pb.h"
+#include "OnlineSessionBehaviour.generated.hpp"
 
 #include <fmt/format.h>
 
 namespace Billiard {
 
-	bool BilliardServerBehaviour::EnsureConnected(const char* actionName) {
+	bool OnlineSessionBehaviour::EnsureConnected(const char* actionName) {
 		if (!_client) {
-			_client = std::make_unique<Engine::Net::NetClient>();
+			_client = std::make_unique<Engine::Net::TcpClient>();
 		}
 
 		if (_client->IsConnected()) {
@@ -25,7 +25,7 @@ namespace Billiard {
 		return true;
 	}
 
-	void BilliardServerBehaviour::CreateSession() {
+	void OnlineSessionBehaviour::CreateSession() {
 		if (!EnsureConnected("CreateSession")) {
 			return;
 		}
@@ -42,7 +42,7 @@ namespace Billiard {
 		fmt::print("[Net] CreateSession: request sent (player={})\n", _playerName);
 	}
 
-	void BilliardServerBehaviour::JoinSession() {
+	void OnlineSessionBehaviour::JoinSession() {
 		if (!EnsureConnected("JoinSession")) {
 			return;
 		}
@@ -61,7 +61,7 @@ namespace Billiard {
 		fmt::print("[Net] JoinSession: request sent (session_id={}, player={})\n", _sessionId, _playerName);
 	}
 
-	void BilliardServerBehaviour::OnUpdate(const sf::Time& /*deltaTime*/) {
+	void OnlineSessionBehaviour::OnUpdate(const sf::Time& /*deltaTime*/) {
 		if (!_client || _pendingRequest == PendingRequest::None) {
 			return;
 		}
