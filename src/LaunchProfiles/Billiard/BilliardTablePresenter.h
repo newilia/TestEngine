@@ -6,6 +6,7 @@
 #include "Engine/Visual/RectangleShapeVisual.h"
 
 #include <map>
+#include <vector>
 
 namespace Billiard {
 
@@ -23,6 +24,7 @@ namespace Billiard {
 		[[nodiscard]] sf::Vector2f GetTableCenter() const;
 		[[nodiscard]] float GetBallRadius() const;
 		void RestoreBall(int ballNumber);
+		[[nodiscard]] std::vector<int> CollectBallsOutsideExpandedTable(float margin) const;
 
 	private:
 		std::map<int, RefWrapper<BilliardBallBehaviour>> _ballsBehaviours;

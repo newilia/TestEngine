@@ -1,5 +1,6 @@
 #include "BilliardTablePresenter.h"
 
+#include "Engine/Core/SceneNodeUtils.h"
 #include "LaunchProfiles/Billiard/RollingBallBehaviour.h"
 
 namespace Billiard {
@@ -133,6 +134,35 @@ namespace Billiard {
 				rollingBall->ResetOmega();
 			}
 		}
+	}
+
+	std::vector<int> BilliardTablePresenter::CollectBallsOutsideExpandedTable(float margin) const {
+		std::vector<int> outOfBoundsBalls;
+		const auto tableBounds = GetBallInHandRect();
+		if (tableBounds.size.x <= 0.f || tableBounds.size.y <= 0.f) {
+			return outOfBoundsBalls;
+		}
+
+		sf::FloatRect allowedBounds = tableBounds;
+		allowedBounds.position -= {margin, margin};
+		allowedBounds.size += {2.f * margin, 2.f * margin};
+
+		for (const auto& [ballNumber, ballRef] : _ballsBehaviours) {
+			const auto ball = ballRef.Get();
+			if (!ball) {
+				continue;
+			}
+			const auto ballNode = ball->GetNode();
+			if (!ballNode || !ballNode->IsEnabled()) {
+				continue;
+			}
+
+			const sf::Vector2f ballCenter = ballNode->GetLocalTransform().GetPosition();
+			if (!allowedBounds.contains(ballCenter)) {
+				outOfBoundsBalls.push_back(ballNumber);
+			}
+		}
+		return outOfBoundsBalls;
 	}
 
 } // namespace Billiard

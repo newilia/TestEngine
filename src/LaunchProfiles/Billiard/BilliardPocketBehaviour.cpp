@@ -59,6 +59,32 @@ namespace {
 
 namespace Billiard {
 
+	void BilliardPocketBehaviour::PocketBall(BilliardBallBehaviour& ballBehaviour) {
+		const int ballNumber = ballBehaviour.GetBallNumber();
+		if (_fallenBalls.contains(ballNumber)) {
+			return;
+		}
+
+		const auto ballNode = ballBehaviour.GetNode();
+		if (!ballNode || !ballNode->IsEnabled()) {
+			return;
+		}
+
+		const auto body = ballNode->FindBehaviour<PhysicsBodyBehaviour>();
+		if (!body) {
+			return;
+		}
+
+		body->GetCollisionGroups().set(0, false);
+		body->GetCollisionGroups().set(_nextBallCollisionGroup, true);
+		_nextBallCollisionGroup =
+		    _nextBallCollisionGroup == PhysicsBodyBehaviour::kGroupsCount - 1 ? 1 : _nextBallCollisionGroup + 1;
+
+		_onBallFallSignal.Emit(ballNumber);
+		_fallenBalls.insert(ballNumber);
+		ballBehaviour.PlayFallAnimation();
+	}
+
 	void BilliardPocketBehaviour::OnUpdate(const sf::Time& dt) {
 		const auto pocketShape = _pocketShape.Get();
 		if (!pocketShape) {
@@ -114,14 +140,7 @@ namespace Billiard {
 			}
 			if (IsCircleCompletelyInsideCircle(
 			        ballCenter, ballRadius, pocketGeometry->center, pocketGeometry->radius)) {
-				body->GetCollisionGroups().set(0, false);
-				body->GetCollisionGroups().set(_nextBallCollisionGroup, true);
-				_nextBallCollisionGroup =
-				    _nextBallCollisionGroup == PhysicsBodyBehaviour::kGroupsCount - 1 ? 1 : _nextBallCollisionGroup + 1;
-
-				_onBallFallSignal.Emit(ballBehaviour->GetBallNumber());
-				_fallenBalls.insert(ballBehaviour->GetBallNumber());
-				ballBehaviour->PlayFallAnimation();
+				PocketBall(*ballBehaviour);
 			}
 			else {
 				const sf::Vector2f toPocket = pocketGeometry->center - ballCenter;

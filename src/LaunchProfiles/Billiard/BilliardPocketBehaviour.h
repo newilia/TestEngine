@@ -21,6 +21,7 @@ namespace Billiard {
 	public:
 		void Reset();
 		void RegisterBall(const BilliardBallBehaviour& ball);
+		void PocketBall(BilliardBallBehaviour& ballBehaviour);
 		Signal<int>& GetOnBallFallSignal() const;
 
 	private:

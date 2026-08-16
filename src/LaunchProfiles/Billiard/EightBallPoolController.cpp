@@ -8,6 +8,7 @@ namespace Billiard {
 	namespace {
 		constexpr float kAimSendIntervalSeconds = 0.05f;
 		constexpr float kTableSendIntervalSeconds = 0.1f;
+		constexpr float kOutOfTablePocketMargin = 200.f;
 	} // namespace
 
 	void EightBallPoolController::OnInit() {
@@ -177,6 +178,9 @@ namespace Billiard {
 		}
 
 		if (_isWaitingForBallsToStop) {
+			if (!_isPassiveTurn) {
+				CheckBallsOutOfBounds();
+			}
 			if (!_isPassiveTurn && !_tablePresenter.AreBallsMoving()) {
 				OnBallsStopped();
 			}
@@ -384,6 +388,25 @@ namespace Billiard {
 		}
 		if (auto aimDisplay = _aimDisplayBehaviour.Get()) {
 			aimDisplay->ResetAimPoint();
+		}
+	}
+
+	void EightBallPoolController::CheckBallsOutOfBounds() {
+		if (_pocketsBehaviours.empty()) {
+			return;
+		}
+
+		auto pocket = _pocketsBehaviours.front().Get();
+		if (!pocket) {
+			return;
+		}
+
+		for (const int ballNumber : _tablePresenter.CollectBallsOutsideExpandedTable(kOutOfTablePocketMargin)) {
+			auto ball = _ballsBehaviours[ballNumber].Get();
+			if (!ball) {
+				continue;
+			}
+			pocket->PocketBall(*ball);
 		}
 	}
 

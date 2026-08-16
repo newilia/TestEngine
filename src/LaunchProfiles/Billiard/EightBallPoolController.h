@@ -67,6 +67,7 @@ namespace Billiard {
 		void UpdatePassiveTurnState();
 		void SendCueAimUpdateIfNeeded();
 		void SendTableStateUpdateIfNeeded();
+		void CheckBallsOutOfBounds();
 
 		/// @property
 		AssetRef<SceneObject> _cueAsset;
