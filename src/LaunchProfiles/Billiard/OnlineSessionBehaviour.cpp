@@ -1,11 +1,47 @@
 #include "OnlineSessionBehaviour.h"
 
+#include "BilliardNetworkMessages.h"
 #include "BilliardSession.pb.h"
 #include "OnlineSessionBehaviour.generated.hpp"
 
 #include <fmt/format.h>
 
 namespace Billiard {
+
+	void OnlineSessionBehaviour::SendTurnStarted(
+	    std::uint32_t turnId, int activePlayer, const TableSnapshot& snapshot) {
+		if (!_client || !_client->IsConnected()) {
+			return;
+		}
+		billiard::Envelope envelope;
+		FillTurnStartedMsg(turnId, activePlayer, snapshot, *envelope.mutable_turn_started());
+		(void)_client->SendMessage(envelope);
+	}
+
+	void OnlineSessionBehaviour::SendTurnResult(
+	    std::uint32_t turnId, int nextActivePlayer, const TableSnapshot& snapshot) {
+		if (!_client || !_client->IsConnected()) {
+			return;
+		}
+		billiard::Envelope envelope;
+		FillTurnResultMsg(turnId, nextActivePlayer, snapshot, *envelope.mutable_turn_result());
+		(void)_client->SendMessage(envelope);
+	}
+
+	std::optional<TableSnapshot> OnlineSessionBehaviour::PollRemoteTurnResult(
+	    std::uint32_t& turnId, int& nextActivePlayer) {
+		if (!_client || !_client->IsConnected()) {
+			return std::nullopt;
+		}
+		billiard::Envelope envelope;
+		if (!_client->PollMessage(envelope) || !envelope.has_turn_result()) {
+			return std::nullopt;
+		}
+		const auto& result = envelope.turn_result();
+		turnId = result.turn_id();
+		nextActivePlayer = result.next_active_player();
+		return ParseTableSnapshotMsg(result.table());
+	}
 
 	bool OnlineSessionBehaviour::EnsureConnected(const char* actionName) {
 		if (!_client) {

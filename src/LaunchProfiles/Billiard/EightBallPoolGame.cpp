@@ -1,5 +1,7 @@
 #include "EightBallPoolGame.h"
 
+#include "BilliardRulesSnapshot.h"
+
 namespace Billiard {
 
 	namespace {
@@ -214,6 +216,20 @@ namespace Billiard {
 
 	BallType EightBallPoolGame::GetPlayerBallType(int playerIndex) const {
 		return _playerBallTypes[playerIndex];
+	}
+
+	RulesSnapshot EightBallPoolGame::ToSnapshot() const {
+		RulesSnapshot snapshot;
+		snapshot.phase = _phase;
+		snapshot.activePlayerIndex = _activePlayerIndex;
+		snapshot.isBallInHand = _isBallInHand;
+		snapshot.isBreakShot = _isBreakShot;
+		snapshot.playerBallTypes = _playerBallTypes;
+		snapshot.pocketedSolids = _pocketedSolids;
+		snapshot.pocketedStripes = _pocketedStripes;
+		snapshot.isGameOver = IsGameOver();
+		snapshot.winnerIndex = _winnerIndex.value_or(-1);
+		return snapshot;
 	}
 
 } // namespace Billiard

@@ -25,11 +25,52 @@ message JoinSessionResponse {
   string error_message = 4;
 }
 
+message BallState {
+  int32 ball_number = 1;
+  float pos_x = 2;
+  float pos_y = 3;
+  float vel_x = 4;
+  float vel_y = 5;
+  float angular_speed = 6;
+  bool is_on_table = 7;
+  float spin_omega_x = 8;
+  float spin_omega_y = 9;
+  float spin_omega_z = 10;
+}
+
+message TableSnapshotMsg {
+  repeated BallState balls = 1;
+}
+
+message TurnStartedMsg {
+  uint32 turn_id = 1;
+  int32 active_player = 2;
+  TableSnapshotMsg table = 3;
+}
+
+message TurnResultMsg {
+  uint32 turn_id = 1;
+  TableSnapshotMsg table = 2;
+  int32 next_active_player = 3;
+}
+
+message SubmitTurnIntentMsg {
+  uint32 turn_id = 1;
+  int32 player_index = 2;
+  float direction_angle_rad = 3;
+  float pull_distance = 4;
+  float lateral_spin = 5;
+  float vertical_spin = 6;
+}
+
 message Envelope {
   oneof payload {
     CreateSessionRequest create_session_request = 1;
     CreateSessionResponse create_session_response = 2;
     JoinSessionRequest join_session_request = 3;
     JoinSessionResponse join_session_response = 4;
+    TurnStartedMsg turn_started = 5;
+    TurnResultMsg turn_result = 6;
+    SubmitTurnIntentMsg submit_turn_intent = 7;
   }
 }

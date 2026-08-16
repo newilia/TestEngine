@@ -10,7 +10,21 @@
 
 namespace Billiard {
 
+	void BilliardBallAimDisplayBehaviour::SetInputEnabled(bool enabled) {
+		_inputEnabled = enabled;
+		if (!enabled) {
+			_isPointerDown = false;
+		}
+	}
+
+	bool BilliardBallAimDisplayBehaviour::IsInputEnabled() const {
+		return _inputEnabled;
+	}
+
 	void BilliardBallAimDisplayBehaviour::OnEvent(const sf::Event& event) {
+		if (!_inputEnabled) {
+			return;
+		}
 		auto window = Engine::MainContext::GetInstance().GetMainWindow();
 		if (!window) {
 			return;

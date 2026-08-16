@@ -118,4 +118,12 @@ namespace Billiard {
 		_spinOmega = {0.f, 0.f, 0.f};
 	}
 
+	sf::Vector3f RollingBallBehaviour::GetSpinOmega() const {
+		return _spinOmega;
+	}
+
+	void RollingBallBehaviour::SetSpinOmega(sf::Vector3f spinOmega) {
+		_spinOmega = spinOmega;
+	}
+
 } // namespace Billiard

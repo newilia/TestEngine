@@ -21,6 +21,8 @@ namespace Billiard {
 	public:
 		void SetVerticalSpin(sf::Angle direction, float value);
 		void ResetOmega();
+		[[nodiscard]] sf::Vector3f GetSpinOmega() const;
+		void SetSpinOmega(sf::Vector3f spinOmega);
 
 	private:
 		float GetRadius() const;

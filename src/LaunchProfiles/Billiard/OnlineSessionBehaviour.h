@@ -1,10 +1,13 @@
 #pragma once
 
+#include "BilliardTableSnapshot.h"
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Core/MetaClass.h"
 #include "Engine/Net/TcpClient.h"
 
+#include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace Billiard {
@@ -21,6 +24,10 @@ namespace Billiard {
 
 		/// @method
 		void JoinSession();
+
+		void SendTurnStarted(std::uint32_t turnId, int activePlayer, const TableSnapshot& snapshot);
+		void SendTurnResult(std::uint32_t turnId, int nextActivePlayer, const TableSnapshot& snapshot);
+		[[nodiscard]] std::optional<TableSnapshot> PollRemoteTurnResult(std::uint32_t& turnId, int& nextActivePlayer);
 
 	private:
 		enum class PendingRequest

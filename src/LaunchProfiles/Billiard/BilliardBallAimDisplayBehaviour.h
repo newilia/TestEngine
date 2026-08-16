@@ -17,6 +17,8 @@ namespace Billiard {
 		META_CLASS()
 
 	public:
+		void SetInputEnabled(bool enabled);
+		[[nodiscard]] bool IsInputEnabled() const;
 		void OnEvent(const sf::Event& event) override;
 
 	public:
@@ -36,6 +38,7 @@ namespace Billiard {
 		RefWrapper<SceneNode> _aimPointNode;
 
 	private:
+		bool _inputEnabled = false;
 		bool _isPointerDown = false;
 		sf::Vector2f _aimPoint;
 		Signal<sf::Vector2f> _aimPointChangedSignal;

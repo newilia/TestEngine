@@ -2,16 +2,52 @@
 
 #include "EightBallPoolController.generated.hpp"
 #include "Engine/Editor/Editor.h"
-#include "RollingBallBehaviour.h"
 
 namespace Billiard {
 
 	void EightBallPoolController::OnInit() {
+		EventHandlerBehaviourBase::OnInit();
+		Engine::Editor::GetInstance().SetCameraPanOnRightClickEnabled(false);
+		_tablePresenter.SetTableRect(_tableRect);
+		ConfigureMatchLoop();
 		InitSubscriptions();
 	}
 
 	void EightBallPoolController::OnDeinit() {
+		EventHandlerBehaviourBase::OnDeinit();
+		_matchLoop.OnTurnEnded();
 		UnsubscribeAll();
+	}
+
+	void EightBallPoolController::ConfigureMatchLoop() {
+		std::array<PlayerSlotConfig, 2> slots;
+		slots[0] = {_player0Kind, _player0Name};
+		slots[1] = {_player1Kind, _player1Name};
+
+		PlayerAgentDeps deps;
+		if (auto cue = _cueBehaviour.Get()) {
+			deps.cue = cue;
+		}
+		if (auto cueBall = _ballsBehaviours[0].Get()) {
+			deps.cueBall = cueBall;
+		}
+		deps.isLocalAuthorityForRemoteSlot = {_player0IsLocalAuthority, _player1IsLocalAuthority};
+		_matchLoop.Configure(slots, deps);
+	}
+
+	void EightBallPoolController::UpdateAimDisplayInputEnabled() {
+		if (auto aimDisplay = _aimDisplayBehaviour.Get()) {
+			bool enabled = !_isWaitingForBallsToStop && !_gameState.IsGameOver();
+			if (enabled) {
+				if (auto* agent = _matchLoop.GetActiveAgent(_gameState)) {
+					enabled = agent->WantsInput();
+				}
+				else {
+					enabled = false;
+				}
+			}
+			aimDisplay->SetInputEnabled(enabled);
+		}
 	}
 
 	void EightBallPoolController::InitSubscriptions() {
@@ -63,15 +99,17 @@ namespace Billiard {
 		_gameTimestamp += deltaTime;
 
 		if (_isWaitingForBallsToStop) {
-			if (!AreBallsMoving()) {
+			if (!_tablePresenter.AreBallsMoving()) {
 				OnBallsStopped();
 			}
 		}
 		else {
+			_matchLoop.OnUpdate(deltaTime, _gameState, _cueBehaviour.Get().get());
 			if (_remainingTurnTime > 0.f) {
 				_remainingTurnTime = std::max(0.f, _remainingTurnTime - deltaTime.asSeconds());
 				if (_remainingTurnTime == 0.f) {
 					_gameState.OnTurnTimeOver();
+					_matchLoop.OnTurnEnded();
 					StartNewTurn();
 					UpdateScoreboard();
 					if (auto cueBehaviour = _cueBehaviour.Get()) {
@@ -85,8 +123,13 @@ namespace Billiard {
 		}
 	}
 
+	void EightBallPoolController::OnEvent(const sf::Event& event) {
+		if (!_isWaitingForBallsToStop) {
+			_matchLoop.OnEvent(event, _gameState);
+		}
+	}
+
 	void EightBallPoolController::StartNewGame() {
-		Engine::Editor::GetInstance().SetCameraPanOnRightClickEnabled(false);
 		_gameTimestamp = sf::Time::Zero;
 		_gameState.StartNewGame();
 
@@ -114,14 +157,18 @@ namespace Billiard {
 					}
 
 					if (ballBehaviour->GetBallNumber() == 0) {
-						ballBehaviour->SetBallInHand(GetKitchenRect());
+						ballBehaviour->SetBallInHand(_tablePresenter.GetKitchenRect());
 					}
 				}
 			}
 		}
 
+		_tablePresenter.SetBalls(_ballsBehaviours);
 		SpawnCue();
 		InitSubscriptions();
+		ConfigureMatchLoop();
+		_matchLoop.OnTurnStarted(_gameState, _tablePresenter, _cueBehaviour.Get().get());
+		UpdateAimDisplayInputEnabled();
 	}
 
 	void EightBallPoolController::SpawnCue() {
@@ -137,11 +184,13 @@ namespace Billiard {
 				if (auto cueNode = cueAsset->InstantiateOn(cueParent)) {
 					if (auto cueBehaviour = cueNode->FindBehaviour<BilliardCueBehaviour>()) {
 						_cueBehaviour = cueBehaviour;
+						cueBehaviour->SetInputEnabled(false);
 						SetCueOnBall(0);
 					}
 				}
 			}
 		}
+		ConfigureMatchLoop();
 	}
 
 	void EightBallPoolController::SetCueOnBall(int ballNumber) {
@@ -160,6 +209,11 @@ namespace Billiard {
 	}
 
 	void EightBallPoolController::OnAimPointChanged(const sf::Vector2f& aimPoint) {
+		if (auto* agent = _matchLoop.GetActiveAgent(_gameState)) {
+			if (!agent->WantsInput()) {
+				return;
+			}
+		}
 		if (auto cueBehaviour = _cueBehaviour.Get()) {
 			cueBehaviour->SetLateralPosition(aimPoint.x);
 			cueBehaviour->SetVerticalSpin(aimPoint.y);
@@ -181,6 +235,8 @@ namespace Billiard {
 			cueBehaviour->PlayHideAnimation();
 		}
 		_isWaitingForBallsToStop = true;
+		_matchLoop.OnTurnEnded();
+		UpdateAimDisplayInputEnabled();
 	}
 
 	void EightBallPoolController::OnBallsStopped() {
@@ -189,19 +245,23 @@ namespace Billiard {
 
 		UpdateScoreboard();
 		if (_gameState.IsGameOver()) {
+			_matchLoop.OnTurnEnded();
+			UpdateAimDisplayInputEnabled();
 			return;
 		}
 
 		if (_gameState.IsCueBallPocketed()) {
-			RestoreBall(0);
+			_tablePresenter.RestoreBall(0);
+			_gameState.OnBallRemovedFromPocket(0);
 		}
 		if (_gameState.IsEightBallPocketed()) {
-			RestoreBall(8); // TODO: restore 8 ball to proper position
+			_tablePresenter.RestoreBall(8);
+			_gameState.OnBallRemovedFromPocket(8);
 		}
 
 		if (_gameState.IsBallInHand()) {
 			if (auto ball = _ballsBehaviours[0].Get()) {
-				ball->SetBallInHand(GetBallInHandRect());
+				ball->SetBallInHand(_tablePresenter.GetBallInHandRect());
 			}
 		}
 
@@ -216,42 +276,9 @@ namespace Billiard {
 	void EightBallPoolController::StartNewTurn() {
 		_remainingTurnTime = _turnTimeLimit;
 		_gameState.StartNewTurn();
+		_matchLoop.OnTurnStarted(_gameState, _tablePresenter, _cueBehaviour.Get().get());
 		UpdateScoreboard();
-	}
-
-	bool EightBallPoolController::AreBallsMoving() const {
-		for (const auto& [_, ball] : _ballsBehaviours) {
-			if (auto ballBehaviour = ball.Get()) {
-				if (!ballBehaviour->GetNode()->IsEnabled()) {
-					continue;
-				}
-				if (auto physicsBody = ballBehaviour->GetPhysicsBody()) {
-					if (physicsBody->GetVelocity().length() > 1.f || std::abs(physicsBody->GetAngularSpeed()) > 0.1f) {
-						return true;
-					}
-				}
-			}
-		}
-		return false;
-	}
-
-	void EightBallPoolController::RestoreBall(int ballNumber) {
-		if (auto ball = _ballsBehaviours[ballNumber].Get()) {
-			ball->Appear();
-			ball->GetNode()->SetLocalPosition(GetTableCenter()); // TODO: set to proper position for 8 ball
-
-			if (auto physicsBody = ball->GetPhysicsBody()) {
-				physicsBody->SetVelocity(sf::Vector2f(0, 0));
-				physicsBody->SetAngularSpeed(0.f);
-				physicsBody->GetCollisionGroups().reset();
-				physicsBody->GetCollisionGroups().set(0, true);
-			}
-
-			if (auto rollingBall = ball->GetRollingBallBehaviour()) {
-				rollingBall->ResetOmega();
-			}
-			_gameState.OnBallRemovedFromPocket(ballNumber);
-		}
+		UpdateAimDisplayInputEnabled();
 	}
 
 	void EightBallPoolController::UpdateScoreboard() {
@@ -266,7 +293,8 @@ namespace Billiard {
 			scoreboard->SetPlayerBallType(0, _gameState.GetPlayerBallType(0));
 			scoreboard->SetPlayerBallType(1, _gameState.GetPlayerBallType(1));
 			if (_gameState.IsGameOver()) {
-				scoreboard->ShowMessage(fmt::format("Player {} wins", _gameState.GetWinnerIndex() + 1));
+				const auto& winnerName = _gameState.GetWinnerIndex() == 0 ? _player0Name : _player1Name;
+				scoreboard->ShowMessage(fmt::format("{} wins", winnerName));
 			}
 		}
 	}
@@ -284,7 +312,6 @@ namespace Billiard {
 		if (!node1 || !node2) {
 			return;
 		}
-		// looks like shitty workaround
 		auto railRect = node1->GetVisual<RectangleShapeVisual>();
 		if (!railRect) {
 			railRect = node2->GetVisual<RectangleShapeVisual>();
@@ -298,44 +325,7 @@ namespace Billiard {
 			auto ballIndex1 = node1->FindBehaviour<BilliardBallBehaviour>()->GetBallNumber();
 			auto ballIndex2 = node2->FindBehaviour<BilliardBallBehaviour>()->GetBallNumber();
 			_gameState.OnCueBallCollideBall(std::max(ballIndex1, ballIndex2));
-			return;
 		}
-	}
-
-	sf::FloatRect EightBallPoolController::GetBallInHandRect() const {
-		if (auto tableRect = _tableRect.Get()) {
-			return tableRect->GetGlobalBounds();
-		}
-		return sf::FloatRect();
-	}
-
-	sf::FloatRect EightBallPoolController::GetKitchenRect() const {
-		if (auto tableRect = _tableRect.Get()) {
-			auto rect = tableRect->GetGlobalBounds();
-			auto radius = GetBallRadius();
-			rect.size.x *= 0.25f;
-			rect.size.x += radius;
-			return rect;
-		}
-		return sf::FloatRect();
-	}
-
-	float EightBallPoolController::GetBallRadius() const {
-		if (_ballsBehaviours.empty()) {
-			return 0.f;
-		}
-		auto ball = _ballsBehaviours.begin()->second.Get();
-		if (!ball) {
-			return 0.f;
-		}
-		return ball->GetRadius();
-	}
-
-	sf::Vector2f EightBallPoolController::GetTableCenter() const {
-		if (auto tableRect = _tableRect.Get()) {
-			return tableRect->GetGlobalBounds().size * 0.5f;
-		}
-		return sf::Vector2f();
 	}
 
 	void EightBallPoolController::OnBallInHandGrab() {

@@ -1,5 +1,7 @@
 #pragma once
 #include "BallType.h"
+#include "BilliardGamePhase.h"
+#include "BilliardRulesSnapshot.h"
 #include "Engine/Core/MetaClass.h"
 
 #include <array>
@@ -8,13 +10,6 @@
 #include <vector>
 
 namespace Billiard {
-
-	enum class GamePhase
-	{
-		Aiming,
-		WaitingForBallsToStop,
-		GameOver,
-	};
 
 	class EightBallPoolGame
 	{
@@ -39,6 +34,7 @@ namespace Billiard {
 		bool IsEightBallPocketed() const;
 		bool IsGameOver() const;
 		int GetWinnerIndex() const;
+		[[nodiscard]] RulesSnapshot ToSnapshot() const;
 
 	private:
 		bool MayPocketEightBall() const;

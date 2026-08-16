@@ -14,6 +14,89 @@
 
 namespace Billiard {
 
+	void BilliardCueBehaviour::SetInputEnabled(bool enabled) {
+		_inputEnabled = enabled;
+		if (!enabled) {
+			AbortAiming();
+		}
+	}
+
+	bool BilliardCueBehaviour::IsInputEnabled() const {
+		return _inputEnabled;
+	}
+
+	bool BilliardCueBehaviour::CanInteract() const {
+		return _inputEnabled && !_isShooting && !_isHiding && !_isShowing;
+	}
+
+	void BilliardCueBehaviour::BeginAiming() {
+		_isAiming = true;
+	}
+
+	void BilliardCueBehaviour::StopAiming() {
+		_isAiming = false;
+	}
+
+	void BilliardCueBehaviour::AimAt(const sf::Vector2f& worldPoint) {
+		const auto targetNode = GetTargetBallNode();
+		if (!targetNode) {
+			return;
+		}
+
+		const sf::Vector2f delta = Utils::GetWorldPos(targetNode) - worldPoint;
+		if (Utils::Length(delta) <= std::numeric_limits<float>::epsilon()) {
+			return;
+		}
+
+		SetDirection(sf::radians(std::atan2(delta.y, delta.x)));
+	}
+
+	void BilliardCueBehaviour::BeginPullBack(const sf::Vector2f& worldPoint) {
+		_isPullingBack = true;
+		_pullBackGrabWorldPoint = worldPoint;
+		_pullBackDistanceAtGrab = _distanceFromTarget;
+	}
+
+	void BilliardCueBehaviour::UpdatePullBack(const sf::Vector2f& worldPoint) {
+		PullBack(worldPoint);
+	}
+
+	void BilliardCueBehaviour::TryReleaseShot() {
+		if (_isPullingBack) {
+			Release();
+		}
+		_isPullingBack = false;
+	}
+
+	void BilliardCueBehaviour::ProcessPointerMove(const sf::Vector2f& worldPoint) {
+		if (_isAiming) {
+			AimAt(worldPoint);
+		}
+		if (_isPullingBack) {
+			UpdatePullBack(worldPoint);
+		}
+	}
+
+	void BilliardCueBehaviour::ApplyShotIntent(const TurnIntent& intent) {
+		SetDirection(intent.directionAngle);
+		SetLateralPosition(intent.lateralSpin);
+		SetVerticalSpin(intent.verticalSpin);
+		SetDistanceFromTarget(intent.pullDistance);
+		Release();
+	}
+
+	TurnIntent BilliardCueBehaviour::BuildTurnIntent(int playerIndex, std::uint32_t turnId) const {
+		TurnIntent intent;
+		intent.phase = TurnIntentPhase::Shoot;
+		intent.playerIndex = playerIndex;
+		intent.turnId = turnId;
+		intent.directionAngle = _directionAngle;
+		intent.pullDistance = _distanceFromTarget;
+		intent.lateralSpin = _lateralPosition;
+		intent.verticalSpin = _verticalSpin;
+		return intent;
+	}
+
 	void BilliardCueBehaviour::OnUpdate(const sf::Time& deltaTime) {
 		if (auto tipPhysicsBody = _tipPhysicsBody.Get()) {
 			if (_isShooting) {
@@ -44,57 +127,6 @@ namespace Billiard {
 				_isShowing = false;
 			}
 		}
-	}
-
-	void BilliardCueBehaviour::OnEvent(const sf::Event& event) {
-		auto window = Engine::MainContext::GetInstance().GetMainWindow();
-		if (!window) {
-			return;
-		}
-		const auto toWorld = [&](sf::Vector2i pixel) -> sf::Vector2f {
-			return Utils::MapWindowPixelToWorld(*window, pixel);
-		};
-
-		const bool canInteract = !_isShooting && !_isHiding && !_isShowing;
-
-		if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
-			if (pressed->button == sf::Mouse::Button::Left) {
-				if (canInteract && HitTestWorld(toWorld(pressed->position))) {
-					_isAiming = true;
-				}
-			}
-			else if (pressed->button == sf::Mouse::Button::Right) {
-				if (canInteract && GetTargetBallNode() && HitTestWorld(toWorld(pressed->position))) {
-					BeginPullBack(toWorld(pressed->position));
-				}
-			}
-			return;
-		}
-
-		if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
-			const sf::Vector2f worldPoint = toWorld(moved->position);
-			if (_isAiming) {
-				Aim(worldPoint);
-			}
-			if (_isPullingBack) {
-				PullBack(worldPoint);
-			}
-			return;
-		}
-
-		if (const auto* released = event.getIf<sf::Event::MouseButtonReleased>()) {
-			if (released->button == sf::Mouse::Button::Left) {
-				_isAiming = false;
-			}
-			else if (released->button == sf::Mouse::Button::Right) {
-				if (_isPullingBack) {
-					Release();
-				}
-			}
-			return;
-		}
-
-		return;
 	}
 
 	void BilliardCueBehaviour::SetTargetBall(const std::shared_ptr<BilliardBallBehaviour>& ballBehaviour) {
@@ -169,26 +201,6 @@ namespace Billiard {
 		}
 
 		_onReleaseSignal.Emit();
-	}
-
-	void BilliardCueBehaviour::Aim(const sf::Vector2f& worldPoint) {
-		const auto targetNode = GetTargetBallNode();
-		if (!targetNode) {
-			return;
-		}
-
-		const sf::Vector2f delta = Utils::GetWorldPos(targetNode) - worldPoint;
-		if (Utils::Length(delta) <= std::numeric_limits<float>::epsilon()) {
-			return;
-		}
-
-		SetDirection(sf::radians(std::atan2(delta.y, delta.x)));
-	}
-
-	void BilliardCueBehaviour::BeginPullBack(const sf::Vector2f& worldPoint) {
-		_isPullingBack = true;
-		_pullBackGrabWorldPoint = worldPoint;
-		_pullBackDistanceAtGrab = _distanceFromTarget;
 	}
 
 	void BilliardCueBehaviour::PullBack(const sf::Vector2f& worldPoint) {

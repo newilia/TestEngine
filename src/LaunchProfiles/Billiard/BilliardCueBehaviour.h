@@ -1,7 +1,8 @@
 #pragma once
 
 #include "BilliardBallBehaviour.h"
-#include "Engine/Behaviour/EventHandlerBehaviourBase.h"
+#include "BilliardTurnIntent.h"
+#include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Behaviour/Physics/IntersectionDetails.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Core/MetaClass.h"
@@ -14,15 +15,28 @@
 
 namespace Billiard {
 
-	class BilliardCueBehaviour : public EventHandlerBehaviourBase
+	class BilliardCueBehaviour : public Behaviour
 	{
 		META_CLASS()
 
 	public:
 		void OnUpdate(const sf::Time& deltaTime) override;
-		void OnEvent(const sf::Event& event) override;
 
 	public:
+		void SetInputEnabled(bool enabled);
+		[[nodiscard]] bool IsInputEnabled() const;
+		[[nodiscard]] bool CanInteract() const;
+		[[nodiscard]] bool HitTestWorld(const sf::Vector2f& worldPoint) const;
+		void BeginAiming();
+		void StopAiming();
+		void AimAt(const sf::Vector2f& worldPoint);
+		void BeginPullBack(const sf::Vector2f& worldPoint);
+		void UpdatePullBack(const sf::Vector2f& worldPoint);
+		void TryReleaseShot();
+		void ProcessPointerMove(const sf::Vector2f& worldPoint);
+		void ApplyShotIntent(const TurnIntent& intent);
+		[[nodiscard]] TurnIntent BuildTurnIntent(int playerIndex, std::uint32_t turnId) const;
+
 		void SetTargetBall(const std::shared_ptr<BilliardBallBehaviour>& ballBehaviour);
 		void AbortAiming();
 
@@ -38,12 +52,9 @@ namespace Billiard {
 		void PlayShowAnimation();
 
 	private:
-		void Aim(const sf::Vector2f& pointerWorldPoint);
-		void BeginPullBack(const sf::Vector2f& pointerWorldPoint);
 		void PullBack(const sf::Vector2f& pointerWorldPoint);
 		void SetDirection(sf::Angle direction);
 		void Release();
-		bool HitTestWorld(const sf::Vector2f& worldPoint) const;
 		void OnTipCollide(const IntersectionDetails& intersection);
 		std::shared_ptr<SceneNode> GetTargetBallNode() const;
 
@@ -84,6 +95,7 @@ namespace Billiard {
 		float _minDistanceFromTarget = 50.f;
 
 	private:
+		bool _inputEnabled = false;
 		bool _isAiming = false;
 		bool _isPullingBack = false;
 		bool _isShooting = false;

@@ -2,7 +2,6 @@
 
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Behaviour/ComposedSurface/TiledTextureContributorBehaviour.h"
-#include "Engine/Behaviour/EventHandlerBehaviourBase.h"
 #include "Engine/Behaviour/Physics/PhysicsBodyBehaviour.h"
 #include "Engine/Behaviour/ShapeLightReceiverBehaviour.h"
 #include "Engine/Core/MetaClass.h"
@@ -12,15 +11,21 @@
 
 namespace Billiard {
 
-	class BilliardBallBehaviour : public EventHandlerBehaviourBase
+	class BilliardBallBehaviour : public Behaviour
 	{
 		META_CLASS()
 
 	public:
 		void OnUpdate(const sf::Time& dt) override;
-		void OnEvent(const sf::Event& event) override;
 
 	public:
+		void SetInputEnabled(bool enabled);
+		[[nodiscard]] bool IsInputEnabled() const;
+		void HandleMouseButtonPressed(const sf::Vector2i& position, sf::Mouse::Button button);
+		void HandleMouseMoved(const sf::Vector2i& position);
+		void HandleMouseButtonReleased(const sf::Vector2i& position);
+		[[nodiscard]] sf::Vector2f GetWorldPosition() const;
+
 		void SetBallNumber(int ballNumber);
 		[[nodiscard]] int GetBallNumber() const;
 		[[nodiscard]] bool IsCue() const;
@@ -59,6 +64,7 @@ namespace Billiard {
 		void OnMouseButtonReleased(const sf::Vector2i& position);
 		void OnMouseMoved(const sf::Vector2i& position);
 
+		bool _inputEnabled = false;
 		bool _isFalling = false;
 		float _fallAnimationProgress = 0.f;
 		float _initialLightingStrength = 1.f;

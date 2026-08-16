@@ -12,6 +12,42 @@ namespace {
 
 namespace Billiard {
 
+	void BilliardBallBehaviour::SetInputEnabled(bool enabled) {
+		_inputEnabled = enabled;
+		if (!enabled) {
+			_dragStartPosition.reset();
+		}
+	}
+
+	bool BilliardBallBehaviour::IsInputEnabled() const {
+		return _inputEnabled;
+	}
+
+	sf::Vector2f BilliardBallBehaviour::GetWorldPosition() const {
+		if (auto node = GetNode()) {
+			return node->GetLocalPosition();
+		}
+		return {};
+	}
+
+	void BilliardBallBehaviour::HandleMouseButtonPressed(const sf::Vector2i& position, sf::Mouse::Button button) {
+		if (_inputEnabled) {
+			OnMouseButtonPressed(position, button);
+		}
+	}
+
+	void BilliardBallBehaviour::HandleMouseMoved(const sf::Vector2i& position) {
+		if (_inputEnabled) {
+			OnMouseMoved(position);
+		}
+	}
+
+	void BilliardBallBehaviour::HandleMouseButtonReleased(const sf::Vector2i& position) {
+		if (_inputEnabled) {
+			OnMouseButtonReleased(position);
+		}
+	}
+
 	void BilliardBallBehaviour::SetBallNumber(int ballNumber) {
 		_ballNumber = ballNumber;
 	}
@@ -84,18 +120,6 @@ namespace Billiard {
 			if (auto textureContributor = _textureContributor.Get()) {
 				textureContributor->SetTint(sf::Color(255, 255, 255, 255 * (1.f - _fallAnimationProgress)));
 			}
-		}
-	}
-
-	void BilliardBallBehaviour::OnEvent(const sf::Event& event) {
-		if (auto e = event.getIf<sf::Event::MouseButtonPressed>()) {
-			OnMouseButtonPressed(e->position, e->button);
-		}
-		else if (auto e = event.getIf<sf::Event::MouseMoved>()) {
-			OnMouseMoved(e->position);
-		}
-		else if (auto e = event.getIf<sf::Event::MouseButtonReleased>()) {
-			OnMouseButtonReleased(e->position);
 		}
 	}
 

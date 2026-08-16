@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/Behaviour/Behaviour.h"
+#include "Engine/Behaviour/EventHandlerBehaviourBase.h"
 #include "Engine/Core/MetaClass.h"
 #include "Engine/Core/RefWrapper.h"
 #include "Engine/Core/SubscriptionsHolderBase.h"
@@ -8,15 +8,19 @@
 #include "LaunchProfiles/Billiard/BilliardBallBehaviour.h"
 #include "LaunchProfiles/Billiard/BilliardBallSpawnBehaviour.h"
 #include "LaunchProfiles/Billiard/BilliardCueBehaviour.h"
+#include "LaunchProfiles/Billiard/BilliardMatchLoop.h"
+#include "LaunchProfiles/Billiard/BilliardPlayerKind.h"
 #include "LaunchProfiles/Billiard/BilliardPocketBehaviour.h"
 #include "LaunchProfiles/Billiard/BilliardScoreboardBehaviour.h"
+#include "LaunchProfiles/Billiard/BilliardTablePresenter.h"
 #include "LaunchProfiles/Billiard/EightBallPoolGame.h"
 
+#include <array>
 #include <map>
 #include <vector>
 
 namespace Billiard {
-	class EightBallPoolController : public Behaviour, public SubscriptionsHolderBase
+	class EightBallPoolController : public EventHandlerBehaviourBase, public SubscriptionsHolderBase
 	{
 		META_CLASS()
 
@@ -24,6 +28,7 @@ namespace Billiard {
 		void OnInit() override;
 		void OnDeinit() override;
 		void OnUpdate(const sf::Time& deltaTime) override;
+		void OnEvent(const sf::Event& event) override;
 
 		/// @method
 		void StartNewGame();
@@ -34,21 +39,16 @@ namespace Billiard {
 		void SetCueOnBall(int ballNumber);
 		void OnBallFellInPocket(int ballNumber);
 		void OnAimPointChanged(const sf::Vector2f& aimPoint);
-		bool AreBallsMoving() const;
 		void OnCueRelease();
 		void OnCueHit();
 		void OnBallsStopped();
-		void RestoreBall(int ballNumber);
 		void UpdateScoreboard();
 		void UpdateScoreboardTimer();
 		void OnBallCollision(
 		    std::shared_ptr<PhysicsBodyBehaviour> ballBody, int ballIndex, const IntersectionDetails& intersection);
 		void StartNewTurn();
-
-		float GetBallRadius() const;
-		sf::FloatRect GetBallInHandRect() const;
-		sf::FloatRect GetKitchenRect() const;
-		sf::Vector2f GetTableCenter() const;
+		void ConfigureMatchLoop();
+		void UpdateAimDisplayInputEnabled();
 		void OnBallInHandGrab();
 		void OnBallInHandRelease();
 
@@ -74,10 +74,18 @@ namespace Billiard {
 		float _turnTimeLimit = 30.f;
 
 	private:
+		PlayerKind _player0Kind = PlayerKind::LocalHuman;
+		PlayerKind _player1Kind = PlayerKind::LocalHuman;
+		bool _player0IsLocalAuthority = true;
+		bool _player1IsLocalAuthority = true;
+		std::string _player0Name = "Player 1";
+		std::string _player1Name = "Player 2";
 		bool _isWaitingForBallsToStop = false;
 		float _remainingTurnTime = 0.f;
 
 		EightBallPoolGame _gameState;
+		BilliardTablePresenter _tablePresenter;
+		BilliardMatchLoop _matchLoop;
 		sf::Time _gameTimestamp;
 	};
 
