@@ -44,12 +44,14 @@ namespace Billiard {
 		Signal<>& GetOnHitSignal() const;
 		void SetLateralPosition(float position);
 		void SetVerticalSpin(float spin);
+		void SetDirectionAngle(sf::Angle angle);
 		void SetDistanceFromTarget(float distance);
 		void ResetDistanceFromTarget();
 		void ApplyCueTransform();
 
 		void PlayHideAnimation();
 		void PlayShowAnimation();
+		void EnsureCueVisible();
 
 	private:
 		void PullBack(const sf::Vector2f& pointerWorldPoint);

@@ -2,13 +2,21 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
 
 from billiards_server.framing import read_frame, write_frame
 from billiards_server.generated import BilliardSession_pb2
-from billiards_server.sessions import SessionManager
+from billiards_server.sessions import FIXED_SESSION_ID, SessionManager
 
 LOG = logging.getLogger(__name__)
+
+RELAY_PAYLOAD_TYPES = frozenset(
+    {
+        "cue_aim_update",
+        "table_state_update",
+        "turn_result",
+        "turn_started",
+    }
+)
 
 
 class BilliardSessionServer:
@@ -34,75 +42,131 @@ class BilliardSessionServer:
     ) -> None:
         peer = writer.get_extra_info("peername")
         LOG.info("Client connected: %s", peer)
+        session_id: int | None = None
+        client_id: int | None = None
         try:
             while True:
                 payload = await read_frame(reader)
                 envelope = BilliardSession_pb2.Envelope()
                 envelope.ParseFromString(payload)
-                response = self._dispatch(envelope, peer)
+                response, registered, should_broadcast = await self._dispatch(
+                    envelope, writer, session_id, client_id
+                )
+                if registered is not None:
+                    session_id, client_id = registered
                 if response is not None:
                     await write_frame(writer, response.SerializeToString())
+                if should_broadcast and session_id is not None:
+                    await self._broadcast_game_started(session_id)
         except asyncio.IncompleteReadError:
             LOG.info("Client disconnected: %s", peer)
         except Exception:
             LOG.exception("Client handler error: %s", peer)
         finally:
+            self._sessions.remove_client(writer)
             writer.close()
             try:
                 await writer.wait_closed()
             except Exception:
                 pass
 
-    def _dispatch(
-        self, envelope: BilliardSession_pb2.Envelope, peer: Any
-    ) -> BilliardSession_pb2.Envelope | None:
-        payload_type = envelope.WhichOneof("payload")
-        if payload_type == "create_session_request":
-            request = envelope.create_session_request
-            session_id, client_id = self._sessions.create_session(request.player_name)
+    async def _broadcast_game_started(self, session_id: int) -> None:
+        for client_id in self._sessions.get_client_ids(session_id):
+            client_writer = self._sessions.get_client_writer(session_id, client_id)
+            if client_writer is None:
+                continue
+
+            envelope = BilliardSession_pb2.Envelope()
+            body = envelope.game_started
+            body.session_id = session_id
+            body.your_player_index = client_id - 1
+            await write_frame(client_writer, envelope.SerializeToString())
             LOG.info(
-                "CreateSession peer=%s player=%r session_id=%s client_id=%s",
-                peer,
-                request.player_name,
+                "GameStarted pushed session_id=%s client_id=%s player_index=%s",
                 session_id,
                 client_id,
+                client_id - 1,
             )
+
+    async def _relay_to_peer(
+        self, envelope: BilliardSession_pb2.Envelope, session_id: int, sender_client_id: int
+    ) -> None:
+        peer_writer = self._sessions.get_peer_writer(session_id, sender_client_id)
+        if peer_writer is None:
+            return
+        await write_frame(peer_writer, envelope.SerializeToString())
+
+    async def _dispatch(
+        self,
+        envelope: BilliardSession_pb2.Envelope,
+        writer: asyncio.StreamWriter,
+        session_id: int | None,
+        client_id: int | None,
+    ) -> tuple[BilliardSession_pb2.Envelope | None, tuple[int, int] | None, bool]:
+        payload_type = envelope.WhichOneof("payload")
+
+        if payload_type == "create_session_request":
+            request = envelope.create_session_request
+            result = self._sessions.create_session(request.player_name, writer)
             response = BilliardSession_pb2.Envelope()
             body = response.create_session_response
-            body.session_id = session_id
-            body.client_id = client_id
-            body.success = True
-            return response
+            if isinstance(result[1], str):
+                body.success = False
+                body.error_message = result[1]
+                LOG.warning("CreateSession failed peer=%s reason=%s", writer, result[1])
+            else:
+                sid, cid = result
+                body.session_id = sid
+                body.client_id = cid
+                body.success = True
+                LOG.info(
+                    "CreateSession peer=%s player=%r session_id=%s client_id=%s",
+                    writer.get_extra_info("peername"),
+                    request.player_name,
+                    sid,
+                    cid,
+                )
+                return response, (sid, cid), False
+            return response, None, False
 
         if payload_type == "join_session_request":
             request = envelope.join_session_request
-            joined = self._sessions.join_session(request.session_id, request.player_name)
+            result = self._sessions.join_session(request.session_id, request.player_name, writer)
             response = BilliardSession_pb2.Envelope()
             body = response.join_session_response
             body.session_id = request.session_id
-            if joined is None:
+            if isinstance(result[1], str):
                 body.success = False
-                body.error_message = f"Session {request.session_id} not found"
+                body.error_message = result[1]
                 LOG.warning(
                     "JoinSession failed peer=%s player=%r session_id=%s reason=%s",
-                    peer,
+                    writer.get_extra_info("peername"),
                     request.player_name,
                     request.session_id,
-                    body.error_message,
+                    result[1],
                 )
             else:
-                session_id, client_id = joined
-                body.session_id = session_id
-                body.client_id = client_id
+                sid, cid = result
+                body.session_id = sid
+                body.client_id = cid
                 body.success = True
                 LOG.info(
                     "JoinSession peer=%s player=%r session_id=%s client_id=%s",
-                    peer,
+                    writer.get_extra_info("peername"),
                     request.player_name,
-                    session_id,
-                    client_id,
+                    sid,
+                    cid,
                 )
-            return response
+                should_broadcast = self._sessions.is_session_ready(sid)
+                return response, (sid, cid), should_broadcast
+            return response, None, False
 
-        LOG.warning("Unhandled payload type=%r from peer=%s", payload_type, peer)
-        return None
+        if payload_type in RELAY_PAYLOAD_TYPES:
+            if session_id is None or client_id is None:
+                LOG.warning("Relay rejected: client not registered payload=%s", payload_type)
+                return None, None, False
+            await self._relay_to_peer(envelope, session_id, client_id)
+            return None, None, False
+
+        LOG.warning("Unhandled payload type=%r", payload_type)
+        return None, None, False

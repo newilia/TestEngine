@@ -150,6 +150,10 @@ namespace Billiard {
 		ApplyCueTransform();
 	}
 
+	void BilliardCueBehaviour::SetDirectionAngle(sf::Angle angle) {
+		SetDirection(angle);
+	}
+
 	void BilliardCueBehaviour::ApplyCueTransform() {
 		const auto cueNode = GetNode();
 		const auto targetNode = GetTargetBallNode();
@@ -271,6 +275,26 @@ namespace Billiard {
 		if (auto visual = _visual.Get()) {
 			visual->SetColor(sf::Color(255, 255, 255, 0));
 		}
+	}
+
+	void BilliardCueBehaviour::EnsureCueVisible() {
+		auto node = GetNode();
+		if (!node) {
+			return;
+		}
+		if (_isShowing) {
+			return;
+		}
+		if (node->IsEnabled() && !_isHiding) {
+			if (auto visual = _visual.Get()) {
+				if (visual->GetColor().a == 255) {
+					return;
+				}
+				visual->SetColor(sf::Color(255, 255, 255, 255));
+			}
+			return;
+		}
+		PlayShowAnimation();
 	}
 
 	std::shared_ptr<SceneNode> BilliardCueBehaviour::GetTargetBallNode() const {

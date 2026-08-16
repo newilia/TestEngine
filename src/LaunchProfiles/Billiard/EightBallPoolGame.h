@@ -35,6 +35,7 @@ namespace Billiard {
 		bool IsGameOver() const;
 		int GetWinnerIndex() const;
 		[[nodiscard]] RulesSnapshot ToSnapshot() const;
+		void ApplySnapshot(const RulesSnapshot& snapshot);
 
 	private:
 		bool MayPocketEightBall() const;

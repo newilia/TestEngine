@@ -184,6 +184,7 @@
                   </Property>
                 </Property>
                 <Property id="table_rect" kind="SceneRef" value="50035901" />
+                <Property id="online_session" kind="SceneRef" value="254798189" />
                 <Property id="turn_time_limit" kind="Float" value="30" />
               </Property>
             </Properties>

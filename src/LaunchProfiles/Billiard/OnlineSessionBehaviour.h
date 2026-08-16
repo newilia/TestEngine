@@ -1,11 +1,15 @@
 #pragma once
 
+#include "BilliardNetworkEvent.h"
+#include "BilliardRulesSnapshot.h"
 #include "BilliardTableSnapshot.h"
+#include "BilliardTurnIntent.h"
 #include "Engine/Behaviour/Behaviour.h"
 #include "Engine/Core/MetaClass.h"
 #include "Engine/Net/TcpClient.h"
 
 #include <cstdint>
+#include <deque>
 #include <memory>
 #include <optional>
 #include <string>
@@ -17,6 +21,8 @@ namespace Billiard {
 		META_CLASS()
 
 	public:
+		static constexpr std::uint32_t kMatchSessionId = 1;
+
 		void OnUpdate(const sf::Time& deltaTime) override;
 
 		/// @method
@@ -25,9 +31,19 @@ namespace Billiard {
 		/// @method
 		void JoinSession();
 
+		void SendCueAimUpdate(std::uint32_t turnId, int playerIndex, const TurnIntent& intent);
+		void SendTableStateUpdate(std::uint32_t turnId, int playerIndex, const TableSnapshot& snapshot);
 		void SendTurnStarted(std::uint32_t turnId, int activePlayer, const TableSnapshot& snapshot);
-		void SendTurnResult(std::uint32_t turnId, int nextActivePlayer, const TableSnapshot& snapshot);
-		[[nodiscard]] std::optional<TableSnapshot> PollRemoteTurnResult(std::uint32_t& turnId, int& nextActivePlayer);
+		void SendTurnResult(
+		    std::uint32_t turnId, int nextActivePlayer, const TableSnapshot& snapshot, const RulesSnapshot& rules);
+
+		[[nodiscard]] bool HasPendingEvent() const;
+		[[nodiscard]] BilliardNetworkEvent PopEvent();
+
+		[[nodiscard]] std::uint32_t GetClientId() const;
+		[[nodiscard]] int GetLocalPlayerIndex() const;
+		[[nodiscard]] bool IsSessionReady() const;
+		[[nodiscard]] bool IsWaitingForOpponent() const;
 
 	private:
 		enum class PendingRequest
@@ -38,6 +54,8 @@ namespace Billiard {
 		};
 
 		[[nodiscard]] bool EnsureConnected(const char* actionName);
+		void PollIncomingMessages();
+		void EnqueueEvent(BilliardNetworkEvent event);
 
 		/// @property
 		std::string _serverHost = "127.0.0.1";
@@ -46,13 +64,15 @@ namespace Billiard {
 		int _serverPort = 7777;
 
 		/// @property
-		int _sessionId = 1;
-
-		/// @property
 		std::string _playerName = "Player";
 
 		std::unique_ptr<Engine::Net::TcpClient> _client;
 		PendingRequest _pendingRequest = PendingRequest::None;
+		std::uint32_t _clientId = 0;
+		int _localPlayerIndex = -1;
+		bool _isSessionReady = false;
+		bool _isWaitingForOpponent = false;
+		BilliardNetworkEventQueue _events;
 	};
 
 } // namespace Billiard

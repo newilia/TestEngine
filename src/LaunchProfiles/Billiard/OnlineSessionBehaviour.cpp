@@ -8,6 +8,25 @@
 
 namespace Billiard {
 
+	void OnlineSessionBehaviour::SendCueAimUpdate(std::uint32_t turnId, int playerIndex, const TurnIntent& intent) {
+		if (!_client || !_client->IsConnected()) {
+			return;
+		}
+		billiard::Envelope envelope;
+		FillCueAimUpdateMsg(turnId, playerIndex, intent, *envelope.mutable_cue_aim_update());
+		(void)_client->SendMessage(envelope);
+	}
+
+	void OnlineSessionBehaviour::SendTableStateUpdate(
+	    std::uint32_t turnId, int playerIndex, const TableSnapshot& snapshot) {
+		if (!_client || !_client->IsConnected()) {
+			return;
+		}
+		billiard::Envelope envelope;
+		FillTableStateUpdateMsg(turnId, playerIndex, snapshot, *envelope.mutable_table_state_update());
+		(void)_client->SendMessage(envelope);
+	}
+
 	void OnlineSessionBehaviour::SendTurnStarted(
 	    std::uint32_t turnId, int activePlayer, const TableSnapshot& snapshot) {
 		if (!_client || !_client->IsConnected()) {
@@ -19,28 +38,39 @@ namespace Billiard {
 	}
 
 	void OnlineSessionBehaviour::SendTurnResult(
-	    std::uint32_t turnId, int nextActivePlayer, const TableSnapshot& snapshot) {
+	    std::uint32_t turnId, int nextActivePlayer, const TableSnapshot& snapshot, const RulesSnapshot& rules) {
 		if (!_client || !_client->IsConnected()) {
 			return;
 		}
 		billiard::Envelope envelope;
-		FillTurnResultMsg(turnId, nextActivePlayer, snapshot, *envelope.mutable_turn_result());
+		FillTurnResultMsg(turnId, nextActivePlayer, snapshot, rules, *envelope.mutable_turn_result());
 		(void)_client->SendMessage(envelope);
 	}
 
-	std::optional<TableSnapshot> OnlineSessionBehaviour::PollRemoteTurnResult(
-	    std::uint32_t& turnId, int& nextActivePlayer) {
-		if (!_client || !_client->IsConnected()) {
-			return std::nullopt;
-		}
-		billiard::Envelope envelope;
-		if (!_client->PollMessage(envelope) || !envelope.has_turn_result()) {
-			return std::nullopt;
-		}
-		const auto& result = envelope.turn_result();
-		turnId = result.turn_id();
-		nextActivePlayer = result.next_active_player();
-		return ParseTableSnapshotMsg(result.table());
+	bool OnlineSessionBehaviour::HasPendingEvent() const {
+		return !_events.empty();
+	}
+
+	BilliardNetworkEvent OnlineSessionBehaviour::PopEvent() {
+		auto event = _events.front();
+		_events.pop_front();
+		return event;
+	}
+
+	std::uint32_t OnlineSessionBehaviour::GetClientId() const {
+		return _clientId;
+	}
+
+	int OnlineSessionBehaviour::GetLocalPlayerIndex() const {
+		return _localPlayerIndex;
+	}
+
+	bool OnlineSessionBehaviour::IsSessionReady() const {
+		return _isSessionReady;
+	}
+
+	bool OnlineSessionBehaviour::IsWaitingForOpponent() const {
+		return _isWaitingForOpponent;
 	}
 
 	bool OnlineSessionBehaviour::EnsureConnected(const char* actionName) {
@@ -59,6 +89,106 @@ namespace Billiard {
 
 		fmt::print("[Net] {}: connected to {}:{}\n", actionName, _serverHost, _serverPort);
 		return true;
+	}
+
+	void OnlineSessionBehaviour::EnqueueEvent(BilliardNetworkEvent event) {
+		_events.push_back(std::move(event));
+	}
+
+	void OnlineSessionBehaviour::PollIncomingMessages() {
+		if (!_client || !_client->IsConnected()) {
+			return;
+		}
+
+		while (true) {
+			billiard::Envelope envelope;
+			if (!_client->PollMessage(envelope)) {
+				break;
+			}
+
+			if (envelope.has_create_session_response()) {
+				const auto& response = envelope.create_session_response();
+				if (response.success()) {
+					_clientId = response.client_id();
+					_localPlayerIndex = static_cast<int>(response.client_id()) - 1;
+					_isWaitingForOpponent = true;
+					fmt::print("[Net] CreateSession: success session_id={} client_id={}\n", response.session_id(),
+					    response.client_id());
+				}
+				else {
+					fmt::print("[Net] CreateSession: failed ({})\n", response.error_message());
+				}
+				_pendingRequest = PendingRequest::None;
+				continue;
+			}
+
+			if (envelope.has_join_session_response()) {
+				const auto& response = envelope.join_session_response();
+				if (response.success()) {
+					_clientId = response.client_id();
+					_localPlayerIndex = static_cast<int>(response.client_id()) - 1;
+					fmt::print("[Net] JoinSession: success session_id={} client_id={}\n", response.session_id(),
+					    response.client_id());
+				}
+				else {
+					fmt::print("[Net] JoinSession: failed ({})\n", response.error_message());
+				}
+				_pendingRequest = PendingRequest::None;
+				continue;
+			}
+
+			if (envelope.has_game_started()) {
+				const auto& started = envelope.game_started();
+				_localPlayerIndex = started.your_player_index();
+				_isSessionReady = true;
+				_isWaitingForOpponent = false;
+				BilliardNetworkEvent event;
+				event.type = BilliardNetworkEventType::GameStarted;
+				event.playerIndex = started.your_player_index();
+				EnqueueEvent(std::move(event));
+				fmt::print("[Net] GameStarted: player_index={}\n", started.your_player_index());
+				continue;
+			}
+
+			if (envelope.has_cue_aim_update()) {
+				const auto& update = envelope.cue_aim_update();
+				const auto intent = ParseCueAimUpdateMsg(update);
+				BilliardNetworkEvent event;
+				event.type = BilliardNetworkEventType::CueAimUpdate;
+				event.turnId = update.turn_id();
+				event.playerIndex = update.player_index();
+				event.directionAngle = intent.directionAngle;
+				event.pullDistance = intent.pullDistance;
+				event.lateralSpin = intent.lateralSpin;
+				event.verticalSpin = intent.verticalSpin;
+				EnqueueEvent(std::move(event));
+				continue;
+			}
+
+			if (envelope.has_table_state_update()) {
+				const auto& update = envelope.table_state_update();
+				BilliardNetworkEvent event;
+				event.type = BilliardNetworkEventType::TableStateUpdate;
+				event.turnId = update.turn_id();
+				event.playerIndex = update.player_index();
+				event.table = ParseTableSnapshotMsg(update.table());
+				EnqueueEvent(std::move(event));
+				continue;
+			}
+
+			if (envelope.has_turn_result()) {
+				const auto& result = envelope.turn_result();
+				BilliardNetworkEvent event;
+				event.type = BilliardNetworkEventType::TurnResult;
+				event.turnId = result.turn_id();
+				event.nextActivePlayer = result.next_active_player();
+				event.table = ParseTableSnapshotMsg(result.table());
+				if (result.has_rules()) {
+					event.rules = ParseRulesSnapshotMsg(result.rules());
+				}
+				EnqueueEvent(std::move(event));
+			}
+		}
 	}
 
 	void OnlineSessionBehaviour::CreateSession() {
@@ -85,7 +215,7 @@ namespace Billiard {
 
 		billiard::Envelope envelope;
 		auto* request = envelope.mutable_join_session_request();
-		request->set_session_id(static_cast<std::uint32_t>(_sessionId));
+		request->set_session_id(kMatchSessionId);
 		request->set_player_name(_playerName);
 		if (!_client->SendMessage(envelope)) {
 			fmt::print("[Net] JoinSession: send failed\n");
@@ -94,54 +224,11 @@ namespace Billiard {
 		}
 
 		_pendingRequest = PendingRequest::JoinSession;
-		fmt::print("[Net] JoinSession: request sent (session_id={}, player={})\n", _sessionId, _playerName);
+		fmt::print("[Net] JoinSession: request sent (session_id={}, player={})\n", kMatchSessionId, _playerName);
 	}
 
 	void OnlineSessionBehaviour::OnUpdate(const sf::Time& /*deltaTime*/) {
-		if (!_client || _pendingRequest == PendingRequest::None) {
-			return;
-		}
-
-		while (true) {
-			billiard::Envelope envelope;
-			if (!_client->PollMessage(envelope)) {
-				break;
-			}
-
-			if (_pendingRequest == PendingRequest::CreateSession) {
-				if (!envelope.has_create_session_response()) {
-					continue;
-				}
-
-				const auto& response = envelope.create_session_response();
-				if (response.success()) {
-					fmt::print("[Net] CreateSession: success session_id={} client_id={}\n", response.session_id(),
-					    response.client_id());
-				}
-				else {
-					fmt::print("[Net] CreateSession: failed ({})\n", response.error_message());
-				}
-				_pendingRequest = PendingRequest::None;
-				return;
-			}
-
-			if (_pendingRequest == PendingRequest::JoinSession) {
-				if (!envelope.has_join_session_response()) {
-					continue;
-				}
-
-				const auto& response = envelope.join_session_response();
-				if (response.success()) {
-					fmt::print("[Net] JoinSession: success session_id={} client_id={}\n", response.session_id(),
-					    response.client_id());
-				}
-				else {
-					fmt::print("[Net] JoinSession: failed ({})\n", response.error_message());
-				}
-				_pendingRequest = PendingRequest::None;
-				return;
-			}
-		}
+		PollIncomingMessages();
 	}
 
 } // namespace Billiard

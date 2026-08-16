@@ -14,8 +14,10 @@
 #include "LaunchProfiles/Billiard/BilliardScoreboardBehaviour.h"
 #include "LaunchProfiles/Billiard/BilliardTablePresenter.h"
 #include "LaunchProfiles/Billiard/EightBallPoolGame.h"
+#include "LaunchProfiles/Billiard/OnlineSessionBehaviour.h"
 
 #include <array>
+#include <cstdint>
 #include <map>
 #include <vector>
 
@@ -33,6 +35,12 @@ namespace Billiard {
 		/// @method
 		void StartNewGame();
 
+		/// @method
+		void CreateServerSession();
+
+		/// @method
+		void JoinServerSession();
+
 	private:
 		void InitSubscriptions();
 		void SpawnCue();
@@ -42,15 +50,23 @@ namespace Billiard {
 		void OnCueRelease();
 		void OnCueHit();
 		void OnBallsStopped();
+		void ApplyTurnResolutionUI();
 		void UpdateScoreboard();
 		void UpdateScoreboardTimer();
 		void OnBallCollision(
 		    std::shared_ptr<PhysicsBodyBehaviour> ballBody, int ballIndex, const IntersectionDetails& intersection);
 		void StartNewTurn();
 		void ConfigureMatchLoop();
+		void ConfigureOnlineMatchLoop();
 		void UpdateAimDisplayInputEnabled();
 		void OnBallInHandGrab();
 		void OnBallInHandRelease();
+		void PollNetworkEvents();
+		void BeginOnlineMatch();
+		[[nodiscard]] bool IsLocalAuthority() const;
+		void UpdatePassiveTurnState();
+		void SendCueAimUpdateIfNeeded();
+		void SendTableStateUpdateIfNeeded();
 
 		/// @property
 		AssetRef<SceneObject> _cueAsset;
@@ -71,6 +87,8 @@ namespace Billiard {
 		/// @property
 		RefWrapper<RectangleShapeVisual> _tableRect;
 		/// @property
+		RefWrapper<OnlineSessionBehaviour> _onlineSession;
+		/// @property
 		float _turnTimeLimit = 30.f;
 
 	private:
@@ -82,6 +100,14 @@ namespace Billiard {
 		std::string _player1Name = "Player 2";
 		bool _isWaitingForBallsToStop = false;
 		float _remainingTurnTime = 0.f;
+		bool _isOnlineMatch = false;
+		bool _waitingForGameStart = false;
+		int _localPlayerIndex = 0;
+		std::uint32_t _networkTurnId = 0;
+		bool _isPassiveTurn = false;
+		int _shootingPlayerIndex = -1;
+		float _aimSendAccumulator = 0.f;
+		float _tableSendAccumulator = 0.f;
 
 		EightBallPoolGame _gameState;
 		BilliardTablePresenter _tablePresenter;

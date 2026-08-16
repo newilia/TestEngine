@@ -232,4 +232,27 @@ namespace Billiard {
 		return snapshot;
 	}
 
+	void EightBallPoolGame::ApplySnapshot(const RulesSnapshot& snapshot) {
+		_phase = snapshot.phase;
+		_activePlayerIndex = snapshot.activePlayerIndex;
+		_isBallInHand = snapshot.isBallInHand;
+		_isBreakShot = snapshot.isBreakShot;
+		_playerBallTypes = snapshot.playerBallTypes;
+		_pocketedSolids = snapshot.pocketedSolids;
+		_pocketedStripes = snapshot.pocketedStripes;
+		_isFoul = false;
+		_isCueBallPocketed = false;
+		_isEightBallPocketed = false;
+		_isCueBallCollideBall = false;
+		_pocketedBallsOnCurrentTurn.clear();
+		_ballsHitRailOnCurrentTurn.clear();
+		if (snapshot.isGameOver) {
+			_phase = GamePhase::GameOver;
+			_winnerIndex = snapshot.winnerIndex >= 0 ? std::optional<int>(snapshot.winnerIndex) : std::nullopt;
+		}
+		else {
+			_winnerIndex = std::nullopt;
+		}
+	}
+
 } // namespace Billiard
