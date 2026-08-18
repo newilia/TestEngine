@@ -39,6 +39,7 @@ namespace Billiard {
 		void OnRemoteTurnResultReceived();
 
 		void OnLocalCueHit(int shootingPlayerIndex);
+		void OnBallInHandDragStarted();
 		bool TryAdvanceAimSendTick(float deltaSeconds);
 		bool TryAdvanceTableSendTick(float deltaSeconds);
 

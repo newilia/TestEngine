@@ -68,6 +68,7 @@ namespace Billiard {
 		[[nodiscard]] bool IsPassiveTurn() const;
 		void SendCueAimUpdateIfNeeded();
 		void SendTableStateUpdateIfNeeded();
+		void SendTableStateUpdateToPeer();
 		void CheckBallsOutOfBounds();
 
 		/// @property
@@ -101,6 +102,7 @@ namespace Billiard {
 		std::string _player1Name = "Player 2";
 
 		bool _isWaitingForBallsToStop = false;
+		bool _isDraggingBallInHand = false;
 		float _remainingTurnTime = 0.f;
 		bool _waitingForGameStart = false;
 

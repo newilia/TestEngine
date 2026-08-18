@@ -88,6 +88,10 @@ namespace Billiard {
 		_tableSendAccumulator = 0.f;
 	}
 
+	void OnlineSession::OnBallInHandDragStarted() {
+		_tableSendAccumulator = 0.f;
+	}
+
 	bool OnlineSession::TryAdvanceAimSendTick(float deltaSeconds) {
 		_aimSendAccumulator += deltaSeconds;
 		if (_aimSendAccumulator >= kAimSendIntervalSeconds) {
