@@ -52,11 +52,11 @@ namespace Billiard {
 	}
 
 	bool EightBallPoolController::IsLocalAuthority() const {
-		return !_isOnlineMatch || _gameState.GetActivePlayerIndex() == _localPlayerIndex;
+		return !_onlineSession || _gameState.GetActivePlayerIndex() == _localPlayerIndex;
 	}
 
 	void EightBallPoolController::UpdatePassiveTurnState() {
-		_isPassiveTurn = _isOnlineMatch && !IsLocalAuthority();
+		_isPassiveTurn = _onlineSession && !IsLocalAuthority();
 	}
 
 	void EightBallPoolController::UpdateAimDisplayInputEnabled() {
@@ -120,60 +120,53 @@ namespace Billiard {
 	}
 
 	void EightBallPoolController::SendCueAimUpdateIfNeeded() {
-		if (!_isOnlineMatch || _isPassiveTurn || _isWaitingForBallsToStop || _gameState.IsGameOver()) {
+		if (!_onlineSession || _isPassiveTurn || _isWaitingForBallsToStop || _gameState.IsGameOver()) {
 			return;
 		}
-		auto online = _onlineSession.Get();
 		auto cueBehaviour = _cueBehaviour.Get();
-		if (!online || !cueBehaviour) {
+		if (!cueBehaviour) {
 			return;
 		}
 		const auto intent = cueBehaviour->BuildTurnIntent(_gameState.GetActivePlayerIndex(), _networkTurnId);
-		online->SendCueAimUpdate(_networkTurnId, _gameState.GetActivePlayerIndex(), intent);
+		_onlineSession->SendCueAimUpdate(_networkTurnId, _gameState.GetActivePlayerIndex(), intent);
 	}
 
 	void EightBallPoolController::SendTableStateUpdateIfNeeded() {
-		if (!_isOnlineMatch || _isPassiveTurn || !_isWaitingForBallsToStop) {
+		if (!_onlineSession || _isPassiveTurn || !_isWaitingForBallsToStop) {
 			return;
 		}
-		auto online = _onlineSession.Get();
-		if (!online) {
-			return;
-		}
-		online->SendTableStateUpdate(
+		_onlineSession->SendTableStateUpdate(
 		    _networkTurnId, _gameState.GetActivePlayerIndex(), _tablePresenter.CaptureSnapshot());
 	}
 
 	void EightBallPoolController::OnUpdate(const sf::Time& deltaTime) {
 		_gameTimestamp += deltaTime;
+		const float deltaSeconds = deltaTime.asSeconds();
 
-		if (_isOnlineMatch) {
+		if (_onlineSession) {
 			PollNetworkEvents();
 			UpdatePassiveTurnState();
 
-			if (auto online = _onlineSession.Get()) {
-				if (_waitingForGameStart && online->IsWaitingForOpponent()) {
-					if (auto scoreboard = _scoreboardBehaviour.Get()) {
-						scoreboard->ShowMessage("Waiting for opponent...");
-					}
+			if (_waitingForGameStart && _onlineSession->IsWaitingForOpponent()) {
+				if (auto scoreboard = _scoreboardBehaviour.Get()) {
+					scoreboard->ShowMessage("Waiting for opponent...");
 				}
 			}
-		}
 
-		const float deltaSeconds = deltaTime.asSeconds();
-		if (_isOnlineMatch && IsLocalAuthority() && !_isWaitingForBallsToStop) {
-			_aimSendAccumulator += deltaSeconds;
-			if (_aimSendAccumulator >= kAimSendIntervalSeconds) {
-				_aimSendAccumulator = 0.f;
-				SendCueAimUpdateIfNeeded();
+			if (IsLocalAuthority() && !_isWaitingForBallsToStop) {
+				_aimSendAccumulator += deltaSeconds;
+				if (_aimSendAccumulator >= kAimSendIntervalSeconds) {
+					_aimSendAccumulator = 0.f;
+					SendCueAimUpdateIfNeeded();
+				}
 			}
-		}
 
-		if (_isOnlineMatch && IsLocalAuthority() && _isWaitingForBallsToStop) {
-			_tableSendAccumulator += deltaSeconds;
-			if (_tableSendAccumulator >= kTableSendIntervalSeconds) {
-				_tableSendAccumulator = 0.f;
-				SendTableStateUpdateIfNeeded();
+			if (IsLocalAuthority() && _isWaitingForBallsToStop) {
+				_tableSendAccumulator += deltaSeconds;
+				if (_tableSendAccumulator >= kTableSendIntervalSeconds) {
+					_tableSendAccumulator = 0.f;
+					SendTableStateUpdateIfNeeded();
+				}
 			}
 		}
 
@@ -214,34 +207,26 @@ namespace Billiard {
 	}
 
 	void EightBallPoolController::CreateServerSession() {
-		auto online = _onlineSession.Get();
-		if (!online) {
-			return;
-		}
-		_isOnlineMatch = true;
+		_onlineSession = std::make_shared<OnlineSession>();
 		_waitingForGameStart = true;
-		online->CreateSession();
+		_onlineSession->CreateSession();
 		if (auto scoreboard = _scoreboardBehaviour.Get()) {
 			scoreboard->ShowMessage("Waiting for opponent...");
 		}
 	}
 
 	void EightBallPoolController::JoinServerSession() {
-		auto online = _onlineSession.Get();
-		if (!online) {
-			return;
-		}
-		_isOnlineMatch = true;
+		_onlineSession = std::make_shared<OnlineSession>();
 		_waitingForGameStart = true;
-		online->JoinSession();
+		_onlineSession->JoinSession();
 		if (auto scoreboard = _scoreboardBehaviour.Get()) {
 			scoreboard->ShowMessage("Joining session...");
 		}
 	}
 
 	void EightBallPoolController::BeginOnlineMatch() {
-		if (auto online = _onlineSession.Get()) {
-			_localPlayerIndex = online->GetLocalPlayerIndex();
+		if (_onlineSession) {
+			_localPlayerIndex = _onlineSession->GetLocalPlayerIndex();
 		}
 		ConfigureOnlineMatchLoop();
 		_waitingForGameStart = false;
@@ -253,13 +238,13 @@ namespace Billiard {
 	}
 
 	void EightBallPoolController::PollNetworkEvents() {
-		auto online = _onlineSession.Get();
-		if (!online) {
+		if (!_onlineSession) {
 			return;
 		}
+		_onlineSession->PollIncomingMessages();
 
-		while (online->HasPendingEvent()) {
-			const auto event = online->PopEvent();
+		while (_onlineSession->HasPendingEvent()) {
+			const auto event = _onlineSession->PopEvent();
 			switch (event.type) {
 			case BilliardNetworkEventType::GameStarted:
 				BeginOnlineMatch();
@@ -340,7 +325,7 @@ namespace Billiard {
 		_tablePresenter.SetBalls(_ballsBehaviours);
 		SpawnCue();
 		InitSubscriptions();
-		if (_isOnlineMatch) {
+		if (_onlineSession) {
 			ConfigureOnlineMatchLoop();
 		}
 		else {
@@ -370,7 +355,7 @@ namespace Billiard {
 				}
 			}
 		}
-		if (_isOnlineMatch) {
+		if (_onlineSession) {
 			ConfigureOnlineMatchLoop();
 		}
 		else {
@@ -494,12 +479,10 @@ namespace Billiard {
 
 		ApplyTurnResolutionUI();
 
-		if (_isOnlineMatch && _shootingPlayerIndex == _localPlayerIndex) {
-			if (auto online = _onlineSession.Get()) {
-				const auto rules = _gameState.ToSnapshot();
-				online->SendTurnResult(
-				    _networkTurnId, _gameState.GetActivePlayerIndex(), _tablePresenter.CaptureSnapshot(), rules);
-			}
+		if (_onlineSession && _shootingPlayerIndex == _localPlayerIndex) {
+			const auto rules = _gameState.ToSnapshot();
+			_onlineSession->SendTurnResult(
+			    _networkTurnId, _gameState.GetActivePlayerIndex(), _tablePresenter.CaptureSnapshot(), rules);
 			++_networkTurnId;
 		}
 		_shootingPlayerIndex = -1;

@@ -10,7 +10,7 @@
 
 namespace Billiard {
 
-	class OnlineSessionBehaviour;
+	class OnlineSession;
 
 	class RemoteHumanPlayer : public IPlayerAgent
 	{

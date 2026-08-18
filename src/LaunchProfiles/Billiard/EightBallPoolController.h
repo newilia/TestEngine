@@ -14,11 +14,12 @@
 #include "LaunchProfiles/Billiard/BilliardScoreboardBehaviour.h"
 #include "LaunchProfiles/Billiard/BilliardTablePresenter.h"
 #include "LaunchProfiles/Billiard/EightBallPoolGame.h"
-#include "LaunchProfiles/Billiard/OnlineSessionBehaviour.h"
+#include "LaunchProfiles/Billiard/OnlineSession.h"
 
 #include <array>
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <vector>
 
 namespace Billiard {
@@ -87,21 +88,21 @@ namespace Billiard {
 		std::map<int, RefWrapper<BilliardBallBehaviour>> _ballsBehaviours;
 		/// @property
 		RefWrapper<RectangleShapeVisual> _tableRect;
-		/// @property
-		RefWrapper<OnlineSessionBehaviour> _onlineSession;
+
 		/// @property
 		float _turnTimeLimit = 30.f;
 
 	private:
+		std::shared_ptr<OnlineSession> _onlineSession;
 		PlayerKind _player0Kind = PlayerKind::LocalHuman;
 		PlayerKind _player1Kind = PlayerKind::LocalHuman;
 		bool _player0IsLocalAuthority = true;
 		bool _player1IsLocalAuthority = true;
 		std::string _player0Name = "Player 1";
 		std::string _player1Name = "Player 2";
+
 		bool _isWaitingForBallsToStop = false;
 		float _remainingTurnTime = 0.f;
-		bool _isOnlineMatch = false;
 		bool _waitingForGameStart = false;
 		int _localPlayerIndex = 0;
 		std::uint32_t _networkTurnId = 0;

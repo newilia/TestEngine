@@ -1,14 +1,13 @@
-#include "OnlineSessionBehaviour.h"
+#include "OnlineSession.h"
 
 #include "BilliardNetworkMessages.h"
 #include "BilliardSession.pb.h"
-#include "OnlineSessionBehaviour.generated.hpp"
 
 #include <fmt/format.h>
 
 namespace Billiard {
 
-	void OnlineSessionBehaviour::SendCueAimUpdate(std::uint32_t turnId, int playerIndex, const TurnIntent& intent) {
+	void OnlineSession::SendCueAimUpdate(std::uint32_t turnId, int playerIndex, const TurnIntent& intent) {
 		if (!_client || !_client->IsConnected()) {
 			return;
 		}
@@ -17,7 +16,7 @@ namespace Billiard {
 		(void)_client->SendMessage(envelope);
 	}
 
-	void OnlineSessionBehaviour::SendTableStateUpdate(
+	void OnlineSession::SendTableStateUpdate(
 	    std::uint32_t turnId, int playerIndex, const TableSnapshot& snapshot) {
 		if (!_client || !_client->IsConnected()) {
 			return;
@@ -27,7 +26,7 @@ namespace Billiard {
 		(void)_client->SendMessage(envelope);
 	}
 
-	void OnlineSessionBehaviour::SendTurnStarted(
+	void OnlineSession::SendTurnStarted(
 	    std::uint32_t turnId, int activePlayer, const TableSnapshot& snapshot) {
 		if (!_client || !_client->IsConnected()) {
 			return;
@@ -37,7 +36,7 @@ namespace Billiard {
 		(void)_client->SendMessage(envelope);
 	}
 
-	void OnlineSessionBehaviour::SendTurnResult(
+	void OnlineSession::SendTurnResult(
 	    std::uint32_t turnId, int nextActivePlayer, const TableSnapshot& snapshot, const RulesSnapshot& rules) {
 		if (!_client || !_client->IsConnected()) {
 			return;
@@ -47,33 +46,33 @@ namespace Billiard {
 		(void)_client->SendMessage(envelope);
 	}
 
-	bool OnlineSessionBehaviour::HasPendingEvent() const {
+	bool OnlineSession::HasPendingEvent() const {
 		return !_events.empty();
 	}
 
-	BilliardNetworkEvent OnlineSessionBehaviour::PopEvent() {
+	BilliardNetworkEvent OnlineSession::PopEvent() {
 		auto event = _events.front();
 		_events.pop_front();
 		return event;
 	}
 
-	std::uint32_t OnlineSessionBehaviour::GetClientId() const {
+	std::uint32_t OnlineSession::GetClientId() const {
 		return _clientId;
 	}
 
-	int OnlineSessionBehaviour::GetLocalPlayerIndex() const {
+	int OnlineSession::GetLocalPlayerIndex() const {
 		return _localPlayerIndex;
 	}
 
-	bool OnlineSessionBehaviour::IsSessionReady() const {
+	bool OnlineSession::IsSessionReady() const {
 		return _isSessionReady;
 	}
 
-	bool OnlineSessionBehaviour::IsWaitingForOpponent() const {
+	bool OnlineSession::IsWaitingForOpponent() const {
 		return _isWaitingForOpponent;
 	}
 
-	bool OnlineSessionBehaviour::EnsureConnected(const char* actionName) {
+	bool OnlineSession::EnsureConnected(const char* actionName) {
 		if (!_client) {
 			_client = std::make_unique<Engine::Net::TcpClient>();
 		}
@@ -91,11 +90,11 @@ namespace Billiard {
 		return true;
 	}
 
-	void OnlineSessionBehaviour::EnqueueEvent(BilliardNetworkEvent event) {
+	void OnlineSession::EnqueueEvent(BilliardNetworkEvent event) {
 		_events.push_back(std::move(event));
 	}
 
-	void OnlineSessionBehaviour::PollIncomingMessages() {
+	void OnlineSession::PollIncomingMessages() {
 		if (!_client || !_client->IsConnected()) {
 			return;
 		}
@@ -191,7 +190,7 @@ namespace Billiard {
 		}
 	}
 
-	void OnlineSessionBehaviour::CreateSession() {
+	void OnlineSession::CreateSession() {
 		if (!EnsureConnected("CreateSession")) {
 			return;
 		}
@@ -208,7 +207,7 @@ namespace Billiard {
 		fmt::print("[Net] CreateSession: request sent (player={})\n", _playerName);
 	}
 
-	void OnlineSessionBehaviour::JoinSession() {
+	void OnlineSession::JoinSession() {
 		if (!EnsureConnected("JoinSession")) {
 			return;
 		}
@@ -225,10 +224,6 @@ namespace Billiard {
 
 		_pendingRequest = PendingRequest::JoinSession;
 		fmt::print("[Net] JoinSession: request sent (session_id={}, player={})\n", kMatchSessionId, _playerName);
-	}
-
-	void OnlineSessionBehaviour::OnUpdate(const sf::Time& /*deltaTime*/) {
-		PollIncomingMessages();
 	}
 
 } // namespace Billiard

@@ -4,30 +4,23 @@
 #include "BilliardRulesSnapshot.h"
 #include "BilliardTableSnapshot.h"
 #include "BilliardTurnIntent.h"
-#include "Engine/Behaviour/Behaviour.h"
-#include "Engine/Core/MetaClass.h"
 #include "Engine/Net/TcpClient.h"
 
 #include <cstdint>
-#include <deque>
 #include <memory>
-#include <optional>
 #include <string>
 
 namespace Billiard {
 
-	class OnlineSessionBehaviour : public Behaviour
+	class OnlineSession
 	{
-		META_CLASS()
-
 	public:
 		static constexpr std::uint32_t kMatchSessionId = 1;
-
-		void OnUpdate(const sf::Time& deltaTime) override;
 
 	public:
 		void CreateSession();
 		void JoinSession();
+		void PollIncomingMessages();
 
 		void SendCueAimUpdate(std::uint32_t turnId, int playerIndex, const TurnIntent& intent);
 		void SendTableStateUpdate(std::uint32_t turnId, int playerIndex, const TableSnapshot& snapshot);
@@ -52,7 +45,6 @@ namespace Billiard {
 		};
 
 		[[nodiscard]] bool EnsureConnected(const char* actionName);
-		void PollIncomingMessages();
 		void EnqueueEvent(BilliardNetworkEvent event);
 
 	private:
