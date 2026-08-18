@@ -7,27 +7,30 @@
 
 namespace Billiard {
 
-	void OnlineSession::SendCueAimUpdate(std::uint32_t turnId, int playerIndex, const TurnIntent& intent) {
+	namespace {
+		constexpr float kAimSendIntervalSeconds = 0.05f;
+		constexpr float kTableSendIntervalSeconds = 0.1f;
+	} // namespace
+
+	void OnlineSession::SendCueAimUpdate(int playerIndex, const TurnIntent& intent) {
 		if (!_client || !_client->IsConnected()) {
 			return;
 		}
 		billiard::Envelope envelope;
-		FillCueAimUpdateMsg(turnId, playerIndex, intent, *envelope.mutable_cue_aim_update());
+		FillCueAimUpdateMsg(_networkTurnId, playerIndex, intent, *envelope.mutable_cue_aim_update());
 		(void)_client->SendMessage(envelope);
 	}
 
-	void OnlineSession::SendTableStateUpdate(
-	    std::uint32_t turnId, int playerIndex, const TableSnapshot& snapshot) {
+	void OnlineSession::SendTableStateUpdate(int playerIndex, const TableSnapshot& snapshot) {
 		if (!_client || !_client->IsConnected()) {
 			return;
 		}
 		billiard::Envelope envelope;
-		FillTableStateUpdateMsg(turnId, playerIndex, snapshot, *envelope.mutable_table_state_update());
+		FillTableStateUpdateMsg(_networkTurnId, playerIndex, snapshot, *envelope.mutable_table_state_update());
 		(void)_client->SendMessage(envelope);
 	}
 
-	void OnlineSession::SendTurnStarted(
-	    std::uint32_t turnId, int activePlayer, const TableSnapshot& snapshot) {
+	void OnlineSession::SendTurnStarted(std::uint32_t turnId, int activePlayer, const TableSnapshot& snapshot) {
 		if (!_client || !_client->IsConnected()) {
 			return;
 		}
@@ -37,13 +40,70 @@ namespace Billiard {
 	}
 
 	void OnlineSession::SendTurnResult(
-	    std::uint32_t turnId, int nextActivePlayer, const TableSnapshot& snapshot, const RulesSnapshot& rules) {
+	    int nextActivePlayer, const TableSnapshot& snapshot, const RulesSnapshot& rules) {
 		if (!_client || !_client->IsConnected()) {
 			return;
 		}
 		billiard::Envelope envelope;
-		FillTurnResultMsg(turnId, nextActivePlayer, snapshot, rules, *envelope.mutable_turn_result());
+		FillTurnResultMsg(_networkTurnId, nextActivePlayer, snapshot, rules, *envelope.mutable_turn_result());
 		(void)_client->SendMessage(envelope);
+		++_networkTurnId;
+	}
+
+	void OnlineSession::SendTurnResultIfLocalShooter(
+	    int nextActivePlayer, const TableSnapshot& snapshot, const RulesSnapshot& rules) {
+		if (_shootingPlayerIndex != GetLocalPlayerIndex()) {
+			_shootingPlayerIndex = -1;
+			return;
+		}
+		SendTurnResult(nextActivePlayer, snapshot, rules);
+		_shootingPlayerIndex = -1;
+	}
+
+	bool OnlineSession::IsPassiveTurn(int activePlayerIndex) const {
+		return activePlayerIndex != GetLocalPlayerIndex();
+	}
+
+	bool OnlineSession::IsLocalAuthority(int activePlayerIndex) const {
+		return activePlayerIndex == GetLocalPlayerIndex();
+	}
+
+	void OnlineSession::BeginMatch() {
+		_networkTurnId = 1;
+		_shootingPlayerIndex = -1;
+		_aimSendAccumulator = 0.f;
+		_tableSendAccumulator = 0.f;
+	}
+
+	std::uint32_t OnlineSession::GetNetworkTurnId() const {
+		return _networkTurnId;
+	}
+
+	void OnlineSession::OnRemoteTurnResultReceived() {
+		++_networkTurnId;
+	}
+
+	void OnlineSession::OnLocalCueHit(int shootingPlayerIndex) {
+		_shootingPlayerIndex = shootingPlayerIndex;
+		_tableSendAccumulator = 0.f;
+	}
+
+	bool OnlineSession::TryAdvanceAimSendTick(float deltaSeconds) {
+		_aimSendAccumulator += deltaSeconds;
+		if (_aimSendAccumulator >= kAimSendIntervalSeconds) {
+			_aimSendAccumulator = 0.f;
+			return true;
+		}
+		return false;
+	}
+
+	bool OnlineSession::TryAdvanceTableSendTick(float deltaSeconds) {
+		_tableSendAccumulator += deltaSeconds;
+		if (_tableSendAccumulator >= kTableSendIntervalSeconds) {
+			_tableSendAccumulator = 0.f;
+			return true;
+		}
+		return false;
 	}
 
 	bool OnlineSession::HasPendingEvent() const {
@@ -61,7 +121,10 @@ namespace Billiard {
 	}
 
 	int OnlineSession::GetLocalPlayerIndex() const {
-		return _localPlayerIndex;
+		if (_clientId == 0) {
+			return -1;
+		}
+		return static_cast<int>(_clientId) - 1;
 	}
 
 	bool OnlineSession::IsSessionReady() const {
@@ -109,7 +172,6 @@ namespace Billiard {
 				const auto& response = envelope.create_session_response();
 				if (response.success()) {
 					_clientId = response.client_id();
-					_localPlayerIndex = static_cast<int>(response.client_id()) - 1;
 					_isWaitingForOpponent = true;
 					fmt::print("[Net] CreateSession: success session_id={} client_id={}\n", response.session_id(),
 					    response.client_id());
@@ -125,7 +187,6 @@ namespace Billiard {
 				const auto& response = envelope.join_session_response();
 				if (response.success()) {
 					_clientId = response.client_id();
-					_localPlayerIndex = static_cast<int>(response.client_id()) - 1;
 					fmt::print("[Net] JoinSession: success session_id={} client_id={}\n", response.session_id(),
 					    response.client_id());
 				}
@@ -138,7 +199,7 @@ namespace Billiard {
 
 			if (envelope.has_game_started()) {
 				const auto& started = envelope.game_started();
-				_localPlayerIndex = started.your_player_index();
+				Verify(started.your_player_index() == GetLocalPlayerIndex());
 				_isSessionReady = true;
 				_isWaitingForOpponent = false;
 				BilliardNetworkEvent event;

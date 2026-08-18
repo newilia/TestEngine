@@ -22,11 +22,7 @@ namespace Billiard {
 		void JoinSession();
 		void PollIncomingMessages();
 
-		void SendCueAimUpdate(std::uint32_t turnId, int playerIndex, const TurnIntent& intent);
-		void SendTableStateUpdate(std::uint32_t turnId, int playerIndex, const TableSnapshot& snapshot);
 		void SendTurnStarted(std::uint32_t turnId, int activePlayer, const TableSnapshot& snapshot);
-		void SendTurnResult(
-		    std::uint32_t turnId, int nextActivePlayer, const TableSnapshot& snapshot, const RulesSnapshot& rules);
 
 		[[nodiscard]] bool HasPendingEvent() const;
 		[[nodiscard]] BilliardNetworkEvent PopEvent();
@@ -35,6 +31,22 @@ namespace Billiard {
 		[[nodiscard]] int GetLocalPlayerIndex() const;
 		[[nodiscard]] bool IsSessionReady() const;
 		[[nodiscard]] bool IsWaitingForOpponent() const;
+		[[nodiscard]] bool IsPassiveTurn(int activePlayerIndex) const;
+		[[nodiscard]] bool IsLocalAuthority(int activePlayerIndex) const;
+
+		void BeginMatch();
+		[[nodiscard]] std::uint32_t GetNetworkTurnId() const;
+		void OnRemoteTurnResultReceived();
+
+		void OnLocalCueHit(int shootingPlayerIndex);
+		bool TryAdvanceAimSendTick(float deltaSeconds);
+		bool TryAdvanceTableSendTick(float deltaSeconds);
+
+		void SendCueAimUpdate(int playerIndex, const TurnIntent& intent);
+		void SendTableStateUpdate(int playerIndex, const TableSnapshot& snapshot);
+		void SendTurnResult(int nextActivePlayer, const TableSnapshot& snapshot, const RulesSnapshot& rules);
+		void SendTurnResultIfLocalShooter(
+		    int nextActivePlayer, const TableSnapshot& snapshot, const RulesSnapshot& rules);
 
 	private:
 		enum class PendingRequest
@@ -54,9 +66,12 @@ namespace Billiard {
 		std::unique_ptr<Engine::Net::TcpClient> _client;
 		PendingRequest _pendingRequest = PendingRequest::None;
 		std::uint32_t _clientId = 0;
-		int _localPlayerIndex = -1;
 		bool _isSessionReady = false;
 		bool _isWaitingForOpponent = false;
+		std::uint32_t _networkTurnId = 0;
+		int _shootingPlayerIndex = -1;
+		float _aimSendAccumulator = 0.f;
+		float _tableSendAccumulator = 0.f;
 		BilliardNetworkEventQueue _events;
 	};
 

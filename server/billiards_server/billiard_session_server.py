@@ -63,7 +63,17 @@ class BilliardSessionServer:
         except Exception:
             LOG.exception("Client handler error: %s", peer)
         finally:
-            self._sessions.remove_client(writer)
+            removal = self._sessions.remove_client(writer)
+            if removal.removed_client_id is not None:
+                LOG.info(
+                    "Client removed session_id=%s client_id=%s host=%s session_destroyed=%s",
+                    removal.session_id,
+                    removal.removed_client_id,
+                    removal.was_host,
+                    removal.session_destroyed,
+                )
+            if removal.peer_writer is not None and not removal.peer_writer.is_closing():
+                removal.peer_writer.close()
             writer.close()
             try:
                 await writer.wait_closed()

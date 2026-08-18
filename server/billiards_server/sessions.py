@@ -4,7 +4,8 @@ import asyncio
 from dataclasses import dataclass, field
 
 FIXED_SESSION_ID = 1
-MAX_PLAYERS = 2
+HOST_CLIENT_ID = 1
+JOINER_CLIENT_ID = 2
 
 
 @dataclass
@@ -17,8 +18,16 @@ class ConnectedClient:
 @dataclass
 class Session:
     session_id: int
-    next_client_id: int = 1
     clients: dict[int, ConnectedClient] = field(default_factory=dict)
+
+
+@dataclass
+class RemoveClientResult:
+    session_id: int | None = None
+    removed_client_id: int | None = None
+    was_host: bool = False
+    session_destroyed: bool = False
+    peer_writer: asyncio.StreamWriter | None = None
 
 
 class SessionManager:
@@ -36,15 +45,11 @@ class SessionManager:
         self, player_name: str, writer: asyncio.StreamWriter
     ) -> tuple[int, int] | tuple[None, str]:
         session = self._get_or_create_session()
-        if len(session.clients) >= MAX_PLAYERS:
-            return None, "Session is full"
-        if len(session.clients) > 0:
+        if HOST_CLIENT_ID in session.clients:
             return None, "Session already has a host; use JoinSession"
 
-        client_id = session.next_client_id
-        session.next_client_id += 1
-        session.clients[client_id] = ConnectedClient(client_id, player_name, writer)
-        return (FIXED_SESSION_ID, client_id)
+        session.clients[HOST_CLIENT_ID] = ConnectedClient(HOST_CLIENT_ID, player_name, writer)
+        return (FIXED_SESSION_ID, HOST_CLIENT_ID)
 
     def join_session(
         self, session_id: int, player_name: str, writer: asyncio.StreamWriter
@@ -54,19 +59,19 @@ class SessionManager:
         session = self._sessions.get(session_id)
         if session is None:
             return None, f"Session {session_id} not found"
-        if len(session.clients) >= MAX_PLAYERS:
-            return None, "Session is full"
-        if len(session.clients) == 0:
+        if HOST_CLIENT_ID not in session.clients:
             return None, "Session has no host; create session first"
+        if JOINER_CLIENT_ID in session.clients:
+            return None, "Session is full"
 
-        client_id = session.next_client_id
-        session.next_client_id += 1
-        session.clients[client_id] = ConnectedClient(client_id, player_name, writer)
-        return (FIXED_SESSION_ID, client_id)
+        session.clients[JOINER_CLIENT_ID] = ConnectedClient(JOINER_CLIENT_ID, player_name, writer)
+        return (FIXED_SESSION_ID, JOINER_CLIENT_ID)
 
     def is_session_ready(self, session_id: int) -> bool:
         session = self._sessions.get(session_id)
-        return session is not None and len(session.clients) >= MAX_PLAYERS
+        if session is None:
+            return False
+        return HOST_CLIENT_ID in session.clients and JOINER_CLIENT_ID in session.clients
 
     def get_peer_writer(
         self, session_id: int, sender_client_id: int
@@ -94,12 +99,32 @@ class SessionManager:
             return []
         return list(session.clients.keys())
 
-    def remove_client(self, writer: asyncio.StreamWriter) -> None:
-        for session in self._sessions.values():
-            to_remove = [
-                client_id
-                for client_id, client in session.clients.items()
-                if client.writer is writer
-            ]
-            for client_id in to_remove:
-                del session.clients[client_id]
+    def remove_client(self, writer: asyncio.StreamWriter) -> RemoveClientResult:
+        result = RemoveClientResult()
+        for session_id, session in list(self._sessions.items()):
+            for client_id, client in list(session.clients.items()):
+                if client.writer is not writer:
+                    continue
+
+                result.session_id = session_id
+                result.removed_client_id = client_id
+                result.was_host = client_id == HOST_CLIENT_ID
+
+                peer_writer: asyncio.StreamWriter | None = None
+                for other_id, other in session.clients.items():
+                    if other_id != client_id:
+                        peer_writer = other.writer
+
+                if result.was_host:
+                    del self._sessions[session_id]
+                    result.session_destroyed = True
+                    result.peer_writer = peer_writer
+                else:
+                    del session.clients[client_id]
+                    if not session.clients:
+                        del self._sessions[session_id]
+                        result.session_destroyed = True
+
+                return result
+
+        return result

@@ -65,7 +65,7 @@ namespace Billiard {
 		void PollNetworkEvents();
 		void BeginOnlineMatch();
 		[[nodiscard]] bool IsLocalAuthority() const;
-		void UpdatePassiveTurnState();
+		[[nodiscard]] bool IsPassiveTurn() const;
 		void SendCueAimUpdateIfNeeded();
 		void SendTableStateUpdateIfNeeded();
 		void CheckBallsOutOfBounds();
@@ -103,12 +103,6 @@ namespace Billiard {
 		bool _isWaitingForBallsToStop = false;
 		float _remainingTurnTime = 0.f;
 		bool _waitingForGameStart = false;
-		int _localPlayerIndex = 0;
-		std::uint32_t _networkTurnId = 0;
-		bool _isPassiveTurn = false;
-		int _shootingPlayerIndex = -1;
-		float _aimSendAccumulator = 0.f;
-		float _tableSendAccumulator = 0.f;
 
 		EightBallPoolGame _gameState;
 		BilliardTablePresenter _tablePresenter;
