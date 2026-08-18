@@ -88,7 +88,6 @@ namespace Billiard {
 		std::map<int, RefWrapper<BilliardBallBehaviour>> _ballsBehaviours;
 		/// @property
 		RefWrapper<RectangleShapeVisual> _tableRect;
-
 		/// @property
 		float _turnTimeLimit = 30.f;
 

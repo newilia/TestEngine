@@ -291,6 +291,7 @@ namespace Billiard {
 	void EightBallPoolController::StartNewGame() {
 		_gameTimestamp = sf::Time::Zero;
 		_gameState.StartNewGame();
+		StartNewTurn();
 
 		if (auto scoreboard = _scoreboardBehaviour.Get()) {
 			scoreboard->Reset();
