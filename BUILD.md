@@ -53,9 +53,11 @@ Visual Studio **не** пишет `compile_commands.json` в `build/`. Для Cu
 _cmake_ninja.cmd
 ```
 
-Перезапуск языкового сервера: **clangd: Restart language server**. В [`.vscode/settings.json`](.vscode/settings.json): `--compile-commands-dir=${workspaceFolder}/build-ninja`.
+Перезапуск языкового сервера: **clangd: Restart language server**. В [`.vscode/settings.json`](.vscode/settings.json): `--compile-commands-dir=${workspaceFolder}/build-ninja`. Флаги PCH MSVC из `compile_commands.json` отключаются в [`.clangd`](.clangd) (иначе после сборки диагностика может «залипать» до перезапуска clangd). `pch.h` в `.clangd` намеренно не подключается — иначе **Find References** всегда показывает `pch.h`.
 
-После крупных изменений CMake/новых `.cpp` — снова `_cmake_ninja.cmd` (полная сборка Ninja не обязательна, достаточно configure).
+После крупных изменений CMake/новых `.cpp` — снова `_cmake_ninja.cmd` (полная сборка Ninja не обязательна, достаточно configure). Скрипт копирует `compile_commands.json` в корень репо — расширение clangd следит за этим файлом и перезапускает сервер.
+
+Если после правок в `*.h` с `META_CLASS()` / `@property` подсветка не обновилась — запустите **Property codegen** (задача в VS Code) или сборку `Codegen`: меняются `src/Codegen/*.generated.hpp`, которые clangd не всегда перечитывает без перезапуска.
 
 ## Codegen (дерево свойств)
 

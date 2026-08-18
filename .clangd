@@ -1,0 +1,12 @@
+# MSVC PCH flags from CMake (target_precompile_headers) confuse clangd's driver:
+# after a build, -include can be upgraded to -include-pch and diagnostics go stale
+# until clangd is restarted. Strip PCH flags only; do not -include pch.h here —
+# that makes every TU list pch.h in Find References. TestEngineGlobals.h stays
+# via /FI in compile_commands.json; other includes come from each file's headers.
+CompileFlags:
+  CompilationDatabase: build-ninja
+  Remove:
+    - /Yc*
+    - /Yu*
+    - /Fp*
+    - /FI*cmake_pch*
