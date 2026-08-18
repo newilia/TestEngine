@@ -289,16 +289,14 @@ namespace Billiard {
 				}
 				break;
 			case BilliardNetworkEventType::TurnResult:
-				if (_isOnlineMatch) {
-					_isWaitingForBallsToStop = false;
-					_tablePresenter.ApplySnapshot(event.table);
-					_gameState.ApplySnapshot(event.rules);
-					UpdatePassiveTurnState();
-					ApplyTurnResolutionUI();
-					++_networkTurnId;
-					if (!_gameState.IsGameOver()) {
-						StartNewTurn();
-					}
+				_isWaitingForBallsToStop = false;
+				_tablePresenter.ApplySnapshot(event.table);
+				_gameState.ApplySnapshot(event.rules);
+				UpdatePassiveTurnState();
+				ApplyTurnResolutionUI();
+				++_networkTurnId;
+				if (!_gameState.IsGameOver()) {
+					StartNewTurn();
 				}
 				break;
 			}

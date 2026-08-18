@@ -25,10 +25,8 @@ namespace Billiard {
 
 		void OnUpdate(const sf::Time& deltaTime) override;
 
-		/// @method
+	public:
 		void CreateSession();
-
-		/// @method
 		void JoinSession();
 
 		void SendCueAimUpdate(std::uint32_t turnId, int playerIndex, const TurnIntent& intent);
@@ -57,15 +55,10 @@ namespace Billiard {
 		void PollIncomingMessages();
 		void EnqueueEvent(BilliardNetworkEvent event);
 
-		/// @property
+	private:
 		std::string _serverHost = "127.0.0.1";
-
-		/// @property
 		int _serverPort = 7777;
-
-		/// @property
 		std::string _playerName = "Player";
-
 		std::unique_ptr<Engine::Net::TcpClient> _client;
 		PendingRequest _pendingRequest = PendingRequest::None;
 		std::uint32_t _clientId = 0;
