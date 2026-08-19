@@ -141,11 +141,16 @@ namespace Billiard {
 		else {
 			const auto playerBallType = _playerBallTypes[_activePlayerIndex];
 			bool hasValidPocketedBalls = false;
-			for (const auto& ballNumber : _pocketedBallsOnCurrentTurn) {
-				auto ballType = GetBallType(ballNumber);
-				if (ballType == playerBallType) {
-					hasValidPocketedBalls = true;
-					break;
+			if (playerBallType == BallType::Undefined && !_pocketedBallsOnCurrentTurn.empty()) {
+				hasValidPocketedBalls = true;
+			}
+			else {
+				for (const auto& ballNumber : _pocketedBallsOnCurrentTurn) {
+					auto ballType = GetBallType(ballNumber);
+					if (ballType == playerBallType) {
+						hasValidPocketedBalls = true;
+						break;
+					}
 				}
 			}
 
