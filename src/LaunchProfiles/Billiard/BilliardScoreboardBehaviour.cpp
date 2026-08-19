@@ -15,6 +15,13 @@ namespace Billiard {
 		ShowMessage("");
 	}
 
+	void BilliardScoreboardBehaviour::SetPlayerName(int playerIndex, const std::string& name) {
+		auto textRef = playerIndex == 0 ? _player1nameTextRef : _player2nameTextRef;
+		if (auto text = textRef.Get()) {
+			text->SetString(name);
+		}
+	}
+
 	void BilliardScoreboardBehaviour::ShowMessage(const std::string& message) {
 		if (auto messageText = _messageTextRef.Get()) {
 			messageText->SetString(message);

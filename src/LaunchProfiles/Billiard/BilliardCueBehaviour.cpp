@@ -272,6 +272,7 @@ namespace Billiard {
 		_isHiding = false;
 		_animationProgress = 0.f;
 		GetNode()->SetEnabled(true);
+		GetNode()->SetVisible(true);
 		if (auto visual = _visual.Get()) {
 			visual->SetColor(sf::Color(255, 255, 255, 0));
 		}

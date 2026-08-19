@@ -13,8 +13,6 @@ namespace Billiard {
 		EventHandlerBehaviourBase::OnInit();
 		Engine::Editor::GetInstance().SetCameraPanOnRightClickEnabled(false);
 		_tablePresenter.SetTableRect(_tableRect);
-		ConfigureMatchLoop();
-		InitSubscriptions();
 	}
 
 	void EightBallPoolController::OnDeinit() {
@@ -23,11 +21,7 @@ namespace Billiard {
 		UnsubscribeAll();
 	}
 
-	void EightBallPoolController::ConfigureMatchLoop() {
-		std::array<PlayerSlotConfig, 2> slots;
-		slots[0] = {_player0Kind, _player0Name};
-		slots[1] = {_player1Kind, _player1Name};
-
+	void EightBallPoolController::ConfigureMatchLoop(const MatchLoopConfig& config) {
 		PlayerAgentDeps deps;
 		if (auto cue = _cueBehaviour.Get()) {
 			deps.cue = cue;
@@ -35,29 +29,27 @@ namespace Billiard {
 		if (auto cueBall = _ballsBehaviours[0].Get()) {
 			deps.cueBall = cueBall;
 		}
-		deps.isLocalAuthorityForRemoteSlot = {_player0IsLocalAuthority, _player1IsLocalAuthority};
-		_matchLoop.Configure(slots, deps);
+		deps.isLocalAuthorityForRemoteSlot = config.isLocalAuthorityForRemoteSlot;
+		_matchLoop.Configure(config.slots, deps);
 	}
 
 	void EightBallPoolController::ConfigureHotSeatMatchLoop() {
-		_player0Kind = PlayerKind::LocalHuman;
-		_player1Kind = PlayerKind::LocalHuman;
-		_player0IsLocalAuthority = true;
-		_player1IsLocalAuthority = true;
-		_player0Name = "Player 1";
-		_player1Name = "Player 2";
-		ConfigureMatchLoop();
+		MatchLoopConfig config;
+		config.slots[0] = {PlayerKind::LocalHuman, "Player 1"};
+		config.slots[1] = {PlayerKind::LocalHuman, "Player 2"};
+		ConfigureMatchLoop(config);
 	}
 
 	void EightBallPoolController::ConfigureOnlineMatchLoop() {
+		assert(_onlineSession && _onlineSession->IsSessionReady());
 		const int localPlayerIndex = _onlineSession->GetLocalPlayerIndex();
-		_player0Kind = localPlayerIndex == 0 ? PlayerKind::LocalHuman : PlayerKind::RemoteHuman;
-		_player1Kind = localPlayerIndex == 1 ? PlayerKind::LocalHuman : PlayerKind::RemoteHuman;
-		_player0IsLocalAuthority = localPlayerIndex == 0;
-		_player1IsLocalAuthority = localPlayerIndex == 1;
-		_player0Name = localPlayerIndex == 0 ? "You" : "Opponent";
-		_player1Name = localPlayerIndex == 1 ? "You" : "Opponent";
-		ConfigureMatchLoop();
+		MatchLoopConfig config;
+		config.slots[0] = {localPlayerIndex == 0 ? PlayerKind::LocalHuman : PlayerKind::RemoteHuman,
+		    localPlayerIndex == 0 ? "You" : "Opponent"};
+		config.slots[1] = {localPlayerIndex == 1 ? PlayerKind::LocalHuman : PlayerKind::RemoteHuman,
+		    localPlayerIndex == 1 ? "You" : "Opponent"};
+		config.isLocalAuthorityForRemoteSlot = {localPlayerIndex == 0, localPlayerIndex == 1};
+		ConfigureMatchLoop(config);
 	}
 
 	bool EightBallPoolController::IsLocalAuthority() const {
@@ -306,20 +298,23 @@ namespace Billiard {
 	}
 
 	void EightBallPoolController::StartNewGame() {
+		InitScoreboard();
+		InitPockets();
+		SpawnBalls();
+		SetupCue();
+		InitSubscriptions();
+		_matchLoop.OnTurnStarted(_gameState, _tablePresenter, _cueBehaviour.Get().get());
+		UpdateAimDisplayInputEnabled();
+
 		_gameTimestamp = sf::Time::Zero;
 		_gameState.StartNewGame();
 		StartNewTurn();
-
-		if (auto scoreboard = _scoreboardBehaviour.Get()) {
-			scoreboard->Reset();
+		if (_onlineSession && _onlineSession->GetLocalPlayerIndex() == 0) { // is host
+			SendTableStateUpdateToPeer();
 		}
+	}
 
-		for (auto& pocket : _pocketsBehaviours) {
-			if (auto pocketBehaviour = pocket.Get()) {
-				pocketBehaviour->Reset();
-			}
-		}
-
+	void EightBallPoolController::SpawnBalls() {
 		if (auto ballSpawn = _ballSpawnBehaviour.Get()) {
 			auto spawnedBalls = ballSpawn->SpawnBalls();
 
@@ -341,46 +336,29 @@ namespace Billiard {
 		}
 
 		_tablePresenter.SetBalls(_ballsBehaviours);
-		SpawnCue();
-		InitSubscriptions();
-		if (_onlineSession) {
-			ConfigureOnlineMatchLoop();
-		}
-		else {
-			ConfigureMatchLoop();
-		}
-		_matchLoop.OnTurnStarted(_gameState, _tablePresenter, _cueBehaviour.Get().get());
-		UpdateAimDisplayInputEnabled();
+	}
 
-		if (_onlineSession && _onlineSession->GetLocalPlayerIndex() == 0) {
-			SendTableStateUpdateToPeer();
+	void EightBallPoolController::InitPockets() {
+		for (auto& pocket : _pocketsBehaviours) {
+			if (auto pocketBehaviour = pocket.Get()) {
+				pocketBehaviour->Reset();
+			}
 		}
 	}
 
-	void EightBallPoolController::SpawnCue() {
-		if (auto cueBehaviour = _cueBehaviour.Get()) {
-			if (auto node = cueBehaviour->GetNode()) {
-				node->RemoveFromParent();
-			}
-			_cueBehaviour.Clear();
+	void EightBallPoolController::InitScoreboard() {
+		if (auto scoreboard = _scoreboardBehaviour.Get()) {
+			scoreboard->Reset();
+			scoreboard->SetPlayerName(0, _matchLoop.GetSlots()[0].displayName);
+			scoreboard->SetPlayerName(1, _matchLoop.GetSlots()[1].displayName);
 		}
+	}
 
-		if (auto cueAsset = _cueAsset.Get()) {
-			if (auto cueParent = _cueParent.Get()) {
-				if (auto cueNode = cueAsset->InstantiateOn(cueParent)) {
-					if (auto cueBehaviour = cueNode->FindBehaviour<BilliardCueBehaviour>()) {
-						_cueBehaviour = cueBehaviour;
-						cueBehaviour->SetInputEnabled(false);
-						SetCueOnBall(0);
-					}
-				}
-			}
-		}
-		if (_onlineSession) {
-			ConfigureOnlineMatchLoop();
-		}
-		else {
-			ConfigureMatchLoop();
+	void EightBallPoolController::SetupCue() {
+		if (auto cueBehaviour = _cueBehaviour.Get()) {
+			cueBehaviour->SetInputEnabled(false);
+			cueBehaviour->PlayShowAnimation();
+			SetCueOnBall(0);
 		}
 	}
 
@@ -539,7 +517,8 @@ namespace Billiard {
 			scoreboard->SetPlayerBallType(0, _gameState.GetPlayerBallType(0));
 			scoreboard->SetPlayerBallType(1, _gameState.GetPlayerBallType(1));
 			if (_gameState.IsGameOver()) {
-				const auto& winnerName = _gameState.GetWinnerIndex() == 0 ? _player0Name : _player1Name;
+				const auto& slots = _matchLoop.GetSlots();
+				const auto& winnerName = slots[static_cast<std::size_t>(_gameState.GetWinnerIndex())].displayName;
 				scoreboard->ShowMessage(fmt::format("{} wins", winnerName));
 			}
 		}

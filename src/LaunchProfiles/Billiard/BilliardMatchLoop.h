@@ -27,6 +27,7 @@ namespace Billiard {
 		void OnEvent(const sf::Event& event, EightBallPoolGame& game);
 		[[nodiscard]] IPlayerAgent* GetActiveAgent(const EightBallPoolGame& game);
 		[[nodiscard]] const std::array<std::unique_ptr<IPlayerAgent>, 2>& GetAgents() const;
+		[[nodiscard]] const std::array<PlayerSlotConfig, 2>& GetSlots() const;
 
 	private:
 		void ApplyAgentShotIntent(const TurnIntent& intent, BilliardCueBehaviour* cue);

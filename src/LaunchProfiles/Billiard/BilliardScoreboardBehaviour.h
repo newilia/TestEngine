@@ -21,6 +21,7 @@ namespace Billiard {
 		void ShowMessage(const std::string& message);
 		void SetRemainingTurnTime(float seconds);
 		void SetPlayerBallType(int playerIndex, BallType ballType);
+		void SetPlayerName(int playerIndex, const std::string& name);
 
 	private:
 		/// @property
@@ -35,6 +36,10 @@ namespace Billiard {
 		RefWrapper<TextVisual> _player1ballTypeTextRef;
 		/// @property
 		RefWrapper<TextVisual> _player2ballTypeTextRef;
+		/// @property
+		RefWrapper<TextVisual> _player1nameTextRef;
+		/// @property
+		RefWrapper<TextVisual> _player2nameTextRef;
 	};
 
 } // namespace Billiard

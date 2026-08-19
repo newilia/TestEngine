@@ -45,7 +45,10 @@ namespace Billiard {
 	private:
 		void InitSubscriptions();
 		void StartNewGame();
-		void SpawnCue();
+		void SetupCue();
+		void SpawnBalls();
+		void InitPockets();
+		void InitScoreboard();
 		void SetCueOnBall(int ballNumber);
 		void OnBallFellInPocket(int ballNumber);
 		void OnAimPointChanged(const sf::Vector2f& aimPoint);
@@ -58,7 +61,14 @@ namespace Billiard {
 		void OnBallCollision(
 		    std::shared_ptr<PhysicsBodyBehaviour> ballBody, int ballIndex, const IntersectionDetails& intersection);
 		void StartNewTurn();
-		void ConfigureMatchLoop();
+
+		struct MatchLoopConfig
+		{
+			std::array<PlayerSlotConfig, 2> slots;
+			std::array<bool, 2> isLocalAuthorityForRemoteSlot = {true, true};
+		};
+
+		void ConfigureMatchLoop(const MatchLoopConfig& config);
 		void ConfigureHotSeatMatchLoop();
 		void ConfigureOnlineMatchLoop();
 		void UpdateAimDisplayInputEnabled();
@@ -78,8 +88,6 @@ namespace Billiard {
 		/// @property
 		RefWrapper<BilliardCueBehaviour> _cueBehaviour;
 		/// @property
-		RefWrapper<SceneNode> _cueParent;
-		/// @property
 		RefWrapper<BilliardScoreboardBehaviour> _scoreboardBehaviour;
 		/// @property
 		RefWrapper<BilliardBallAimDisplayBehaviour> _aimDisplayBehaviour;
@@ -96,12 +104,6 @@ namespace Billiard {
 
 	private:
 		std::shared_ptr<OnlineSession> _onlineSession;
-		PlayerKind _player0Kind = PlayerKind::LocalHuman;
-		PlayerKind _player1Kind = PlayerKind::LocalHuman;
-		bool _player0IsLocalAuthority = true;
-		bool _player1IsLocalAuthority = true;
-		std::string _player0Name = "Player 1";
-		std::string _player1Name = "Player 2";
 
 		bool _isWaitingForBallsToStop = false;
 		bool _isDraggingBallInHand = false;

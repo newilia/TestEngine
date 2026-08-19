@@ -77,6 +77,10 @@ namespace Billiard {
 		return _agents;
 	}
 
+	const std::array<PlayerSlotConfig, 2>& BilliardMatchLoop::GetSlots() const {
+		return _slots;
+	}
+
 	void BilliardMatchLoop::ApplyAgentShotIntent(const TurnIntent& intent, BilliardCueBehaviour* cue) {
 		if (!cue) {
 			return;

@@ -2,7 +2,7 @@
 <Scene version="2">
   <Settings>
     <Simulation speedMultiplier="1" vsync="false" />
-    <View centerX="64.9425507" centerY="-149.030685" scale="1.98220527" />
+    <View centerX="171.980148" centerY="-198.585129" scale="1.98220515" />
     <Grid visible="false" size="50" basis="10" snap="true" />
     <Physics gravityX="0" gravityY="400" gravityEnabled="false" airFriction="0" substeps="4">
       <Attraction strength="50" softening="4" massCoupling="true" />
@@ -93,7 +93,6 @@
               <Property id="eight_ball_pool_controller" kind="Object">
                 <Property id="cue_asset" kind="AssetRef" value="assets/sceneobjects/8 ball pool/cue.xml" type="Engine.SceneObject" />
                 <Property id="cue_behaviour" kind="SceneRef" value="2568429161" />
-                <Property id="cue_parent" kind="SceneRef" value="3927536882" />
                 <Property id="scoreboard_behaviour" kind="SceneRef" value="3074770674" />
                 <Property id="aim_display_behaviour" kind="SceneRef" value="2812427044" />
                 <Property id="ball_spawn_behaviour" kind="SceneRef" value="519174997" />
@@ -8743,6 +8742,8 @@
                 <Property id="timer_text_ref" kind="SceneRef" value="3489218946" />
                 <Property id="player1ball_type_text_ref" kind="SceneRef" value="807900618" />
                 <Property id="player2ball_type_text_ref" kind="SceneRef" value="1521273579" />
+                <Property id="player1name_text_ref" kind="SceneRef" value="2520766451" />
+                <Property id="player2name_text_ref" kind="SceneRef" value="1667256532" />
               </Property>
             </Properties>
           </Behaviour>
@@ -8773,7 +8774,7 @@
                   <Property id="scene_node" kind="Object">
                     <Property id="name" kind="String" value="Active" />
                     <Property id="is_enabled" kind="Bool" value="true" />
-                    <Property id="is_visible" kind="Bool" value="true" />
+                    <Property id="is_visible" kind="Bool" value="false" />
                   </Property>
                 </Properties>
                 <Transform type="Engine.Transform">
@@ -8824,7 +8825,7 @@
                 <Visual type="Engine.TextVisual" entityId="2520766451">
                   <Properties>
                     <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                    <Property id="get_string" kind="String" value="Player1" />
+                    <Property id="get_string" kind="String" value="" />
                     <Property id="get_fill_color" kind="Color" r="0" g="0" b="0" a="255" />
                     <Property id="get_outline_color" kind="Color" r="0" g="0" b="0" a="255" />
                     <Property id="get_character_size" kind="Int32" value="60" />
@@ -8939,7 +8940,7 @@
                 <Transform type="Engine.Transform">
                   <Properties>
                     <Property id="transform" kind="Object">
-                      <Property id="get_position" kind="Vec2f" x="50" y="20" />
+                      <Property id="get_position" kind="Vec2f" x="489" y="20" />
                       <Property id="get_scale" kind="Vec2f" x="1" y="1" />
                       <Property id="get_rotation" kind="Float" value="0" />
                       <Property id="get_origin" kind="Vec2f" x="0" y="0" />
@@ -8949,14 +8950,14 @@
                 <Visual type="Engine.TextVisual" entityId="1667256532">
                   <Properties>
                     <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                    <Property id="get_string" kind="String" value="Player2" />
+                    <Property id="get_string" kind="String" value="" />
                     <Property id="get_fill_color" kind="Color" r="0" g="0" b="0" a="255" />
                     <Property id="get_outline_color" kind="Color" r="0" g="0" b="0" a="255" />
                     <Property id="get_character_size" kind="Int32" value="60" />
                     <Property id="get_origin" kind="Vec2f" x="0" y="0" />
                     <Property id="get_position" kind="Vec2f" x="0" y="0" />
                     <Property id="get_outline_thickness" kind="Float" value="0" />
-                    <Property id="get_text_alignment" kind="Enum" value="0" name="Default" />
+                    <Property id="get_text_alignment" kind="Enum" value="3" name="Right" />
                   </Properties>
                 </Visual>
                 <Behaviours />
@@ -9063,6 +9064,12 @@
                 <Property id="get_text_alignment" kind="Enum" value="2" name="Center" />
               </Properties>
             </Visual>
+            <SortingStrategy type="Engine.DefaultSortingStrategy" entityId="680212671">
+              <Properties>
+                <Property id="sort_key" kind="Int32" value="4" />
+                <Property id="type" kind="Enum" value="0" name="Relative" />
+              </Properties>
+            </SortingStrategy>
             <Behaviours />
             <Children />
           </Node>
