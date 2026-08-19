@@ -93,7 +93,7 @@ namespace Billiard {
 		_isCueBallCollideBall = true;
 		auto ballType = GetBallType(ballNumber);
 		auto playerBallType = _playerBallTypes[_activePlayerIndex];
-		if (playerBallType != BallType::Undefined && playerBallType != ballType || ballType == BallType::Eight) {
+		if (playerBallType != BallType::Undefined && playerBallType != ballType) {
 			_isFoul = true;
 		}
 	}
@@ -134,13 +134,22 @@ namespace Billiard {
 			}
 		}
 
-		/* TODO move to StartNewTurn() ? */
 		if (_isFoul) {
 			_activePlayerIndex = 1 - _activePlayerIndex;
 			_isBallInHand = true;
 		}
 		else {
-			if (_pocketedBallsOnCurrentTurn.empty()) {
+			const auto playerBallType = _playerBallTypes[_activePlayerIndex];
+			bool hasValidPocketedBalls = false;
+			for (const auto& ballNumber : _pocketedBallsOnCurrentTurn) {
+				auto ballType = GetBallType(ballNumber);
+				if (ballType == playerBallType) {
+					hasValidPocketedBalls = true;
+					break;
+				}
+			}
+
+			if (!hasValidPocketedBalls) {
 				_activePlayerIndex = 1 - _activePlayerIndex;
 			}
 			_isBallInHand = false;
