@@ -34,7 +34,7 @@ namespace Billiard {
 		void OnEvent(const sf::Event& event) override;
 
 		/// @method
-		void StartNewGame();
+		void StartHotSeatGame();
 
 		/// @method
 		void CreateServerSession();
@@ -44,6 +44,7 @@ namespace Billiard {
 
 	private:
 		void InitSubscriptions();
+		void StartNewGame();
 		void SpawnCue();
 		void SetCueOnBall(int ballNumber);
 		void OnBallFellInPocket(int ballNumber);
@@ -58,6 +59,7 @@ namespace Billiard {
 		    std::shared_ptr<PhysicsBodyBehaviour> ballBody, int ballIndex, const IntersectionDetails& intersection);
 		void StartNewTurn();
 		void ConfigureMatchLoop();
+		void ConfigureHotSeatMatchLoop();
 		void ConfigureOnlineMatchLoop();
 		void UpdateAimDisplayInputEnabled();
 		void OnBallInHandGrab();

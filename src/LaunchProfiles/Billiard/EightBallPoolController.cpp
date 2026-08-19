@@ -39,6 +39,16 @@ namespace Billiard {
 		_matchLoop.Configure(slots, deps);
 	}
 
+	void EightBallPoolController::ConfigureHotSeatMatchLoop() {
+		_player0Kind = PlayerKind::LocalHuman;
+		_player1Kind = PlayerKind::LocalHuman;
+		_player0IsLocalAuthority = true;
+		_player1IsLocalAuthority = true;
+		_player0Name = "Player 1";
+		_player1Name = "Player 2";
+		ConfigureMatchLoop();
+	}
+
 	void EightBallPoolController::ConfigureOnlineMatchLoop() {
 		const int localPlayerIndex = _onlineSession->GetLocalPlayerIndex();
 		_player0Kind = localPlayerIndex == 0 ? PlayerKind::LocalHuman : PlayerKind::RemoteHuman;
@@ -203,6 +213,13 @@ namespace Billiard {
 		if (!_isWaitingForBallsToStop && !IsPassiveTurn()) {
 			_matchLoop.OnEvent(event, _gameState);
 		}
+	}
+
+	void EightBallPoolController::StartHotSeatGame() {
+		_onlineSession = nullptr;
+		_waitingForGameStart = false;
+		ConfigureHotSeatMatchLoop();
+		StartNewGame();
 	}
 
 	void EightBallPoolController::CreateServerSession() {
