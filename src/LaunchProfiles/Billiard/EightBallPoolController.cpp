@@ -22,15 +22,21 @@ namespace Billiard {
 	}
 
 	void EightBallPoolController::ConfigureMatchLoop(const MatchLoopConfig& config) {
-		PlayerAgentDeps deps;
-		if (auto cue = _cueBehaviour.Get()) {
-			deps.cue = cue;
+		_matchLoop.Configure(config.slots, config.isLocalAuthorityForRemoteSlot);
+	}
+
+	void EightBallPoolController::BindPlayerAgentRuntimeDeps() {
+		std::weak_ptr<BilliardCueBehaviour> cue;
+		if (auto resolvedCue = _cueBehaviour.Get()) {
+			cue = resolvedCue;
 		}
-		if (auto cueBall = _ballsBehaviours[0].Get()) {
-			deps.cueBall = cueBall;
+		std::weak_ptr<BilliardBallBehaviour> cueBall;
+		if (Verify(!_ballsBehaviours.empty())) {
+			if (auto resolvedCueBall = _ballsBehaviours[0].Get()) {
+				cueBall = resolvedCueBall;
+			}
 		}
-		deps.isLocalAuthorityForRemoteSlot = config.isLocalAuthorityForRemoteSlot;
-		_matchLoop.Configure(config.slots, deps);
+		_matchLoop.BindRuntimeDeps(cue, cueBall);
 	}
 
 	void EightBallPoolController::ConfigureHotSeatMatchLoop() {
@@ -302,8 +308,9 @@ namespace Billiard {
 		InitPockets();
 		SpawnBalls();
 		SetupCue();
+		BindPlayerAgentRuntimeDeps();
 		InitSubscriptions();
-		_matchLoop.OnTurnStarted(_gameState, _tablePresenter, _cueBehaviour.Get().get());
+		_matchLoop.OnTurnStarted(_gameState, _tablePresenter);
 		UpdateAimDisplayInputEnabled();
 
 		_gameTimestamp = sf::Time::Zero;
@@ -494,7 +501,7 @@ namespace Billiard {
 	void EightBallPoolController::StartNewTurn() {
 		_remainingTurnTime = _turnTimeLimit;
 		_gameState.StartNewTurn();
-		_matchLoop.OnTurnStarted(_gameState, _tablePresenter, _cueBehaviour.Get().get());
+		_matchLoop.OnTurnStarted(_gameState, _tablePresenter);
 		if (IsLocalAuthority() && !_isWaitingForBallsToStop) {
 			SetCueOnBall(0);
 			if (auto cueBehaviour = _cueBehaviour.Get()) {
@@ -508,7 +515,7 @@ namespace Billiard {
 	void EightBallPoolController::UpdateScoreboard() {
 		if (auto scoreboard = _scoreboardBehaviour.Get()) {
 			scoreboard->SetActivePlayerIndex(_gameState.GetActivePlayerIndex());
-			if (_gameState.IsBallInHand() && !_isWaitingForBallsToStop) {
+			if (_gameState.GetFoulKind() != FoulKind::None) {
 				scoreboard->ShowFoulMessage(_gameState.GetFoulKind());
 			}
 			else if (!_waitingForGameStart) {

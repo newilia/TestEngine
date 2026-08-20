@@ -69,6 +69,7 @@ namespace Billiard {
 		};
 
 		void ConfigureMatchLoop(const MatchLoopConfig& config);
+		void BindPlayerAgentRuntimeDeps();
 		void ConfigureHotSeatMatchLoop();
 		void ConfigureOnlineMatchLoop();
 		void UpdateAimDisplayInputEnabled();

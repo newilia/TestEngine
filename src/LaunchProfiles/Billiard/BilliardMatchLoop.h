@@ -19,9 +19,11 @@ namespace Billiard {
 	class BilliardMatchLoop
 	{
 	public:
-		void Configure(const std::array<PlayerSlotConfig, 2>& slots, const PlayerAgentDeps& deps);
-		void RebuildAgents();
-		void OnTurnStarted(EightBallPoolGame& game, BilliardTablePresenter& table, BilliardCueBehaviour* cue);
+		void Configure(
+		    const std::array<PlayerSlotConfig, 2>& slots, const std::array<bool, 2>& isLocalAuthorityForRemoteSlot);
+		void BindRuntimeDeps(
+		    const std::weak_ptr<BilliardCueBehaviour>& cue, const std::weak_ptr<BilliardBallBehaviour>& cueBall);
+		void OnTurnStarted(EightBallPoolGame& game, BilliardTablePresenter& table);
 		void OnTurnEnded();
 		void OnUpdate(const sf::Time& deltaTime, EightBallPoolGame& game, BilliardCueBehaviour* cue);
 		void OnEvent(const sf::Event& event, EightBallPoolGame& game);

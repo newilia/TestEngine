@@ -2,18 +2,20 @@
 
 namespace Billiard {
 
-	void BilliardMatchLoop::Configure(const std::array<PlayerSlotConfig, 2>& slots, const PlayerAgentDeps& deps) {
+	void BilliardMatchLoop::Configure(
+	    const std::array<PlayerSlotConfig, 2>& slots, const std::array<bool, 2>& isLocalAuthorityForRemoteSlot) {
 		_slots = slots;
-		_deps = deps;
-		RebuildAgents();
+		_deps.isLocalAuthorityForRemoteSlot = isLocalAuthorityForRemoteSlot;
 	}
 
-	void BilliardMatchLoop::RebuildAgents() {
+	void BilliardMatchLoop::BindRuntimeDeps(
+	    const std::weak_ptr<BilliardCueBehaviour>& cue, const std::weak_ptr<BilliardBallBehaviour>& cueBall) {
+		_deps.cue = cue;
+		_deps.cueBall = cueBall;
 		_agents = CreatePlayerAgents(_slots, _deps);
 	}
 
-	void BilliardMatchLoop::OnTurnStarted(
-	    EightBallPoolGame& game, BilliardTablePresenter& table, BilliardCueBehaviour* /*cue*/) {
+	void BilliardMatchLoop::OnTurnStarted(EightBallPoolGame& game, BilliardTablePresenter& table) {
 		const auto tableSnapshot = table.CaptureSnapshot();
 		const auto rulesSnapshot = game.ToSnapshot();
 		if (auto* agent = GetActiveAgent(game)) {
