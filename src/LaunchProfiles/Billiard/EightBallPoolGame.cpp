@@ -27,7 +27,7 @@ namespace Billiard {
 		_phase = GamePhase::Aiming;
 		_activePlayerIndex = 0;
 		_isBreakShot = true;
-		_isFoul = false;
+		_foulKind = FoulKind::None;
 		_isBallInHand = false;
 		_isCueBallPocketed = false;
 		_isEightBallPocketed = false;
@@ -42,6 +42,7 @@ namespace Billiard {
 
 	void EightBallPoolGame::OnShoot() {
 		assert(_phase == GamePhase::Aiming);
+		_foulKind = FoulKind::None;
 		_phase = GamePhase::WaitingForBallsToStop;
 	}
 
@@ -51,7 +52,7 @@ namespace Billiard {
 		auto ballType = GetBallType(ballNumber);
 		if (ballType == BallType::Cue) {
 			_isCueBallPocketed = true;
-			_isFoul = true;
+			_foulKind = FoulKind::CueBallPocketed;
 		}
 		else if (ballType == BallType::Eight) {
 			_isEightBallPocketed = true;
@@ -94,7 +95,7 @@ namespace Billiard {
 		auto ballType = GetBallType(ballNumber);
 		auto playerBallType = _playerBallTypes[_activePlayerIndex];
 		if (playerBallType != BallType::Undefined && playerBallType != ballType) {
-			_isFoul = true;
+			_foulKind = FoulKind::WrongBallFirst;
 		}
 	}
 
@@ -113,18 +114,18 @@ namespace Billiard {
 		}
 
 		if (_isBreakShot) {
-			if (_ballsHitRailOnCurrentTurn.size() < 4) {
-				_isFoul = true;
+			if (_foulKind == FoulKind::None && _ballsHitRailOnCurrentTurn.size() < 4) {
+				_foulKind = FoulKind::BreakInsufficientRails;
 			}
 			_isBreakShot = false;
 		}
 		else {
-			if (_ballsHitRailOnCurrentTurn.empty()) {
-				_isFoul = true;
+			if (_foulKind == FoulKind::None && _ballsHitRailOnCurrentTurn.empty()) {
+				_foulKind = FoulKind::NoRailContact;
 			}
 
 			/* try assign ball types */
-			if (_playerBallTypes[_activePlayerIndex] == BallType::Undefined && !_isFoul) {
+			if (_playerBallTypes[_activePlayerIndex] == BallType::Undefined && _foulKind == FoulKind::None) {
 				if (!_pocketedBallsOnCurrentTurn.empty()) {
 					auto ballType = GetBallType(_pocketedBallsOnCurrentTurn.front());
 					_playerBallTypes[_activePlayerIndex] = ballType;
@@ -134,7 +135,7 @@ namespace Billiard {
 			}
 		}
 
-		if (_isFoul) {
+		if (_foulKind != FoulKind::None) {
 			_activePlayerIndex = 1 - _activePlayerIndex;
 			_isBallInHand = true;
 		}
@@ -208,12 +209,15 @@ namespace Billiard {
 		return _winnerIndex.value_or(-1);
 	}
 
+	FoulKind EightBallPoolGame::GetFoulKind() const {
+		return _foulKind;
+	}
+
 	void EightBallPoolGame::StartNewTurn() {
 		if (_phase == GamePhase::GameOver) {
 			return;
 		}
 		_phase = GamePhase::Aiming;
-		_isFoul = false;
 		_pocketedBallsOnCurrentTurn.clear();
 		_ballsHitRailOnCurrentTurn.clear();
 		_isCueBallCollideBall = false;
@@ -223,7 +227,7 @@ namespace Billiard {
 		if (_phase != GamePhase::Aiming) {
 			return;
 		}
-		_isFoul = true;
+		_foulKind = FoulKind::TurnTimeOver;
 		_isBallInHand = true;
 		_activePlayerIndex = 1 - _activePlayerIndex;
 	}
@@ -254,7 +258,7 @@ namespace Billiard {
 		_playerBallTypes = snapshot.playerBallTypes;
 		_pocketedSolids = snapshot.pocketedSolids;
 		_pocketedStripes = snapshot.pocketedStripes;
-		_isFoul = false;
+		_foulKind = FoulKind::None;
 		_isCueBallPocketed = false;
 		_isEightBallPocketed = false;
 		_isCueBallCollideBall = false;

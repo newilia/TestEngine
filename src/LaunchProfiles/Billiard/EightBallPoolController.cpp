@@ -509,7 +509,7 @@ namespace Billiard {
 		if (auto scoreboard = _scoreboardBehaviour.Get()) {
 			scoreboard->SetActivePlayerIndex(_gameState.GetActivePlayerIndex());
 			if (_gameState.IsBallInHand() && !_isWaitingForBallsToStop) {
-				scoreboard->ShowMessage("Foul! Ball in hand");
+				scoreboard->ShowFoulMessage(_gameState.GetFoulKind());
 			}
 			else if (!_waitingForGameStart) {
 				scoreboard->ShowMessage("");

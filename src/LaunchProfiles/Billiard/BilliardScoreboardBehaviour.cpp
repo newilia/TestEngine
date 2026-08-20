@@ -1,6 +1,7 @@
 #include "BilliardScoreboardBehaviour.h"
 
 #include "BilliardScoreboardBehaviour.generated.hpp"
+#include "EightBallPoolGame.h"
 #include "Engine/Visual/TextVisual.h"
 
 #include <algorithm>
@@ -25,6 +26,32 @@ namespace Billiard {
 	void BilliardScoreboardBehaviour::ShowMessage(const std::string& message) {
 		if (auto messageText = _messageTextRef.Get()) {
 			messageText->SetString(message);
+		}
+	}
+
+	void BilliardScoreboardBehaviour::ShowFoulMessage(FoulKind foulKind) {
+		switch (foulKind) {
+		case FoulKind::None:
+			ShowMessage("");
+			break;
+		case FoulKind::CueBallPocketed:
+			ShowMessage("Foul! Cue ball pocketed. Ball in hand");
+			break;
+		case FoulKind::WrongBallFirst:
+			ShowMessage("Foul! Wrong ball first. Ball in hand");
+			break;
+		case FoulKind::BreakInsufficientRails:
+			ShowMessage("Foul! Break - at least 4 balls must collide with rails. Ball in hand");
+			break;
+		case FoulKind::NoRailContact:
+			ShowMessage("Foul! No balls collided with rails. Ball in hand");
+			break;
+		case FoulKind::TurnTimeOver:
+			ShowMessage("Foul! Turn time expired. Ball in hand");
+			break;
+		default:
+			ShowMessage("Foul! Ball in hand");
+			break;
 		}
 	}
 

@@ -11,6 +11,8 @@
 
 namespace Billiard {
 
+	enum class FoulKind;
+
 	class BilliardScoreboardBehaviour : public Behaviour
 	{
 		META_CLASS()
@@ -19,6 +21,7 @@ namespace Billiard {
 		void Reset();
 		void SetActivePlayerIndex(int playerIndex);
 		void ShowMessage(const std::string& message);
+		void ShowFoulMessage(FoulKind foulKind);
 		void SetRemainingTurnTime(float seconds);
 		void SetPlayerBallType(int playerIndex, BallType ballType);
 		void SetPlayerName(int playerIndex, const std::string& name);

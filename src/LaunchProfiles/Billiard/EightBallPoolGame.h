@@ -2,7 +2,6 @@
 #include "BallType.h"
 #include "BilliardGamePhase.h"
 #include "BilliardRulesSnapshot.h"
-#include "Engine/Core/MetaClass.h"
 
 #include <array>
 #include <optional>
@@ -10,6 +9,16 @@
 #include <vector>
 
 namespace Billiard {
+
+	enum class FoulKind
+	{
+		None,
+		CueBallPocketed,
+		WrongBallFirst,
+		BreakInsufficientRails,
+		NoRailContact,
+		TurnTimeOver
+	};
 
 	class EightBallPoolGame
 	{
@@ -34,6 +43,7 @@ namespace Billiard {
 		bool IsEightBallPocketed() const;
 		bool IsGameOver() const;
 		int GetWinnerIndex() const;
+		[[nodiscard]] FoulKind GetFoulKind() const;
 		[[nodiscard]] RulesSnapshot ToSnapshot() const;
 		void ApplySnapshot(const RulesSnapshot& snapshot);
 
@@ -49,7 +59,7 @@ namespace Billiard {
 		std::set<int> _ballsHitRailOnCurrentTurn;
 		bool _isCueBallPocketed = false;
 		bool _isEightBallPocketed = false;
-		bool _isFoul = false;
+		FoulKind _foulKind = FoulKind::None;
 		bool _isBallInHand = false;
 		std::array<BallType, 2> _playerBallTypes = {BallType::Undefined, BallType::Undefined};
 		std::optional<int> _winnerIndex;
