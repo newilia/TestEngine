@@ -2,7 +2,7 @@
 <Scene version="2">
   <Settings>
     <Simulation speedMultiplier="1" vsync="false" />
-    <View centerX="171.980148" centerY="-198.585129" scale="1.98220515" />
+    <View centerX="-278.770142" centerY="-286.231384" scale="2.17811203" />
     <Grid visible="false" size="50" basis="10" snap="true" />
     <Physics gravityX="0" gravityY="400" gravityEnabled="false" airFriction="0" substeps="4">
       <Attraction strength="50" softening="4" massCoupling="true" />
@@ -91,7 +91,6 @@
           <Behaviour type="Billiard.EightBallPoolController" entityId="1285399435">
             <Properties>
               <Property id="eight_ball_pool_controller" kind="Object">
-                <Property id="cue_asset" kind="AssetRef" value="assets/sceneobjects/8 ball pool/cue.xml" type="Engine.SceneObject" />
                 <Property id="cue_behaviour" kind="SceneRef" value="2568429161" />
                 <Property id="scoreboard_behaviour" kind="SceneRef" value="3074770674" />
                 <Property id="aim_display_behaviour" kind="SceneRef" value="2812427044" />
@@ -116,74 +115,9 @@
                     <Property id="v" kind="SceneRef" value="3087557890" />
                   </Property>
                 </Property>
-                <Property id="balls_behaviours" kind="Associative">
-                  <Property id="0" kind="Object">
-                    <Property id="key" kind="Int32" value="0" />
-                    <Property id="value" kind="SceneRef" value="2597099577" />
-                  </Property>
-                  <Property id="1" kind="Object">
-                    <Property id="key" kind="Int32" value="1" />
-                    <Property id="value" kind="SceneRef" value="1432624099" />
-                  </Property>
-                  <Property id="2" kind="Object">
-                    <Property id="key" kind="Int32" value="2" />
-                    <Property id="value" kind="SceneRef" value="17896074" />
-                  </Property>
-                  <Property id="3" kind="Object">
-                    <Property id="key" kind="Int32" value="3" />
-                    <Property id="value" kind="SceneRef" value="3018986830" />
-                  </Property>
-                  <Property id="4" kind="Object">
-                    <Property id="key" kind="Int32" value="4" />
-                    <Property id="value" kind="SceneRef" value="4242718431" />
-                  </Property>
-                  <Property id="5" kind="Object">
-                    <Property id="key" kind="Int32" value="5" />
-                    <Property id="value" kind="SceneRef" value="3096230862" />
-                  </Property>
-                  <Property id="6" kind="Object">
-                    <Property id="key" kind="Int32" value="6" />
-                    <Property id="value" kind="SceneRef" value="1600310641" />
-                  </Property>
-                  <Property id="7" kind="Object">
-                    <Property id="key" kind="Int32" value="7" />
-                    <Property id="value" kind="SceneRef" value="918109826" />
-                  </Property>
-                  <Property id="8" kind="Object">
-                    <Property id="key" kind="Int32" value="8" />
-                    <Property id="value" kind="SceneRef" value="2454869963" />
-                  </Property>
-                  <Property id="9" kind="Object">
-                    <Property id="key" kind="Int32" value="9" />
-                    <Property id="value" kind="SceneRef" value="1670714305" />
-                  </Property>
-                  <Property id="10" kind="Object">
-                    <Property id="key" kind="Int32" value="10" />
-                    <Property id="value" kind="SceneRef" value="1720077977" />
-                  </Property>
-                  <Property id="11" kind="Object">
-                    <Property id="key" kind="Int32" value="11" />
-                    <Property id="value" kind="SceneRef" value="1464883623" />
-                  </Property>
-                  <Property id="12" kind="Object">
-                    <Property id="key" kind="Int32" value="12" />
-                    <Property id="value" kind="SceneRef" value="431846788" />
-                  </Property>
-                  <Property id="13" kind="Object">
-                    <Property id="key" kind="Int32" value="13" />
-                    <Property id="value" kind="SceneRef" value="111189671" />
-                  </Property>
-                  <Property id="14" kind="Object">
-                    <Property id="key" kind="Int32" value="14" />
-                    <Property id="value" kind="SceneRef" value="3009714472" />
-                  </Property>
-                  <Property id="15" kind="Object">
-                    <Property id="key" kind="Int32" value="15" />
-                    <Property id="value" kind="SceneRef" value="1509349550" />
-                  </Property>
-                </Property>
+                <Property id="balls_behaviours" kind="Associative" />
                 <Property id="table_rect" kind="SceneRef" value="50035901" />
-                <Property id="turn_time_limit" kind="Float" value="30" />
+                <Property id="turn_time_limit" kind="Float" value="600" />
               </Property>
             </Properties>
           </Behaviour>
@@ -8280,7 +8214,7 @@
                   <Property id="billiard_cue_behaviour" kind="Object">
                     <Property id="tip_physics_body" kind="SceneRef" value="3038546210" />
                     <Property id="visual" kind="SceneRef" value="3184215626" />
-                    <Property id="overlap_group_on_shoot" kind="Int32" value="0" />
+                    <Property id="overlap_group_on_release" kind="Int32" value="0" />
                     <Property id="target_ball" kind="SceneRef" value="2597099577" />
                     <Property id="lateral_position" kind="Float" value="0" />
                     <Property id="distance_from_target" kind="Float" value="50" />
@@ -8288,9 +8222,9 @@
                     <Property id="shoot_acceleration" kind="Float" value="100000" />
                     <Property id="velocity_damping_after_hit" kind="Float" value="50000" />
                     <Property id="max_distance_from_target" kind="Float" value="500" />
-                    <Property id="vertical_spin_multiplier" kind="Float" value="1" />
+                    <Property id="vertical_spin_multiplier" kind="Float" value="3" />
                     <Property id="side_spin_ball_deflection_factor" kind="Float" value="0.00999999978" />
-                    <Property id="side_spin_ball_rotation_factor" kind="Float" value="100" />
+                    <Property id="side_spin_ball_rotation_factor" kind="Float" value="25" />
                     <Property id="hide_animation_duration" kind="Float" value="0.300000012" />
                     <Property id="show_animation_duration" kind="Float" value="0.300000012" />
                     <Property id="ball_radius" kind="Float" value="28.6000004" />
@@ -8974,7 +8908,7 @@
                 <Transform type="Engine.Transform">
                   <Properties>
                     <Property id="transform" kind="Object">
-                      <Property id="get_position" kind="Vec2f" x="500" y="20" />
+                      <Property id="get_position" kind="Vec2f" x="49" y="20" />
                       <Property id="get_scale" kind="Vec2f" x="1" y="1" />
                       <Property id="get_rotation" kind="Float" value="0" />
                       <Property id="get_origin" kind="Vec2f" x="0" y="0" />
@@ -8991,7 +8925,7 @@
                     <Property id="get_origin" kind="Vec2f" x="0" y="0" />
                     <Property id="get_position" kind="Vec2f" x="0" y="0" />
                     <Property id="get_outline_thickness" kind="Float" value="0" />
-                    <Property id="get_text_alignment" kind="Enum" value="3" name="Right" />
+                    <Property id="get_text_alignment" kind="Enum" value="1" name="Left" />
                   </Properties>
                 </Visual>
                 <Behaviours />

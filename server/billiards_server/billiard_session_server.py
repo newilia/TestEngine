@@ -15,6 +15,9 @@ RELAY_PAYLOAD_TYPES = frozenset(
         "table_state_update",
         "turn_result",
         "turn_started",
+        "ball_in_hand_drag_started",
+        "ball_in_hand_drag_ended",
+        "cue_released",
     }
 )
 

@@ -30,6 +30,33 @@ namespace Billiard {
 		(void)_client->SendMessage(envelope);
 	}
 
+	void OnlineSession::SendBallInHandDragStarted(int playerIndex) {
+		if (!_client || !_client->IsConnected()) {
+			return;
+		}
+		billiard::Envelope envelope;
+		FillBallInHandDragStartedMsg(_networkTurnId, playerIndex, *envelope.mutable_ball_in_hand_drag_started());
+		(void)_client->SendMessage(envelope);
+	}
+
+	void OnlineSession::SendBallInHandDragEnded(int playerIndex) {
+		if (!_client || !_client->IsConnected()) {
+			return;
+		}
+		billiard::Envelope envelope;
+		FillBallInHandDragEndedMsg(_networkTurnId, playerIndex, *envelope.mutable_ball_in_hand_drag_ended());
+		(void)_client->SendMessage(envelope);
+	}
+
+	void OnlineSession::SendCueReleased(int playerIndex, const TurnIntent& intent) {
+		if (!_client || !_client->IsConnected()) {
+			return;
+		}
+		billiard::Envelope envelope;
+		FillCueReleasedMsg(_networkTurnId, playerIndex, intent, *envelope.mutable_cue_released());
+		(void)_client->SendMessage(envelope);
+	}
+
 	void OnlineSession::SendTurnStarted(std::uint32_t turnId, int activePlayer, const TableSnapshot& snapshot) {
 		if (!_client || !_client->IsConnected()) {
 			return;
@@ -39,24 +66,16 @@ namespace Billiard {
 		(void)_client->SendMessage(envelope);
 	}
 
-	void OnlineSession::SendTurnResult(
-	    int nextActivePlayer, const TableSnapshot& snapshot, const RulesSnapshot& rules) {
-		if (!_client || !_client->IsConnected()) {
-			return;
-		}
-		billiard::Envelope envelope;
-		FillTurnResultMsg(_networkTurnId, nextActivePlayer, snapshot, rules, *envelope.mutable_turn_result());
-		(void)_client->SendMessage(envelope);
-		++_networkTurnId;
-	}
-
 	void OnlineSession::SendTurnResultIfLocalShooter(
 	    int nextActivePlayer, const TableSnapshot& snapshot, const RulesSnapshot& rules) {
 		if (_shootingPlayerIndex != GetLocalPlayerIndex()) {
 			_shootingPlayerIndex = -1;
 			return;
 		}
-		SendTurnResult(nextActivePlayer, snapshot, rules);
+		billiard::Envelope envelope;
+		FillTurnResultMsg(_networkTurnId, nextActivePlayer, snapshot, rules, *envelope.mutable_turn_result());
+		(void)_client->SendMessage(envelope);
+		++_networkTurnId;
 		_shootingPlayerIndex = -1;
 	}
 
@@ -236,6 +255,41 @@ namespace Billiard {
 				event.turnId = update.turn_id();
 				event.playerIndex = update.player_index();
 				event.table = ParseTableSnapshotMsg(update.table());
+				EnqueueEvent(std::move(event));
+				continue;
+			}
+
+			if (envelope.has_ball_in_hand_drag_started()) {
+				const auto& started = envelope.ball_in_hand_drag_started();
+				BilliardNetworkEvent event;
+				event.type = BilliardNetworkEventType::BallInHandDragStarted;
+				event.turnId = started.turn_id();
+				event.playerIndex = started.player_index();
+				EnqueueEvent(std::move(event));
+				continue;
+			}
+
+			if (envelope.has_ball_in_hand_drag_ended()) {
+				const auto& ended = envelope.ball_in_hand_drag_ended();
+				BilliardNetworkEvent event;
+				event.type = BilliardNetworkEventType::BallInHandDragEnded;
+				event.turnId = ended.turn_id();
+				event.playerIndex = ended.player_index();
+				EnqueueEvent(std::move(event));
+				continue;
+			}
+
+			if (envelope.has_cue_released()) {
+				const auto& released = envelope.cue_released();
+				const auto intent = ParseCueReleasedMsg(released);
+				BilliardNetworkEvent event;
+				event.type = BilliardNetworkEventType::CueReleased;
+				event.turnId = released.turn_id();
+				event.playerIndex = released.player_index();
+				event.directionAngle = intent.directionAngle;
+				event.pullDistance = intent.pullDistance;
+				event.lateralSpin = intent.lateralSpin;
+				event.verticalSpin = intent.verticalSpin;
 				EnqueueEvent(std::move(event));
 				continue;
 			}

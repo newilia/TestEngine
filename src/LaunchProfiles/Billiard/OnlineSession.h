@@ -45,7 +45,9 @@ namespace Billiard {
 
 		void SendCueAimUpdate(int playerIndex, const TurnIntent& intent);
 		void SendTableStateUpdate(int playerIndex, const TableSnapshot& snapshot);
-		void SendTurnResult(int nextActivePlayer, const TableSnapshot& snapshot, const RulesSnapshot& rules);
+		void SendBallInHandDragStarted(int playerIndex);
+		void SendBallInHandDragEnded(int playerIndex);
+		void SendCueReleased(int playerIndex, const TurnIntent& intent);
 		void SendTurnResultIfLocalShooter(
 		    int nextActivePlayer, const TableSnapshot& snapshot, const RulesSnapshot& rules);
 

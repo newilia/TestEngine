@@ -4,7 +4,6 @@
 #include "Engine/Core/MathUtils.h"
 #include "Engine/Core/SceneNode.h"
 #include "Engine/Core/SceneNodeUtils.h"
-#include "Engine/Core/SfmlWindowUtils.h"
 #include "LaunchProfiles/Billiard/RollingBallBehaviour.h"
 #include "SFML/System/Angle.hpp"
 
@@ -131,7 +130,9 @@ namespace Billiard {
 
 	void BilliardCueBehaviour::SetTargetBall(const std::shared_ptr<BilliardBallBehaviour>& ballBehaviour) {
 		_targetBall = ballBehaviour;
-		_ballRadius = ballBehaviour->GetRadius();
+		if (ballBehaviour) {
+			_ballRadius = ballBehaviour->GetRadius();
+		}
 		ResetDistanceFromTarget();
 	}
 
@@ -196,12 +197,12 @@ namespace Billiard {
 		}
 		if (auto targetNode = GetTargetBallNode()) {
 			if (auto targetPhysicsBody = targetNode->FindBehaviour<PhysicsBodyBehaviour>()) {
-				targetPhysicsBody->GetOverlapGroups().set(_overlapGroupOnShoot, true);
+				targetPhysicsBody->GetOverlapGroups().set(_overlapGroupOnRelease, true);
 			}
 		}
 		if (auto tipPhysicsBody = _tipPhysicsBody.Get()) {
 			tipPhysicsBody->SetLinearDamping(0.f);
-			tipPhysicsBody->GetOverlapGroups().set(_overlapGroupOnShoot, true);
+			tipPhysicsBody->GetOverlapGroups().set(_overlapGroupOnRelease, true);
 		}
 
 		_onReleaseSignal.Emit();
@@ -225,8 +226,8 @@ namespace Billiard {
 			return;
 		}
 
-		targetPhysicsBody->GetOverlapGroups().set(_overlapGroupOnShoot, false);
-		tipPhysicsBody->GetOverlapGroups().set(_overlapGroupOnShoot, false);
+		targetPhysicsBody->GetOverlapGroups().set(_overlapGroupOnRelease, false);
+		tipPhysicsBody->GetOverlapGroups().set(_overlapGroupOnRelease, false);
 		tipPhysicsBody->SetLinearDamping(_velocityDampingAfterHit);
 
 		auto v1 = tipPhysicsBody->GetVelocity();
@@ -278,26 +279,6 @@ namespace Billiard {
 		}
 	}
 
-	void BilliardCueBehaviour::EnsureCueVisible() {
-		auto node = GetNode();
-		if (!node) {
-			return;
-		}
-		if (_isShowing) {
-			return;
-		}
-		if (node->IsEnabled() && !_isHiding) {
-			if (auto visual = _visual.Get()) {
-				if (visual->GetColor().a == 255) {
-					return;
-				}
-				visual->SetColor(sf::Color(255, 255, 255, 255));
-			}
-			return;
-		}
-		PlayShowAnimation();
-	}
-
 	std::shared_ptr<SceneNode> BilliardCueBehaviour::GetTargetBallNode() const {
 		if (!_targetBall) {
 			return nullptr;
@@ -314,6 +295,20 @@ namespace Billiard {
 
 	void BilliardCueBehaviour::ResetDistanceFromTarget() {
 		SetDistanceFromTarget(_minDistanceFromTarget);
+	}
+
+	void BilliardCueBehaviour::Reset() {
+		_isAiming = false;
+		_isPullingBack = false;
+		_isShooting = false;
+		PlayShowAnimation();
+
+		if (auto tipPhysicsBody = _tipPhysicsBody.Get()) {
+			tipPhysicsBody->SetVelocity(sf::Vector2f());
+			tipPhysicsBody->SetAngularSpeed(0.f);
+			tipPhysicsBody->SetLinearDamping(0.f);
+			tipPhysicsBody->GetOverlapGroups().set(_overlapGroupOnRelease, false);
+		}
 	}
 
 } // namespace Billiard

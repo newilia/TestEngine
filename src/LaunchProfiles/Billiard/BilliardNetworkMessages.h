@@ -5,7 +5,10 @@
 #include "BilliardTurnIntent.h"
 
 namespace billiard {
+	class BallInHandDragEndedMsg;
+	class BallInHandDragStartedMsg;
 	class CueAimUpdateMsg;
+	class CueReleasedMsg;
 	class RulesSnapshotMsg;
 	class TableSnapshotMsg;
 	class TableStateUpdateMsg;
@@ -30,8 +33,14 @@ namespace Billiard {
 	    std::uint32_t turnId, int playerIndex, const TurnIntent& intent, billiard::CueAimUpdateMsg& message);
 	void FillTableStateUpdateMsg(
 	    std::uint32_t turnId, int playerIndex, const TableSnapshot& snapshot, billiard::TableStateUpdateMsg& message);
+	void FillBallInHandDragStartedMsg(
+	    std::uint32_t turnId, int playerIndex, billiard::BallInHandDragStartedMsg& message);
+	void FillBallInHandDragEndedMsg(std::uint32_t turnId, int playerIndex, billiard::BallInHandDragEndedMsg& message);
+	void FillCueReleasedMsg(
+	    std::uint32_t turnId, int playerIndex, const TurnIntent& intent, billiard::CueReleasedMsg& message);
 	void FillSubmitTurnIntentMsg(const TurnIntent& intent, billiard::SubmitTurnIntentMsg& message);
 	[[nodiscard]] TurnIntent ParseSubmitTurnIntentMsg(const billiard::SubmitTurnIntentMsg& message);
 	[[nodiscard]] TurnIntent ParseCueAimUpdateMsg(const billiard::CueAimUpdateMsg& message);
+	[[nodiscard]] TurnIntent ParseCueReleasedMsg(const billiard::CueReleasedMsg& message);
 
 } // namespace Billiard

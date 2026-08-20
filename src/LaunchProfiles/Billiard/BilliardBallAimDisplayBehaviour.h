@@ -26,6 +26,7 @@ namespace Billiard {
 		void Hide();
 		[[nodiscard]] Signal<sf::Vector2f>& GetAimPointChangedSignal();
 		void ResetAimPoint();
+		void SetAimPoint(const sf::Vector2f& aimPoint);
 
 	private:
 		void UpdateAimPointPosition();

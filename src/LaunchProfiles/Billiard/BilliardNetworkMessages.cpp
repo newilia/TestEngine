@@ -134,6 +134,27 @@ namespace Billiard {
 		FillTableSnapshotMsg(snapshot, *message.mutable_table());
 	}
 
+	void FillBallInHandDragStartedMsg(
+	    std::uint32_t turnId, int playerIndex, billiard::BallInHandDragStartedMsg& message) {
+		message.set_turn_id(turnId);
+		message.set_player_index(playerIndex);
+	}
+
+	void FillBallInHandDragEndedMsg(std::uint32_t turnId, int playerIndex, billiard::BallInHandDragEndedMsg& message) {
+		message.set_turn_id(turnId);
+		message.set_player_index(playerIndex);
+	}
+
+	void FillCueReleasedMsg(
+	    std::uint32_t turnId, int playerIndex, const TurnIntent& intent, billiard::CueReleasedMsg& message) {
+		message.set_turn_id(turnId);
+		message.set_player_index(playerIndex);
+		message.set_direction_angle_rad(intent.directionAngle.asRadians());
+		message.set_pull_distance(intent.pullDistance);
+		message.set_lateral_spin(intent.lateralSpin);
+		message.set_vertical_spin(intent.verticalSpin);
+	}
+
 	void FillSubmitTurnIntentMsg(const TurnIntent& intent, billiard::SubmitTurnIntentMsg& message) {
 		message.set_turn_id(intent.turnId);
 		message.set_player_index(intent.playerIndex);
@@ -156,6 +177,18 @@ namespace Billiard {
 	}
 
 	TurnIntent ParseCueAimUpdateMsg(const billiard::CueAimUpdateMsg& message) {
+		TurnIntent intent;
+		intent.phase = TurnIntentPhase::Shoot;
+		intent.turnId = message.turn_id();
+		intent.playerIndex = message.player_index();
+		intent.directionAngle = sf::radians(message.direction_angle_rad());
+		intent.pullDistance = message.pull_distance();
+		intent.lateralSpin = message.lateral_spin();
+		intent.verticalSpin = message.vertical_spin();
+		return intent;
+	}
+
+	TurnIntent ParseCueReleasedMsg(const billiard::CueReleasedMsg& message) {
 		TurnIntent intent;
 		intent.phase = TurnIntentPhase::Shoot;
 		intent.turnId = message.turn_id();

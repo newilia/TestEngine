@@ -177,11 +177,9 @@ namespace Billiard {
 			}
 		}
 
-		if (_isWaitingForBallsToStop) {
-			if (!IsPassiveTurn()) {
-				CheckBallsOutOfBounds();
-			}
-			if (!IsPassiveTurn() && !_tablePresenter.AreBallsMoving()) {
+		if (_isWaitingForBallsToStop && !IsPassiveTurn()) {
+			CheckBallsOutOfBounds();
+			if (!_tablePresenter.AreBallsMoving()) {
 				OnBallsStopped();
 			}
 		}
@@ -268,24 +266,39 @@ namespace Billiard {
 						cueBehaviour->SetLateralPosition(event.lateralSpin);
 						cueBehaviour->SetVerticalSpin(event.verticalSpin);
 						cueBehaviour->ApplyCueTransform();
-						cueBehaviour->EnsureCueVisible();
+					}
+					if (auto aimDisplay = _aimDisplayBehaviour.Get()) {
+						aimDisplay->SetAimPoint({event.lateralSpin, event.verticalSpin});
+						aimDisplay->Show();
+					}
+				}
+				break;
+			case BilliardNetworkEventType::BallInHandDragStarted:
+				if (event.playerIndex != _onlineSession->GetLocalPlayerIndex()) {
+					OnBallInHandGrab();
+				}
+				break;
+			case BilliardNetworkEventType::BallInHandDragEnded:
+				if (event.playerIndex != _onlineSession->GetLocalPlayerIndex()) {
+					OnBallInHandRelease();
+				}
+				break;
+			case BilliardNetworkEventType::CueReleased:
+				if (event.playerIndex != _onlineSession->GetLocalPlayerIndex()) {
+					if (auto cueBehaviour = _cueBehaviour.Get()) {
+						TurnIntent intent;
+						intent.directionAngle = event.directionAngle;
+						intent.pullDistance = event.pullDistance;
+						intent.lateralSpin = event.lateralSpin;
+						intent.verticalSpin = event.verticalSpin;
+						cueBehaviour->SetInputEnabled(true); // todo check
+						cueBehaviour->ApplyShotIntent(intent);
 					}
 				}
 				break;
 			case BilliardNetworkEventType::TableStateUpdate:
 				if (event.playerIndex != _onlineSession->GetLocalPlayerIndex()) {
 					_tablePresenter.ApplySnapshot(event.table);
-					if (_tablePresenter.AreBallsMoving()) {
-						if (auto cueBehaviour = _cueBehaviour.Get()) {
-							cueBehaviour->PlayHideAnimation();
-						}
-						_isWaitingForBallsToStop = true;
-					}
-					else if (!_isWaitingForBallsToStop && _gameState.IsBallInHand()) {
-						if (auto cueBehaviour = _cueBehaviour.Get()) {
-							cueBehaviour->PlayHideAnimation();
-						}
-					}
 					UpdateAimDisplayInputEnabled();
 				}
 				break;
@@ -307,7 +320,7 @@ namespace Billiard {
 		InitScoreboard();
 		InitPockets();
 		SpawnBalls();
-		SetupCue();
+		ResetCue();
 		BindPlayerAgentRuntimeDeps();
 		InitSubscriptions();
 		_matchLoop.OnTurnStarted(_gameState, _tablePresenter);
@@ -361,19 +374,14 @@ namespace Billiard {
 		}
 	}
 
-	void EightBallPoolController::SetupCue() {
+	void EightBallPoolController::ResetCue() {
 		if (auto cueBehaviour = _cueBehaviour.Get()) {
-			cueBehaviour->SetInputEnabled(false);
-			cueBehaviour->PlayShowAnimation();
-			SetCueOnBall(0);
-		}
-	}
-
-	void EightBallPoolController::SetCueOnBall(int ballNumber) {
-		if (auto cueBehaviour = _cueBehaviour.Get()) {
-			if (auto ball = _ballsBehaviours[ballNumber].Get()) {
-				cueBehaviour->SetTargetBall(ball);
+			if (!_ballsBehaviours.empty()) {
+				if (auto ball = _ballsBehaviours[0].Get()) {
+					cueBehaviour->SetTargetBall(ball);
+				}
 			}
+			cueBehaviour->Reset();
 		}
 		if (auto aimDisplay = _aimDisplayBehaviour.Get()) {
 			aimDisplay->ResetAimPoint();
@@ -426,6 +434,13 @@ namespace Billiard {
 		if (IsPassiveTurn()) {
 			return;
 		}
+		if (_onlineSession) {
+			if (auto cueBehaviour = _cueBehaviour.Get()) {
+				const auto intent = cueBehaviour->BuildTurnIntent(
+				    _gameState.GetActivePlayerIndex(), _onlineSession->GetNetworkTurnId());
+				_onlineSession->SendCueReleased(_gameState.GetActivePlayerIndex(), intent);
+			}
+		}
 		if (auto ball = _ballsBehaviours[0].Get()) {
 			ball->ResetBallInHand();
 		}
@@ -436,16 +451,17 @@ namespace Billiard {
 	}
 
 	void EightBallPoolController::OnCueHit() {
+		if (auto cue = _cueBehaviour.Get()) {
+			cue->PlayHideAnimation();
+		}
 		if (IsPassiveTurn()) {
 			return;
 		}
+		_isWaitingForBallsToStop = true;
+
 		if (_onlineSession) {
 			_onlineSession->OnLocalCueHit(_gameState.GetActivePlayerIndex());
 		}
-		if (auto cueBehaviour = _cueBehaviour.Get()) {
-			cueBehaviour->PlayHideAnimation();
-		}
-		_isWaitingForBallsToStop = true;
 		_matchLoop.OnTurnEnded();
 		UpdateAimDisplayInputEnabled();
 		SendTableStateUpdateIfNeeded();
@@ -473,11 +489,6 @@ namespace Billiard {
 				ball->SetBallInHand(_tablePresenter.GetBallInHandRect());
 			}
 		}
-
-		if (auto cueBehaviour = _cueBehaviour.Get()) {
-			cueBehaviour->EnsureCueVisible();
-		}
-		SetCueOnBall(0);
 	}
 
 	void EightBallPoolController::OnBallsStopped() {
@@ -502,12 +513,7 @@ namespace Billiard {
 		_remainingTurnTime = _turnTimeLimit;
 		_gameState.StartNewTurn();
 		_matchLoop.OnTurnStarted(_gameState, _tablePresenter);
-		if (IsLocalAuthority() && !_isWaitingForBallsToStop) {
-			SetCueOnBall(0);
-			if (auto cueBehaviour = _cueBehaviour.Get()) {
-				cueBehaviour->EnsureCueVisible();
-			}
-		}
+		ResetCue();
 		UpdateScoreboard();
 		UpdateAimDisplayInputEnabled();
 	}
@@ -564,28 +570,34 @@ namespace Billiard {
 	}
 
 	void EightBallPoolController::OnBallInHandGrab() {
+		_isDraggingBallInHand = true;
+		if (auto cueBehaviour = _cueBehaviour.Get()) {
+			cueBehaviour->PlayHideAnimation();
+		}
 		if (IsPassiveTurn()) {
 			return;
 		}
-		_isDraggingBallInHand = true;
+
 		if (_onlineSession) {
+			// todo combine these two calls into one
 			_onlineSession->OnBallInHandDragStarted();
-		}
-		if (auto cueBehaviour = _cueBehaviour.Get()) {
-			cueBehaviour->PlayHideAnimation();
+			_onlineSession->SendBallInHandDragStarted(_gameState.GetActivePlayerIndex());
 		}
 		SendTableStateUpdateIfNeeded();
 	}
 
 	void EightBallPoolController::OnBallInHandRelease() {
-		if (IsPassiveTurn()) {
-			return;
-		}
-		SendTableStateUpdateIfNeeded();
 		_isDraggingBallInHand = false;
 		if (auto cueBehaviour = _cueBehaviour.Get()) {
 			cueBehaviour->PlayShowAnimation();
 			cueBehaviour->ApplyCueTransform();
+		}
+		if (IsPassiveTurn()) {
+			return;
+		}
+		SendTableStateUpdateIfNeeded();
+		if (_onlineSession) {
+			_onlineSession->SendBallInHandDragEnded(_gameState.GetActivePlayerIndex());
 		}
 	}
 } // namespace Billiard

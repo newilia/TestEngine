@@ -39,6 +39,7 @@ namespace Billiard {
 
 		void SetTargetBall(const std::shared_ptr<BilliardBallBehaviour>& ballBehaviour);
 		void AbortAiming();
+		void Reset();
 
 		Signal<>& GetOnReleaseSignal() const;
 		Signal<>& GetOnHitSignal() const;
@@ -51,7 +52,6 @@ namespace Billiard {
 
 		void PlayHideAnimation();
 		void PlayShowAnimation();
-		void EnsureCueVisible();
 
 	private:
 		void PullBack(const sf::Vector2f& pointerWorldPoint);
@@ -66,8 +66,8 @@ namespace Billiard {
 		/// @property
 		RefWrapper<SpriteVisual> _visual;
 		/// @property(minValue=0, maxValue=7)
-		int _overlapGroupOnShoot = 0;
-		/// @property
+		int _overlapGroupOnRelease = 0;
+		/// _overlapGroupOnRelease
 		RefWrapper<BilliardBallBehaviour> _targetBall;
 		/// @property
 		float _lateralPosition = 0.f;

@@ -67,6 +67,12 @@ namespace Billiard {
 	void BilliardBallAimDisplayBehaviour::ResetAimPoint() {
 		_aimPoint = sf::Vector2f();
 		UpdateAimPointPosition();
+		_aimPointChangedSignal.Emit(_aimPoint);
+	}
+
+	void BilliardBallAimDisplayBehaviour::SetAimPoint(const sf::Vector2f& aimPoint) {
+		_aimPoint = aimPoint;
+		UpdateAimPointPosition();
 	}
 
 	void BilliardBallAimDisplayBehaviour::UpdateAimPointPosition() {

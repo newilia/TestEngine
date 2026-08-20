@@ -45,11 +45,10 @@ namespace Billiard {
 	private:
 		void InitSubscriptions();
 		void StartNewGame();
-		void SetupCue();
+		void ResetCue();
 		void SpawnBalls();
 		void InitPockets();
 		void InitScoreboard();
-		void SetCueOnBall(int ballNumber);
 		void OnBallFellInPocket(int ballNumber);
 		void OnAimPointChanged(const sf::Vector2f& aimPoint);
 		void OnCueRelease();

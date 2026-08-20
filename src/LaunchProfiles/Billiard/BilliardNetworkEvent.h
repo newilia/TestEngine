@@ -16,6 +16,9 @@ namespace Billiard {
 		CueAimUpdate,
 		TableStateUpdate,
 		TurnResult,
+		BallInHandDragStarted,
+		BallInHandDragEnded,
+		CueReleased,
 	};
 
 	struct BilliardNetworkEvent
