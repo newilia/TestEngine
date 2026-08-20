@@ -247,6 +247,7 @@ namespace Billiard {
 		snapshot.pocketedStripes = _pocketedStripes;
 		snapshot.isGameOver = IsGameOver();
 		snapshot.winnerIndex = _winnerIndex.value_or(-1);
+		snapshot.foulKind = _foulKind;
 		return snapshot;
 	}
 
@@ -258,7 +259,7 @@ namespace Billiard {
 		_playerBallTypes = snapshot.playerBallTypes;
 		_pocketedSolids = snapshot.pocketedSolids;
 		_pocketedStripes = snapshot.pocketedStripes;
-		_foulKind = FoulKind::None;
+		_foulKind = snapshot.foulKind;
 		_isCueBallPocketed = false;
 		_isEightBallPocketed = false;
 		_isCueBallCollideBall = false;

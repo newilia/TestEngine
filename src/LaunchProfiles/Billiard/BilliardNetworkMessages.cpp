@@ -12,6 +12,17 @@ namespace Billiard {
 		BallType BallTypeFromProto(int value) {
 			return static_cast<BallType>(value);
 		}
+
+		int FoulKindToProto(FoulKind foulKind) {
+			return static_cast<int>(foulKind);
+		}
+
+		FoulKind FoulKindFromProto(int value) {
+			if (value < static_cast<int>(FoulKind::None) || value > static_cast<int>(FoulKind::TurnTimeOver)) {
+				return FoulKind::None;
+			}
+			return static_cast<FoulKind>(value);
+		}
 	} // namespace
 
 	void FillTableSnapshotMsg(const TableSnapshot& snapshot, billiard::TableSnapshotMsg& message) {
@@ -66,6 +77,7 @@ namespace Billiard {
 		}
 		message.set_is_game_over(snapshot.isGameOver);
 		message.set_winner_index(snapshot.winnerIndex);
+		message.set_foul_kind(FoulKindToProto(snapshot.foulKind));
 	}
 
 	RulesSnapshot ParseRulesSnapshotMsg(const billiard::RulesSnapshotMsg& message) {
@@ -86,6 +98,7 @@ namespace Billiard {
 		}
 		snapshot.isGameOver = message.is_game_over();
 		snapshot.winnerIndex = message.winner_index();
+		snapshot.foulKind = FoulKindFromProto(message.foul_kind());
 		return snapshot;
 	}
 

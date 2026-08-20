@@ -10,16 +10,6 @@
 
 namespace Billiard {
 
-	enum class FoulKind
-	{
-		None,
-		CueBallPocketed,
-		WrongBallFirst,
-		BreakInsufficientRails,
-		NoRailContact,
-		TurnTimeOver
-	};
-
 	class EightBallPoolGame
 	{
 	public:

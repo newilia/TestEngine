@@ -52,6 +52,7 @@ message RulesSnapshotMsg {
   repeated int32 pocketed_stripes = 7;
   bool is_game_over = 8;
   int32 winner_index = 9;
+  int32 foul_kind = 10;
 }
 
 message GameStartedMsg {

@@ -4,8 +4,6 @@
 #include "EightBallPoolGame.h"
 #include "Engine/Visual/TextVisual.h"
 
-#include <algorithm>
-
 namespace Billiard {
 
 	void BilliardScoreboardBehaviour::Reset() {
