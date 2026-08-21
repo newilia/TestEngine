@@ -178,7 +178,7 @@ namespace Billiard {
 		}
 
 		if (_isWaitingForBallsToStop && !IsPassiveTurn()) {
-			CheckBallsOutOfBounds();
+			CheckBallsOutOfTableBounds();
 			if (!_tablePresenter.AreBallsMoving()) {
 				OnBallsStopped();
 			}
@@ -364,6 +364,7 @@ namespace Billiard {
 				pocketBehaviour->Reset();
 			}
 		}
+		_tablePresenter.SetPockets(_pocketsBehaviours);
 	}
 
 	void EightBallPoolController::InitScoreboard() {
@@ -388,7 +389,7 @@ namespace Billiard {
 		}
 	}
 
-	void EightBallPoolController::CheckBallsOutOfBounds() {
+	void EightBallPoolController::CheckBallsOutOfTableBounds() {
 		if (_pocketsBehaviours.empty()) {
 			return;
 		}
@@ -398,12 +399,15 @@ namespace Billiard {
 			return;
 		}
 
-		for (const int ballNumber : _tablePresenter.CollectBallsOutsideExpandedTable(kOutOfTablePocketMargin)) {
-			auto ball = _ballsBehaviours[ballNumber].Get();
-			if (!ball) {
+		for (const auto& [ballNumber, ballRef] : _ballsBehaviours) {
+			if (_gameState.IsBallPocketed(ballNumber)) {
 				continue;
 			}
-			pocket->PocketBall(*ball);
+			if (_tablePresenter.IsBallOutsideExpandedTable(ballNumber, kOutOfTablePocketMargin)) {
+				if (auto ball = _ballsBehaviours[ballNumber].Get()) {
+					pocket->PocketBall(*ball);
+				}
+			}
 		}
 	}
 

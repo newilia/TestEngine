@@ -173,6 +173,23 @@ namespace Billiard {
 		return false;
 	}
 
+	bool EightBallPoolGame::IsBallPocketed(int ballNumber) const {
+		auto ballType = GetBallType(ballNumber);
+		if (ballType == BallType::Cue) {
+			return _isCueBallPocketed;
+		}
+		if (ballType == BallType::Eight) {
+			return _isEightBallPocketed;
+		}
+		if (ballType == BallType::Solid) {
+			return _pocketedSolids.contains(ballNumber);
+		}
+		if (ballType == BallType::Striped) {
+			return _pocketedStripes.contains(ballNumber);
+		}
+		return false;
+	}
+
 	bool EightBallPoolGame::IsBallInHand() const {
 		return _isBallInHand;
 	}

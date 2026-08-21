@@ -23,6 +23,7 @@ namespace Billiard {
 		void StartNewTurn();
 		void OnTurnTimeOver();
 
+		bool IsBallPocketed(int ballNumber) const;
 		bool IsBallInHand() const;
 		bool IsBallInKitchen() const;
 		int GetActivePlayerIndex() const;

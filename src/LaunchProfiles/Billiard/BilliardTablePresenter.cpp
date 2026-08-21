@@ -1,7 +1,7 @@
 #include "BilliardTablePresenter.h"
 
 #include "Engine/Core/SceneNodeUtils.h"
-#include "LaunchProfiles/Billiard/RollingBallBehaviour.h"
+#include "RollingBallBehaviour.h"
 
 namespace Billiard {
 
@@ -11,6 +11,10 @@ namespace Billiard {
 
 	void BilliardTablePresenter::SetTableRect(RefWrapper<RectangleShapeVisual> tableRect) {
 		_tableRect = std::move(tableRect);
+	}
+
+	void BilliardTablePresenter::SetPockets(std::vector<RefWrapper<BilliardPocketBehaviour>> pockets) {
+		_pockets = std::move(pockets);
 	}
 
 	TableSnapshot BilliardTablePresenter::CaptureSnapshot() const {
@@ -121,48 +125,49 @@ namespace Billiard {
 	void BilliardTablePresenter::RestoreBall(int ballNumber) {
 		if (auto ball = _ballsBehaviours[ballNumber].Get()) {
 			ball->Appear();
-			ball->GetNode()->SetLocalPosition(GetTableCenter());
+			ball->GetNode()->SetLocalPosition(GetTableCenter()); // todo find proper position
+			ball->RestoreCollisionGroups();
 
 			if (auto physicsBody = ball->GetPhysicsBody()) {
 				physicsBody->SetVelocity(sf::Vector2f(0, 0));
 				physicsBody->SetAngularSpeed(0.f);
-				physicsBody->GetCollisionGroups().reset();
-				physicsBody->GetCollisionGroups().set(0, true);
 			}
 
 			if (auto rollingBall = ball->GetRollingBallBehaviour()) {
 				rollingBall->ResetOmega();
 			}
 		}
+		for (auto& pocket : _pockets) {
+			if (auto pocketBehaviour = pocket.Get()) {
+				pocketBehaviour->UnpocketBall(ballNumber);
+			}
+		}
 	}
 
-	std::vector<int> BilliardTablePresenter::CollectBallsOutsideExpandedTable(float margin) const {
-		std::vector<int> outOfBoundsBalls;
-		const auto tableBounds = GetBallInHandRect();
-		if (tableBounds.size.x <= 0.f || tableBounds.size.y <= 0.f) {
-			return outOfBoundsBalls;
+	bool BilliardTablePresenter::IsBallOutsideExpandedTable(int ballNumber, float margin) const {
+		auto it = _ballsBehaviours.find(ballNumber);
+		if (it == _ballsBehaviours.end()) {
+			return false;
+		}
+		auto ball = it->second.Get();
+		if (!ball) {
+			return false;
 		}
 
-		sf::FloatRect allowedBounds = tableBounds;
+		sf::FloatRect allowedBounds = GetBallInHandRect();
 		allowedBounds.position -= {margin, margin};
 		allowedBounds.size += {2.f * margin, 2.f * margin};
 
-		for (const auto& [ballNumber, ballRef] : _ballsBehaviours) {
-			const auto ball = ballRef.Get();
-			if (!ball) {
-				continue;
-			}
-			const auto ballNode = ball->GetNode();
-			if (!ballNode || !ballNode->IsEnabled()) {
-				continue;
-			}
-
-			const sf::Vector2f ballCenter = ballNode->GetLocalTransform().GetPosition();
-			if (!allowedBounds.contains(ballCenter)) {
-				outOfBoundsBalls.push_back(ballNumber);
-			}
+		const auto ballNode = ball->GetNode();
+		if (!ballNode || !ballNode->IsEnabled()) {
+			return false;
 		}
-		return outOfBoundsBalls;
+
+		const sf::Vector2f ballCenter = ballNode->GetLocalTransform().GetPosition();
+		if (!allowedBounds.contains(ballCenter)) {
+			return true;
+		}
+		return false;
 	}
 
 } // namespace Billiard

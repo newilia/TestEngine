@@ -23,13 +23,6 @@ namespace Billiard {
 		return _inputEnabled;
 	}
 
-	sf::Vector2f BilliardBallBehaviour::GetWorldPosition() const {
-		if (auto node = GetNode()) {
-			return node->GetLocalPosition();
-		}
-		return {};
-	}
-
 	void BilliardBallBehaviour::HandleMouseButtonPressed(const sf::Vector2i& position, sf::Mouse::Button button) {
 		if (_inputEnabled) {
 			OnMouseButtonPressed(position, button);
@@ -105,6 +98,8 @@ namespace Billiard {
 	}
 
 	void BilliardBallBehaviour::OnUpdate(const sf::Time& dt) {
+		TryInitializeCollisionGroups();
+
 		if (_isFalling) {
 			_fallAnimationProgress += dt.asSeconds() / _fallAnimationDuration;
 
@@ -150,8 +145,6 @@ namespace Billiard {
 				if (visual->HitTest(worldPos)) {
 					_dragStartPosition = worldPos;
 					if (auto physicsBody = _physicsBody.Get()) {
-						_overlapGroupsBeforeGrab = physicsBody->GetOverlapGroups();
-						_collisionGroupsBeforeGrab = physicsBody->GetCollisionGroups();
 						physicsBody->GetOverlapGroups() = {};
 						physicsBody->GetCollisionGroups() = {};
 					}
@@ -180,12 +173,27 @@ namespace Billiard {
 	void BilliardBallBehaviour::OnMouseButtonReleased(const sf::Vector2i& position) {
 		if (_dragStartPosition) {
 			_dragStartPosition.reset();
-			if (auto physicsBody = _physicsBody.Get()) {
-				physicsBody->GetOverlapGroups() = _overlapGroupsBeforeGrab;
-				physicsBody->GetCollisionGroups() = _collisionGroupsBeforeGrab;
-			}
+			RestoreCollisionGroups();
 			_onReleaseSignal.Emit();
 			// TODO check if ball is not overlapping with any other ball
+		}
+	}
+
+	void BilliardBallBehaviour::RestoreCollisionGroups() {
+		if (auto physicsBody = _physicsBody.Get()) {
+			physicsBody->GetCollisionGroups() = _defaultCollisionGroups;
+			physicsBody->GetOverlapGroups() = _defaultOverlapGroups;
+		}
+	}
+
+	void BilliardBallBehaviour::TryInitializeCollisionGroups() {
+		if (_isCollisionGroupsInitialized) {
+			return;
+		}
+		if (auto physicsBody = _physicsBody.Get()) {
+			_defaultOverlapGroups = physicsBody->GetOverlapGroups();
+			_defaultCollisionGroups = physicsBody->GetCollisionGroups();
+			_isCollisionGroupsInitialized = true;
 		}
 	}
 } // namespace Billiard

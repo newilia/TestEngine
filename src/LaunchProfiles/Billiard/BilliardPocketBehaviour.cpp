@@ -85,6 +85,10 @@ namespace Billiard {
 		ballBehaviour.PlayFallAnimation();
 	}
 
+	void BilliardPocketBehaviour::UnpocketBall(int ballNumber) {
+		_fallenBalls.erase(ballNumber);
+	}
+
 	void BilliardPocketBehaviour::OnUpdate(const sf::Time& dt) {
 		const auto pocketShape = _pocketShape.Get();
 		if (!pocketShape) {

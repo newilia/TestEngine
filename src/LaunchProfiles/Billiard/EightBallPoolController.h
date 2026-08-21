@@ -17,7 +17,6 @@
 #include "LaunchProfiles/Billiard/OnlineSession.h"
 
 #include <array>
-#include <cstdint>
 #include <map>
 #include <memory>
 #include <vector>
@@ -33,12 +32,11 @@ namespace Billiard {
 		void OnUpdate(const sf::Time& deltaTime) override;
 		void OnEvent(const sf::Event& event) override;
 
+	public:
 		/// @method
 		void StartHotSeatGame();
-
 		/// @method
 		void CreateServerSession();
-
 		/// @method
 		void JoinServerSession();
 
@@ -64,7 +62,7 @@ namespace Billiard {
 		struct MatchLoopConfig
 		{
 			std::array<PlayerSlotConfig, 2> slots;
-			std::array<bool, 2> isLocalAuthorityForRemoteSlot = {true, true};
+			std::array<bool, 2> isLocalAuthorityForRemoteSlot = {true, true}; // todo move to PlayerSlotConfig?
 		};
 
 		void ConfigureMatchLoop(const MatchLoopConfig& config);
@@ -81,10 +79,9 @@ namespace Billiard {
 		void SendCueAimUpdateIfNeeded();
 		void SendTableStateUpdateIfNeeded();
 		void SendTableStateUpdateToPeer();
-		void CheckBallsOutOfBounds();
+		void CheckBallsOutOfTableBounds();
 
-		/// @property
-		AssetRef<SceneObject> _cueAsset;
+	private:
 		/// @property
 		RefWrapper<BilliardCueBehaviour> _cueBehaviour;
 		/// @property

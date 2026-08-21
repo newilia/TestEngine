@@ -22,6 +22,7 @@ namespace Billiard {
 		void Reset();
 		void RegisterBall(const BilliardBallBehaviour& ball);
 		void PocketBall(BilliardBallBehaviour& ballBehaviour);
+		void UnpocketBall(int ballNumber);
 		Signal<int>& GetOnBallFallSignal() const;
 
 	private:
