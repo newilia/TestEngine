@@ -1,20 +1,20 @@
 #pragma once
 
+#include "BilliardBallAimDisplayBehaviour.h"
+#include "BilliardBallBehaviour.h"
+#include "BilliardBallSpawnBehaviour.h"
+#include "BilliardCueBehaviour.h"
+#include "BilliardMatchLoop.h"
+#include "BilliardPlayerKind.h"
+#include "BilliardPocketBehaviour.h"
+#include "BilliardScoreboardBehaviour.h"
+#include "BilliardTablePresenter.h"
+#include "EightBallPoolGame.h"
 #include "Engine/Behaviour/EventHandlerBehaviourBase.h"
 #include "Engine/Core/MetaClass.h"
 #include "Engine/Core/RefWrapper.h"
 #include "Engine/Core/SubscriptionsHolderBase.h"
-#include "LaunchProfiles/Billiard/BilliardBallAimDisplayBehaviour.h"
-#include "LaunchProfiles/Billiard/BilliardBallBehaviour.h"
-#include "LaunchProfiles/Billiard/BilliardBallSpawnBehaviour.h"
-#include "LaunchProfiles/Billiard/BilliardCueBehaviour.h"
-#include "LaunchProfiles/Billiard/BilliardMatchLoop.h"
-#include "LaunchProfiles/Billiard/BilliardPlayerKind.h"
-#include "LaunchProfiles/Billiard/BilliardPocketBehaviour.h"
-#include "LaunchProfiles/Billiard/BilliardScoreboardBehaviour.h"
-#include "LaunchProfiles/Billiard/BilliardTablePresenter.h"
-#include "LaunchProfiles/Billiard/EightBallPoolGame.h"
-#include "LaunchProfiles/Billiard/OnlineSession.h"
+#include "OnlineSession.h"
 
 #include <array>
 #include <map>
@@ -47,7 +47,7 @@ namespace Billiard {
 		void SpawnBalls();
 		void InitPockets();
 		void InitScoreboard();
-		void OnBallFellInPocket(int ballNumber);
+		void OnBallFellInPocket(int ballNumber, shared_ptr<BilliardPocketBehaviour> pocketRef);
 		void OnAimPointChanged(const sf::Vector2f& aimPoint);
 		void OnCueRelease();
 		void OnCueHit();
@@ -74,8 +74,8 @@ namespace Billiard {
 		void OnBallInHandRelease();
 		void PollNetworkEvents();
 		void BeginOnlineMatch();
-		[[nodiscard]] bool IsLocalAuthority() const;
-		[[nodiscard]] bool IsPassiveTurn() const;
+		bool IsLocalAuthority() const;
+		bool IsPassiveTurn() const;
 		void SendCueAimUpdateIfNeeded();
 		void SendTableStateUpdateIfNeeded();
 		void SendTableStateUpdateToPeer();

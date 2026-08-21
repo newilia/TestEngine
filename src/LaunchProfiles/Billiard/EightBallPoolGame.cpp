@@ -29,11 +29,8 @@ namespace Billiard {
 		_isBreakShot = true;
 		_foulKind = FoulKind::None;
 		_isBallInHand = false;
-		_isCueBallPocketed = false;
-		_isEightBallPocketed = false;
 		_isCueBallCollideBall = false;
-		_pocketedSolids.clear();
-		_pocketedStripes.clear();
+		_pocketedBalls.clear();
 		_playerBallTypes = {BallType::Undefined, BallType::Undefined};
 		_winnerIndex = std::nullopt;
 		_pocketedBallsOnCurrentTurn.clear();
@@ -49,38 +46,18 @@ namespace Billiard {
 	void EightBallPoolGame::OnBallFellInPocket(int ballNumber) {
 		assert(_phase == GamePhase::WaitingForBallsToStop);
 
+		_pocketedBalls.insert(ballNumber);
+
 		auto ballType = GetBallType(ballNumber);
 		if (ballType == BallType::Cue) {
-			_isCueBallPocketed = true;
 			_foulKind = FoulKind::CueBallPocketed;
-		}
-		else if (ballType == BallType::Eight) {
-			_isEightBallPocketed = true;
-		}
-		else if (ballType == BallType::Solid) {
-			_pocketedSolids.insert(ballNumber);
-		}
-		else if (ballType == BallType::Striped) {
-			_pocketedStripes.insert(ballNumber);
 		}
 
 		_pocketedBallsOnCurrentTurn.push_back(ballNumber);
 	}
 
 	void EightBallPoolGame::OnBallRemovedFromPocket(int ballNumber) {
-		auto ballType = GetBallType(ballNumber);
-		if (ballType == BallType::Cue) {
-			_isCueBallPocketed = false;
-		}
-		else if (ballType == BallType::Eight) {
-			_isEightBallPocketed = false;
-		}
-		else if (ballType == BallType::Solid) {
-			_pocketedSolids.erase(ballNumber);
-		}
-		else if (ballType == BallType::Striped) {
-			_pocketedStripes.erase(ballNumber);
-		}
+		_pocketedBalls.erase(ballNumber);
 	}
 
 	void EightBallPoolGame::OnBallCollideRail(int ballNumber) {
@@ -102,9 +79,9 @@ namespace Billiard {
 	void EightBallPoolGame::OnBallsStopped() {
 		assert(_phase == GamePhase::WaitingForBallsToStop);
 
-		if (_isEightBallPocketed && !_isBreakShot) {
+		if (_pocketedBalls.contains(8) && !_isBreakShot) {
 			_phase = GamePhase::GameOver;
-			if (MayPocketEightBall() && !_isCueBallPocketed) {
+			if (MayPocketEightBall() && !_pocketedBalls.contains(0)) {
 				_winnerIndex = _activePlayerIndex;
 			}
 			else {
@@ -165,29 +142,16 @@ namespace Billiard {
 	bool EightBallPoolGame::MayPocketEightBall() const {
 		auto ballType = _playerBallTypes[_activePlayerIndex];
 		if (ballType == BallType::Solid) {
-			return _pocketedSolids.size() == 7;
+			return GetPocketedSolids().size() == 7;
 		}
 		if (ballType == BallType::Striped) {
-			return _pocketedStripes.size() == 7;
+			return GetPocketedStripes().size() == 7;
 		}
 		return false;
 	}
 
 	bool EightBallPoolGame::IsBallPocketed(int ballNumber) const {
-		auto ballType = GetBallType(ballNumber);
-		if (ballType == BallType::Cue) {
-			return _isCueBallPocketed;
-		}
-		if (ballType == BallType::Eight) {
-			return _isEightBallPocketed;
-		}
-		if (ballType == BallType::Solid) {
-			return _pocketedSolids.contains(ballNumber);
-		}
-		if (ballType == BallType::Striped) {
-			return _pocketedStripes.contains(ballNumber);
-		}
-		return false;
+		return _pocketedBalls.contains(ballNumber);
 	}
 
 	bool EightBallPoolGame::IsBallInHand() const {
@@ -198,20 +162,36 @@ namespace Billiard {
 		return _isBreakShot;
 	}
 
+	const std::set<int>& EightBallPoolGame::GetPocketedBalls() const {
+		return _pocketedBalls;
+	}
+
 	const std::set<int>& EightBallPoolGame::GetPocketedSolids() const {
-		return _pocketedSolids;
+		_pocketedSolidsView.clear();
+		for (const auto ballNumber : _pocketedBalls) {
+			if (GetBallType(ballNumber) == BallType::Solid) {
+				_pocketedSolidsView.insert(ballNumber);
+			}
+		}
+		return _pocketedSolidsView;
 	}
 
 	const std::set<int>& EightBallPoolGame::GetPocketedStripes() const {
-		return _pocketedStripes;
+		_pocketedStripesView.clear();
+		for (const auto ballNumber : _pocketedBalls) {
+			if (GetBallType(ballNumber) == BallType::Striped) {
+				_pocketedStripesView.insert(ballNumber);
+			}
+		}
+		return _pocketedStripesView;
 	}
 
 	bool EightBallPoolGame::IsCueBallPocketed() const {
-		return _isCueBallPocketed;
+		return _pocketedBalls.contains(0);
 	}
 
 	bool EightBallPoolGame::IsEightBallPocketed() const {
-		return _isEightBallPocketed;
+		return _pocketedBalls.contains(8);
 	}
 
 	int EightBallPoolGame::GetActivePlayerIndex() const {
@@ -260,8 +240,7 @@ namespace Billiard {
 		snapshot.isBallInHand = _isBallInHand;
 		snapshot.isBreakShot = _isBreakShot;
 		snapshot.playerBallTypes = _playerBallTypes;
-		snapshot.pocketedSolids = _pocketedSolids;
-		snapshot.pocketedStripes = _pocketedStripes;
+		snapshot.pocketedBalls = _pocketedBalls;
 		snapshot.isGameOver = IsGameOver();
 		snapshot.winnerIndex = _winnerIndex.value_or(-1);
 		snapshot.foulKind = _foulKind;
@@ -274,11 +253,8 @@ namespace Billiard {
 		_isBallInHand = snapshot.isBallInHand;
 		_isBreakShot = snapshot.isBreakShot;
 		_playerBallTypes = snapshot.playerBallTypes;
-		_pocketedSolids = snapshot.pocketedSolids;
-		_pocketedStripes = snapshot.pocketedStripes;
+		_pocketedBalls = snapshot.pocketedBalls;
 		_foulKind = snapshot.foulKind;
-		_isCueBallPocketed = false;
-		_isEightBallPocketed = false;
 		_isCueBallCollideBall = false;
 		_pocketedBallsOnCurrentTurn.clear();
 		_ballsHitRailOnCurrentTurn.clear();

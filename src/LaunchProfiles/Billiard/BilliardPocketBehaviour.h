@@ -21,9 +21,11 @@ namespace Billiard {
 	public:
 		void Reset();
 		void RegisterBall(const BilliardBallBehaviour& ball);
-		void PocketBall(BilliardBallBehaviour& ballBehaviour);
-		void UnpocketBall(int ballNumber);
-		Signal<int>& GetOnBallFallSignal() const;
+		Signal<int>& GetOnBallPocketedSignal() const;
+		int UseBallCollisionGroup();
+
+	private:
+		void OnBallPocketed(BilliardBallBehaviour& ballBehaviour);
 
 	private:
 		/// @property
@@ -32,7 +34,7 @@ namespace Billiard {
 		std::vector<RefWrapper<BilliardBallBehaviour>> _balls;
 
 	private:
-		mutable Signal<int> _onBallFallSignal;
+		mutable Signal<int> _onBallPocketedSignal;
 		int _nextBallCollisionGroup = 1;
 		std::set<int> _fallenBalls;
 	};

@@ -86,8 +86,8 @@ namespace Billiard {
 
 		for (auto& pocketRef : _pocketsBehaviours) {
 			if (auto pocket = pocketRef.Get()) {
-				Subscribe(pocket->GetOnBallFallSignal(), [this](int ballNumber) {
-					OnBallFellInPocket(ballNumber);
+				Subscribe(pocket->GetOnBallPocketedSignal(), [this, pocketRef](int ballNumber) {
+					OnBallFellInPocket(ballNumber, pocketRef.Get());
 				});
 			}
 		}
@@ -390,32 +390,23 @@ namespace Billiard {
 	}
 
 	void EightBallPoolController::CheckBallsOutOfTableBounds() {
-		if (_pocketsBehaviours.empty()) {
-			return;
-		}
-
-		auto pocket = _pocketsBehaviours.front().Get();
-		if (!pocket) {
-			return;
-		}
-
 		for (const auto& [ballNumber, ballRef] : _ballsBehaviours) {
 			if (_gameState.IsBallPocketed(ballNumber)) {
 				continue;
 			}
 			if (_tablePresenter.IsBallOutsideExpandedTable(ballNumber, kOutOfTablePocketMargin)) {
-				if (auto ball = _ballsBehaviours[ballNumber].Get()) {
-					pocket->PocketBall(*ball);
-				}
+				_gameState.OnBallFellInPocket(ballNumber);
+				_tablePresenter.PocketBall(ballNumber, nullptr);
 			}
 		}
 	}
 
-	void EightBallPoolController::OnBallFellInPocket(int ballNumber) {
+	void EightBallPoolController::OnBallFellInPocket(int ballNumber, shared_ptr<BilliardPocketBehaviour> pocketRef) {
 		if (IsPassiveTurn()) {
 			return;
 		}
 		_gameState.OnBallFellInPocket(ballNumber);
+		_tablePresenter.PocketBall(ballNumber, pocketRef);
 	}
 
 	void EightBallPoolController::OnAimPointChanged(const sf::Vector2f& aimPoint) {
@@ -479,11 +470,11 @@ namespace Billiard {
 			return;
 		}
 
-		if (_gameState.IsCueBallPocketed()) {
+		if (_gameState.IsBallPocketed(0)) {
 			_tablePresenter.RestoreBall(0);
 			_gameState.OnBallRemovedFromPocket(0);
 		}
-		if (_gameState.IsEightBallPocketed()) {
+		if (_gameState.IsBallPocketed(8)) {
 			_tablePresenter.RestoreBall(8);
 			_gameState.OnBallRemovedFromPocket(8);
 		}

@@ -122,11 +122,21 @@ namespace Billiard {
 		return sf::Vector2f();
 	}
 
+	void BilliardTablePresenter::PocketBall(int ballNumber, shared_ptr<BilliardPocketBehaviour> pocketRef) {
+		if (auto ball = _ballsBehaviours[ballNumber].Get()) {
+			if (auto physicsBody = ball->GetPhysicsBody(); physicsBody && pocketRef) {
+				physicsBody->GetCollisionGroups() = {};
+				physicsBody->GetCollisionGroups()[pocketRef->UseBallCollisionGroup()] = true;
+			}
+			ball->PlayFallAnimation();
+		}
+	}
+
 	void BilliardTablePresenter::RestoreBall(int ballNumber) {
 		if (auto ball = _ballsBehaviours[ballNumber].Get()) {
+			ball->RestoreCollisionGroups();
 			ball->Appear();
 			ball->GetNode()->SetLocalPosition(GetTableCenter()); // todo find proper position
-			ball->RestoreCollisionGroups();
 
 			if (auto physicsBody = ball->GetPhysicsBody()) {
 				physicsBody->SetVelocity(sf::Vector2f(0, 0));
@@ -135,11 +145,6 @@ namespace Billiard {
 
 			if (auto rollingBall = ball->GetRollingBallBehaviour()) {
 				rollingBall->ResetOmega();
-			}
-		}
-		for (auto& pocket : _pockets) {
-			if (auto pocketBehaviour = pocket.Get()) {
-				pocketBehaviour->UnpocketBall(ballNumber);
 			}
 		}
 	}

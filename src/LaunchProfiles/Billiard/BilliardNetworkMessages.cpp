@@ -67,13 +67,9 @@ namespace Billiard {
 		for (const auto ballType : snapshot.playerBallTypes) {
 			message.add_player_ball_types(BallTypeToProto(ballType));
 		}
-		message.clear_pocketed_solids();
-		for (const auto ballNumber : snapshot.pocketedSolids) {
-			message.add_pocketed_solids(ballNumber);
-		}
-		message.clear_pocketed_stripes();
-		for (const auto ballNumber : snapshot.pocketedStripes) {
-			message.add_pocketed_stripes(ballNumber);
+		message.clear_pocketed_balls();
+		for (const auto ballNumber : snapshot.pocketedBalls) {
+			message.add_pocketed_balls(ballNumber);
 		}
 		message.set_is_game_over(snapshot.isGameOver);
 		message.set_winner_index(snapshot.winnerIndex);
@@ -90,11 +86,8 @@ namespace Billiard {
 			snapshot.playerBallTypes[static_cast<std::size_t>(index)] =
 			    BallTypeFromProto(message.player_ball_types(index));
 		}
-		for (const auto ballNumber : message.pocketed_solids()) {
-			snapshot.pocketedSolids.insert(ballNumber);
-		}
-		for (const auto ballNumber : message.pocketed_stripes()) {
-			snapshot.pocketedStripes.insert(ballNumber);
+		for (const auto ballNumber : message.pocketed_balls()) {
+			snapshot.pocketedBalls.insert(ballNumber);
 		}
 		snapshot.isGameOver = message.is_game_over();
 		snapshot.winnerIndex = message.winner_index();

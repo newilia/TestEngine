@@ -18,13 +18,14 @@ namespace Billiard {
 		void SetPockets(std::vector<RefWrapper<BilliardPocketBehaviour>> pockets);
 		void SetTableRect(RefWrapper<RectangleShapeVisual> tableRect);
 
-		[[nodiscard]] TableSnapshot CaptureSnapshot() const;
+		TableSnapshot CaptureSnapshot() const;
 		void ApplySnapshot(const TableSnapshot& snapshot);
-		[[nodiscard]] bool AreBallsMoving() const;
-		[[nodiscard]] sf::FloatRect GetBallInHandRect() const;
-		[[nodiscard]] sf::FloatRect GetKitchenRect() const;
-		[[nodiscard]] sf::Vector2f GetTableCenter() const;
-		[[nodiscard]] float GetBallRadius() const;
+		bool AreBallsMoving() const;
+		sf::FloatRect GetBallInHandRect() const;
+		sf::FloatRect GetKitchenRect() const;
+		sf::Vector2f GetTableCenter() const;
+		float GetBallRadius() const;
+		void PocketBall(int ballNumber, shared_ptr<BilliardPocketBehaviour> pocketRef);
 		void RestoreBall(int ballNumber);
 		bool IsBallOutsideExpandedTable(int ballNumber, float margin) const;
 

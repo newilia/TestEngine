@@ -48,11 +48,10 @@ message RulesSnapshotMsg {
   bool is_ball_in_hand = 3;
   bool is_break_shot = 4;
   repeated int32 player_ball_types = 5;
-  repeated int32 pocketed_solids = 6;
-  repeated int32 pocketed_stripes = 7;
-  bool is_game_over = 8;
-  int32 winner_index = 9;
-  int32 foul_kind = 10;
+  repeated int32 pocketed_balls = 6;
+  bool is_game_over = 7;
+  int32 winner_index = 8;
+  int32 foul_kind = 9;
 }
 
 message GameStartedMsg {

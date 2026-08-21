@@ -25,8 +25,7 @@ namespace Billiard {
 		bool isBallInHand = false;
 		bool isBreakShot = true;
 		std::array<BallType, 2> playerBallTypes = {BallType::Undefined, BallType::Undefined};
-		std::set<int> pocketedSolids;
-		std::set<int> pocketedStripes;
+		std::set<int> pocketedBalls;
 		bool isGameOver = false;
 		int winnerIndex = -1;
 		FoulKind foulKind = FoulKind::None;

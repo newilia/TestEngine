@@ -28,6 +28,7 @@ namespace Billiard {
 		bool IsBallInKitchen() const;
 		int GetActivePlayerIndex() const;
 		BallType GetPlayerBallType(int playerIndex) const;
+		const std::set<int>& GetPocketedBalls() const;
 		const std::set<int>& GetPocketedSolids() const;
 		const std::set<int>& GetPocketedStripes() const;
 		bool IsCueBallPocketed() const;
@@ -44,17 +45,16 @@ namespace Billiard {
 		GamePhase _phase = GamePhase::Aiming;
 		int _activePlayerIndex = 0;
 		bool _isBreakShot = true;
-		std::set<int> _pocketedSolids;
-		std::set<int> _pocketedStripes;
+		std::set<int> _pocketedBalls;
 		std::vector<int> _pocketedBallsOnCurrentTurn;
 		std::set<int> _ballsHitRailOnCurrentTurn;
-		bool _isCueBallPocketed = false;
-		bool _isEightBallPocketed = false;
 		FoulKind _foulKind = FoulKind::None;
 		bool _isBallInHand = false;
 		std::array<BallType, 2> _playerBallTypes = {BallType::Undefined, BallType::Undefined};
 		std::optional<int> _winnerIndex;
 		bool _isCueBallCollideBall = false;
+		mutable std::set<int> _pocketedSolidsView;
+		mutable std::set<int> _pocketedStripesView;
 	};
 
 } // namespace Billiard

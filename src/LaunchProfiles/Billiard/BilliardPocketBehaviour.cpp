@@ -59,34 +59,21 @@ namespace {
 
 namespace Billiard {
 
-	void BilliardPocketBehaviour::PocketBall(BilliardBallBehaviour& ballBehaviour) {
+	void BilliardPocketBehaviour::OnBallPocketed(BilliardBallBehaviour& ballBehaviour) {
 		const int ballNumber = ballBehaviour.GetBallNumber();
 		if (_fallenBalls.contains(ballNumber)) {
 			return;
 		}
-
-		const auto ballNode = ballBehaviour.GetNode();
-		if (!ballNode || !ballNode->IsEnabled()) {
-			return;
-		}
-
-		const auto body = ballNode->FindBehaviour<PhysicsBodyBehaviour>();
-		if (!body) {
-			return;
-		}
-
-		body->GetCollisionGroups().set(0, false);
-		body->GetCollisionGroups().set(_nextBallCollisionGroup, true);
-		_nextBallCollisionGroup =
-		    _nextBallCollisionGroup == PhysicsBodyBehaviour::kGroupsCount - 1 ? 1 : _nextBallCollisionGroup + 1;
-
-		_onBallFallSignal.Emit(ballNumber);
 		_fallenBalls.insert(ballNumber);
-		ballBehaviour.PlayFallAnimation();
+		_onBallPocketedSignal.Emit(ballNumber);
 	}
 
-	void BilliardPocketBehaviour::UnpocketBall(int ballNumber) {
-		_fallenBalls.erase(ballNumber);
+	int BilliardPocketBehaviour::UseBallCollisionGroup() {
+		auto group = _nextBallCollisionGroup++;
+		if (_nextBallCollisionGroup == PhysicsBodyBehaviour::kGroupsCount - 1) {
+			_nextBallCollisionGroup = 1;
+		}
+		return group;
 	}
 
 	void BilliardPocketBehaviour::OnUpdate(const sf::Time& dt) {
@@ -120,39 +107,49 @@ namespace Billiard {
 				continue;
 			}
 			const auto ballBounds = Utils::TryGetNodeVisualWorldBounds(ballNode);
-			if (!ballBounds || !pocketBounds->findIntersection(*ballBounds)) {
+			if (!ballBounds) {
 				continue;
 			}
+			const int ballNumber = ballBehaviour->GetBallNumber();
 
-			if (_fallenBalls.contains(ballBehaviour->GetBallNumber())) {
-				continue;
-			}
+			if (pocketBounds->findIntersection(*ballBounds)) {
+				const sf::Vector2f ballCenter = Utils::GetWorldPos(ballNode);
 
-			const sf::Vector2f ballCenter = Utils::GetWorldPos(ballNode);
-			const float ballRadius = GetBallWorldRadius(ballNode);
-			if (ballRadius <= 0.f) {
-				continue;
-			}
+				if (IsPointInsideCircle(ballCenter, pocketGeometry->center, pocketGeometry->radius)) {
+					if (_fallenBalls.contains(ballNumber)) {
+						continue;
+					}
 
-			if (!IsPointInsideCircle(ballCenter, pocketGeometry->center, pocketGeometry->radius)) {
-				continue;
-			}
+					const auto ballBody = ballNode->FindBehaviour<PhysicsBodyBehaviour>();
+					if (!ballBody) {
+						continue;
+					}
+					const float ballRadius = GetBallWorldRadius(ballNode);
 
-			const auto body = ballNode->FindBehaviour<PhysicsBodyBehaviour>();
-			if (!body) {
-				continue;
-			}
-			if (IsCircleCompletelyInsideCircle(
-			        ballCenter, ballRadius, pocketGeometry->center, pocketGeometry->radius)) {
-				PocketBall(*ballBehaviour);
+					if (IsCircleCompletelyInsideCircle(
+					        ballCenter, ballRadius, pocketGeometry->center, pocketGeometry->radius)) {
+						OnBallPocketed(*ballBehaviour);
+					}
+					else {
+						const sf::Vector2f toPocket = pocketGeometry->center - ballCenter;
+						const float dist = Utils::Length(toPocket);
+						if (dist > 1e-6f) {
+							float sinArg = 3.14 * (pocketGeometry->radius - dist) / (ballRadius);
+							float accelerationMag = sin(sinArg) * kPocketPullSpeed;
+							ballBody->AddVelocity(accelerationMag * Utils::Normalize(toPocket) * dt.asSeconds());
+						}
+					}
+				}
+				else {
+					if (_fallenBalls.contains(ballNumber)) {
+						_fallenBalls.erase(ballNumber);
+					}
+				}
 			}
 			else {
-				const sf::Vector2f toPocket = pocketGeometry->center - ballCenter;
-				const float dist = Utils::Length(toPocket);
-				if (dist > 1e-6f) {
-					float sinArg = 3.14 * (pocketGeometry->radius - dist) / (ballRadius);
-					float accelerationMag = sin(sinArg) * kPocketPullSpeed;
-					body->AddVelocity(accelerationMag * Utils::Normalize(toPocket) * dt.asSeconds());
+				if (_fallenBalls.contains(ballNumber)) {
+					_fallenBalls.erase(ballNumber);
+					continue;
 				}
 			}
 		}
@@ -170,8 +167,8 @@ namespace Billiard {
 		_balls.push_back(ballRef);
 	}
 
-	Signal<int>& BilliardPocketBehaviour::GetOnBallFallSignal() const {
-		return _onBallFallSignal;
+	Signal<int>& BilliardPocketBehaviour::GetOnBallPocketedSignal() const {
+		return _onBallPocketedSignal;
 	}
 
 } // namespace Billiard
