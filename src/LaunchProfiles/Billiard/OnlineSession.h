@@ -18,8 +18,8 @@ namespace Billiard {
 		static constexpr std::uint32_t kMatchSessionId = 1;
 
 	public:
-		void CreateSession();
-		void JoinSession();
+		void CreateSession(std::string serverHost, int serverPort);
+		void JoinSession(std::string serverHost, int serverPort);
 		void PollIncomingMessages();
 
 		void SendTurnStarted(std::uint32_t turnId, int activePlayer, const TableSnapshot& snapshot);
@@ -48,8 +48,7 @@ namespace Billiard {
 		void SendBallInHandDragStarted(int playerIndex);
 		void SendBallInHandDragEnded(int playerIndex);
 		void SendCueReleased(int playerIndex, const TurnIntent& intent);
-		void SendTurnResultIfLocalShooter(
-		    int nextActivePlayer, const TableSnapshot& snapshot, const RulesSnapshot& rules);
+		void SendTurnResult(int nextActivePlayer, const TableSnapshot& snapshot, const RulesSnapshot& rules);
 
 	private:
 		enum class PendingRequest
@@ -59,12 +58,10 @@ namespace Billiard {
 			JoinSession,
 		};
 
-		[[nodiscard]] bool EnsureConnected(const char* actionName);
+		[[nodiscard]] bool EnsureConnected(const char* actionName, std::string serverHost, int serverPort);
 		void EnqueueEvent(BilliardNetworkEvent event);
 
 	private:
-		std::string _serverHost = "127.0.0.1";
-		int _serverPort = 7777;
 		std::string _playerName = "Player";
 		std::unique_ptr<Engine::Net::TcpClient> _client;
 		PendingRequest _pendingRequest = PendingRequest::None;

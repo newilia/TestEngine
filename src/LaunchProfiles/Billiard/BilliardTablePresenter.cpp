@@ -122,11 +122,11 @@ namespace Billiard {
 		return sf::Vector2f();
 	}
 
-	void BilliardTablePresenter::PocketBall(int ballNumber, shared_ptr<BilliardPocketBehaviour> pocketRef) {
+	void BilliardTablePresenter::OnBallPocketed(int ballNumber, shared_ptr<BilliardPocketBehaviour> pocket) {
 		if (auto ball = _ballsBehaviours[ballNumber].Get()) {
-			if (auto physicsBody = ball->GetPhysicsBody(); physicsBody && pocketRef) {
+			if (auto physicsBody = ball->GetPhysicsBody(); physicsBody && pocket) {
 				physicsBody->GetCollisionGroups() = {};
-				physicsBody->GetCollisionGroups()[pocketRef->UseBallCollisionGroup()] = true;
+				physicsBody->GetCollisionGroups()[pocket->UseBallCollisionGroup()] = true;
 			}
 			ball->PlayFallAnimation();
 		}

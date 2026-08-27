@@ -25,7 +25,7 @@ namespace Billiard {
 		sf::FloatRect GetKitchenRect() const;
 		sf::Vector2f GetTableCenter() const;
 		float GetBallRadius() const;
-		void PocketBall(int ballNumber, shared_ptr<BilliardPocketBehaviour> pocketRef);
+		void OnBallPocketed(int ballNumber, shared_ptr<BilliardPocketBehaviour> pocket);
 		void RestoreBall(int ballNumber);
 		bool IsBallOutsideExpandedTable(int ballNumber, float margin) const;
 

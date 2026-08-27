@@ -31,7 +31,7 @@ namespace Billiard {
 		}
 	}
 
-	void BilliardMatchLoop::OnUpdate(const sf::Time& deltaTime, EightBallPoolGame& game, BilliardCueBehaviour* cue) {
+	void BilliardMatchLoop::OnUpdate(const sf::Time& deltaTime, EightBallPoolGame& game) {
 		if (game.IsGameOver()) {
 			return;
 		}
@@ -54,7 +54,7 @@ namespace Billiard {
 
 		if (auto intent = agent->ConsumeIntent()) {
 			if (intent->phase == TurnIntentPhase::Shoot) {
-				ApplyAgentShotIntent(*intent, cue);
+				ApplyAgentShotIntent(*intent);
 			}
 		}
 	}
@@ -83,12 +83,11 @@ namespace Billiard {
 		return _slots;
 	}
 
-	void BilliardMatchLoop::ApplyAgentShotIntent(const TurnIntent& intent, BilliardCueBehaviour* cue) {
-		if (!cue) {
-			return;
+	void BilliardMatchLoop::ApplyAgentShotIntent(const TurnIntent& intent) {
+		if (auto cue = _deps.cue.lock()) {
+			cue->SetInputEnabled(true);
+			cue->ApplyShotIntent(intent);
 		}
-		cue->SetInputEnabled(true);
-		cue->ApplyShotIntent(intent);
 	}
 
 } // namespace Billiard

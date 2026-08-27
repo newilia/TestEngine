@@ -184,25 +184,44 @@ namespace Billiard {
 			}
 		}
 		else {
-			_matchLoop.OnUpdate(deltaTime, _gameState, _cueBehaviour.Get().get());
-			if (_remainingTurnTime > 0.f) {
-				_remainingTurnTime = std::max(0.f, _remainingTurnTime - deltaSeconds);
-				if (_remainingTurnTime == 0.f) {
-					if (!IsPassiveTurn()) {
-						_gameState.OnTurnTimeOver();
-					}
-					_matchLoop.OnTurnEnded();
-					StartNewTurn();
-					UpdateScoreboard();
-					if (auto cueBehaviour = _cueBehaviour.Get()) {
-						cueBehaviour->AbortAiming();
-					}
-				}
-				else {
-					UpdateScoreboardTimer();
-				}
-			}
+			_matchLoop.OnUpdate(deltaTime, _gameState);
 		}
+
+		UpdateCountdownTimer(deltaSeconds);
+	}
+
+	void EightBallPoolController::UpdateCountdownTimer(float deltaSeconds) {
+		if (_gameState.IsGameOver()) {
+			return;
+		}
+		if (_isWaitingForBallsToStop) {
+			return;
+		}
+
+		if (_remainingTurnTime > 0.f) {
+			_remainingTurnTime = std::max(0.f, _remainingTurnTime - deltaSeconds);
+			if (_remainingTurnTime == 0.f) {
+				OnTurnTimeOver();
+			}
+			UpdateScoreboardTimer();
+		}
+	}
+
+	void EightBallPoolController::OnTurnTimeOver() {
+		if (IsPassiveTurn()) {
+			return;
+		}
+
+		_gameState.OnTurnTimeOver();
+		_matchLoop.OnTurnEnded();
+
+		if (_onlineSession) {
+			_onlineSession->SendTurnResult(
+			    _gameState.GetActivePlayerIndex(), _tablePresenter.CaptureSnapshot(), _gameState.ToSnapshot());
+		}
+
+		StartNewTurn();
+		UpdateScoreboard();
 	}
 
 	void EightBallPoolController::OnEvent(const sf::Event& event) {
@@ -221,7 +240,7 @@ namespace Billiard {
 	void EightBallPoolController::CreateServerSession() {
 		_onlineSession = std::make_shared<OnlineSession>();
 		_waitingForGameStart = true;
-		_onlineSession->CreateSession();
+		_onlineSession->CreateSession(_serverHost, _serverPort);
 		if (auto scoreboard = _scoreboardBehaviour.Get()) {
 			scoreboard->ShowMessage("Waiting for opponent...");
 		}
@@ -230,7 +249,7 @@ namespace Billiard {
 	void EightBallPoolController::JoinServerSession() {
 		_onlineSession = std::make_shared<OnlineSession>();
 		_waitingForGameStart = true;
-		_onlineSession->JoinSession();
+		_onlineSession->JoinSession(_serverHost, _serverPort);
 		if (auto scoreboard = _scoreboardBehaviour.Get()) {
 			scoreboard->ShowMessage("Joining session...");
 		}
@@ -395,18 +414,14 @@ namespace Billiard {
 				continue;
 			}
 			if (_tablePresenter.IsBallOutsideExpandedTable(ballNumber, kOutOfTablePocketMargin)) {
-				_gameState.OnBallFellInPocket(ballNumber);
-				_tablePresenter.PocketBall(ballNumber, nullptr);
+				OnBallFellInPocket(ballNumber, nullptr);
 			}
 		}
 	}
 
-	void EightBallPoolController::OnBallFellInPocket(int ballNumber, shared_ptr<BilliardPocketBehaviour> pocketRef) {
-		if (IsPassiveTurn()) {
-			return;
-		}
+	void EightBallPoolController::OnBallFellInPocket(int ballNumber, shared_ptr<BilliardPocketBehaviour> pocket) {
 		_gameState.OnBallFellInPocket(ballNumber);
-		_tablePresenter.PocketBall(ballNumber, pocketRef);
+		_tablePresenter.OnBallPocketed(ballNumber, pocket);
 	}
 
 	void EightBallPoolController::OnAimPointChanged(const sf::Vector2f& aimPoint) {
@@ -426,16 +441,14 @@ namespace Billiard {
 	}
 
 	void EightBallPoolController::OnCueRelease() {
-		if (IsPassiveTurn()) {
-			return;
-		}
-		if (_onlineSession) {
+		if (_onlineSession && !IsPassiveTurn()) {
 			if (auto cueBehaviour = _cueBehaviour.Get()) {
 				const auto intent = cueBehaviour->BuildTurnIntent(
 				    _gameState.GetActivePlayerIndex(), _onlineSession->GetNetworkTurnId());
 				_onlineSession->SendCueReleased(_gameState.GetActivePlayerIndex(), intent);
 			}
 		}
+
 		if (auto ball = _ballsBehaviours[0].Get()) {
 			ball->ResetBallInHand();
 		}
@@ -449,10 +462,11 @@ namespace Billiard {
 		if (auto cue = _cueBehaviour.Get()) {
 			cue->PlayHideAnimation();
 		}
+		_isWaitingForBallsToStop = true;
+
 		if (IsPassiveTurn()) {
 			return;
 		}
-		_isWaitingForBallsToStop = true;
 
 		if (_onlineSession) {
 			_onlineSession->OnLocalCueHit(_gameState.GetActivePlayerIndex());
@@ -484,24 +498,20 @@ namespace Billiard {
 				ball->SetBallInHand(_tablePresenter.GetBallInHandRect());
 			}
 		}
+
+		StartNewTurn();
 	}
 
 	void EightBallPoolController::OnBallsStopped() {
 		_isWaitingForBallsToStop = false;
 		_gameState.OnBallsStopped();
 
-		ApplyTurnResolutionUI();
-
 		if (_onlineSession) {
-			_onlineSession->SendTurnResultIfLocalShooter(
+			_onlineSession->SendTurnResult(
 			    _gameState.GetActivePlayerIndex(), _tablePresenter.CaptureSnapshot(), _gameState.ToSnapshot());
 		}
 
-		if (_gameState.IsGameOver()) {
-			return;
-		}
-
-		StartNewTurn();
+		ApplyTurnResolutionUI();
 	}
 
 	void EightBallPoolController::StartNewTurn() {

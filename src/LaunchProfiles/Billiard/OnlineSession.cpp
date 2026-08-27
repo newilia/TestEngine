@@ -66,12 +66,12 @@ namespace Billiard {
 		(void)_client->SendMessage(envelope);
 	}
 
-	void OnlineSession::SendTurnResultIfLocalShooter(
+	void OnlineSession::SendTurnResult(
 	    int nextActivePlayer, const TableSnapshot& snapshot, const RulesSnapshot& rules) {
-		if (_shootingPlayerIndex != GetLocalPlayerIndex()) {
+		/*if (_shootingPlayerIndex != GetLocalPlayerIndex()) {
 			_shootingPlayerIndex = -1;
 			return;
-		}
+		}*/
 		billiard::Envelope envelope;
 		FillTurnResultMsg(_networkTurnId, nextActivePlayer, snapshot, rules, *envelope.mutable_turn_result());
 		(void)_client->SendMessage(envelope);
@@ -158,7 +158,7 @@ namespace Billiard {
 		return _isWaitingForOpponent;
 	}
 
-	bool OnlineSession::EnsureConnected(const char* actionName) {
+	bool OnlineSession::EnsureConnected(const char* actionName, std::string serverHost, int serverPort) {
 		if (!_client) {
 			_client = std::make_unique<Engine::Net::TcpClient>();
 		}
@@ -167,12 +167,12 @@ namespace Billiard {
 			return true;
 		}
 
-		if (!_client->Connect(_serverHost, static_cast<unsigned short>(_serverPort))) {
-			fmt::print("[Net] {}: connect failed ({}:{})\n", actionName, _serverHost, _serverPort);
+		if (!_client->Connect(serverHost, static_cast<unsigned short>(serverPort))) {
+			fmt::print("[Net] {}: connect failed ({}:{})\n", actionName, serverHost, serverPort);
 			return false;
 		}
 
-		fmt::print("[Net] {}: connected to {}:{}\n", actionName, _serverHost, _serverPort);
+		fmt::print("[Net] {}: connected to {}:{}\n", actionName, serverHost, serverPort);
 		return true;
 	}
 
@@ -309,8 +309,8 @@ namespace Billiard {
 		}
 	}
 
-	void OnlineSession::CreateSession() {
-		if (!EnsureConnected("CreateSession")) {
+	void OnlineSession::CreateSession(std::string serverHost, int serverPort) {
+		if (!EnsureConnected("CreateSession", serverHost, serverPort)) {
 			return;
 		}
 
@@ -326,8 +326,8 @@ namespace Billiard {
 		fmt::print("[Net] CreateSession: request sent (player={})\n", _playerName);
 	}
 
-	void OnlineSession::JoinSession() {
-		if (!EnsureConnected("JoinSession")) {
+	void OnlineSession::JoinSession(std::string serverHost, int serverPort) {
+		if (!EnsureConnected("JoinSession", serverHost, serverPort)) {
 			return;
 		}
 

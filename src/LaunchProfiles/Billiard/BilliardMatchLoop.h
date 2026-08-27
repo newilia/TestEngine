@@ -25,14 +25,14 @@ namespace Billiard {
 		    const std::weak_ptr<BilliardCueBehaviour>& cue, const std::weak_ptr<BilliardBallBehaviour>& cueBall);
 		void OnTurnStarted(EightBallPoolGame& game, BilliardTablePresenter& table);
 		void OnTurnEnded();
-		void OnUpdate(const sf::Time& deltaTime, EightBallPoolGame& game, BilliardCueBehaviour* cue);
+		void OnUpdate(const sf::Time& deltaTime, EightBallPoolGame& game);
 		void OnEvent(const sf::Event& event, EightBallPoolGame& game);
 		[[nodiscard]] IPlayerAgent* GetActiveAgent(const EightBallPoolGame& game);
 		[[nodiscard]] const std::array<std::unique_ptr<IPlayerAgent>, 2>& GetAgents() const;
 		[[nodiscard]] const std::array<PlayerSlotConfig, 2>& GetSlots() const;
 
 	private:
-		void ApplyAgentShotIntent(const TurnIntent& intent, BilliardCueBehaviour* cue);
+		void ApplyAgentShotIntent(const TurnIntent& intent);
 
 		std::array<PlayerSlotConfig, 2> _slots = {};
 		PlayerAgentDeps _deps;

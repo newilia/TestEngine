@@ -80,6 +80,8 @@ namespace Billiard {
 		void SendTableStateUpdateIfNeeded();
 		void SendTableStateUpdateToPeer();
 		void CheckBallsOutOfTableBounds();
+		void UpdateCountdownTimer(float deltaSeconds);
+		void OnTurnTimeOver();
 
 	private:
 		/// @property
@@ -98,6 +100,10 @@ namespace Billiard {
 		RefWrapper<RectangleShapeVisual> _tableRect;
 		/// @property
 		float _turnTimeLimit = 30.f;
+		/// @property
+		std::string _serverHost = "130.110.1.72";
+		/// @property
+		int _serverPort = 7777;
 
 	private:
 		std::shared_ptr<OnlineSession> _onlineSession;
