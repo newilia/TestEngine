@@ -40,6 +40,8 @@ namespace Billiard {
 		RefWrapper<RectangleShapeVisual> _ray2;
 		/// @property
 		RefWrapper<RectangleShapeVisual> _ray3;
+		/// @property
+		std::vector<RefWrapper<RectangleShapeVisual>> _tableRails;
 		/// @property(minValue=0)
 		int _maxRayLength = 100;
 
