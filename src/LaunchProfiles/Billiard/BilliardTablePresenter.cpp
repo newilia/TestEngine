@@ -52,7 +52,6 @@ namespace Billiard {
 				continue;
 			}
 			if (ballSnapshot.isOnTable) {
-				ball->Appear();
 				if (auto node = ball->GetNode()) {
 					node->SetLocalPosition(ballSnapshot.position);
 				}

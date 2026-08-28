@@ -71,9 +71,12 @@ namespace Billiard {
 	}
 
 	void BilliardBallBehaviour::Appear() {
+		if (GetNode()->IsEnabled()) {
+			return;
+		}
+		GetNode()->SetEnabled(true);
 		_isFalling = false;
 		_fallAnimationProgress = 0.f;
-		GetNode()->SetEnabled(true);
 		if (auto lightReceiver = _lightReceiver.Get()) {
 			lightReceiver->SetLightingStrength(_initialLightingStrength);
 		}
