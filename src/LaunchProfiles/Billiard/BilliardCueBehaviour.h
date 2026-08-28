@@ -37,9 +37,9 @@ namespace Billiard {
 		void ApplyShotIntent(const TurnIntent& intent);
 		TurnIntent BuildTurnIntent(int playerIndex, std::uint32_t turnId) const;
 
-		void SetTargetBall(const std::shared_ptr<BilliardBallBehaviour>& ballBehaviour);
+		void SetCueBall(const std::shared_ptr<BilliardBallBehaviour>& ballBehaviour);
 		void AbortAiming();
-		void Reset();
+		void PrepareForNewTurn();
 
 		Signal<>& GetOnReleaseSignal() const;
 		Signal<>& GetOnHitSignal() const;

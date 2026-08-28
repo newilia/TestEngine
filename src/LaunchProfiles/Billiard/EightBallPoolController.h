@@ -44,8 +44,8 @@ namespace Billiard {
 	private:
 		void InitSubscriptions();
 		void StartNewGame();
-		void SetupCue();
-		void SetupAimGuideLine();
+		void InitCue();
+		void InitAimGuideLine();
 		void SpawnBalls();
 		void InitPockets();
 		void InitScoreboard();
@@ -85,6 +85,7 @@ namespace Billiard {
 		void UpdateCountdownTimer(float deltaSeconds);
 		void OnTurnTimeOver();
 		void OnCueAimChanged();
+		std::shared_ptr<BilliardBallBehaviour> GetCueBall();
 
 	private:
 		/// @property

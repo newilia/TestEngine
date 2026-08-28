@@ -128,7 +128,7 @@ namespace Billiard {
 		}
 	}
 
-	void BilliardCueBehaviour::SetTargetBall(const std::shared_ptr<BilliardBallBehaviour>& ballBehaviour) {
+	void BilliardCueBehaviour::SetCueBall(const std::shared_ptr<BilliardBallBehaviour>& ballBehaviour) {
 		_targetBall = ballBehaviour;
 		if (ballBehaviour) {
 			_ballRadius = ballBehaviour->GetRadius();
@@ -213,6 +213,10 @@ namespace Billiard {
 	}
 
 	void BilliardCueBehaviour::OnTipCollide(const IntersectionDetails& intersection) {
+		if (!_isShooting) {
+			return;
+		}
+
 		auto tipPhysicsBody = _tipPhysicsBody.Get();
 		auto targetNode = GetTargetBallNode();
 		if (!tipPhysicsBody || !targetNode) {
@@ -247,8 +251,6 @@ namespace Billiard {
 		}
 
 		_isShooting = false;
-		_targetBall.Clear();
-
 		_onHitSignal.Emit();
 	}
 
@@ -306,7 +308,7 @@ namespace Billiard {
 		SetDistanceFromTarget(_minDistanceFromTarget);
 	}
 
-	void BilliardCueBehaviour::Reset() {
+	void BilliardCueBehaviour::PrepareForNewTurn() {
 		_isAiming = false;
 		_isPullingBack = false;
 		_isShooting = false;

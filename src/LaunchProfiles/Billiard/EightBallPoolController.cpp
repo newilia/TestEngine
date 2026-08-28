@@ -25,17 +25,19 @@ namespace Billiard {
 		_matchLoop.Configure(config.slots, config.isLocalAuthorityForRemoteSlot);
 	}
 
+	std::shared_ptr<BilliardBallBehaviour> EightBallPoolController::GetCueBall() {
+		if (Verify(!_ballsBehaviours.empty())) {
+			return _ballsBehaviours[0].Get();
+		}
+		return nullptr;
+	}
+
 	void EightBallPoolController::BindPlayerAgentRuntimeDeps() {
 		std::weak_ptr<BilliardCueBehaviour> cue;
 		if (auto resolvedCue = _cueBehaviour.Get()) {
 			cue = resolvedCue;
 		}
-		std::weak_ptr<BilliardBallBehaviour> cueBall;
-		if (Verify(!_ballsBehaviours.empty())) {
-			if (auto resolvedCueBall = _ballsBehaviours[0].Get()) {
-				cueBall = resolvedCueBall;
-			}
-		}
+		std::weak_ptr<BilliardBallBehaviour> cueBall = GetCueBall();
 		_matchLoop.BindRuntimeDeps(cue, cueBall);
 	}
 
@@ -342,12 +344,11 @@ namespace Billiard {
 		InitScoreboard();
 		InitPockets();
 		SpawnBalls();
-		SetupAimGuideLine();
-		SetupCue();
+		InitCue();
 		BindPlayerAgentRuntimeDeps();
+		InitAimGuideLine();
 		InitSubscriptions();
 		_matchLoop.OnTurnStarted(_gameState, _tablePresenter);
-		UpdateAimDisplayInputEnabled();
 
 		_gameTimestamp = sf::Time::Zero;
 		_gameState.StartNewGame();
@@ -398,21 +399,15 @@ namespace Billiard {
 		}
 	}
 
-	void EightBallPoolController::SetupCue() {
+	void EightBallPoolController::InitCue() {
 		if (auto cueBehaviour = _cueBehaviour.Get()) {
-			if (!_ballsBehaviours.empty()) {
-				if (auto ball = _ballsBehaviours[0].Get()) {
-					cueBehaviour->SetTargetBall(ball);
-				}
+			if (auto ball = GetCueBall()) {
+				cueBehaviour->SetCueBall(ball);
 			}
-			cueBehaviour->Reset();
-		}
-		if (auto aimDisplay = _aimDisplayBehaviour.Get()) {
-			aimDisplay->ResetAimPoint();
 		}
 	}
 
-	void EightBallPoolController::SetupAimGuideLine() {
+	void EightBallPoolController::InitAimGuideLine() {
 		auto aimGuideLine = _aimGuideLineBehaviour.Get();
 		auto cueBehaviour = _cueBehaviour.Get();
 		if (!aimGuideLine || !cueBehaviour) {
@@ -470,7 +465,7 @@ namespace Billiard {
 			}
 		}
 
-		if (auto ball = _ballsBehaviours[0].Get()) {
+		if (auto ball = GetCueBall()) {
 			ball->ResetBallInHand();
 		}
 		if (auto scoreboard = _scoreboardBehaviour.Get()) {
@@ -519,7 +514,7 @@ namespace Billiard {
 		}
 
 		if (_gameState.IsBallInHand()) {
-			if (auto ball = _ballsBehaviours[0].Get()) {
+			if (auto ball = GetCueBall()) {
 				ball->SetBallInHand(_tablePresenter.GetBallInHandRect());
 			}
 		}
@@ -544,7 +539,12 @@ namespace Billiard {
 		_gameState.StartNewTurn();
 		_matchLoop.OnTurnStarted(_gameState, _tablePresenter);
 
-		SetupCue();
+		if (auto cueBehaviour = _cueBehaviour.Get()) {
+			cueBehaviour->PrepareForNewTurn();
+		}
+		if (auto aimDisplay = _aimDisplayBehaviour.Get()) {
+			aimDisplay->ResetAimPoint();
+		}
 		if (auto aimGuideLine = _aimGuideLineBehaviour.Get()) {
 			aimGuideLine->Show();
 		}

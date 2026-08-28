@@ -44,8 +44,6 @@ namespace Billiard {
 	}
 
 	void EightBallPoolGame::OnBallFellInPocket(int ballNumber) {
-		assert(_phase == GamePhase::WaitingForBallsToStop);
-
 		_pocketedBalls.insert(ballNumber);
 
 		auto ballType = GetBallType(ballNumber);
