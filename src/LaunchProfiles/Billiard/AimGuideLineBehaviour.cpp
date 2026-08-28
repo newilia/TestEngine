@@ -219,6 +219,9 @@ namespace Billiard {
 	}
 
 	void AimGuideLineBehaviour::SetDirectionAngle(sf::Angle directionAngle) {
+		const float angleDelta = std::abs((directionAngle - _directionAngle).asRadians());
+		_secondaryRayLength = std::clamp(_secondaryRayLength - angleDelta * static_cast<float>(_rayLengthDecreaseSpeed),
+		    static_cast<float>(_minRayLength), static_cast<float>(_maxRayLength));
 		_directionAngle = directionAngle;
 	}
 
@@ -259,11 +262,15 @@ namespace Billiard {
 		const bool isRailHitFirst = railHit && (!ballHit || railHit->_distance < ballHit->_distance);
 
 		if (!isBallHitFirst && !isRailHitFirst) {
+			_ray2LengthFactor = 0.f;
+			_ray3LengthFactor = 0.f;
 			HideGuideVisuals();
 			return;
 		}
 
 		if (isRailHitFirst) {
+			_ray2LengthFactor = 0.f;
+			_ray3LengthFactor = 0.f;
 			if (auto imaginaryBall = _imaginaryBall.Get()) {
 				if (auto imaginaryBallNode = imaginaryBall->GetNode()) {
 					Utils::SetLocalPosToWorld(imaginaryBallNode, railHit->_ghostCenter);
@@ -298,7 +305,8 @@ namespace Billiard {
 		const sf::Vector2f collisionNormal = Utils::Normalize(ballHit->_targetCenter - ballHit->_ghostCenter);
 		const float cueTangentLength =
 		    Utils::Length(direction - collisionNormal * Utils::Dot(direction, collisionNormal));
-		const bool showCueDeflectRay = cueTangentLength > kDirectionEpsilon;
+		_ray2LengthFactor = cueTangentLength;
+		_ray3LengthFactor = std::max(0.f, Utils::Dot(direction, collisionNormal));
 
 		if (auto imaginaryBall = _imaginaryBall.Get()) {
 			if (auto imaginaryBallNode = imaginaryBall->GetNode()) {
@@ -319,10 +327,10 @@ namespace Billiard {
 		}
 
 		if (auto ray2 = _ray2.Get()) {
-			if (showCueDeflectRay) {
+			if (_ray2LengthFactor > kDirectionEpsilon) {
 				const sf::Vector2f cueTangent =
 				    Utils::Normalize(direction - collisionNormal * Utils::Dot(direction, collisionNormal));
-				PlaceRay(ray2, ballHit->_ghostCenter, cueTangent, static_cast<float>(_maxRayLength));
+				PlaceRay(ray2, ballHit->_ghostCenter, cueTangent, _secondaryRayLength * _ray2LengthFactor);
 			}
 			else if (auto rayNode = ray2->GetNode()) {
 				rayNode->SetVisible(false);
@@ -330,13 +338,51 @@ namespace Billiard {
 		}
 
 		if (auto ray3 = _ray3.Get()) {
-			PlaceRay(ray3, ballHit->_targetCenter, collisionNormal, static_cast<float>(_maxRayLength));
+			if (_ray3LengthFactor > kDirectionEpsilon) {
+				PlaceRay(ray3, ballHit->_targetCenter, collisionNormal, _secondaryRayLength * _ray3LengthFactor);
+			}
+			else if (auto rayNode = ray3->GetNode()) {
+				rayNode->SetVisible(false);
+			}
 		}
 	}
 
 	void AimGuideLineBehaviour::Show() {
 		_isGuideVisible = true;
+		_secondaryRayLength = static_cast<float>(_minRayLength);
 		Recalculate();
+	}
+
+	void AimGuideLineBehaviour::OnUpdate(const sf::Time& dt) {
+		if (!_isGuideVisible) {
+			return;
+		}
+
+		const float maxLength = static_cast<float>(_maxRayLength);
+		if (_secondaryRayLength >= maxLength - kDirectionEpsilon) {
+			return;
+		}
+
+		const float t = std::min(1.f, static_cast<float>(_rayLengthIncreaseSpeed) * dt.asSeconds());
+		_secondaryRayLength += (maxLength - _secondaryRayLength) * t;
+		ApplySecondaryRayLengths();
+	}
+
+	void AimGuideLineBehaviour::ApplySecondaryRayLengths() const {
+		const auto applyLength = [&](const RefWrapper<RectangleShapeVisual>& rayRef, float lengthFactor) {
+			const auto ray = rayRef.Get();
+			if (!ray) {
+				return;
+			}
+			const auto rayNode = ray->GetNode();
+			if (!rayNode || !rayNode->IsVisible()) {
+				return;
+			}
+			ray->SetSize({_secondaryRayLength * lengthFactor, ray->GetSize().y});
+		};
+
+		applyLength(_ray2, _ray2LengthFactor);
+		applyLength(_ray3, _ray3LengthFactor);
 	}
 
 	void AimGuideLineBehaviour::Hide() {
@@ -345,6 +391,8 @@ namespace Billiard {
 	}
 
 	void AimGuideLineBehaviour::HideGuideVisuals() {
+		_ray2LengthFactor = 0.f;
+		_ray3LengthFactor = 0.f;
 		if (auto imaginaryBall = _imaginaryBall.Get()) {
 			if (auto imaginaryBallNode = imaginaryBall->GetNode()) {
 				imaginaryBallNode->SetVisible(false);

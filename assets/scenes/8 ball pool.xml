@@ -2,7 +2,7 @@
 <Scene version="2">
   <Settings>
     <Simulation speedMultiplier="1" vsync="false" />
-    <View centerX="-247.125122" centerY="-165.588013" scale="1.66795301" />
+    <View centerX="-6.00415039" centerY="-133.756149" scale="1.59374297" />
     <Grid visible="false" size="50" basis="10" snap="true" />
     <Physics gravityX="0" gravityY="400" gravityEnabled="false" airFriction="0" substeps="4">
       <Attraction strength="50" softening="4" massCoupling="true" />
@@ -118,7 +118,7 @@
                 </Property>
                 <Property id="balls_behaviours" kind="Associative" />
                 <Property id="table_rect" kind="SceneRef" value="50035901" />
-                <Property id="turn_time_limit" kind="Float" value="10" />
+                <Property id="turn_time_limit" kind="Float" value="30" />
                 <Property id="server_host" kind="String" value="127.0.0.1" />
                 <Property id="server_port" kind="Int32" value="7777" />
               </Property>
@@ -8425,7 +8425,10 @@
                         <Property id="v" kind="SceneRef" value="3993687878" />
                       </Property>
                     </Property>
-                    <Property id="max_ray_length" kind="Int32" value="100" />
+                    <Property id="max_ray_length" kind="Int32" value="350" />
+                    <Property id="min_ray_length" kind="Int32" value="30" />
+                    <Property id="ray_length_increase_speed" kind="Float" value="0.150000006" />
+                    <Property id="ray_length_decrease_speed" kind="Int32" value="10000" />
                   </Property>
                 </Properties>
               </Behaviour>
@@ -8452,7 +8455,7 @@
                 <Visual type="Engine.RectangleShapeVisual" entityId="3797692919">
                   <Properties>
                     <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                    <Property id="get_fill_color" kind="Color" r="255" g="255" b="255" a="86" />
+                    <Property id="get_fill_color" kind="Color" r="255" g="255" b="255" a="77" />
                     <Property id="get_outline_color" kind="Color" r="255" g="255" b="255" a="0" />
                     <Property id="get_outline_thickness" kind="Float" value="0" />
                     <Property id="get_position" kind="Vec2f" x="0" y="0" />
@@ -8487,9 +8490,9 @@
                 <Visual type="Engine.RectangleShapeVisual" entityId="2361175844">
                   <Properties>
                     <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                    <Property id="get_fill_color" kind="Color" r="255" g="255" b="255" a="86" />
-                    <Property id="get_outline_color" kind="Color" r="255" g="255" b="255" a="0" />
-                    <Property id="get_outline_thickness" kind="Float" value="0" />
+                    <Property id="get_fill_color" kind="Color" r="255" g="255" b="255" a="204" />
+                    <Property id="get_outline_color" kind="Color" r="0" g="0" b="0" a="89" />
+                    <Property id="get_outline_thickness" kind="Float" value="2" />
                     <Property id="get_position" kind="Vec2f" x="0" y="0" />
                     <Property id="get_rotation" kind="Float" value="0" />
                     <Property id="get_scale" kind="Vec2f" x="1" y="1" />
@@ -8522,9 +8525,9 @@
                 <Visual type="Engine.RectangleShapeVisual" entityId="1342484733">
                   <Properties>
                     <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                    <Property id="get_fill_color" kind="Color" r="255" g="255" b="255" a="86" />
-                    <Property id="get_outline_color" kind="Color" r="255" g="255" b="255" a="0" />
-                    <Property id="get_outline_thickness" kind="Float" value="0" />
+                    <Property id="get_fill_color" kind="Color" r="255" g="255" b="255" a="204" />
+                    <Property id="get_outline_color" kind="Color" r="0" g="0" b="0" a="89" />
+                    <Property id="get_outline_thickness" kind="Float" value="2" />
                     <Property id="get_position" kind="Vec2f" x="0" y="0" />
                     <Property id="get_rotation" kind="Float" value="0" />
                     <Property id="get_scale" kind="Vec2f" x="1" y="1" />

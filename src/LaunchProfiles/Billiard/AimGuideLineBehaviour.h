@@ -26,7 +26,10 @@ namespace Billiard {
 		void Show();
 		void Hide();
 
+		void OnUpdate(const sf::Time& dt) override;
+
 	private:
+		void ApplySecondaryRayLengths() const;
 		void HideGuideVisuals();
 		void PlaceRay(const std::shared_ptr<RectangleShapeVisual>& visual, const sf::Vector2f& worldStart,
 		    const sf::Vector2f& worldDir, float length) const;
@@ -43,13 +46,22 @@ namespace Billiard {
 		/// @property
 		std::vector<RefWrapper<RectangleShapeVisual>> _tableRails;
 		/// @property(minValue=0)
-		int _maxRayLength = 100;
+		int _maxRayLength = 300;
+		/// @property(minValue=0)
+		int _minRayLength = 100;
+		/// @property(minValue=0)
+		float _rayLengthIncreaseSpeed = 10;
+		/// @property(minValue=0)
+		int _rayLengthDecreaseSpeed = 10;
 
 	private:
 		std::vector<std::weak_ptr<BilliardBallBehaviour>> _balls;
 		int _cueBallIndex = 0;
 		sf::Angle _directionAngle{};
 		bool _isGuideVisible = true;
+		float _secondaryRayLength = 100.f;
+		float _ray2LengthFactor = 0.f;
+		float _ray3LengthFactor = 0.f;
 	};
 
 } // namespace Billiard
