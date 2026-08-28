@@ -2,7 +2,7 @@
 <Scene version="2">
   <Settings>
     <Simulation speedMultiplier="1" vsync="false" />
-    <View centerX="-278.770142" centerY="-286.231384" scale="2.17811203" />
+    <View centerX="48.1053467" centerY="-260.662231" scale="1.66795301" />
     <Grid visible="false" size="50" basis="10" snap="true" />
     <Physics gravityX="0" gravityY="400" gravityEnabled="false" airFriction="0" substeps="4">
       <Attraction strength="50" softening="4" massCoupling="true" />
@@ -92,6 +92,7 @@
             <Properties>
               <Property id="eight_ball_pool_controller" kind="Object">
                 <Property id="cue_behaviour" kind="SceneRef" value="2568429161" />
+                <Property id="aim_guide_line_behaviour" kind="SceneRef" value="644508645" />
                 <Property id="scoreboard_behaviour" kind="SceneRef" value="3074770674" />
                 <Property id="aim_display_behaviour" kind="SceneRef" value="2812427044" />
                 <Property id="ball_spawn_behaviour" kind="SceneRef" value="519174997" />
@@ -117,7 +118,9 @@
                 </Property>
                 <Property id="balls_behaviours" kind="Associative" />
                 <Property id="table_rect" kind="SceneRef" value="50035901" />
-                <Property id="turn_time_limit" kind="Float" value="600" />
+                <Property id="turn_time_limit" kind="Float" value="10" />
+                <Property id="server_host" kind="String" value="130.110.1.72" />
+                <Property id="server_port" kind="Int32" value="7777" />
               </Property>
             </Properties>
           </Behaviour>
@@ -8215,7 +8218,6 @@
                     <Property id="tip_physics_body" kind="SceneRef" value="3038546210" />
                     <Property id="visual" kind="SceneRef" value="3184215626" />
                     <Property id="overlap_group_on_release" kind="Int32" value="0" />
-                    <Property id="target_ball" kind="SceneRef" value="2597099577" />
                     <Property id="lateral_position" kind="Float" value="0" />
                     <Property id="distance_from_target" kind="Float" value="50" />
                     <Property id="direction_angle" kind="Float" value="0" />
@@ -8333,10 +8335,50 @@
                 <Behaviours />
                 <Children />
               </Node>
-              <Node entityId="441658810">
+            </Children>
+          </Node>
+          <Node entityId="2108788558">
+            <Properties>
+              <Property id="scene_node" kind="Object">
+                <Property id="name" kind="String" value="Guide lines" />
+                <Property id="is_enabled" kind="Bool" value="true" />
+                <Property id="is_visible" kind="Bool" value="true" />
+              </Property>
+            </Properties>
+            <Transform type="Engine.Transform">
+              <Properties>
+                <Property id="transform" kind="Object">
+                  <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                  <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                  <Property id="get_rotation" kind="Float" value="0" />
+                  <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                </Property>
+              </Properties>
+            </Transform>
+            <SortingStrategy type="Engine.DefaultSortingStrategy" entityId="3170866209">
+              <Properties>
+                <Property id="sort_key" kind="Int32" value="50" />
+                <Property id="type" kind="Enum" value="0" name="Relative" />
+              </Properties>
+            </SortingStrategy>
+            <Behaviours>
+              <Behaviour type="Billiard.AimGuideLineBehaviour" entityId="644508645">
+                <Properties>
+                  <Property id="aim_guide_line_behaviour" kind="Object">
+                    <Property id="imaginary_ball" kind="SceneRef" value="2346795157" />
+                    <Property id="ray1" kind="SceneRef" value="3797692919" />
+                    <Property id="ray2" kind="SceneRef" value="2361175844" />
+                    <Property id="ray3" kind="SceneRef" value="1342484733" />
+                    <Property id="max_ray_length" kind="Int32" value="100" />
+                  </Property>
+                </Properties>
+              </Behaviour>
+            </Behaviours>
+            <Children>
+              <Node entityId="3487351937">
                 <Properties>
                   <Property id="scene_node" kind="Object">
-                    <Property id="name" kind="String" value="Guideline" />
+                    <Property id="name" kind="String" value="Ray1" />
                     <Property id="is_enabled" kind="Bool" value="true" />
                     <Property id="is_visible" kind="Bool" value="true" />
                   </Property>
@@ -8351,18 +8393,126 @@
                     </Property>
                   </Properties>
                 </Transform>
-                <Visual type="Engine.RectangleShapeVisual" entityId="2258509197">
+                <Visual type="Engine.RectangleShapeVisual" entityId="3797692919">
                   <Properties>
                     <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                    <Property id="get_fill_color" kind="Color" r="255" g="255" b="255" a="119" />
-                    <Property id="get_outline_color" kind="Color" r="255" g="255" b="255" a="255" />
+                    <Property id="get_fill_color" kind="Color" r="255" g="255" b="255" a="86" />
+                    <Property id="get_outline_color" kind="Color" r="255" g="255" b="255" a="0" />
                     <Property id="get_outline_thickness" kind="Float" value="0" />
                     <Property id="get_position" kind="Vec2f" x="0" y="0" />
                     <Property id="get_rotation" kind="Float" value="0" />
                     <Property id="get_scale" kind="Vec2f" x="1" y="1" />
-                    <Property id="get_origin" kind="Vec2f" x="0" y="1" />
+                    <Property id="get_origin" kind="Vec2f" x="0" y="1.5" />
                     <Property id="get_miter_limit" kind="Float" value="10" />
-                    <Property id="get_size" kind="Vec2f" x="3000" y="2" />
+                    <Property id="get_size" kind="Vec2f" x="0" y="3" />
+                  </Properties>
+                </Visual>
+                <Behaviours />
+                <Children />
+              </Node>
+              <Node entityId="1943405676">
+                <Properties>
+                  <Property id="scene_node" kind="Object">
+                    <Property id="name" kind="String" value="Ray2" />
+                    <Property id="is_enabled" kind="Bool" value="true" />
+                    <Property id="is_visible" kind="Bool" value="true" />
+                  </Property>
+                </Properties>
+                <Transform type="Engine.Transform">
+                  <Properties>
+                    <Property id="transform" kind="Object">
+                      <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                      <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                      <Property id="get_rotation" kind="Float" value="0" />
+                      <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    </Property>
+                  </Properties>
+                </Transform>
+                <Visual type="Engine.RectangleShapeVisual" entityId="2361175844">
+                  <Properties>
+                    <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                    <Property id="get_fill_color" kind="Color" r="255" g="255" b="255" a="86" />
+                    <Property id="get_outline_color" kind="Color" r="255" g="255" b="255" a="0" />
+                    <Property id="get_outline_thickness" kind="Float" value="0" />
+                    <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_rotation" kind="Float" value="0" />
+                    <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                    <Property id="get_origin" kind="Vec2f" x="0" y="1.5" />
+                    <Property id="get_miter_limit" kind="Float" value="10" />
+                    <Property id="get_size" kind="Vec2f" x="0" y="3" />
+                  </Properties>
+                </Visual>
+                <Behaviours />
+                <Children />
+              </Node>
+              <Node entityId="830913226">
+                <Properties>
+                  <Property id="scene_node" kind="Object">
+                    <Property id="name" kind="String" value="Ray3" />
+                    <Property id="is_enabled" kind="Bool" value="true" />
+                    <Property id="is_visible" kind="Bool" value="true" />
+                  </Property>
+                </Properties>
+                <Transform type="Engine.Transform">
+                  <Properties>
+                    <Property id="transform" kind="Object">
+                      <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                      <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                      <Property id="get_rotation" kind="Float" value="0" />
+                      <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    </Property>
+                  </Properties>
+                </Transform>
+                <Visual type="Engine.RectangleShapeVisual" entityId="1342484733">
+                  <Properties>
+                    <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                    <Property id="get_fill_color" kind="Color" r="255" g="255" b="255" a="86" />
+                    <Property id="get_outline_color" kind="Color" r="255" g="255" b="255" a="0" />
+                    <Property id="get_outline_thickness" kind="Float" value="0" />
+                    <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_rotation" kind="Float" value="0" />
+                    <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                    <Property id="get_origin" kind="Vec2f" x="0" y="1.5" />
+                    <Property id="get_miter_limit" kind="Float" value="10" />
+                    <Property id="get_size" kind="Vec2f" x="0" y="3" />
+                  </Properties>
+                </Visual>
+                <Behaviours />
+                <Children />
+              </Node>
+              <Node entityId="4239730026">
+                <Properties>
+                  <Property id="scene_node" kind="Object">
+                    <Property id="name" kind="String" value="Imaginary ball" />
+                    <Property id="is_enabled" kind="Bool" value="true" />
+                    <Property id="is_visible" kind="Bool" value="false" />
+                  </Property>
+                </Properties>
+                <Transform type="Engine.Transform">
+                  <Properties>
+                    <Property id="transform" kind="Object">
+                      <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                      <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                      <Property id="get_rotation" kind="Float" value="0" />
+                      <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                    </Property>
+                  </Properties>
+                </Transform>
+                <Visual type="Engine.CircleShapeVisual" entityId="2346795157">
+                  <Properties>
+                    <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                    <Property id="get_fill_color" kind="Color" r="255" g="255" b="255" a="69" />
+                    <Property id="get_outline_color" kind="Color" r="255" g="255" b="255" a="91" />
+                    <Property id="get_outline_thickness" kind="Float" value="-3" />
+                    <Property id="get_position" kind="Vec2f" x="0" y="0" />
+                    <Property id="get_rotation" kind="Float" value="0" />
+                    <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                    <Property id="get_origin" kind="Vec2f" x="20" y="20" />
+                    <Property id="get_miter_limit" kind="Float" value="10" />
+                    <Property id="get_radius" kind="Float" value="20" />
+                    <Property id="get_point_count" kind="Int32" value="64" />
+                    <Property id="get_draw_sector" kind="Bool" value="false" />
+                    <Property id="get_sector_color" kind="Color" r="0" g="0" b="0" a="255" />
                   </Properties>
                 </Visual>
                 <Behaviours />

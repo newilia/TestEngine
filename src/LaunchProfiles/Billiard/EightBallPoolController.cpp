@@ -105,6 +105,9 @@ namespace Billiard {
 			Subscribe(cueBehaviour->GetOnHitSignal(), [this]() {
 				OnCueHit();
 			});
+			Subscribe(cueBehaviour->GetOnAimChangedSignal(), [this]() {
+				OnCueAimChanged();
+			});
 		}
 
 		for (auto& [ballIndex, ballBehRef] : _ballsBehaviours) {
@@ -339,7 +342,8 @@ namespace Billiard {
 		InitScoreboard();
 		InitPockets();
 		SpawnBalls();
-		ResetCue();
+		SetupAimGuideLine();
+		SetupCue();
 		BindPlayerAgentRuntimeDeps();
 		InitSubscriptions();
 		_matchLoop.OnTurnStarted(_gameState, _tablePresenter);
@@ -394,7 +398,7 @@ namespace Billiard {
 		}
 	}
 
-	void EightBallPoolController::ResetCue() {
+	void EightBallPoolController::SetupCue() {
 		if (auto cueBehaviour = _cueBehaviour.Get()) {
 			if (!_ballsBehaviours.empty()) {
 				if (auto ball = _ballsBehaviours[0].Get()) {
@@ -406,6 +410,23 @@ namespace Billiard {
 		if (auto aimDisplay = _aimDisplayBehaviour.Get()) {
 			aimDisplay->ResetAimPoint();
 		}
+	}
+
+	void EightBallPoolController::SetupAimGuideLine() {
+		auto aimGuideLine = _aimGuideLineBehaviour.Get();
+		auto cueBehaviour = _cueBehaviour.Get();
+		if (!aimGuideLine || !cueBehaviour) {
+			return;
+		}
+		aimGuideLine->SetCueBallIndex(0);
+		aimGuideLine->SetDirectionAngle(cueBehaviour->GetActualBallDirectionAngle());
+		aimGuideLine->Show();
+
+		std::vector<std::weak_ptr<BilliardBallBehaviour>> balls;
+		for (const auto& [ballNumber, ballRef] : _ballsBehaviours) {
+			balls.push_back(ballRef.Get());
+		}
+		aimGuideLine->SetBalls(balls);
 	}
 
 	void EightBallPoolController::CheckBallsOutOfTableBounds() {
@@ -462,6 +483,10 @@ namespace Billiard {
 		if (auto cue = _cueBehaviour.Get()) {
 			cue->PlayHideAnimation();
 		}
+		if (auto aimGuideLine = _aimGuideLineBehaviour.Get()) {
+			aimGuideLine->Hide();
+		}
+
 		_isWaitingForBallsToStop = true;
 
 		if (IsPassiveTurn()) {
@@ -518,7 +543,12 @@ namespace Billiard {
 		_remainingTurnTime = _turnTimeLimit;
 		_gameState.StartNewTurn();
 		_matchLoop.OnTurnStarted(_gameState, _tablePresenter);
-		ResetCue();
+
+		SetupCue();
+		if (auto aimGuideLine = _aimGuideLineBehaviour.Get()) {
+			aimGuideLine->Show();
+		}
+
 		UpdateScoreboard();
 		UpdateAimDisplayInputEnabled();
 	}
@@ -579,6 +609,10 @@ namespace Billiard {
 		if (auto cueBehaviour = _cueBehaviour.Get()) {
 			cueBehaviour->PlayHideAnimation();
 		}
+		if (auto aimGuideLine = _aimGuideLineBehaviour.Get()) {
+			aimGuideLine->Hide();
+		}
+
 		if (IsPassiveTurn()) {
 			return;
 		}
@@ -597,12 +631,25 @@ namespace Billiard {
 			cueBehaviour->PlayShowAnimation();
 			cueBehaviour->ApplyCueTransform();
 		}
+		if (auto aimGuideLine = _aimGuideLineBehaviour.Get()) {
+			aimGuideLine->Show();
+		}
+
 		if (IsPassiveTurn()) {
 			return;
 		}
 		SendTableStateUpdateIfNeeded();
 		if (_onlineSession) {
 			_onlineSession->SendBallInHandDragEnded(_gameState.GetActivePlayerIndex());
+		}
+	}
+
+	void EightBallPoolController::OnCueAimChanged() {
+		auto aimGuideLine = _aimGuideLineBehaviour.Get();
+		auto cueBehaviour = _cueBehaviour.Get();
+		if (aimGuideLine && cueBehaviour) {
+			aimGuideLine->SetDirectionAngle(cueBehaviour->GetActualBallDirectionAngle());
+			aimGuideLine->Recalculate();
 		}
 	}
 } // namespace Billiard

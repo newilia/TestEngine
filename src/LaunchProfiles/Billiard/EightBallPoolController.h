@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AimGuideLineBehaviour.h"
 #include "BilliardBallAimDisplayBehaviour.h"
 #include "BilliardBallBehaviour.h"
 #include "BilliardBallSpawnBehaviour.h"
@@ -43,7 +44,8 @@ namespace Billiard {
 	private:
 		void InitSubscriptions();
 		void StartNewGame();
-		void ResetCue();
+		void SetupCue();
+		void SetupAimGuideLine();
 		void SpawnBalls();
 		void InitPockets();
 		void InitScoreboard();
@@ -82,10 +84,13 @@ namespace Billiard {
 		void CheckBallsOutOfTableBounds();
 		void UpdateCountdownTimer(float deltaSeconds);
 		void OnTurnTimeOver();
+		void OnCueAimChanged();
 
 	private:
 		/// @property
 		RefWrapper<BilliardCueBehaviour> _cueBehaviour;
+		/// @property
+		RefWrapper<AimGuideLineBehaviour> _aimGuideLineBehaviour;
 		/// @property
 		RefWrapper<BilliardScoreboardBehaviour> _scoreboardBehaviour;
 		/// @property

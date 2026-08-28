@@ -24,9 +24,9 @@ namespace Billiard {
 
 	public:
 		void SetInputEnabled(bool enabled);
-		[[nodiscard]] bool IsInputEnabled() const;
-		[[nodiscard]] bool CanInteract() const;
-		[[nodiscard]] bool HitTestWorld(const sf::Vector2f& worldPoint) const;
+		bool IsInputEnabled() const;
+		bool CanInteract() const;
+		bool HitTestWorld(const sf::Vector2f& worldPoint) const;
 		void BeginAiming();
 		void StopAiming();
 		void AimAt(const sf::Vector2f& worldPoint);
@@ -35,7 +35,7 @@ namespace Billiard {
 		void TryReleaseShot();
 		void ProcessPointerMove(const sf::Vector2f& worldPoint);
 		void ApplyShotIntent(const TurnIntent& intent);
-		[[nodiscard]] TurnIntent BuildTurnIntent(int playerIndex, std::uint32_t turnId) const;
+		TurnIntent BuildTurnIntent(int playerIndex, std::uint32_t turnId) const;
 
 		void SetTargetBall(const std::shared_ptr<BilliardBallBehaviour>& ballBehaviour);
 		void AbortAiming();
@@ -43,6 +43,8 @@ namespace Billiard {
 
 		Signal<>& GetOnReleaseSignal() const;
 		Signal<>& GetOnHitSignal() const;
+		Signal<>& GetOnAimChangedSignal() const;
+
 		void SetLateralPosition(float position);
 		void SetVerticalSpin(float spin);
 		void SetDirectionAngle(sf::Angle angle);
@@ -53,9 +55,10 @@ namespace Billiard {
 		void PlayHideAnimation();
 		void PlayShowAnimation();
 
+		sf::Angle GetActualBallDirectionAngle() const;
+
 	private:
 		void PullBack(const sf::Vector2f& pointerWorldPoint);
-		void SetDirection(sf::Angle direction);
 		void Release();
 		void OnTipCollide(const IntersectionDetails& intersection);
 		std::shared_ptr<SceneNode> GetTargetBallNode() const;
@@ -67,13 +70,11 @@ namespace Billiard {
 		RefWrapper<SpriteVisual> _visual;
 		/// @property(minValue=0, maxValue=7)
 		int _overlapGroupOnRelease = 0;
-		/// _overlapGroupOnRelease
-		RefWrapper<BilliardBallBehaviour> _targetBall;
 		/// @property
 		float _lateralPosition = 0.f;
 		/// @property
 		float _distanceFromTarget = 0.f;
-		/// @property(setter=SetDirection)
+		/// @property(setter=SetDirectionAngle)
 		sf::Angle _directionAngle{};
 		/// @property
 		float _shootAcceleration = 5.f;
@@ -97,6 +98,7 @@ namespace Billiard {
 		float _minDistanceFromTarget = 50.f;
 
 	private:
+		RefWrapper<BilliardBallBehaviour> _targetBall;
 		bool _inputEnabled = false;
 		bool _isAiming = false;
 		bool _isPullingBack = false;
@@ -108,6 +110,7 @@ namespace Billiard {
 		Signal<const IntersectionDetails&>::Subscription _tipCollideSubscription;
 		mutable Signal<> _onReleaseSignal;
 		mutable Signal<> _onHitSignal;
+		mutable Signal<> _onAimChangedSignal;
 		float _animationProgress = 0.f;
 		bool _isHiding = false;
 		bool _isShowing = false;

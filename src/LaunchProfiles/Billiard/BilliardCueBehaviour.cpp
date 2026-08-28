@@ -47,7 +47,7 @@ namespace Billiard {
 			return;
 		}
 
-		SetDirection(sf::radians(std::atan2(delta.y, delta.x)));
+		SetDirectionAngle(sf::radians(std::atan2(delta.y, delta.x)));
 	}
 
 	void BilliardCueBehaviour::BeginPullBack(const sf::Vector2f& worldPoint) {
@@ -77,7 +77,7 @@ namespace Billiard {
 	}
 
 	void BilliardCueBehaviour::ApplyShotIntent(const TurnIntent& intent) {
-		SetDirection(intent.directionAngle);
+		SetDirectionAngle(intent.directionAngle);
 		SetLateralPosition(intent.lateralSpin);
 		SetVerticalSpin(intent.verticalSpin);
 		SetDistanceFromTarget(intent.pullDistance);
@@ -136,11 +136,6 @@ namespace Billiard {
 		ResetDistanceFromTarget();
 	}
 
-	void BilliardCueBehaviour::SetDirection(sf::Angle angle) {
-		_directionAngle = angle;
-		ApplyCueTransform();
-	}
-
 	void BilliardCueBehaviour::SetDistanceFromTarget(float distance) {
 		_distanceFromTarget = std::clamp(distance, _minDistanceFromTarget, _maxDistanceFromTarget);
 		ApplyCueTransform();
@@ -149,10 +144,7 @@ namespace Billiard {
 	void BilliardCueBehaviour::SetLateralPosition(float position) {
 		_lateralPosition = position;
 		ApplyCueTransform();
-	}
-
-	void BilliardCueBehaviour::SetDirectionAngle(sf::Angle angle) {
-		SetDirection(angle);
+		_onAimChangedSignal.Emit();
 	}
 
 	void BilliardCueBehaviour::ApplyCueTransform() {
@@ -172,6 +164,12 @@ namespace Billiard {
 
 	void BilliardCueBehaviour::SetVerticalSpin(float spin) {
 		_verticalSpin = spin;
+	}
+
+	void BilliardCueBehaviour::SetDirectionAngle(sf::Angle angle) {
+		_directionAngle = angle;
+		ApplyCueTransform();
+		_onAimChangedSignal.Emit();
 	}
 
 	bool BilliardCueBehaviour::HitTestWorld(const sf::Vector2f& worldPoint) const {
@@ -254,12 +252,20 @@ namespace Billiard {
 		_onHitSignal.Emit();
 	}
 
+	sf::Angle BilliardCueBehaviour::GetActualBallDirectionAngle() const {
+		return _directionAngle;
+	}
+
 	Signal<>& BilliardCueBehaviour::GetOnReleaseSignal() const {
 		return _onReleaseSignal;
 	}
 
 	Signal<>& BilliardCueBehaviour::GetOnHitSignal() const {
 		return _onHitSignal;
+	}
+
+	Signal<>& BilliardCueBehaviour::GetOnAimChangedSignal() const {
+		return _onAimChangedSignal;
 	}
 
 	void BilliardCueBehaviour::PlayHideAnimation() {
@@ -290,7 +296,10 @@ namespace Billiard {
 		_isAiming = false;
 		_isPullingBack = false;
 		_isShooting = false;
-		SetDistanceFromTarget(_minDistanceFromTarget);
+
+		if (auto tipPhysicsBody = _tipPhysicsBody.Get()) {
+			tipPhysicsBody->GetOverlapGroups().set(_overlapGroupOnRelease, false);
+		}
 	}
 
 	void BilliardCueBehaviour::ResetDistanceFromTarget() {
@@ -301,6 +310,7 @@ namespace Billiard {
 		_isAiming = false;
 		_isPullingBack = false;
 		_isShooting = false;
+		ResetDistanceFromTarget();
 		PlayShowAnimation();
 
 		if (auto tipPhysicsBody = _tipPhysicsBody.Get()) {
