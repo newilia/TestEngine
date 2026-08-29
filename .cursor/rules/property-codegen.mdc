@@ -51,7 +51,7 @@ Scanner picks classes from headers under **`src/`** (excluding **`Codegen/`**) t
 
 ## `META_ENUM` (`enum class` in the inspector)
 
-- On a **single line** in a header (same file as the reflecting class, typically inside the same `namespace` as the class): `META_ENUM(MyEnumType, Value1, Value2, Value3);` — expands to `enum class MyEnumType { Value1, Value2, Value3 }` via `Engine/Core/MetaClass.h`. Enumerators are comma-separated identifiers only (no `= value` in v1).
+- On one or more lines in a header (same file as the reflecting class, typically inside the same `namespace` as the class): `META_ENUM(MyEnumType, Value1, Value2, Value3);` — expands to `enum class MyEnumType { Value1, Value2, Value3 }` via `Engine/Core/MetaClass.h`. Enumerators are comma-separated identifiers only (no `= value` in v1). Line breaks and indentation inside the macro are allowed; the scanner joins continuation lines before parsing.
 - The scanner builds a **fully qualified** registration key: current `namespace` stack + each **nested `class`/`struct`** scope on the block stack + the enum name (e.g. `MyNs::MyEnum`, or `Outer::Inner::NestedEnum` when `META_ENUM` appears inside nested classes).
 - Use a reflected field or `@getter` / `@setter` whose type resolves to that enum:
   - If the field type is **exactly** the fq name as registered, it matches.

@@ -61,6 +61,8 @@ namespace Billiard {
 		/// @property
 		RefWrapper<SceneNode> _player2pocketedBallsParent;
 		/// @property
+		RefWrapper<SceneNode> _commonPocketedBallsParent;
+		/// @property
 		int _pocketdBallWidth = 50;
 		/// @property(tooltip="fmt placeholder for ball id")
 		std::string _pocketedBallTexturePathMask = "resources/textures/8ball/ball_{}.png";

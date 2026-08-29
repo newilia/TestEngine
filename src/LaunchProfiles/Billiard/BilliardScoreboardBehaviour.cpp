@@ -18,12 +18,20 @@ namespace Billiard {
 		_playerBallTypes.fill(BallType::Undefined);
 
 		if (auto parent = _player1pocketedBallsParent.Get()) {
-			for (auto child : parent->GetChildren()) {
+			const auto children = parent->GetChildren();
+			for (auto child : children) {
 				child->RemoveFromParent();
 			}
 		}
 		if (auto parent = _player2pocketedBallsParent.Get()) {
-			for (auto child : parent->GetChildren()) {
+			const auto children = parent->GetChildren();
+			for (auto child : children) {
+				child->RemoveFromParent();
+			}
+		}
+		if (auto parent = _commonPocketedBallsParent.Get()) {
+			const auto children = parent->GetChildren();
+			for (auto child : children) {
 				child->RemoveFromParent();
 			}
 		}
@@ -92,6 +100,13 @@ namespace Billiard {
 		if (ballType == _playerBallTypes[playerIndex]) {
 			return;
 		}
+		if (auto parent = _commonPocketedBallsParent.Get()) {
+			const auto children = parent->GetChildren();
+			for (auto child : children) {
+				child->RemoveFromParent();
+			}
+		}
+
 		_playerBallTypes[playerIndex] = ballType;
 		CreatePocketedBalls(playerIndex);
 
@@ -111,6 +126,10 @@ namespace Billiard {
 	}
 
 	void BilliardScoreboardBehaviour::OnBallPocketed(int ballNumber) {
+		if (ballNumber == 0 || ballNumber == 8) {
+			return;
+		}
+
 		_pocketedBalls.insert(ballNumber);
 
 		auto ballType = Utils::GetBallType(ballNumber);
@@ -119,6 +138,9 @@ namespace Billiard {
 		}
 		else if (ballType == _playerBallTypes[1]) {
 			AddPocketedBall(_player2pocketedBallsParent.Get(), ballNumber);
+		}
+		else {
+			AddPocketedBall(_commonPocketedBallsParent.Get(), ballNumber);
 		}
 	}
 
