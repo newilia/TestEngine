@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<SceneObject version="1">
+  <Node entityId="1090916461">
+    <Properties>
+      <Property id="scene_node" kind="Object">
+        <Property id="name" kind="String" value="Pool ball" />
+        <Property id="is_enabled" kind="Bool" value="true" />
+        <Property id="is_visible" kind="Bool" value="true" />
+      </Property>
+    </Properties>
+    <Transform type="Engine.Transform">
+      <Properties>
+        <Property id="transform" kind="Object">
+          <Property id="get_position" kind="Vec2f" x="0" y="0" />
+          <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+          <Property id="get_rotation" kind="Float" value="0" />
+          <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+        </Property>
+      </Properties>
+    </Transform>
+    <Behaviours />
+    <Children>
+      <Node entityId="2298085435">
+        <Properties>
+          <Property id="scene_node" kind="Object">
+            <Property id="name" kind="String" value="Visual" />
+            <Property id="is_enabled" kind="Bool" value="true" />
+            <Property id="is_visible" kind="Bool" value="true" />
+          </Property>
+        </Properties>
+        <Transform type="Engine.Transform">
+          <Properties>
+            <Property id="transform" kind="Object">
+              <Property id="get_position" kind="Vec2f" x="0" y="0" />
+              <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+              <Property id="get_rotation" kind="Float" value="0" />
+              <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+            </Property>
+          </Properties>
+        </Transform>
+        <Visual type="Engine.ComposedSurfaceVisual" entityId="1082508573">
+          <Properties>
+            <Property id="tap_handling_enabled" kind="Bool" value="false" />
+            <Property id="contributors" kind="Sequence">
+              <Property id="0" kind="Object">
+                <Property id="v" kind="SceneRef" value="3850518943" />
+              </Property>
+              <Property id="1" kind="Object">
+                <Property id="v" kind="SceneRef" value="3290324261" />
+              </Property>
+            </Property>
+            <Property id="size" kind="Vec2f" x="57.2000008" y="57.2000008" />
+            <Property id="origin" kind="Vec2f" x="28.6000004" y="28.6000004" />
+          </Properties>
+        </Visual>
+        <SortingStrategy type="Engine.DefaultSortingStrategy" entityId="4224520210">
+          <Properties>
+            <Property id="sort_key" kind="Int32" value="2" />
+            <Property id="type" kind="Enum" value="0" name="Relative" />
+          </Properties>
+        </SortingStrategy>
+        <Behaviours>
+          <Behaviour type="Engine.TiledTextureContributorBehaviour" entityId="3850518943">
+            <Properties>
+              <Property id="tiled_texture_contributor_behaviour" kind="Object">
+                <Property id="is_enabled" kind="Bool" value="true" />
+                <Property id="texture_path" kind="String" value="resources/textures/8ball/ball_1.png" />
+                <Property id="tiling" kind="Vec2f" x="1" y="1" />
+                <Property id="uv_offset" kind="Vec2f" x="-0.25" y="0" />
+                <Property id="tint" kind="Color" r="255" g="255" b="255" a="255" />
+              </Property>
+            </Properties>
+          </Behaviour>
+          <Behaviour type="Engine.SphereProjectionContributorBehaviour" entityId="3290324261">
+            <Properties>
+              <Property id="sphere_projection_contributor_behaviour" kind="Object">
+                <Property id="is_enabled" kind="Bool" value="true" />
+                <Property id="sphere_uv_offset" kind="Vec2f" x="0" y="0" />
+                <Property id="unwrap" kind="Enum" value="0" name="Horizontal" />
+                <Property id="get_sphere_rotation_yaw" kind="Float" value="0" />
+                <Property id="get_sphere_rotation_pitch" kind="Float" value="0" />
+                <Property id="get_sphere_rotation_roll" kind="Float" value="0" />
+              </Property>
+            </Properties>
+          </Behaviour>
+        </Behaviours>
+        <Children>
+          <Node entityId="1511734741">
+            <Properties>
+              <Property id="scene_node" kind="Object">
+                <Property id="name" kind="String" value="" />
+                <Property id="is_enabled" kind="Bool" value="true" />
+                <Property id="is_visible" kind="Bool" value="true" />
+              </Property>
+            </Properties>
+            <Transform type="Engine.Transform">
+              <Properties>
+                <Property id="transform" kind="Object">
+                  <Property id="get_position" kind="Vec2f" x="-31.7999992" y="-32.9000015" />
+                  <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+                  <Property id="get_rotation" kind="Float" value="0" />
+                  <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+                </Property>
+              </Properties>
+            </Transform>
+            <Visual type="Engine.SpriteVisual" entityId="130769093">
+              <Properties>
+                <Property id="tap_handling_enabled" kind="Bool" value="false" />
+                <Property id="get_texture_path" kind="String" value="resources/textures/ball_white.png" />
+                <Property id="get_size" kind="Vec2f" x="63.2999992" y="64.1999969" />
+                <Property id="get_texture_rect" kind="Object" />
+                <Property id="get_color" kind="Color" r="255" g="255" b="255" a="106" />
+              </Properties>
+            </Visual>
+            <Behaviours />
+            <Children />
+          </Node>
+        </Children>
+      </Node>
+    </Children>
+  </Node>
+</SceneObject>

@@ -2,7 +2,9 @@
 
 #include "BilliardScoreboardBehaviour.generated.hpp"
 #include "EightBallPoolGame.h"
+#include "Engine/Behaviour/ComposedSurface/TiledTextureContributorBehaviour.h"
 #include "Engine/Visual/TextVisual.h"
+#include "PoolBilliardUtils.h"
 
 namespace Billiard {
 
@@ -12,6 +14,19 @@ namespace Billiard {
 		SetPlayerBallType(0, BallType::Undefined);
 		SetPlayerBallType(1, BallType::Undefined);
 		ShowMessage("");
+		_pocketedBalls.clear();
+		_playerBallTypes.fill(BallType::Undefined);
+
+		if (auto parent = _player1pocketedBallsParent.Get()) {
+			for (auto child : parent->GetChildren()) {
+				child->RemoveFromParent();
+			}
+		}
+		if (auto parent = _player2pocketedBallsParent.Get()) {
+			for (auto child : parent->GetChildren()) {
+				child->RemoveFromParent();
+			}
+		}
 	}
 
 	void BilliardScoreboardBehaviour::SetPlayerName(int playerIndex, const std::string& name) {
@@ -74,6 +89,12 @@ namespace Billiard {
 	}
 
 	void BilliardScoreboardBehaviour::SetPlayerBallType(int playerIndex, BallType ballType) {
+		if (ballType == _playerBallTypes[playerIndex]) {
+			return;
+		}
+		_playerBallTypes[playerIndex] = ballType;
+		CreatePocketedBalls(playerIndex);
+
 		auto textRef = playerIndex == 0 ? _player1ballTypeTextRef : _player2ballTypeTextRef;
 		if (auto text = textRef.Get()) {
 			std::string str;
@@ -88,4 +109,43 @@ namespace Billiard {
 			text->SetString(str);
 		}
 	}
+
+	void BilliardScoreboardBehaviour::OnBallPocketed(int ballNumber) {
+		_pocketedBalls.insert(ballNumber);
+
+		auto ballType = Utils::GetBallType(ballNumber);
+		if (ballType == _playerBallTypes[0]) {
+			AddPocketedBall(_player1pocketedBallsParent.Get(), ballNumber);
+		}
+		else if (ballType == _playerBallTypes[1]) {
+			AddPocketedBall(_player2pocketedBallsParent.Get(), ballNumber);
+		}
+	}
+
+	void BilliardScoreboardBehaviour::CreatePocketedBalls(int playerIndex) {
+		auto ballType = _playerBallTypes[playerIndex];
+		for (int ballNumber : _pocketedBalls) {
+			if (Utils::GetBallType(ballNumber) == ballType) {
+				AddPocketedBall(
+				    playerIndex == 0 ? _player1pocketedBallsParent.Get() : _player2pocketedBallsParent.Get(),
+				    ballNumber);
+			}
+		}
+	}
+
+	void BilliardScoreboardBehaviour::AddPocketedBall(shared_ptr<SceneNode> parentNode, int ballNumber) {
+		if (!parentNode) {
+			return;
+		}
+		if (auto pocketedBallAsset = _pocketedBallAsset.Get()) {
+			size_t pocketedBallsCount = parentNode->GetChildren().size();
+			auto pocketedBallNode = pocketedBallAsset->InstantiateOn(parentNode);
+			pocketedBallNode->SetLocalPosition({static_cast<float>(pocketedBallsCount * _pocketdBallWidth), 0.f});
+
+			if (auto tiledTexture = pocketedBallNode->FindBehaviourRec<Engine::TiledTextureContributorBehaviour>()) {
+				tiledTexture->SetTexturePath(Utils::FormatBallTexturePath(_pocketedBallTexturePathMask, ballNumber));
+			}
+		}
+	}
+
 } // namespace Billiard

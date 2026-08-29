@@ -2,9 +2,11 @@
 
 #include "BallType.h"
 #include "Engine/Behaviour/Behaviour.h"
+#include "Engine/Core/AssetRef.h"
 #include "Engine/Core/MetaClass.h"
 #include "Engine/Core/RefWrapper.h"
 #include "Engine/Core/SceneNode.h"
+#include "Engine/Core/SceneObject.h"
 #include "Engine/Visual/TextVisual.h"
 
 #include <string>
@@ -25,6 +27,15 @@ namespace Billiard {
 		void SetRemainingTurnTime(float seconds);
 		void SetPlayerBallType(int playerIndex, BallType ballType);
 		void SetPlayerName(int playerIndex, const std::string& name);
+		void OnBallPocketed(int ballNumber);
+
+	private:
+		void CreatePocketedBalls(int playerIndex);
+		void AddPocketedBall(shared_ptr<SceneNode> parentNode, int ballNumber);
+
+	private:
+		std::set<int> _pocketedBalls;
+		std::array<BallType, 2> _playerBallTypes;
 
 	private:
 		/// @property
@@ -43,6 +54,16 @@ namespace Billiard {
 		RefWrapper<TextVisual> _player1nameTextRef;
 		/// @property
 		RefWrapper<TextVisual> _player2nameTextRef;
+		/// @property
+		AssetRef<SceneObject> _pocketedBallAsset;
+		/// @property
+		RefWrapper<SceneNode> _player1pocketedBallsParent;
+		/// @property
+		RefWrapper<SceneNode> _player2pocketedBallsParent;
+		/// @property
+		int _pocketdBallWidth = 50;
+		/// @property(tooltip="fmt placeholder for ball id")
+		std::string _pocketedBallTexturePathMask = "resources/textures/8ball/ball_{}.png";
 	};
 
 } // namespace Billiard

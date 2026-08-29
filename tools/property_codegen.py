@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 CACHE_NAME = ".codegen_cache.json"
-CACHE_VERSION = 24
+CACHE_VERSION = 25
 
 PROPERTY_TAG_RE = re.compile(r"^\s*///\s*@property\s*(?:\((.*)\))?\s*$")
 GETTER_TAG_RE = re.compile(r"^\s*///\s*@getter\s*(?:\((.*)\))?\s*$")
@@ -155,7 +155,8 @@ _QUALIFIED_ID_ENUM = r"[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*"
 VECTOR_POLY_FIELD_RE = re.compile(
     rf"^\s*(?:inline\s+|static\s+|mutable\s+)*std::vector<\s*std::unique_ptr<\s*({_QUALIFIED_ID_ENUM})\s*>\s*>\s+(\w+)\s*;\s*$"
 )
-META_ENUM_LINE_RE = re.compile(
+META_ENUM_START_RE = re.compile(r"^\s*META_ENUM\s*\(")
+META_ENUM_RE = re.compile(
     r"^\s*META_ENUM\s*\(\s*([A-Za-z_]\w*)\s*,\s*((?:[A-Za-z_]\w*)(?:\s*,\s*[A-Za-z_]\w*)*)\s*\)\s*;\s*$"
 )
 ENUM_PROP_FIELD_RE = re.compile(
@@ -914,6 +915,29 @@ def class_enum_scope_parts(ns_stack: list[str], block_stack: list[dict[str, Any]
     return parts
 
 
+def collapse_cpp_macro_ws(text: str) -> str:
+    return re.sub(r"\s+", " ", text.strip())
+
+
+def parse_meta_enum_at(
+    path: Path,
+    lines: list[str],
+    start_i: int,
+) -> tuple[re.Match[str], int]:
+    chunks: list[str] = []
+    for j in range(start_i, len(lines)):
+        chunks.append(strip_line_comment_keep_doc(lines[j]))
+        me = META_ENUM_RE.match(collapse_cpp_macro_ws(" ".join(chunks)))
+        if me:
+            return me, j
+    raise ParseError(
+        "unterminated META_ENUM (expected ');' to close the macro)",
+        path,
+        start_i + 1,
+        1,
+    )
+
+
 def register_meta_enum(
     path: Path,
     line_no: int,
@@ -978,6 +1002,7 @@ def parse_header(path: Path, meta_class_index: MetaClassIndex | None = None) -> 
     finished: list[ClassSpec] = []
     pending: PendingTag | None = None
     file_enums: dict[str, tuple[str, ...]] = {}
+    skip_until = -1
 
     def close_class_block(b: dict[str, Any]) -> None:
         if b.get("property_base") and not b.get("meta"):
@@ -1010,6 +1035,8 @@ def parse_header(path: Path, meta_class_index: MetaClassIndex | None = None) -> 
         )
 
     for i, raw_line in enumerate(lines):
+        if i <= skip_until:
+            continue
         line_no = i + 1
         line = strip_line_comment_keep_doc(raw_line)
         stripped = line.strip()
@@ -1538,9 +1565,10 @@ def parse_header(path: Path, meta_class_index: MetaClassIndex | None = None) -> 
             pending = None
             continue
 
-        me = META_ENUM_LINE_RE.match(line)
-        if me and not re.search(r"^\s*#\s*define\s+META_ENUM\b", raw_line):
+        if META_ENUM_START_RE.match(line) and not re.search(r"^\s*#\s*define\s+META_ENUM\b", raw_line):
+            me, end_i = parse_meta_enum_at(path, lines, i)
             register_meta_enum(path, line_no, me.group(1), me.group(2), ns_stack, block_stack, file_enums)
+            skip_until = end_i
             continue
 
         m_using_bitset_alias = USING_BITSET_ALIAS_RE.match(line)
@@ -4725,6 +4753,58 @@ def run_container_element_self_tests() -> int:
     return 0
 
 
+def run_meta_enum_self_tests() -> int:
+    path = Path("test.h")
+    multi = [
+        "META_ENUM(SpriteBlendFactor, Zero, One, SrcColor, OneMinusSrcColor, DstColor, OneMinusDstColor, SrcAlpha,",
+        "    OneMinusSrcAlpha, DstAlpha, OneMinusDstAlpha);",
+    ]
+    me, end_i = parse_meta_enum_at(path, multi, 0)
+    if me.group(1) != "SpriteBlendFactor" or end_i != 1:
+        print("[codegen] META_ENUM test FAIL: multi-line parse", file=sys.stderr)
+        return 1
+    ids = [x.strip() for x in me.group(2).split(",") if x.strip()]
+    if ids != [
+        "Zero",
+        "One",
+        "SrcColor",
+        "OneMinusSrcColor",
+        "DstColor",
+        "OneMinusDstColor",
+        "SrcAlpha",
+        "OneMinusSrcAlpha",
+        "DstAlpha",
+        "OneMinusDstAlpha",
+    ]:
+        print("[codegen] META_ENUM test FAIL: multi-line enumerators", file=sys.stderr)
+        return 1
+
+    single = ["META_ENUM(TextAlignment, Default, Left, Center, Right);"]
+    me_single, end_single = parse_meta_enum_at(path, single, 0)
+    if me_single.group(1) != "TextAlignment" or end_single != 0:
+        print("[codegen] META_ENUM test FAIL: single-line parse", file=sys.stderr)
+        return 1
+
+    indented = [
+        "\tMETA_ENUM(PlayerKind, LocalHuman, RemoteHuman,",
+        "\t    Ai);",
+    ]
+    me_indented, end_indented = parse_meta_enum_at(path, indented, 0)
+    if me_indented.group(1) != "PlayerKind" or end_indented != 1:
+        print("[codegen] META_ENUM test FAIL: indented multi-line parse", file=sys.stderr)
+        return 1
+
+    try:
+        parse_meta_enum_at(path, ["META_ENUM(Broken, A,"], 0)
+        print("[codegen] META_ENUM test FAIL: expected unterminated error", file=sys.stderr)
+        return 1
+    except ParseError:
+        pass
+
+    print("[codegen] META_ENUM self-tests OK")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Property tree codegen for TestEngine.")
     ap.add_argument("--root", type=Path, default=Path.cwd(), help="Repository root (default: cwd)")
@@ -4744,6 +4824,9 @@ def main() -> int:
         if rc != 0:
             return rc
         rc = run_container_element_self_tests()
+        if rc != 0:
+            return rc
+        rc = run_meta_enum_self_tests()
         if rc != 0:
             return rc
         return run_label_inference_self_tests()

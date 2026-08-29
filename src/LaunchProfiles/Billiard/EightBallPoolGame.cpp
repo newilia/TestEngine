@@ -1,27 +1,9 @@
 #include "EightBallPoolGame.h"
 
 #include "BilliardRulesSnapshot.h"
+#include "PoolBilliardUtils.h"
 
 namespace Billiard {
-
-	namespace {
-		BallType GetBallType(int ballNumber) {
-			if (ballNumber == 0) {
-				return BallType::Cue;
-			}
-			if (ballNumber >= 1 && ballNumber <= 7) {
-				return BallType::Solid;
-			}
-			if (ballNumber == 8) {
-				return BallType::Eight;
-			}
-			if (ballNumber >= 9 && ballNumber <= 15) {
-				return BallType::Striped;
-			}
-			return BallType::Undefined;
-		}
-
-	} // namespace
 
 	void EightBallPoolGame::StartNewGame() {
 		_phase = GamePhase::Aiming;
@@ -46,7 +28,7 @@ namespace Billiard {
 	void EightBallPoolGame::OnBallFellInPocket(int ballNumber) {
 		_pocketedBalls.insert(ballNumber);
 
-		auto ballType = GetBallType(ballNumber);
+		auto ballType = Utils::GetBallType(ballNumber);
 		if (ballType == BallType::Cue) {
 			_foulKind = FoulKind::CueBallPocketed;
 		}
@@ -67,7 +49,7 @@ namespace Billiard {
 			return;
 		}
 		_isCueBallCollideBall = true;
-		auto ballType = GetBallType(ballNumber);
+		auto ballType = Utils::GetBallType(ballNumber);
 		auto playerBallType = _playerBallTypes[_activePlayerIndex];
 		if (playerBallType != BallType::Undefined && playerBallType != ballType) {
 			_foulKind = FoulKind::WrongBallFirst;
@@ -102,7 +84,7 @@ namespace Billiard {
 			/* try assign ball types */
 			if (_playerBallTypes[_activePlayerIndex] == BallType::Undefined && _foulKind == FoulKind::None) {
 				if (!_pocketedBallsOnCurrentTurn.empty()) {
-					auto ballType = GetBallType(_pocketedBallsOnCurrentTurn.front());
+					auto ballType = Utils::GetBallType(_pocketedBallsOnCurrentTurn.front());
 					_playerBallTypes[_activePlayerIndex] = ballType;
 					_playerBallTypes[1 - _activePlayerIndex] =
 					    ballType == BallType::Striped ? BallType::Solid : BallType::Striped;
@@ -122,7 +104,7 @@ namespace Billiard {
 			}
 			else {
 				for (const auto& ballNumber : _pocketedBallsOnCurrentTurn) {
-					auto ballType = GetBallType(ballNumber);
+					auto ballType = Utils::GetBallType(ballNumber);
 					if (ballType == playerBallType) {
 						hasValidPocketedBalls = true;
 						break;
@@ -167,7 +149,7 @@ namespace Billiard {
 	const std::set<int>& EightBallPoolGame::GetPocketedSolids() const {
 		_pocketedSolidsView.clear();
 		for (const auto ballNumber : _pocketedBalls) {
-			if (GetBallType(ballNumber) == BallType::Solid) {
+			if (Utils::GetBallType(ballNumber) == BallType::Solid) {
 				_pocketedSolidsView.insert(ballNumber);
 			}
 		}
@@ -177,7 +159,7 @@ namespace Billiard {
 	const std::set<int>& EightBallPoolGame::GetPocketedStripes() const {
 		_pocketedStripesView.clear();
 		for (const auto ballNumber : _pocketedBalls) {
-			if (GetBallType(ballNumber) == BallType::Striped) {
+			if (Utils::GetBallType(ballNumber) == BallType::Striped) {
 				_pocketedStripesView.insert(ballNumber);
 			}
 		}

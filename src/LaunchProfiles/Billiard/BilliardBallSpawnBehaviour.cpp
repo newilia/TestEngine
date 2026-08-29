@@ -8,6 +8,7 @@
 #include "Engine/Core/SceneNodeClone.h"
 #include "Engine/Core/SceneNodeUtils.h"
 #include "LaunchProfiles/Billiard/BilliardBallBehaviour.h"
+#include "LaunchProfiles/Billiard/PoolBilliardUtils.h"
 #include "LaunchProfiles/Billiard/TopDownShadowBehaviour.h"
 
 #include <SFML/Graphics/RectangleShape.hpp>
@@ -104,10 +105,10 @@ shared_ptr<SceneNode> Billiard::BilliardBallSpawnBehaviour::SpawnBall(int ballIn
 	}
 
 	instance->SetName(fmt::format("Ball {}", ballIndex));
-	Utils::SetLocalPosToWorld(instance, worldPos);
+	::Utils::SetLocalPosToWorld(instance, worldPos);
 
 	if (auto tiledTexture = instance->FindBehaviourRec<Engine::TiledTextureContributorBehaviour>()) {
-		tiledTexture->SetTexturePath(FormatTexturePath(ballIndex));
+		tiledTexture->SetTexturePath(Utils::FormatBallTexturePath(_texturePathMask, ballIndex));
 	}
 
 	if (auto ballBehaviour = instance->FindBehaviourRec<BilliardBallBehaviour>()) {
@@ -165,17 +166,6 @@ void Billiard::BilliardBallSpawnBehaviour::SetupShadows(SceneNode& ballNode) {
 			}
 		}
 	}
-}
-
-std::string Billiard::BilliardBallSpawnBehaviour::FormatTexturePath(int ballIndex) const {
-	const std::string idPart = fmt::format("{}", ballIndex);
-	const std::size_t placeholder = _texturePathMask.find("{}");
-	if (placeholder == std::string::npos) {
-		return _texturePathMask;
-	}
-	std::string result = _texturePathMask;
-	result.replace(placeholder, 2, idPart);
-	return result;
 }
 
 sf::FloatRect Billiard::BilliardBallSpawnBehaviour::GetTableWorldBounds() const {

@@ -27,7 +27,6 @@ namespace Billiard {
 
 	private:
 		shared_ptr<SceneNode> SpawnBall(int ballIndex, sf::Vector2f worldPos);
-		[[nodiscard]] std::string FormatTexturePath(int ballIndex) const;
 		[[nodiscard]] sf::FloatRect GetTableWorldBounds() const;
 		[[nodiscard]] std::array<int, 15> BuildRackBallNumbers() const;
 

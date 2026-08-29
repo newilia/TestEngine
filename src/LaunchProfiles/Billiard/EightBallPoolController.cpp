@@ -182,9 +182,9 @@ namespace Billiard {
 			}
 		}
 
-		if (_isWaitingForBallsToStop && !IsPassiveTurn()) {
+		if (_isWaitingForBallsToStop) {
 			CheckBallsOutOfTableBounds();
-			if (!_tablePresenter.AreBallsMoving()) {
+			if (!_tablePresenter.AreBallsMoving() && !IsPassiveTurn()) {
 				OnBallsStopped();
 			}
 		}
@@ -438,6 +438,9 @@ namespace Billiard {
 	void EightBallPoolController::OnBallFellInPocket(int ballNumber, shared_ptr<BilliardPocketBehaviour> pocket) {
 		_gameState.OnBallFellInPocket(ballNumber);
 		_tablePresenter.OnBallPocketed(ballNumber, pocket);
+		if (auto scoreboard = _scoreboardBehaviour.Get()) {
+			scoreboard->OnBallPocketed(ballNumber);
+		}
 	}
 
 	void EightBallPoolController::OnAimPointChanged(const sf::Vector2f& aimPoint) {
