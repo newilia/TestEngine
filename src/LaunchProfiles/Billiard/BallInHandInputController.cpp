@@ -97,11 +97,11 @@ namespace Billiard {
 		const sf::Vector2f delta = pointerWorldPos - *_lastPointerWorld;
 		newPos += delta;
 
-		const float radius = cueBall->GetRadius();
-		newPos.x = std::clamp(newPos.x, _allowedMoveArea->position.x + radius,
-		    _allowedMoveArea->position.x + _allowedMoveArea->size.x - radius);
-		newPos.y = std::clamp(newPos.y, _allowedMoveArea->position.y + radius,
-		    _allowedMoveArea->position.y + _allowedMoveArea->size.y - radius);
+		//const float radius = cueBall->GetRadius();
+		newPos.x =
+		    std::clamp(newPos.x, _allowedMoveArea->position.x, _allowedMoveArea->position.x + _allowedMoveArea->size.x);
+		newPos.y =
+		    std::clamp(newPos.y, _allowedMoveArea->position.y, _allowedMoveArea->position.y + _allowedMoveArea->size.y);
 
 		newPos = _tablePresenter.GetNearestFreeBallPosition(newPos, 0);
 		node->SetLocalPosition(newPos);

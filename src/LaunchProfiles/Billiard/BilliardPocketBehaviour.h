@@ -23,6 +23,7 @@ namespace Billiard {
 		void RegisterBall(const BilliardBallBehaviour& ball);
 		Signal<int>& GetOnBallPocketedSignal() const;
 		int UseBallCollisionGroup();
+		shared_ptr<CircleShapeVisual> GetPocketShape() const;
 
 	private:
 		void OnBallPocketed(BilliardBallBehaviour& ballBehaviour);

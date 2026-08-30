@@ -171,4 +171,8 @@ namespace Billiard {
 		return _onBallPocketedSignal;
 	}
 
+	shared_ptr<CircleShapeVisual> BilliardPocketBehaviour::GetPocketShape() const {
+		return _pocketShape.Get();
+	}
+
 } // namespace Billiard

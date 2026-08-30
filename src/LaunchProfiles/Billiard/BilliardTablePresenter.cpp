@@ -4,12 +4,38 @@
 #include "Engine/Core/SceneNodeUtils.h"
 #include "RollingBallBehaviour.h"
 
+#include <algorithm>
 #include <limits>
 
 namespace {
 
 	constexpr float kBallOverlapEpsilon = 0.01f;
-	constexpr int kNearestFreePositionMaxIterations = 16;
+	constexpr int kNearestFreePositionMaxIterations = 32;
+
+	[[nodiscard]] sf::Vector2f ClampBallCenterToRect(sf::Vector2f position, const sf::FloatRect& rect, float radius) {
+		if (rect.size.x <= 0.f || rect.size.y <= 0.f) {
+			return position;
+		}
+		const float minX = rect.position.x + radius;
+		const float maxX = rect.position.x + rect.size.x - radius;
+		const float minY = rect.position.y + radius;
+		const float maxY = rect.position.y + rect.size.y - radius;
+		position.x = std::clamp(position.x, minX, maxX);
+		position.y = std::clamp(position.y, minY, maxY);
+		return position;
+	}
+
+	[[nodiscard]] bool IsBallCenterInsideRect(const sf::Vector2f& position, const sf::FloatRect& rect, float radius) {
+		if (rect.size.x <= 0.f || rect.size.y <= 0.f) {
+			return true;
+		}
+		const float minX = rect.position.x + radius;
+		const float maxX = rect.position.x + rect.size.x - radius;
+		const float minY = rect.position.y + radius;
+		const float maxY = rect.position.y + rect.size.y - radius;
+		return position.x >= minX - kBallOverlapEpsilon && position.x <= maxX + kBallOverlapEpsilon &&
+		       position.y >= minY - kBallOverlapEpsilon && position.y <= maxY + kBallOverlapEpsilon;
+	}
 
 } // namespace
 
@@ -169,7 +195,13 @@ namespace Billiard {
 			occupiedBalls.push_back({node->GetLocalPosition(), ball->GetRadius()});
 		}
 
+		const sf::FloatRect tableRect = GetBallInHandRect();
+		requestedPosition = ClampBallCenterToRect(requestedPosition, tableRect, ballRadius);
+
 		auto isFree = [&](const sf::Vector2f& position) {
+			if (!IsBallCenterInsideRect(position, tableRect, ballRadius)) {
+				return false;
+			}
 			for (const auto& other : occupiedBalls) {
 				if (Utils::Length(position - other.position) < ballRadius + other.radius - kBallOverlapEpsilon) {
 					return false;
@@ -199,12 +231,17 @@ namespace Billiard {
 					moved = true;
 				}
 			}
+			const sf::Vector2f clamped = ClampBallCenterToRect(result, tableRect, ballRadius);
+			if (clamped != result) {
+				result = clamped;
+				moved = true;
+			}
 			if (!moved) {
 				break;
 			}
 		}
 
-		return result;
+		return ClampBallCenterToRect(result, tableRect, ballRadius);
 	}
 
 	void BilliardTablePresenter::OnBallPocketed(int ballNumber, shared_ptr<BilliardPocketBehaviour> pocket) {
