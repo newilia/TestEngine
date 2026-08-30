@@ -46,6 +46,7 @@ namespace Engine {
 		void Toggle();
 		void SetIsOpen(bool isOpen);
 		bool IsOpen() const;
+		Signal<bool>& GetOnIsOpenChangedSignal() const;
 		void OnUpdate(const sf::Time dt);
 		void DrawSceneGrid(sf::RenderWindow& window);
 		void Draw(sf::RenderWindow& window);
@@ -116,7 +117,10 @@ namespace Engine {
 		bool& DrawDescendantsSelectionEnabledMutable();
 
 		bool TryLoadLastSceneOnStartup();
-		void SetCameraPanOnRightClickEnabled(bool isEnabled);
+		void SetCameraPanEnabled(bool isEnabled);
+		void SetCameraZoomEnabled(bool isEnabled);
+
+		bool LoadScene(const std::filesystem::path& path);
 
 	private:
 		Editor() = default;
@@ -125,7 +129,6 @@ namespace Engine {
 		void DrawSaveDocumentKindModal();
 		bool NewScene();
 		bool LoadScene();
-		bool LoadScene(const std::filesystem::path& path);
 		bool ReloadScene();
 		bool InstantiateSceneObject(const std::filesystem::path& path);
 		bool SaveScene();
@@ -155,6 +158,7 @@ namespace Engine {
 		    const SceneNode& node, sf::VertexArray& lineOutlines, std::vector<sf::CircleShape>& fallbackMarkers);
 
 		bool _isOpen = true;
+		mutable Signal<bool> _onIsOpenChanged;
 		bool _isDrawSelectionEnabled = true;
 		bool _isDrawDescendantsSelectionEnabled = true;
 		mutable bool _isLayoutFinished = false;
@@ -175,7 +179,8 @@ namespace Engine {
 		bool _showSaveDocumentKindModal = false;
 		bool _pendingSaveAs = false;
 		int _saveKindModalSelection = 0;
-		bool _cameraPanOnRightClickEnabled = true;
+		bool _cameraPanEnabled = true;
+		bool _cameraZoomEnabled = true;
 	};
 
 } // namespace Engine

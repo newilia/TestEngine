@@ -1,6 +1,7 @@
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/MainLoop.h"
 #include "LaunchProfiles/BallGame1/BallGame1LaunchProfile.h"
+#include "LaunchProfiles/Billiard/BilliardGameLaunchProfile.h"
 #include "LaunchProfiles/Demo1/Demo1LaunchProfile.h"
 #include "LaunchProfiles/Editor/EditorProfile.h"
 #include "LaunchProfiles/LaunchProfileBase.h"
@@ -25,6 +26,7 @@ namespace {
 		Pong,
 		Demo1,
 		BallGame1,
+		Billiard,
 	};
 
 	bool EqualsIgnoreCaseAscii(std::string_view a, std::string_view b) {
@@ -60,6 +62,9 @@ namespace {
 				if (EqualsIgnoreCaseAscii(value, "ballgame1")) {
 					return LaunchProfileKind::BallGame1;
 				}
+				if (EqualsIgnoreCaseAscii(value, "billiard")) {
+					return LaunchProfileKind::Billiard;
+				}
 			}
 		}
 		return std::nullopt;
@@ -94,6 +99,9 @@ namespace {
 			if (EqualsIgnoreCaseAscii(value, "ballgame1")) {
 				return LaunchProfileKind::BallGame1;
 			}
+			if (EqualsIgnoreCaseAscii(value, "billiard")) {
+				return LaunchProfileKind::Billiard;
+			}
 			pos = valEnd;
 		}
 		return std::nullopt;
@@ -111,6 +119,8 @@ namespace {
 			return std::make_shared<Demo1::Demo1LaunchProfile>();
 		case LaunchProfileKind::BallGame1:
 			return std::make_shared<BallGame1::BallGame1LaunchProfile>();
+		case LaunchProfileKind::Billiard:
+			return std::make_shared<Billiard::BilliardGameLaunchProfile>();
 		default:
 			return nullptr;
 		}

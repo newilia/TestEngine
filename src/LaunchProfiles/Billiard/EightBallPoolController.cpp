@@ -11,7 +11,6 @@ namespace Billiard {
 
 	void EightBallPoolController::OnInit() {
 		EventHandlerBehaviourBase::OnInit();
-		Engine::Editor::GetInstance().SetCameraPanOnRightClickEnabled(false);
 		_tablePresenter.SetTableRect(_tableRect);
 	}
 

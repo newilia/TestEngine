@@ -1,5 +1,5 @@
 {
-	"testEngine.launch.profileArg": "--profile=",
+	"testEngine.launch.profileArg": "--profile=billiard",
 	"cmake.options.statusBarVisibility": "hidden",
 	"cmake.options.advanced": {
 		"variant": {

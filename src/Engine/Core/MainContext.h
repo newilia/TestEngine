@@ -2,6 +2,7 @@
 #include "Engine/Background/GameBackgroundContext.h"
 #include "Engine/Core/CameraViewAnimator.h"
 #include "Engine/Core/Scene.h"
+#include "Engine/Core/Signal.h"
 #include "Engine/Core/Singleton.h"
 
 #include <cstdint>
@@ -78,6 +79,7 @@ namespace Engine {
 		void ZoomCamera(float zoomFactor, std::optional<sf::Vector2i> focusPixel = std::nullopt, bool smooth = true);
 		void FocusCameraOnNode(const std::shared_ptr<SceneNode>& node, bool smooth = true);
 		void FocusCameraOnWorldPoint(const sf::Vector2f& worldPoint, bool smooth = true);
+		void FocusCameraOnWorldRect(const sf::FloatRect& worldRect, bool smooth = true);
 
 		std::optional<sf::Vector2f> GetMainCameraCenter() const;
 		std::optional<float> GetMainCameraViewScale() const;
@@ -85,6 +87,8 @@ namespace Engine {
 		void ResetMainCameraViewToDefault();
 
 		void OnMainWindowResized(const sf::Vector2u& newPixelSize);
+
+		Signal<bool>& GetOnSimPausedChangedSignal();
 
 	private:
 		MainContext();
@@ -106,6 +110,7 @@ namespace Engine {
 		sf::Time _tickTime;
 		float _simSpeedMultiplier = 1.f;
 		bool _isSimPaused = false;
+		Signal<bool> _onSimPausedChanged;
 		bool _isImGuiInitialized = false;
 		bool _verticalSyncEnabled = false;
 		float _tickRate = 0.f;

@@ -79,6 +79,16 @@ namespace Engine {
 		_hasTarget = true;
 	}
 
+	void CameraViewAnimator::RequestFocusRect(
+	    sf::RenderWindow& window, sf::Vector2f worldCenter, sf::Vector2f viewSize) {
+		(void)window;
+		_targetCenter = worldCenter;
+		_targetSize = viewSize;
+		_anchorPixel.reset();
+		_anchorWorld.reset();
+		_hasTarget = true;
+	}
+
 	void CameraViewAnimator::OffsetTargetCenter(sf::Vector2f worldDelta) {
 		if (!_hasTarget) {
 			return;

@@ -2,7 +2,7 @@
 <Scene version="2">
   <Settings>
     <Simulation speedMultiplier="1" vsync="false" />
-    <View centerX="-171.222336" centerY="-970.557312" scale="1.21653461" />
+    <View centerX="97.8614502" centerY="-209.391876" scale="1.90256333" />
     <Grid visible="false" size="50" basis="10" snap="true" />
     <Physics gravityX="0" gravityY="400" gravityEnabled="false" airFriction="0" substeps="4">
       <Attraction strength="50" softening="4" massCoupling="true" />
@@ -276,12 +276,6 @@
                 <Visual type="Engine.SpriteVisual" entityId="1604692566">
                   <Properties>
                     <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                    <Property id="color_src_factor" kind="Enum" value="6" name="SrcAlpha" />
-                    <Property id="color_dst_factor" kind="Enum" value="7" name="OneMinusSrcAlpha" />
-                    <Property id="color_equation" kind="Enum" value="0" name="Add" />
-                    <Property id="alpha_src_factor" kind="Enum" value="1" name="One" />
-                    <Property id="alpha_dst_factor" kind="Enum" value="7" name="OneMinusSrcAlpha" />
-                    <Property id="alpha_equation" kind="Enum" value="0" name="Add" />
                     <Property id="get_texture_path" kind="String" value="resources/textures/8ball/cloth2.png" />
                     <Property id="get_size" kind="Vec2f" x="2607" y="1340" />
                     <Property id="get_texture_rect" kind="Object" />
@@ -8332,12 +8326,6 @@
                 <Visual type="Engine.SpriteVisual" entityId="3184215626">
                   <Properties>
                     <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                    <Property id="color_src_factor" kind="Enum" value="6" name="SrcAlpha" />
-                    <Property id="color_dst_factor" kind="Enum" value="7" name="OneMinusSrcAlpha" />
-                    <Property id="color_equation" kind="Enum" value="0" name="Add" />
-                    <Property id="alpha_src_factor" kind="Enum" value="1" name="One" />
-                    <Property id="alpha_dst_factor" kind="Enum" value="7" name="OneMinusSrcAlpha" />
-                    <Property id="alpha_equation" kind="Enum" value="0" name="Add" />
                     <Property id="get_texture_path" kind="String" value="resources/textures/8ball/cue.png" />
                     <Property id="get_size" kind="Vec2f" x="1477" y="36" />
                     <Property id="get_texture_rect" kind="Object" />
@@ -8836,12 +8824,6 @@
             <Visual type="Engine.SpriteVisual" entityId="2059569140">
               <Properties>
                 <Property id="tap_handling_enabled" kind="Bool" value="false" />
-                <Property id="color_src_factor" kind="Enum" value="6" name="SrcAlpha" />
-                <Property id="color_dst_factor" kind="Enum" value="7" name="OneMinusSrcAlpha" />
-                <Property id="color_equation" kind="Enum" value="0" name="Add" />
-                <Property id="alpha_src_factor" kind="Enum" value="1" name="One" />
-                <Property id="alpha_dst_factor" kind="Enum" value="7" name="OneMinusSrcAlpha" />
-                <Property id="alpha_equation" kind="Enum" value="0" name="Add" />
                 <Property id="get_texture_path" kind="String" value="resources/textures/ball_white.png" />
                 <Property id="get_size" kind="Vec2f" x="350" y="350" />
                 <Property id="get_texture_rect" kind="Object" />
@@ -9334,6 +9316,47 @@
             <Children />
           </Node>
         </Children>
+      </Node>
+      <Node entityId="2853819184">
+        <Properties>
+          <Property id="scene_node" kind="Object">
+            <Property id="name" kind="String" value="ScreenRect" />
+            <Property id="is_enabled" kind="Bool" value="true" />
+            <Property id="is_visible" kind="Bool" value="true" />
+          </Property>
+        </Properties>
+        <Transform type="Engine.Transform">
+          <Properties>
+            <Property id="transform" kind="Object">
+              <Property id="get_position" kind="Vec2f" x="-1702.13599" y="-1320.28833" />
+              <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+              <Property id="get_rotation" kind="Float" value="0" />
+              <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+            </Property>
+          </Properties>
+        </Transform>
+        <Visual type="Engine.RectangleShapeVisual" entityId="1182296001">
+          <Properties>
+            <Property id="tap_handling_enabled" kind="Bool" value="false" />
+            <Property id="get_fill_color" kind="Color" r="255" g="255" b="255" a="0" />
+            <Property id="get_outline_color" kind="Color" r="255" g="255" b="255" a="0" />
+            <Property id="get_outline_thickness" kind="Float" value="0" />
+            <Property id="get_position" kind="Vec2f" x="0" y="0" />
+            <Property id="get_rotation" kind="Float" value="0" />
+            <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+            <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+            <Property id="get_miter_limit" kind="Float" value="10" />
+            <Property id="get_size" kind="Vec2f" x="3418" y="2317" />
+          </Properties>
+        </Visual>
+        <Behaviours>
+          <Behaviour type="Engine.ScreenRectSetterBehaviour" entityId="3518745844">
+            <Properties>
+              <Property id="screen_rect_setter_behaviour" kind="Object" />
+            </Properties>
+          </Behaviour>
+        </Behaviours>
+        <Children />
       </Node>
     </Children>
   </Node>

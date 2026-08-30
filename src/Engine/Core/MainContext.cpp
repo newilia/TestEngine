@@ -12,10 +12,19 @@
 #include <imgui-SFML.h>
 #include <imgui.h>
 
+#include <algorithm>
 #include <cmath>
 
 namespace {
 	constexpr float kRateSmoothing = 0.92f;
+
+	sf::FloatRect NormalizeRect(const sf::FloatRect& rect) {
+		const float minX = std::min(rect.position.x, rect.position.x + rect.size.x);
+		const float minY = std::min(rect.position.y, rect.position.y + rect.size.y);
+		const float maxX = std::max(rect.position.x, rect.position.x + rect.size.x);
+		const float maxY = std::max(rect.position.y, rect.position.y + rect.size.y);
+		return {{minX, minY}, {maxX - minX, maxY - minY}};
+	}
 
 	void AccumulateSmoothedRate(float instantaneous, float& smoothed, bool& isValid) {
 		if (!std::isfinite(instantaneous) || instantaneous <= 0.f) {
@@ -82,6 +91,7 @@ namespace Engine {
 
 	void MainContext::SetSimPaused(bool paused) {
 		_isSimPaused = paused;
+		_onSimPausedChanged.Emit(paused);
 	}
 
 	void MainContext::ToggleSimPaused() {
@@ -266,6 +276,31 @@ namespace Engine {
 			auto view = window->getView();
 			view.setCenter(worldPoint);
 			window->setView(view);
+		}
+	}
+
+	void MainContext::FocusCameraOnWorldRect(const sf::FloatRect& worldRect, bool smooth) {
+		const sf::FloatRect normalizedRect = NormalizeRect(worldRect);
+		const sf::Vector2f center = normalizedRect.position + normalizedRect.size * 0.5f;
+
+		if (auto* window = GetMainWindow()) {
+			const sf::Vector2u pixelSize = window->getSize();
+			if (pixelSize.x == 0u || pixelSize.y == 0u) {
+				return;
+			}
+			const float pixelW = static_cast<float>(pixelSize.x);
+			const float pixelH = static_cast<float>(pixelSize.y);
+
+			float scale = 1.f;
+			if (normalizedRect.size.x > 0.f && normalizedRect.size.y > 0.f) {
+				scale = std::max(normalizedRect.size.x / pixelW, normalizedRect.size.y / pixelH);
+			}
+
+			if (smooth) {
+				_cameraViewAnimator.RequestFocusRect(*window, center, {pixelW * scale, pixelH * scale});
+				return;
+			}
+			SetMainCameraView(center, scale);
 		}
 	}
 

@@ -155,10 +155,7 @@ namespace Engine {
 	}
 
 	void Editor::Toggle() {
-		_isOpen = !_isOpen;
-		if (!_isOpen) {
-			_sceneHierarchyWidget.CancelRenaming();
-		}
+		SetIsOpen(!IsOpen());
 	}
 
 	void Editor::SetIsOpen(bool isOpen) {
@@ -166,10 +163,15 @@ namespace Engine {
 			_sceneHierarchyWidget.CancelRenaming();
 		}
 		_isOpen = isOpen;
+		_onIsOpenChanged.Emit(isOpen);
 	}
 
 	bool Editor::IsOpen() const {
 		return _isOpen;
+	}
+
+	Signal<bool>& Editor::GetOnIsOpenChangedSignal() const {
+		return _onIsOpenChanged;
 	}
 
 	void Editor::PlaySimulation() {
@@ -1285,20 +1287,27 @@ namespace Engine {
 	}
 
 	void Editor::OnMouseButtonPressed(const sf::Event::MouseButtonPressed& e) {
-		if (e.button == sf::Mouse::Button::Middle ||
-		    (e.button == sf::Mouse::Button::Right && _cameraPanOnRightClickEnabled)) {
+		if (!_cameraPanEnabled) {
+			return;
+		}
+		if (e.button == sf::Mouse::Button::Middle || e.button == sf::Mouse::Button::Right) {
 			_cameraMoveMouseOriginPos = e.position;
 		}
 	}
 
 	void Editor::OnMouseButtonReleased(const sf::Event::MouseButtonReleased& e) {
-		if (e.button == sf::Mouse::Button::Middle ||
-		    (e.button == sf::Mouse::Button::Right && _cameraPanOnRightClickEnabled)) {
+		if (!_cameraPanEnabled) {
+			return;
+		}
+		if (e.button == sf::Mouse::Button::Middle || e.button == sf::Mouse::Button::Right) {
 			_cameraMoveMouseOriginPos.reset();
 		}
 	}
 
 	void Editor::OnMouseWheelScrolled(const sf::Event::MouseWheelScrolled& e) {
+		if (!_cameraZoomEnabled) {
+			return;
+		}
 		if (e.wheel == sf::Mouse::Wheel::Vertical) {
 			if (!ImGui::GetIO().WantCaptureMouse) {
 				auto& mainContext = MainContext::GetInstance();
@@ -1405,7 +1414,11 @@ namespace Engine {
 		CollectHierarchyFallbackMarker(node, kHierarchySelectionOutlineColor, fallbackMarkers);
 	}
 
-	void Editor::SetCameraPanOnRightClickEnabled(bool isEnabled) {
-		_cameraPanOnRightClickEnabled = isEnabled;
+	void Editor::SetCameraPanEnabled(bool isEnabled) {
+		_cameraPanEnabled = isEnabled;
+	}
+
+	void Editor::SetCameraZoomEnabled(bool isEnabled) {
+		_cameraZoomEnabled = isEnabled;
 	}
 } // namespace Engine

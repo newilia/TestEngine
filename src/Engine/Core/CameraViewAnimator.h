@@ -24,6 +24,8 @@ namespace Engine {
 
 		void RequestFocusCenter(sf::RenderWindow& window, sf::Vector2f worldCenter);
 
+		void RequestFocusRect(sf::RenderWindow& window, sf::Vector2f worldCenter, sf::Vector2f viewSize);
+
 		void OffsetTargetCenter(sf::Vector2f worldDelta);
 
 		void ScaleTargets(sf::Vector2f sizeScale);
