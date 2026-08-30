@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BallInHandInputController.h"
 #include "BilliardCueBehaviour.h"
 #include "BilliardTurnIntent.h"
 #include "IPlayerAgent.h"
@@ -12,8 +13,8 @@ namespace Billiard {
 	class LocalHumanPlayer : public IPlayerAgent
 	{
 	public:
-		LocalHumanPlayer(
-		    int playerIndex, std::weak_ptr<BilliardCueBehaviour> cue, std::weak_ptr<BilliardBallBehaviour> cueBall);
+		LocalHumanPlayer(int playerIndex, std::weak_ptr<BilliardCueBehaviour> cue,
+		    std::weak_ptr<BilliardBallBehaviour> cueBall, BallInHandInputController* ballInHandInput);
 
 		void OnTurnStarted(const TableSnapshot& table, const RulesSnapshot& rules) override;
 		void OnTurnUpdate(const sf::Time& deltaTime) override;
@@ -30,6 +31,7 @@ namespace Billiard {
 		std::uint32_t _turnId = 0;
 		std::weak_ptr<BilliardCueBehaviour> _cue;
 		std::weak_ptr<BilliardBallBehaviour> _cueBall;
+		BallInHandInputController* _ballInHandInput = nullptr;
 		bool _inputEnabled = false;
 		std::optional<TurnIntent> _pendingIntent;
 	};

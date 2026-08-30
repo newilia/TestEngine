@@ -8,11 +8,12 @@
 
 namespace Billiard {
 
-	LocalHumanPlayer::LocalHumanPlayer(
-	    int playerIndex, std::weak_ptr<BilliardCueBehaviour> cue, std::weak_ptr<BilliardBallBehaviour> cueBall)
-	    : _playerIndex(playerIndex), _cue(std::move(cue)), _cueBall(std::move(cueBall)) {}
+	LocalHumanPlayer::LocalHumanPlayer(int playerIndex, std::weak_ptr<BilliardCueBehaviour> cue,
+	    std::weak_ptr<BilliardBallBehaviour> cueBall, BallInHandInputController* ballInHandInput)
+	    : _playerIndex(playerIndex), _cue(std::move(cue)), _cueBall(std::move(cueBall)),
+	      _ballInHandInput(ballInHandInput) {}
 
-	void LocalHumanPlayer::OnTurnStarted(const TableSnapshot& /*table*/, const RulesSnapshot& rules) {
+	void LocalHumanPlayer::OnTurnStarted(const TableSnapshot& /*table*/, const RulesSnapshot& /*rules*/) {
 		_turnId++;
 		_pendingIntent.reset();
 		_inputEnabled = true;
@@ -20,8 +21,8 @@ namespace Billiard {
 		if (auto cue = _cue.lock()) {
 			cue->SetInputEnabled(true);
 		}
-		if (auto cueBall = _cueBall.lock()) {
-			cueBall->SetInputEnabled(cueBall->IsBallInHand());
+		if (_ballInHandInput) {
+			_ballInHandInput->SetInputEnabled(_ballInHandInput->IsBallInHand());
 		}
 	}
 
@@ -32,8 +33,8 @@ namespace Billiard {
 		if (auto cue = _cue.lock()) {
 			cue->SetInputEnabled(false);
 		}
-		if (auto cueBall = _cueBall.lock()) {
-			cueBall->SetInputEnabled(false);
+		if (_ballInHandInput) {
+			_ballInHandInput->SetInputEnabled(false);
 		}
 	}
 
@@ -43,14 +44,13 @@ namespace Billiard {
 		}
 
 		auto cue = _cue.lock();
-		auto cueBall = _cueBall.lock();
 		if (!cue) {
 			return;
 		}
 
 		if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
-			if (cueBall && cueBall->IsBallInHand()) {
-				cueBall->HandleMouseButtonPressed(pressed->position, pressed->button);
+			if (_ballInHandInput && _ballInHandInput->IsInputEnabled()) {
+				_ballInHandInput->OnMouseButtonPressed(pressed->position, pressed->button);
 			}
 			if (pressed->button == sf::Mouse::Button::Left) {
 				if (cue->CanInteract() && cue->HitTestWorld(MapPixelToWorld(pressed->position))) {
@@ -67,16 +67,16 @@ namespace Billiard {
 
 		if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
 			const sf::Vector2f worldPoint = MapPixelToWorld(moved->position);
-			if (cueBall && cueBall->IsBallInHand()) {
-				cueBall->HandleMouseMoved(moved->position);
+			if (_ballInHandInput && _ballInHandInput->IsInputEnabled()) {
+				_ballInHandInput->OnMouseMoved(moved->position);
 			}
 			cue->ProcessPointerMove(worldPoint);
 			return;
 		}
 
 		if (const auto* released = event.getIf<sf::Event::MouseButtonReleased>()) {
-			if (cueBall && cueBall->IsBallInHand()) {
-				cueBall->HandleMouseButtonReleased(released->position);
+			if (_ballInHandInput && _ballInHandInput->IsInputEnabled()) {
+				_ballInHandInput->OnMouseButtonReleased(released->position);
 			}
 			if (released->button == sf::Mouse::Button::Left) {
 				cue->StopAiming();

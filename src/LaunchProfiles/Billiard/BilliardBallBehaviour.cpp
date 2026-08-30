@@ -2,44 +2,7 @@
 
 #include "BilliardBallBehaviour.generated.hpp"
 
-#include <Engine/Core/SfmlWindowUtils.h>
-
-namespace {
-	sf::Vector2f toWorld(sf::Vector2i pixel) {
-		return Utils::MapWindowPixelToWorld(*Engine::MainContext::GetInstance().GetMainWindow(), pixel);
-	};
-} // namespace
-
 namespace Billiard {
-
-	void BilliardBallBehaviour::SetInputEnabled(bool enabled) {
-		_inputEnabled = enabled;
-		if (!enabled) {
-			_dragStartPosition.reset();
-		}
-	}
-
-	bool BilliardBallBehaviour::IsInputEnabled() const {
-		return _inputEnabled;
-	}
-
-	void BilliardBallBehaviour::HandleMouseButtonPressed(const sf::Vector2i& position, sf::Mouse::Button button) {
-		if (_inputEnabled) {
-			OnMouseButtonPressed(position, button);
-		}
-	}
-
-	void BilliardBallBehaviour::HandleMouseMoved(const sf::Vector2i& position) {
-		if (_inputEnabled) {
-			OnMouseMoved(position);
-		}
-	}
-
-	void BilliardBallBehaviour::HandleMouseButtonReleased(const sf::Vector2i& position) {
-		if (_inputEnabled) {
-			OnMouseButtonReleased(position);
-		}
-	}
 
 	void BilliardBallBehaviour::SetBallNumber(int ballNumber) {
 		_ballNumber = ballNumber;
@@ -118,67 +81,6 @@ namespace Billiard {
 			if (auto textureContributor = _textureContributor.Get()) {
 				textureContributor->SetTint(sf::Color(255, 255, 255, 255 * (1.f - _fallAnimationProgress)));
 			}
-		}
-	}
-
-	void BilliardBallBehaviour::SetBallInHand(const sf::FloatRect& allowedMoveArea) {
-		_ballInHandArea = allowedMoveArea;
-	}
-
-	void BilliardBallBehaviour::ResetBallInHand() {
-		_ballInHandArea.reset();
-	}
-
-	bool BilliardBallBehaviour::IsBallInHand() const {
-		return _ballInHandArea.has_value();
-	}
-
-	Signal<>& BilliardBallBehaviour::GetOnGrabSignal() const {
-		return _onGrabSignal;
-	}
-
-	Signal<>& BilliardBallBehaviour::GetOnReleaseSignal() const {
-		return _onReleaseSignal;
-	}
-
-	void BilliardBallBehaviour::OnMouseButtonPressed(const sf::Vector2i& position, sf::Mouse::Button /*button*/) {
-		if (IsBallInHand()) {
-			auto worldPos = toWorld(position);
-			if (auto visual = _ballShape.Get()) {
-				if (visual->HitTest(worldPos)) {
-					_dragStartPosition = worldPos;
-					if (auto physicsBody = _physicsBody.Get()) {
-						physicsBody->GetOverlapGroups() = {};
-						physicsBody->GetCollisionGroups() = {};
-					}
-					_onGrabSignal.Emit();
-				}
-			}
-		}
-	}
-
-	void BilliardBallBehaviour::OnMouseMoved(const sf::Vector2i& position) {
-		if (_dragStartPosition && IsBallInHand()) {
-			auto newPos = GetNode()->GetLocalPosition();
-			auto pointerWorldPos = toWorld(position);
-			auto delta = pointerWorldPos - *_dragStartPosition;
-			newPos += delta;
-			auto radius = GetRadius();
-			newPos.x = std::clamp(newPos.x, _ballInHandArea->position.x + radius,
-			    _ballInHandArea->position.x + _ballInHandArea->size.x - radius);
-			newPos.y = std::clamp(newPos.y, _ballInHandArea->position.y + radius,
-			    _ballInHandArea->position.y + _ballInHandArea->size.y - radius);
-			GetNode()->SetLocalPosition(newPos);
-			_dragStartPosition = pointerWorldPos;
-		}
-	}
-
-	void BilliardBallBehaviour::OnMouseButtonReleased(const sf::Vector2i& position) {
-		if (_dragStartPosition) {
-			_dragStartPosition.reset();
-			RestoreCollisionGroups();
-			_onReleaseSignal.Emit();
-			// TODO check if ball is not overlapping with any other ball
 		}
 	}
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BallInHandInputController.h"
 #include "BilliardBallBehaviour.h"
 #include "BilliardCueBehaviour.h"
 #include "BilliardPlayerKind.h"
@@ -14,6 +15,7 @@ namespace Billiard {
 	{
 		std::weak_ptr<BilliardCueBehaviour> cue;
 		std::weak_ptr<BilliardBallBehaviour> cueBall;
+		BallInHandInputController* ballInHandInput = nullptr;
 		std::array<bool, 2> isLocalAuthorityForRemoteSlot = {true, true};
 	};
 

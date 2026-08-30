@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AimGuideLineBehaviour.h"
+#include "BallInHandInputController.h"
 #include "BilliardBallAimDisplayBehaviour.h"
 #include "BilliardBallBehaviour.h"
 #include "BilliardBallSpawnBehaviour.h"
@@ -121,6 +122,7 @@ namespace Billiard {
 
 		EightBallPoolGame _gameState;
 		BilliardTablePresenter _tablePresenter;
+		BallInHandInputController _ballInHandInputController{_tablePresenter};
 		BilliardMatchLoop _matchLoop;
 		sf::Time _gameTimestamp;
 	};

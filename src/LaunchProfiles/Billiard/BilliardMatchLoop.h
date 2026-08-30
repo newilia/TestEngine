@@ -21,8 +21,8 @@ namespace Billiard {
 	public:
 		void Configure(
 		    const std::array<PlayerSlotConfig, 2>& slots, const std::array<bool, 2>& isLocalAuthorityForRemoteSlot);
-		void BindRuntimeDeps(
-		    const std::weak_ptr<BilliardCueBehaviour>& cue, const std::weak_ptr<BilliardBallBehaviour>& cueBall);
+		void BindRuntimeDeps(const std::weak_ptr<BilliardCueBehaviour>& cue,
+		    const std::weak_ptr<BilliardBallBehaviour>& cueBall, BallInHandInputController* ballInHandInput);
 		void OnTurnStarted(EightBallPoolGame& game, BilliardTablePresenter& table);
 		void OnTurnEnded();
 		void OnUpdate(const sf::Time& deltaTime, EightBallPoolGame& game);

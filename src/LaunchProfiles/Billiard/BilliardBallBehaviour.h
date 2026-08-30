@@ -19,12 +19,6 @@ namespace Billiard {
 		void OnUpdate(const sf::Time& dt) override;
 
 	public:
-		void SetInputEnabled(bool enabled);
-		[[nodiscard]] bool IsInputEnabled() const;
-		void HandleMouseButtonPressed(const sf::Vector2i& position, sf::Mouse::Button button);
-		void HandleMouseMoved(const sf::Vector2i& position);
-		void HandleMouseButtonReleased(const sf::Vector2i& position);
-
 		void SetBallNumber(int ballNumber);
 		[[nodiscard]] int GetBallNumber() const;
 		[[nodiscard]] bool IsCue() const;
@@ -33,12 +27,7 @@ namespace Billiard {
 		[[nodiscard]] float GetRadius() const;
 		std::shared_ptr<PhysicsBodyBehaviour> GetPhysicsBody() const;
 		std::shared_ptr<RollingBallBehaviour> GetRollingBallBehaviour() const;
-		void SetBallInHand(const sf::FloatRect& allowedFreeMoveArea);
-		bool IsBallInHand() const;
-		void ResetBallInHand();
 		void RestoreCollisionGroups();
-		Signal<>& GetOnGrabSignal() const;
-		Signal<>& GetOnReleaseSignal() const;
 
 		void Appear();
 		void PlayFallAnimation();
@@ -60,22 +49,14 @@ namespace Billiard {
 		float _fallAnimationDuration = 0.3f;
 
 	private:
-		void OnMouseButtonPressed(const sf::Vector2i& position, sf::Mouse::Button button);
-		void OnMouseButtonReleased(const sf::Vector2i& position);
-		void OnMouseMoved(const sf::Vector2i& position);
 		void TryInitializeCollisionGroups();
 
-		bool _inputEnabled = false;
 		bool _isFalling = false;
 		float _fallAnimationProgress = 0.f;
 		float _initialLightingStrength = 1.f;
-		std::optional<sf::Vector2f> _dragStartPosition;
-		std::optional<sf::FloatRect> _ballInHandArea;
 		bool _isCollisionGroupsInitialized = false;
 		PhysicsBodyBehaviour::GroupSet _defaultOverlapGroups;
 		PhysicsBodyBehaviour::GroupSet _defaultCollisionGroups;
-		mutable Signal<> _onGrabSignal;
-		mutable Signal<> _onReleaseSignal;
 	};
 
 } // namespace Billiard

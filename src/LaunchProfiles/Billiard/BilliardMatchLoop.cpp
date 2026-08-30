@@ -8,10 +8,11 @@ namespace Billiard {
 		_deps.isLocalAuthorityForRemoteSlot = isLocalAuthorityForRemoteSlot;
 	}
 
-	void BilliardMatchLoop::BindRuntimeDeps(
-	    const std::weak_ptr<BilliardCueBehaviour>& cue, const std::weak_ptr<BilliardBallBehaviour>& cueBall) {
+	void BilliardMatchLoop::BindRuntimeDeps(const std::weak_ptr<BilliardCueBehaviour>& cue,
+	    const std::weak_ptr<BilliardBallBehaviour>& cueBall, BallInHandInputController* ballInHandInput) {
 		_deps.cue = cue;
 		_deps.cueBall = cueBall;
+		_deps.ballInHandInput = ballInHandInput;
 		_agents = CreatePlayerAgents(_slots, _deps);
 	}
 

@@ -13,10 +13,11 @@ namespace Billiard {
 			switch (slots[static_cast<std::size_t>(playerIndex)].kind) {
 			case PlayerKind::LocalHuman:
 				agents[static_cast<std::size_t>(playerIndex)] =
-				    std::make_unique<LocalHumanPlayer>(playerIndex, deps.cue, deps.cueBall);
+				    std::make_unique<LocalHumanPlayer>(playerIndex, deps.cue, deps.cueBall, deps.ballInHandInput);
 				break;
 			case PlayerKind::RemoteHuman: {
-				auto localDelegate = std::make_unique<LocalHumanPlayer>(playerIndex, deps.cue, deps.cueBall);
+				auto localDelegate =
+				    std::make_unique<LocalHumanPlayer>(playerIndex, deps.cue, deps.cueBall, deps.ballInHandInput);
 				const bool isLocalAuthority = deps.isLocalAuthorityForRemoteSlot[static_cast<std::size_t>(playerIndex)];
 				agents[static_cast<std::size_t>(playerIndex)] =
 				    std::make_unique<RemoteHumanPlayer>(playerIndex, isLocalAuthority, std::move(localDelegate));

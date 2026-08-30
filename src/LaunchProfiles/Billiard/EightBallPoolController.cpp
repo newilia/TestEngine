@@ -37,7 +37,8 @@ namespace Billiard {
 			cue = resolvedCue;
 		}
 		std::weak_ptr<BilliardBallBehaviour> cueBall = GetCueBall();
-		_matchLoop.BindRuntimeDeps(cue, cueBall);
+		_ballInHandInputController.SetCueBall(cueBall);
+		_matchLoop.BindRuntimeDeps(cue, cueBall, &_ballInHandInputController);
 	}
 
 	void EightBallPoolController::ConfigureHotSeatMatchLoop() {
@@ -120,14 +121,15 @@ namespace Billiard {
 						    OnBallCollision(weakBallBody.lock(), ballIndex, intersection);
 					    });
 				}
-				Subscribe(ballBehaviour->GetOnGrabSignal(), [this]() {
-					OnBallInHandGrab();
-				});
-				Subscribe(ballBehaviour->GetOnReleaseSignal(), [this]() {
-					OnBallInHandRelease();
-				});
 			}
 		}
+
+		Subscribe(_ballInHandInputController.GetOnGrabSignal(), [this]() {
+			OnBallInHandGrab();
+		});
+		Subscribe(_ballInHandInputController.GetOnReleaseSignal(), [this]() {
+			OnBallInHandRelease();
+		});
 	}
 
 	void EightBallPoolController::SendCueAimUpdateIfNeeded() {
@@ -372,7 +374,7 @@ namespace Billiard {
 					}
 
 					if (ballBehaviour->GetBallNumber() == 0) {
-						ballBehaviour->SetBallInHand(_tablePresenter.GetKitchenRect());
+						_ballInHandInputController.SetBallInHandRect(_tablePresenter.GetKitchenRect());
 					}
 				}
 			}
@@ -467,9 +469,7 @@ namespace Billiard {
 			}
 		}
 
-		if (auto ball = GetCueBall()) {
-			ball->ResetBallInHand();
-		}
+		_ballInHandInputController.ResetBallInHand();
 		if (auto scoreboard = _scoreboardBehaviour.Get()) {
 			scoreboard->ShowMessage("");
 		}
@@ -516,9 +516,7 @@ namespace Billiard {
 		}
 
 		if (_gameState.IsBallInHand()) {
-			if (auto ball = GetCueBall()) {
-				ball->SetBallInHand(_tablePresenter.GetBallInHandRect());
-			}
+			_ballInHandInputController.SetBallInHandRect(_tablePresenter.GetBallInHandRect());
 		}
 
 		StartNewTurn();
