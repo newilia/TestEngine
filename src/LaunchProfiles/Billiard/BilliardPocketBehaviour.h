@@ -31,10 +31,9 @@ namespace Billiard {
 	private:
 		/// @property
 		RefWrapper<CircleShapeVisual> _pocketShape;
-		/// @property
-		std::vector<RefWrapper<BilliardBallBehaviour>> _balls;
 
 	private:
+		std::vector<RefWrapper<BilliardBallBehaviour>> _balls;
 		mutable Signal<int> _onBallPocketedSignal;
 		int _nextBallCollisionGroup = 1;
 		std::set<int> _fallenBalls;

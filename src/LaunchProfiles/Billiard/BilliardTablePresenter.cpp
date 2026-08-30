@@ -1,16 +1,51 @@
 #include "BilliardTablePresenter.h"
 
 #include "Engine/Core/MathUtils.h"
+#include "Engine/Core/SceneNode.h"
 #include "Engine/Core/SceneNodeUtils.h"
+#include "Engine/Visual/CircleShapeVisual.h"
 #include "RollingBallBehaviour.h"
 
 #include <algorithm>
 #include <limits>
+#include <optional>
 
 namespace {
 
 	constexpr float kBallOverlapEpsilon = 0.01f;
+	constexpr float kPocketKeepOutMargin = 1.f;
 	constexpr int kNearestFreePositionMaxIterations = 32;
+
+	struct WorldCircle
+	{
+		sf::Vector2f center;
+		float radius = 0.f;
+	};
+
+	std::optional<WorldCircle> TryGetCircleWorldGeometry(const CircleShapeVisual& circleVisual) {
+		const auto node = circleVisual.GetNode();
+		if (!node) {
+			return std::nullopt;
+		}
+		const float localRadius = circleVisual.GetRadius();
+		if (localRadius <= 0.f) {
+			return std::nullopt;
+		}
+
+		sf::Transform combined = node->GetWorldTransform();
+		if (const auto* visualTransform = circleVisual.GetTransform()) {
+			combined *= *visualTransform;
+		}
+
+		const sf::Vector2f localCenter{localRadius, localRadius};
+		const sf::Vector2f center = combined.transformPoint(localCenter);
+		const float radius =
+		    Utils::Length(combined.transformPoint(localCenter + sf::Vector2f{localRadius, 0.f}) - center);
+		if (radius <= 0.f) {
+			return std::nullopt;
+		}
+		return WorldCircle{center, radius};
+	}
 
 	[[nodiscard]] sf::Vector2f ClampBallCenterToRect(sf::Vector2f position, const sf::FloatRect& rect, float radius) {
 		if (rect.size.x <= 0.f || rect.size.y <= 0.f) {
@@ -171,14 +206,23 @@ namespace Billiard {
 			return requestedPosition;
 		}
 
-		struct OccupiedBall
+		struct KeepOutCircle
 		{
-			sf::Vector2f position;
-			float radius;
+			sf::Vector2f center;
+			float minDistance;
 		};
 
-		std::vector<OccupiedBall> occupiedBalls;
-		occupiedBalls.reserve(_ballsBehaviours.size());
+		std::vector<KeepOutCircle> keepOutCircles;
+		keepOutCircles.reserve(_ballsBehaviours.size() + _pockets.size());
+
+		sf::Transform tableLocalToWorld;
+		sf::Transform worldToTableLocal;
+		if (auto tableRectVisual = _tableRect.Get()) {
+			if (auto tableNode = tableRectVisual->GetNode()) {
+				tableLocalToWorld = tableNode->GetWorldTransform();
+				worldToTableLocal = tableLocalToWorld.getInverse();
+			}
+		}
 
 		for (const auto& [ballNumber, ballRef] : _ballsBehaviours) {
 			if (ballNumber == excludeBallNumber) {
@@ -192,18 +236,33 @@ namespace Billiard {
 			if (!node || !node->IsEnabled()) {
 				continue;
 			}
-			occupiedBalls.push_back({node->GetLocalPosition(), ball->GetRadius()});
+			keepOutCircles.push_back({Utils::GetWorldPos(node), ballRadius + ball->GetRadius()});
 		}
 
-		const sf::FloatRect tableRect = GetBallInHandRect();
+		for (const auto& pocketRef : _pockets) {
+			auto pocket = pocketRef.Get();
+			if (!pocket) {
+				continue;
+			}
+			auto pocketShape = pocket->GetPocketShape();
+			if (!pocketShape) {
+				continue;
+			}
+			if (const auto pocketCircle = TryGetCircleWorldGeometry(*pocketShape)) {
+				keepOutCircles.push_back({pocketCircle->center, pocketCircle->radius + kPocketKeepOutMargin});
+			}
+		}
+
+		sf::FloatRect tableRect = tableLocalToWorld.transformRect(GetBallInHandRect());
+		requestedPosition = tableLocalToWorld.transformPoint(requestedPosition);
 		requestedPosition = ClampBallCenterToRect(requestedPosition, tableRect, ballRadius);
 
 		auto isFree = [&](const sf::Vector2f& position) {
 			if (!IsBallCenterInsideRect(position, tableRect, ballRadius)) {
 				return false;
 			}
-			for (const auto& other : occupiedBalls) {
-				if (Utils::Length(position - other.position) < ballRadius + other.radius - kBallOverlapEpsilon) {
+			for (const auto& other : keepOutCircles) {
+				if (Utils::Length(position - other.center) < other.minDistance - kBallOverlapEpsilon) {
 					return false;
 				}
 			}
@@ -211,22 +270,22 @@ namespace Billiard {
 		};
 
 		if (isFree(requestedPosition)) {
-			return requestedPosition;
+			return worldToTableLocal.transformPoint(requestedPosition);
 		}
 
 		sf::Vector2f result = requestedPosition;
 		for (int iteration = 0; iteration < kNearestFreePositionMaxIterations; ++iteration) {
 			bool moved = false;
-			for (const auto& other : occupiedBalls) {
-				const sf::Vector2f delta = result - other.position;
+			for (const auto& other : keepOutCircles) {
+				const sf::Vector2f delta = result - other.center;
 				const float distance = Utils::Length(delta);
-				const float minDistance = ballRadius + other.radius;
+				const float minDistance = other.minDistance;
 				if (distance < minDistance - kBallOverlapEpsilon) {
 					if (distance < std::numeric_limits<float>::epsilon()) {
-						result = other.position + sf::Vector2f{minDistance, 0.f};
+						result = other.center + sf::Vector2f{minDistance, 0.f};
 					}
 					else {
-						result = other.position + delta / distance * minDistance;
+						result = other.center + delta / distance * minDistance;
 					}
 					moved = true;
 				}
@@ -241,7 +300,7 @@ namespace Billiard {
 			}
 		}
 
-		return ClampBallCenterToRect(result, tableRect, ballRadius);
+		return worldToTableLocal.transformPoint(ClampBallCenterToRect(result, tableRect, ballRadius));
 	}
 
 	void BilliardTablePresenter::OnBallPocketed(int ballNumber, shared_ptr<BilliardPocketBehaviour> pocket) {
