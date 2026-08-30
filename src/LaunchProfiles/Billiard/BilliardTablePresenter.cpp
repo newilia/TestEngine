@@ -1,7 +1,17 @@
 #include "BilliardTablePresenter.h"
 
+#include "Engine/Core/MathUtils.h"
 #include "Engine/Core/SceneNodeUtils.h"
 #include "RollingBallBehaviour.h"
+
+#include <limits>
+
+namespace {
+
+	constexpr float kBallOverlapEpsilon = 0.01f;
+	constexpr int kNearestFreePositionMaxIterations = 16;
+
+} // namespace
 
 namespace Billiard {
 
@@ -121,6 +131,82 @@ namespace Billiard {
 		return sf::Vector2f();
 	}
 
+	sf::Vector2f BilliardTablePresenter::GetEightBallRestorePosition() const {
+		if (auto tableRect = _tableRect.Get()) {
+			return tableRect->GetGlobalBounds().size.componentWiseMul({0.75f, 0.5f});
+		}
+		return sf::Vector2f();
+	}
+
+	sf::Vector2f BilliardTablePresenter::GetNearestFreeBallPosition(
+	    sf::Vector2f requestedPosition, int excludeBallNumber) const {
+		const float ballRadius = GetBallRadius();
+		if (ballRadius <= 0.f) {
+			return requestedPosition;
+		}
+
+		struct OccupiedBall
+		{
+			sf::Vector2f position;
+			float radius;
+		};
+
+		std::vector<OccupiedBall> occupiedBalls;
+		occupiedBalls.reserve(_ballsBehaviours.size());
+
+		for (const auto& [ballNumber, ballRef] : _ballsBehaviours) {
+			if (ballNumber == excludeBallNumber) {
+				continue;
+			}
+			auto ball = ballRef.Get();
+			if (!ball) {
+				continue;
+			}
+			auto node = ball->GetNode();
+			if (!node || !node->IsEnabled()) {
+				continue;
+			}
+			occupiedBalls.push_back({node->GetLocalPosition(), ball->GetRadius()});
+		}
+
+		auto isFree = [&](const sf::Vector2f& position) {
+			for (const auto& other : occupiedBalls) {
+				if (Utils::Length(position - other.position) < ballRadius + other.radius - kBallOverlapEpsilon) {
+					return false;
+				}
+			}
+			return true;
+		};
+
+		if (isFree(requestedPosition)) {
+			return requestedPosition;
+		}
+
+		sf::Vector2f result = requestedPosition;
+		for (int iteration = 0; iteration < kNearestFreePositionMaxIterations; ++iteration) {
+			bool moved = false;
+			for (const auto& other : occupiedBalls) {
+				const sf::Vector2f delta = result - other.position;
+				const float distance = Utils::Length(delta);
+				const float minDistance = ballRadius + other.radius;
+				if (distance < minDistance - kBallOverlapEpsilon) {
+					if (distance < std::numeric_limits<float>::epsilon()) {
+						result = other.position + sf::Vector2f{minDistance, 0.f};
+					}
+					else {
+						result = other.position + delta / distance * minDistance;
+					}
+					moved = true;
+				}
+			}
+			if (!moved) {
+				break;
+			}
+		}
+
+		return result;
+	}
+
 	void BilliardTablePresenter::OnBallPocketed(int ballNumber, shared_ptr<BilliardPocketBehaviour> pocket) {
 		if (auto ball = _ballsBehaviours[ballNumber].Get()) {
 			if (auto physicsBody = ball->GetPhysicsBody(); physicsBody && pocket) {
@@ -133,9 +219,11 @@ namespace Billiard {
 
 	void BilliardTablePresenter::RestoreBall(int ballNumber) {
 		if (auto ball = _ballsBehaviours[ballNumber].Get()) {
+			auto restorePosition = ballNumber == 8 ? GetEightBallRestorePosition() : GetTableCenter();
+			restorePosition = GetNearestFreeBallPosition(restorePosition);
+			ball->GetNode()->SetLocalPosition(restorePosition);
 			ball->RestoreCollisionGroups();
 			ball->Appear();
-			ball->GetNode()->SetLocalPosition(GetTableCenter()); // todo find proper position
 
 			if (auto physicsBody = ball->GetPhysicsBody()) {
 				physicsBody->SetVelocity(sf::Vector2f(0, 0));

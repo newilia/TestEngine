@@ -1290,7 +1290,7 @@ namespace Engine {
 		if (!_cameraPanEnabled) {
 			return;
 		}
-		if (e.button == sf::Mouse::Button::Middle || e.button == sf::Mouse::Button::Right) {
+		if (e.button == sf::Mouse::Button::Middle) {
 			_cameraMoveMouseOriginPos = e.position;
 		}
 	}
@@ -1299,7 +1299,7 @@ namespace Engine {
 		if (!_cameraPanEnabled) {
 			return;
 		}
-		if (e.button == sf::Mouse::Button::Middle || e.button == sf::Mouse::Button::Right) {
+		if (e.button == sf::Mouse::Button::Middle) {
 			_cameraMoveMouseOriginPos.reset();
 		}
 	}

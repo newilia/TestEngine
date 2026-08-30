@@ -23,11 +23,15 @@ namespace Billiard {
 		bool AreBallsMoving() const;
 		sf::FloatRect GetBallInHandRect() const;
 		sf::FloatRect GetKitchenRect() const;
-		sf::Vector2f GetTableCenter() const;
 		float GetBallRadius() const;
+		sf::Vector2f GetNearestFreeBallPosition(sf::Vector2f requestedPosition, int excludeBallNumber = -1) const;
 		void OnBallPocketed(int ballNumber, shared_ptr<BilliardPocketBehaviour> pocket);
 		void RestoreBall(int ballNumber);
 		bool IsBallOutsideExpandedTable(int ballNumber, float margin) const;
+
+	private:
+		sf::Vector2f GetTableCenter() const;
+		sf::Vector2f GetEightBallRestorePosition() const;
 
 	private:
 		std::map<int, RefWrapper<BilliardBallBehaviour>> _ballsBehaviours;
