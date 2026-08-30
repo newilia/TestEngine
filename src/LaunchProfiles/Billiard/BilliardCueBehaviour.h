@@ -23,19 +23,12 @@ namespace Billiard {
 		void OnUpdate(const sf::Time& deltaTime) override;
 
 	public:
-		void SetInputEnabled(bool enabled);
-		bool IsInputEnabled() const;
-		bool CanInteract() const;
-		bool HitTestWorld(const sf::Vector2f& worldPoint) const;
-		void BeginAiming();
-		void StopAiming();
+		[[nodiscard]] bool IsInteractable() const;
+		[[nodiscard]] bool HitTestWorld(const sf::Vector2f& worldPoint) const;
 		void AimAt(const sf::Vector2f& worldPoint);
-		void BeginPullBack(const sf::Vector2f& worldPoint);
-		void UpdatePullBack(const sf::Vector2f& worldPoint);
-		void TryReleaseShot();
-		void ProcessPointerMove(const sf::Vector2f& worldPoint);
 		void ApplyShotIntent(const TurnIntent& intent);
 		TurnIntent BuildTurnIntent(int playerIndex, std::uint32_t turnId) const;
+		void Release();
 
 		void SetCueBall(const std::shared_ptr<BilliardBallBehaviour>& ballBehaviour);
 		void AbortAiming();
@@ -49,6 +42,7 @@ namespace Billiard {
 		void SetVerticalSpin(float spin);
 		void SetDirectionAngle(sf::Angle angle);
 		void SetDistanceFromTarget(float distance);
+		[[nodiscard]] float GetDistanceFromTarget() const;
 		void ResetDistanceFromTarget();
 		void ApplyCueTransform();
 
@@ -58,8 +52,6 @@ namespace Billiard {
 		sf::Angle GetActualBallDirectionAngle() const;
 
 	private:
-		void PullBack(const sf::Vector2f& pointerWorldPoint);
-		void Release();
 		void OnTipCollide(const IntersectionDetails& intersection);
 		std::shared_ptr<SceneNode> GetTargetBallNode() const;
 
@@ -99,14 +91,9 @@ namespace Billiard {
 
 	private:
 		RefWrapper<BilliardBallBehaviour> _targetBall;
-		bool _inputEnabled = false;
-		bool _isAiming = false;
-		bool _isPullingBack = false;
 		bool _isShooting = false;
 		float _verticalSpin = 0.f;
 		float _distanceBeforeShoot = 0.f;
-		sf::Vector2f _pullBackGrabWorldPoint{};
-		float _pullBackDistanceAtGrab = 0.f;
 		Signal<const IntersectionDetails&>::Subscription _tipCollideSubscription;
 		mutable Signal<> _onReleaseSignal;
 		mutable Signal<> _onHitSignal;

@@ -33,6 +33,7 @@ namespace Billiard {
 	private:
 		[[nodiscard]] sf::Vector2f MapPixelToWorld(sf::Vector2i pixel) const;
 		void ApplyDragPosition(const sf::Vector2f& pointerWorldPos);
+		void TryReleaseBallInHand();
 
 		BilliardTablePresenter& _tablePresenter;
 		std::weak_ptr<BilliardBallBehaviour> _cueBall;

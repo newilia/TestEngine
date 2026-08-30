@@ -1,11 +1,12 @@
 #pragma once
 
 #include "BallInHandInputController.h"
-#include "BilliardCueBehaviour.h"
 #include "BilliardTurnIntent.h"
+#include "CueBallAimInputController.h"
+#include "CueInputController.h"
 #include "IPlayerAgent.h"
 
-#include <memory>
+#include <cstdint>
 #include <optional>
 
 namespace Billiard {
@@ -13,8 +14,8 @@ namespace Billiard {
 	class LocalHumanPlayer : public IPlayerAgent
 	{
 	public:
-		LocalHumanPlayer(int playerIndex, std::weak_ptr<BilliardCueBehaviour> cue,
-		    std::weak_ptr<BilliardBallBehaviour> cueBall, BallInHandInputController* ballInHandInput);
+		LocalHumanPlayer(int playerIndex, BallInHandInputController* ballInHandInput, CueInputController* cueInput,
+		    CueBallAimInputController* cueBallAimInput);
 
 		void OnTurnStarted(const TableSnapshot& table, const RulesSnapshot& rules) override;
 		void OnTurnUpdate(const sf::Time& deltaTime) override;
@@ -25,15 +26,12 @@ namespace Billiard {
 		[[nodiscard]] bool WantsInput() const override;
 
 	private:
-		[[nodiscard]] sf::Vector2f MapPixelToWorld(sf::Vector2i pixel) const;
-
 		int _playerIndex = 0;
 		std::uint32_t _turnId = 0;
-		std::weak_ptr<BilliardCueBehaviour> _cue;
-		std::weak_ptr<BilliardBallBehaviour> _cueBall;
 		BallInHandInputController* _ballInHandInput = nullptr;
+		CueInputController* _cueInput = nullptr;
+		CueBallAimInputController* _cueBallAimInput = nullptr;
 		bool _inputEnabled = false;
-		std::optional<TurnIntent> _pendingIntent;
 	};
 
 } // namespace Billiard

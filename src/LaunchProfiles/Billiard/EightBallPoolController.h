@@ -2,7 +2,6 @@
 
 #include "AimGuideLineBehaviour.h"
 #include "BallInHandInputController.h"
-#include "BilliardBallAimDisplayBehaviour.h"
 #include "BilliardBallBehaviour.h"
 #include "BilliardBallSpawnBehaviour.h"
 #include "BilliardCueBehaviour.h"
@@ -11,6 +10,9 @@
 #include "BilliardPocketBehaviour.h"
 #include "BilliardScoreboardBehaviour.h"
 #include "BilliardTablePresenter.h"
+#include "CueBallAimInputController.h"
+#include "CueBallAimWidgetBehaviour.h"
+#include "CueInputController.h"
 #include "EightBallPoolGame.h"
 #include "Engine/Behaviour/EventHandlerBehaviourBase.h"
 #include "Engine/Core/MetaClass.h"
@@ -96,7 +98,7 @@ namespace Billiard {
 		/// @property
 		RefWrapper<BilliardScoreboardBehaviour> _scoreboardBehaviour;
 		/// @property
-		RefWrapper<BilliardBallAimDisplayBehaviour> _aimDisplayBehaviour;
+		RefWrapper<CueBallAimWidgetBehaviour> _aimWidgetBehaviour;
 		/// @property
 		RefWrapper<BilliardBallSpawnBehaviour> _ballSpawnBehaviour;
 		/// @property
@@ -123,6 +125,8 @@ namespace Billiard {
 		EightBallPoolGame _gameState;
 		BilliardTablePresenter _tablePresenter;
 		BallInHandInputController _ballInHandInputController{_tablePresenter};
+		CueInputController _cueInputController;
+		CueBallAimInputController _cueBallAimInputController;
 		BilliardMatchLoop _matchLoop;
 		sf::Time _gameTimestamp;
 	};

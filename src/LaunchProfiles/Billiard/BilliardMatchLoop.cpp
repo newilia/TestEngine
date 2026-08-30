@@ -9,10 +9,12 @@ namespace Billiard {
 	}
 
 	void BilliardMatchLoop::BindRuntimeDeps(const std::weak_ptr<BilliardCueBehaviour>& cue,
-	    const std::weak_ptr<BilliardBallBehaviour>& cueBall, BallInHandInputController* ballInHandInput) {
+	    BallInHandInputController* ballInHandInput, CueInputController* cueInput,
+	    CueBallAimInputController* cueBallAimInput) {
 		_deps.cue = cue;
-		_deps.cueBall = cueBall;
 		_deps.ballInHandInput = ballInHandInput;
+		_deps.cueInput = cueInput;
+		_deps.cueBallAimInput = cueBallAimInput;
 		_agents = CreatePlayerAgents(_slots, _deps);
 	}
 
@@ -86,7 +88,6 @@ namespace Billiard {
 
 	void BilliardMatchLoop::ApplyAgentShotIntent(const TurnIntent& intent) {
 		if (auto cue = _deps.cue.lock()) {
-			cue->SetInputEnabled(true);
 			cue->ApplyShotIntent(intent);
 		}
 	}

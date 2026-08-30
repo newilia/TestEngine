@@ -2,7 +2,7 @@
 <Scene version="2">
   <Settings>
     <Simulation speedMultiplier="1" vsync="false" />
-    <View centerX="97.8614502" centerY="-209.391876" scale="1.90256333" />
+    <View centerX="10.9262085" centerY="-169.56311" scale="1.65439701" />
     <Grid visible="false" size="50" basis="10" snap="true" />
     <Physics gravityX="0" gravityY="400" gravityEnabled="false" airFriction="0" substeps="4">
       <Attraction strength="50" softening="4" massCoupling="true" />
@@ -94,7 +94,7 @@
                 <Property id="cue_behaviour" kind="SceneRef" value="2568429161" />
                 <Property id="aim_guide_line_behaviour" kind="SceneRef" value="644508645" />
                 <Property id="scoreboard_behaviour" kind="SceneRef" value="3074770674" />
-                <Property id="aim_display_behaviour" kind="SceneRef" value="2812427044" />
+                <Property id="aim_widget_behaviour" kind="SceneRef" value="2812427044" />
                 <Property id="ball_spawn_behaviour" kind="SceneRef" value="519174997" />
                 <Property id="pockets_behaviours" kind="Sequence">
                   <Property id="0" kind="Object">
@@ -122,6 +122,47 @@
                 <Property id="server_host" kind="String" value="127.0.0.1" />
                 <Property id="server_port" kind="Int32" value="7777" />
               </Property>
+            </Properties>
+          </Behaviour>
+        </Behaviours>
+        <Children />
+      </Node>
+      <Node entityId="2853819184">
+        <Properties>
+          <Property id="scene_node" kind="Object">
+            <Property id="name" kind="String" value="ScreenRect" />
+            <Property id="is_enabled" kind="Bool" value="true" />
+            <Property id="is_visible" kind="Bool" value="true" />
+          </Property>
+        </Properties>
+        <Transform type="Engine.Transform">
+          <Properties>
+            <Property id="transform" kind="Object">
+              <Property id="get_position" kind="Vec2f" x="-1702.13599" y="-1320.28833" />
+              <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+              <Property id="get_rotation" kind="Float" value="0" />
+              <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+            </Property>
+          </Properties>
+        </Transform>
+        <Visual type="Engine.RectangleShapeVisual" entityId="1182296001">
+          <Properties>
+            <Property id="tap_handling_enabled" kind="Bool" value="false" />
+            <Property id="get_fill_color" kind="Color" r="255" g="255" b="255" a="0" />
+            <Property id="get_outline_color" kind="Color" r="255" g="255" b="255" a="0" />
+            <Property id="get_outline_thickness" kind="Float" value="0" />
+            <Property id="get_position" kind="Vec2f" x="0" y="0" />
+            <Property id="get_rotation" kind="Float" value="0" />
+            <Property id="get_scale" kind="Vec2f" x="1" y="1" />
+            <Property id="get_origin" kind="Vec2f" x="0" y="0" />
+            <Property id="get_miter_limit" kind="Float" value="10" />
+            <Property id="get_size" kind="Vec2f" x="3418" y="2317" />
+          </Properties>
+        </Visual>
+        <Behaviours>
+          <Behaviour type="Engine.ScreenRectSetterBehaviour" entityId="3518745844">
+            <Properties>
+              <Property id="screen_rect_setter_behaviour" kind="Object" />
             </Properties>
           </Behaviour>
         </Behaviours>
@@ -8760,7 +8801,7 @@
       <Node entityId="2323409586">
         <Properties>
           <Property id="scene_node" kind="Object">
-            <Property id="name" kind="String" value="Aim display" />
+            <Property id="name" kind="String" value="Aim widget" />
             <Property id="is_enabled" kind="Bool" value="true" />
             <Property id="is_visible" kind="Bool" value="true" />
           </Property>
@@ -8793,9 +8834,9 @@
           </Properties>
         </Visual>
         <Behaviours>
-          <Behaviour type="Billiard.BilliardBallAimDisplayBehaviour" entityId="2812427044">
+          <Behaviour type="Billiard.CueBallAimWidgetBehaviour" entityId="2812427044">
             <Properties>
-              <Property id="billiard_ball_aim_display_behaviour" kind="Object">
+              <Property id="cue_ball_aim_widget_behaviour" kind="Object">
                 <Property id="circle_area" kind="SceneRef" value="2309270662" />
                 <Property id="aim_point_node" kind="SceneRef" value="3998567120" />
               </Property>
@@ -9316,47 +9357,6 @@
             <Children />
           </Node>
         </Children>
-      </Node>
-      <Node entityId="2853819184">
-        <Properties>
-          <Property id="scene_node" kind="Object">
-            <Property id="name" kind="String" value="ScreenRect" />
-            <Property id="is_enabled" kind="Bool" value="true" />
-            <Property id="is_visible" kind="Bool" value="true" />
-          </Property>
-        </Properties>
-        <Transform type="Engine.Transform">
-          <Properties>
-            <Property id="transform" kind="Object">
-              <Property id="get_position" kind="Vec2f" x="-1702.13599" y="-1320.28833" />
-              <Property id="get_scale" kind="Vec2f" x="1" y="1" />
-              <Property id="get_rotation" kind="Float" value="0" />
-              <Property id="get_origin" kind="Vec2f" x="0" y="0" />
-            </Property>
-          </Properties>
-        </Transform>
-        <Visual type="Engine.RectangleShapeVisual" entityId="1182296001">
-          <Properties>
-            <Property id="tap_handling_enabled" kind="Bool" value="false" />
-            <Property id="get_fill_color" kind="Color" r="255" g="255" b="255" a="0" />
-            <Property id="get_outline_color" kind="Color" r="255" g="255" b="255" a="0" />
-            <Property id="get_outline_thickness" kind="Float" value="0" />
-            <Property id="get_position" kind="Vec2f" x="0" y="0" />
-            <Property id="get_rotation" kind="Float" value="0" />
-            <Property id="get_scale" kind="Vec2f" x="1" y="1" />
-            <Property id="get_origin" kind="Vec2f" x="0" y="0" />
-            <Property id="get_miter_limit" kind="Float" value="10" />
-            <Property id="get_size" kind="Vec2f" x="3418" y="2317" />
-          </Properties>
-        </Visual>
-        <Behaviours>
-          <Behaviour type="Engine.ScreenRectSetterBehaviour" entityId="3518745844">
-            <Properties>
-              <Property id="screen_rect_setter_behaviour" kind="Object" />
-            </Properties>
-          </Behaviour>
-        </Behaviours>
-        <Children />
       </Node>
     </Children>
   </Node>

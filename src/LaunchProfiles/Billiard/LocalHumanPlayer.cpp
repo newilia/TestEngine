@@ -1,28 +1,24 @@
 #include "LocalHumanPlayer.h"
 
-#include "Engine/Core/MainContext.h"
-#include "Engine/Core/SfmlWindowUtils.h"
-
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/Mouse.hpp>
 
 namespace Billiard {
 
-	LocalHumanPlayer::LocalHumanPlayer(int playerIndex, std::weak_ptr<BilliardCueBehaviour> cue,
-	    std::weak_ptr<BilliardBallBehaviour> cueBall, BallInHandInputController* ballInHandInput)
-	    : _playerIndex(playerIndex), _cue(std::move(cue)), _cueBall(std::move(cueBall)),
-	      _ballInHandInput(ballInHandInput) {}
+	LocalHumanPlayer::LocalHumanPlayer(int playerIndex, BallInHandInputController* ballInHandInput,
+	    CueInputController* cueInput, CueBallAimInputController* cueBallAimInput)
+	    : _playerIndex(playerIndex), _ballInHandInput(ballInHandInput), _cueInput(cueInput),
+	      _cueBallAimInput(cueBallAimInput) {}
 
 	void LocalHumanPlayer::OnTurnStarted(const TableSnapshot& /*table*/, const RulesSnapshot& /*rules*/) {
 		_turnId++;
-		_pendingIntent.reset();
 		_inputEnabled = true;
 
-		if (auto cue = _cue.lock()) {
-			cue->SetInputEnabled(true);
-		}
 		if (_ballInHandInput) {
-			_ballInHandInput->SetInputEnabled(_ballInHandInput->IsBallInHand());
+			_ballInHandInput->SetInputEnabled(true);
+		}
+		if (_cueInput) {
+			_cueInput->SetInputEnabled(true);
 		}
 	}
 
@@ -30,11 +26,11 @@ namespace Billiard {
 
 	void LocalHumanPlayer::OnTurnEnded() {
 		_inputEnabled = false;
-		if (auto cue = _cue.lock()) {
-			cue->SetInputEnabled(false);
-		}
 		if (_ballInHandInput) {
 			_ballInHandInput->SetInputEnabled(false);
+		}
+		if (_cueInput) {
+			_cueInput->SetInputEnabled(false);
 		}
 	}
 
@@ -43,34 +39,29 @@ namespace Billiard {
 			return;
 		}
 
-		auto cue = _cue.lock();
-		if (!cue) {
-			return;
-		}
-
 		if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
 			if (_ballInHandInput && _ballInHandInput->IsInputEnabled()) {
 				_ballInHandInput->OnMouseButtonPressed(pressed->position, pressed->button);
 			}
-			if (pressed->button == sf::Mouse::Button::Left) {
-				if (cue->CanInteract() && cue->HitTestWorld(MapPixelToWorld(pressed->position))) {
-					cue->BeginAiming();
-				}
+			if (_cueBallAimInput && _cueBallAimInput->IsInputEnabled()) {
+				_cueBallAimInput->OnMouseButtonPressed(pressed->position, pressed->button);
 			}
-			else if (pressed->button == sf::Mouse::Button::Right) {
-				if (cue->CanInteract() && cue->HitTestWorld(MapPixelToWorld(pressed->position))) {
-					cue->BeginPullBack(MapPixelToWorld(pressed->position));
-				}
+			if (_cueInput && _cueInput->IsInputEnabled()) {
+				_cueInput->OnMouseButtonPressed(pressed->position, pressed->button);
 			}
 			return;
 		}
 
 		if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
-			const sf::Vector2f worldPoint = MapPixelToWorld(moved->position);
 			if (_ballInHandInput && _ballInHandInput->IsInputEnabled()) {
 				_ballInHandInput->OnMouseMoved(moved->position);
 			}
-			cue->ProcessPointerMove(worldPoint);
+			if (_cueBallAimInput && _cueBallAimInput->IsInputEnabled()) {
+				_cueBallAimInput->OnMouseMoved(moved->position);
+			}
+			if (_cueInput && _cueInput->IsInputEnabled()) {
+				_cueInput->OnMouseMoved(moved->position);
+			}
 			return;
 		}
 
@@ -78,38 +69,28 @@ namespace Billiard {
 			if (_ballInHandInput && _ballInHandInput->IsInputEnabled()) {
 				_ballInHandInput->OnMouseButtonReleased(released->position);
 			}
-			if (released->button == sf::Mouse::Button::Left) {
-				cue->StopAiming();
+			if (_cueBallAimInput && _cueBallAimInput->IsInputEnabled()) {
+				_cueBallAimInput->OnMouseButtonReleased(released->position, released->button);
 			}
-			else if (released->button == sf::Mouse::Button::Right) {
-				if (cue->CanInteract()) {
-					_pendingIntent = cue->BuildTurnIntent(_playerIndex, _turnId);
-				}
-				cue->TryReleaseShot();
+			if (_cueInput && _cueInput->IsInputEnabled()) {
+				_cueInput->OnMouseButtonReleased(released->position, released->button, _playerIndex, _turnId);
 			}
 		}
 	}
 
 	bool LocalHumanPlayer::HasPendingIntent() const {
-		return _pendingIntent.has_value();
+		return _cueInput && _cueInput->HasPendingIntent();
 	}
 
 	std::optional<TurnIntent> LocalHumanPlayer::ConsumeIntent() {
-		auto intent = _pendingIntent;
-		_pendingIntent.reset();
-		return intent;
+		if (_cueInput) {
+			return _cueInput->ConsumePendingIntent();
+		}
+		return std::nullopt;
 	}
 
 	bool LocalHumanPlayer::WantsInput() const {
 		return _inputEnabled;
-	}
-
-	sf::Vector2f LocalHumanPlayer::MapPixelToWorld(sf::Vector2i pixel) const {
-		auto window = Engine::MainContext::GetInstance().GetMainWindow();
-		if (!window) {
-			return {};
-		}
-		return Utils::MapWindowPixelToWorld(*window, pixel);
 	}
 
 } // namespace Billiard

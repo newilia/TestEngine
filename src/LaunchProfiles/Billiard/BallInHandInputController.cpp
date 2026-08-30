@@ -30,7 +30,7 @@ namespace Billiard {
 	void BallInHandInputController::SetInputEnabled(bool enabled) {
 		_inputEnabled = enabled;
 		if (!enabled) {
-			_lastPointerWorld.reset();
+			TryReleaseBallInHand();
 		}
 	}
 
@@ -116,14 +116,18 @@ namespace Billiard {
 	}
 
 	void BallInHandInputController::OnMouseButtonReleased(const sf::Vector2i& /*position*/) {
+		TryReleaseBallInHand();
+	}
+
+	void BallInHandInputController::TryReleaseBallInHand() {
 		if (!_lastPointerWorld) {
 			return;
 		}
-		_lastPointerWorld.reset();
+		_lastPointerWorld.reset(); // todo check
 		if (auto cueBall = _cueBall.lock()) {
 			cueBall->RestoreCollisionGroups();
 		}
-		_onReleaseSignal.Emit();
+		_onReleaseSignal.Emit(); // todo check
 	}
 
 } // namespace Billiard

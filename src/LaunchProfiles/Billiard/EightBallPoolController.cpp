@@ -32,13 +32,15 @@ namespace Billiard {
 	}
 
 	void EightBallPoolController::BindPlayerAgentRuntimeDeps() {
-		std::weak_ptr<BilliardCueBehaviour> cue;
-		if (auto resolvedCue = _cueBehaviour.Get()) {
-			cue = resolvedCue;
+		_ballInHandInputController.SetCueBall(GetCueBall());
+		_ballInHandInputController.SetBallInHandRect(_tablePresenter.GetKitchenRect());
+
+		_cueInputController.SetCue(_cueBehaviour.Get());
+		if (auto aimDisplay = _aimWidgetBehaviour.Get()) {
+			_cueBallAimInputController.SetAimWidget(aimDisplay);
 		}
-		std::weak_ptr<BilliardBallBehaviour> cueBall = GetCueBall();
-		_ballInHandInputController.SetCueBall(cueBall);
-		_matchLoop.BindRuntimeDeps(cue, cueBall, &_ballInHandInputController);
+		_matchLoop.BindRuntimeDeps(
+		    _cueBehaviour.Get(), &_ballInHandInputController, &_cueInputController, &_cueBallAimInputController);
 	}
 
 	void EightBallPoolController::ConfigureHotSeatMatchLoop() {
@@ -69,18 +71,16 @@ namespace Billiard {
 	}
 
 	void EightBallPoolController::UpdateAimDisplayInputEnabled() {
-		if (auto aimDisplay = _aimDisplayBehaviour.Get()) {
-			bool enabled = !_isWaitingForBallsToStop && !_gameState.IsGameOver() && !IsPassiveTurn();
-			if (enabled) {
-				if (auto* agent = _matchLoop.GetActiveAgent(_gameState)) {
-					enabled = agent->WantsInput();
-				}
-				else {
-					enabled = false;
-				}
+		bool enabled = !_isWaitingForBallsToStop && !_gameState.IsGameOver() && !IsPassiveTurn();
+		if (enabled) {
+			if (auto* agent = _matchLoop.GetActiveAgent(_gameState)) {
+				enabled = agent->WantsInput();
 			}
-			aimDisplay->SetInputEnabled(enabled);
+			else {
+				enabled = false;
+			}
 		}
+		_cueBallAimInputController.SetInputEnabled(enabled);
 	}
 
 	void EightBallPoolController::InitSubscriptions() {
@@ -94,7 +94,7 @@ namespace Billiard {
 			}
 		}
 
-		if (auto aimDisplay = _aimDisplayBehaviour.Get()) {
+		if (auto aimDisplay = _aimWidgetBehaviour.Get()) {
 			Subscribe(aimDisplay->GetAimPointChangedSignal(), [this](const sf::Vector2f& aimPoint) {
 				OnAimPointChanged(aimPoint);
 			});
@@ -292,7 +292,7 @@ namespace Billiard {
 						cueBehaviour->SetVerticalSpin(event.verticalSpin);
 						cueBehaviour->ApplyCueTransform();
 					}
-					if (auto aimDisplay = _aimDisplayBehaviour.Get()) {
+					if (auto aimDisplay = _aimWidgetBehaviour.Get()) {
 						aimDisplay->SetAimPoint({event.lateralSpin, event.verticalSpin});
 						aimDisplay->Show();
 					}
@@ -316,7 +316,6 @@ namespace Billiard {
 						intent.pullDistance = event.pullDistance;
 						intent.lateralSpin = event.lateralSpin;
 						intent.verticalSpin = event.verticalSpin;
-						cueBehaviour->SetInputEnabled(true); // todo check
 						cueBehaviour->ApplyShotIntent(intent);
 					}
 				}
@@ -371,10 +370,6 @@ namespace Billiard {
 						if (auto pocketBehaviour = pocket.Get()) {
 							pocketBehaviour->RegisterBall(*ballBehaviour);
 						}
-					}
-
-					if (ballBehaviour->GetBallNumber() == 0) {
-						_ballInHandInputController.SetBallInHandRect(_tablePresenter.GetKitchenRect());
 					}
 				}
 			}
@@ -542,7 +537,7 @@ namespace Billiard {
 		if (auto cueBehaviour = _cueBehaviour.Get()) {
 			cueBehaviour->PrepareForNewTurn();
 		}
-		if (auto aimDisplay = _aimDisplayBehaviour.Get()) {
+		if (auto aimDisplay = _aimWidgetBehaviour.Get()) {
 			aimDisplay->ResetAimPoint();
 		}
 		if (auto aimGuideLine = _aimGuideLineBehaviour.Get()) {
