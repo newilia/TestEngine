@@ -5,17 +5,29 @@
 #include "Engine/Core/SfmlWindowUtils.h"
 
 #include <cmath>
+#include <limits>
 
 namespace Billiard {
+
+	namespace {
+		constexpr float kTapMoveThresholdPixels = 2.f;
+		constexpr float kWheelRotateRadiansPerNotch = -0.001f;
+	} // namespace
 
 	void CueInputController::SetCue(std::weak_ptr<BilliardCueBehaviour> cue) {
 		_cue = std::move(cue);
 	}
 
+	void CueInputController::SetTableRect(RefWrapper<RectangleShapeVisual> tableRect) {
+		_tableRect = std::move(tableRect);
+	}
+
 	void CueInputController::SetInputEnabled(bool enabled) {
 		_inputEnabled = enabled;
 		if (!enabled) {
-			_isAiming = false;
+			_isLeftButtonHeldOnTable = false;
+			_leftButtonDragStarted = false;
+			_hasPointerAngle = false;
 			_isPullingBack = false;
 			_pendingIntent.reset();
 			if (auto cue = _cue.lock()) {
@@ -46,6 +58,44 @@ namespace Billiard {
 		return Utils::MapWindowPixelToWorld(*window, pixel);
 	}
 
+	bool CueInputController::IsPointOnTable(const sf::Vector2f& worldPoint) const {
+		if (auto tableRect = _tableRect.Get()) {
+			return tableRect->HitTest(worldPoint);
+		}
+		return false;
+	}
+
+	void CueInputController::RotateCueBy(float radiansDelta) {
+		auto cue = _cue.lock();
+		if (!cue || !cue->IsInteractable() || radiansDelta == 0.f) {
+			return;
+		}
+		cue->SetDirectionAngle(cue->GetActualBallDirectionAngle() + sf::radians(radiansDelta));
+	}
+
+	float CueInputController::ShortestAngleDelta(float fromRadians, float toRadians) const {
+		return std::atan2(std::sin(toRadians - fromRadians), std::cos(toRadians - fromRadians));
+	}
+
+	void CueInputController::UpdateDragRotation(const BilliardCueBehaviour& cue, const sf::Vector2f& worldPoint) {
+		const auto ballPosition = cue.GetTargetBallWorldPosition();
+		if (!ballPosition) {
+			return;
+		}
+
+		const sf::Vector2f offset = worldPoint - *ballPosition;
+		if (offset.lengthSquared() <= std::numeric_limits<float>::epsilon()) {
+			return;
+		}
+
+		const float pointerAngle = std::atan2(offset.y, offset.x);
+		if (_hasPointerAngle) {
+			RotateCueBy(ShortestAngleDelta(_lastPointerAngleRadians, pointerAngle));
+		}
+		_lastPointerAngleRadians = pointerAngle;
+		_hasPointerAngle = true;
+	}
+
 	void CueInputController::UpdatePullBack(const sf::Vector2f& worldPoint) {
 		auto cue = _cue.lock();
 		if (!cue || !_isPullingBack) {
@@ -68,12 +118,12 @@ namespace Billiard {
 		}
 
 		const sf::Vector2f worldPoint = MapPixelToWorld(position);
-		if (!cue->HitTestWorld(worldPoint)) {
-			return;
-		}
-
 		if (button == sf::Mouse::Button::Left) {
-			_isAiming = true;
+			_isLeftButtonHeldOnTable = true;
+			_leftButtonDragStarted = false;
+			_hasPointerAngle = false;
+			_leftButtonPressPixel = position;
+			return;
 		}
 		else if (button == sf::Mouse::Button::Right) {
 			_isPullingBack = true;
@@ -91,17 +141,31 @@ namespace Billiard {
 			return;
 		}
 
-		const sf::Vector2f worldPoint = MapPixelToWorld(position);
-		if (_isAiming) {
-			cue->AimAt(worldPoint);
+		if (_isLeftButtonHeldOnTable) {
+			const sf::Vector2f pixelDelta = sf::Vector2f(position - _leftButtonPressPixel);
+			if (!_leftButtonDragStarted &&
+			    pixelDelta.lengthSquared() > kTapMoveThresholdPixels * kTapMoveThresholdPixels) {
+				_leftButtonDragStarted = true;
+			}
+			if (_leftButtonDragStarted) {
+				UpdateDragRotation(*cue, MapPixelToWorld(position));
+			}
 		}
+
 		if (_isPullingBack) {
-			UpdatePullBack(worldPoint);
+			UpdatePullBack(MapPixelToWorld(position));
 		}
 	}
 
+	void CueInputController::OnMouseWheelScrolled(float wheelDelta) {
+		if (!_inputEnabled) {
+			return;
+		}
+		RotateCueBy(wheelDelta * kWheelRotateRadiansPerNotch);
+	}
+
 	void CueInputController::OnMouseButtonReleased(
-	    const sf::Vector2i& /*position*/, sf::Mouse::Button button, int playerIndex, std::uint32_t turnId) {
+	    const sf::Vector2i& position, sf::Mouse::Button button, int playerIndex, std::uint32_t turnId) {
 		if (!_inputEnabled) {
 			return;
 		}
@@ -111,7 +175,15 @@ namespace Billiard {
 		}
 
 		if (button == sf::Mouse::Button::Left) {
-			_isAiming = false;
+			if (_isLeftButtonHeldOnTable && !_leftButtonDragStarted && cue->IsInteractable()) {
+				const sf::Vector2f worldPoint = MapPixelToWorld(position);
+				if (IsPointOnTable(worldPoint)) {
+					cue->AimAt(worldPoint);
+				}
+			}
+			_isLeftButtonHeldOnTable = false;
+			_leftButtonDragStarted = false;
+			_hasPointerAngle = false;
 			return;
 		}
 		if (button != sf::Mouse::Button::Right) {

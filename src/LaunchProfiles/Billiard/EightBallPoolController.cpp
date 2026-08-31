@@ -1,7 +1,6 @@
 #include "EightBallPoolController.h"
 
 #include "EightBallPoolController.generated.hpp"
-#include "Engine/Editor/Editor.h"
 
 namespace Billiard {
 
@@ -36,6 +35,7 @@ namespace Billiard {
 		_ballInHandInputController.SetBallInHandRect(_tablePresenter.GetKitchenRect());
 
 		_cueInputController.SetCue(_cueBehaviour.Get());
+		_cueInputController.SetTableRect(_tableRect);
 		if (auto aimDisplay = _aimWidgetBehaviour.Get()) {
 			_cueBallAimInputController.SetAimWidget(aimDisplay);
 		}

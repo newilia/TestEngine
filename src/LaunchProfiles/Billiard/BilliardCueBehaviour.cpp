@@ -28,7 +28,7 @@ namespace Billiard {
 			return;
 		}
 
-		SetDirectionAngle(sf::radians(std::atan2(delta.y, delta.x)));
+		SetDirectionAngle(sf::radians(std::atan2(-delta.y, -delta.x)));
 	}
 
 	void BilliardCueBehaviour::SetDistanceFromTarget(float distance) {
@@ -208,6 +208,14 @@ namespace Billiard {
 
 	sf::Angle BilliardCueBehaviour::GetActualBallDirectionAngle() const {
 		return _directionAngle;
+	}
+
+	std::optional<sf::Vector2f> BilliardCueBehaviour::GetTargetBallWorldPosition() const {
+		const auto targetNode = GetTargetBallNode();
+		if (!targetNode) {
+			return std::nullopt;
+		}
+		return Utils::GetWorldPos(targetNode);
 	}
 
 	Signal<>& BilliardCueBehaviour::GetOnReleaseSignal() const {

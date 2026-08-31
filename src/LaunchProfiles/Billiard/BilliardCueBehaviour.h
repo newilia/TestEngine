@@ -13,6 +13,8 @@
 
 #include <SFML/System/Angle.hpp>
 
+#include <optional>
+
 namespace Billiard {
 
 	class BilliardCueBehaviour : public Behaviour
@@ -50,6 +52,7 @@ namespace Billiard {
 		void PlayShowAnimation();
 
 		sf::Angle GetActualBallDirectionAngle() const;
+		[[nodiscard]] std::optional<sf::Vector2f> GetTargetBallWorldPosition() const;
 
 	private:
 		void OnTipCollide(const IntersectionDetails& intersection);

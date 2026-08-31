@@ -65,6 +65,13 @@ namespace Billiard {
 			return;
 		}
 
+		if (const auto* scrolled = event.getIf<sf::Event::MouseWheelScrolled>()) {
+			if (_cueInput && _cueInput->IsInputEnabled() && scrolled->wheel == sf::Mouse::Wheel::Vertical) {
+				_cueInput->OnMouseWheelScrolled(scrolled->delta);
+			}
+			return;
+		}
+
 		if (const auto* released = event.getIf<sf::Event::MouseButtonReleased>()) {
 			if (_ballInHandInput && _ballInHandInput->IsInputEnabled()) {
 				_ballInHandInput->OnMouseButtonReleased(released->position);
