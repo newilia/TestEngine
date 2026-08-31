@@ -40,11 +40,13 @@ namespace Billiard {
 		}
 
 		if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
-			if (_ballInHandInput && _ballInHandInput->IsInputEnabled()) {
-				_ballInHandInput->OnMouseButtonPressed(pressed->position, pressed->button);
+			if (_cueBallAimInput && _cueBallAimInput->IsInputEnabled() &&
+			    _cueBallAimInput->OnMouseButtonPressed(pressed->position, pressed->button)) {
+				return;
 			}
-			if (_cueBallAimInput && _cueBallAimInput->IsInputEnabled()) {
-				_cueBallAimInput->OnMouseButtonPressed(pressed->position, pressed->button);
+			if (_ballInHandInput && _ballInHandInput->IsInputEnabled() &&
+			    _ballInHandInput->OnMouseButtonPressed(pressed->position, pressed->button)) {
+				return;
 			}
 			if (_cueInput && _cueInput->IsInputEnabled()) {
 				_cueInput->OnMouseButtonPressed(pressed->position, pressed->button);
@@ -53,11 +55,13 @@ namespace Billiard {
 		}
 
 		if (const auto* moved = event.getIf<sf::Event::MouseMoved>()) {
-			if (_ballInHandInput && _ballInHandInput->IsInputEnabled()) {
-				_ballInHandInput->OnMouseMoved(moved->position);
+			if (_cueBallAimInput && _cueBallAimInput->IsInputEnabled() &&
+			    _cueBallAimInput->OnMouseMoved(moved->position)) {
+				return;
 			}
-			if (_cueBallAimInput && _cueBallAimInput->IsInputEnabled()) {
-				_cueBallAimInput->OnMouseMoved(moved->position);
+			if (_ballInHandInput && _ballInHandInput->IsInputEnabled() &&
+			    _ballInHandInput->OnMouseMoved(moved->position)) {
+				return;
 			}
 			if (_cueInput && _cueInput->IsInputEnabled()) {
 				_cueInput->OnMouseMoved(moved->position);
@@ -66,18 +70,23 @@ namespace Billiard {
 		}
 
 		if (const auto* scrolled = event.getIf<sf::Event::MouseWheelScrolled>()) {
-			if (_cueInput && _cueInput->IsInputEnabled() && scrolled->wheel == sf::Mouse::Wheel::Vertical) {
+			if (scrolled->wheel != sf::Mouse::Wheel::Vertical) {
+				return;
+			}
+			if (_cueInput && _cueInput->IsInputEnabled()) {
 				_cueInput->OnMouseWheelScrolled(scrolled->delta);
 			}
 			return;
 		}
 
 		if (const auto* released = event.getIf<sf::Event::MouseButtonReleased>()) {
-			if (_ballInHandInput && _ballInHandInput->IsInputEnabled()) {
-				_ballInHandInput->OnMouseButtonReleased(released->position);
+			if (_cueBallAimInput && _cueBallAimInput->IsInputEnabled() &&
+			    _cueBallAimInput->OnMouseButtonReleased(released->position, released->button)) {
+				return;
 			}
-			if (_cueBallAimInput && _cueBallAimInput->IsInputEnabled()) {
-				_cueBallAimInput->OnMouseButtonReleased(released->position, released->button);
+			if (_ballInHandInput && _ballInHandInput->IsInputEnabled() &&
+			    _ballInHandInput->OnMouseButtonReleased(released->position)) {
+				return;
 			}
 			if (_cueInput && _cueInput->IsInputEnabled()) {
 				_cueInput->OnMouseButtonReleased(released->position, released->button, _playerIndex, _turnId);

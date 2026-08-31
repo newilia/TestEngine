@@ -28,35 +28,39 @@ namespace Billiard {
 		return Utils::MapWindowPixelToWorld(*window, pixel);
 	}
 
-	void CueBallAimInputController::OnMouseButtonPressed(const sf::Vector2i& position, sf::Mouse::Button button) {
+	bool CueBallAimInputController::OnMouseButtonPressed(const sf::Vector2i& position, sf::Mouse::Button button) {
 		if (!_inputEnabled || button != sf::Mouse::Button::Left) {
-			return;
+			return false;
 		}
 		auto aimWidget = _aimWidget.lock();
 		if (!aimWidget) {
-			return;
+			return false;
 		}
 
 		const sf::Vector2f worldPoint = MapPixelToWorld(position);
 		if (!aimWidget->TrySetAimPointFromWorld(worldPoint)) {
-			return;
+			return false;
 		}
 		_isPointerDown = true;
+		return true;
 	}
 
-	void CueBallAimInputController::OnMouseMoved(const sf::Vector2i& position) {
+	bool CueBallAimInputController::OnMouseMoved(const sf::Vector2i& position) {
 		if (!_inputEnabled || !_isPointerDown) {
-			return;
+			return false;
 		}
 		if (auto aimWidget = _aimWidget.lock()) {
 			aimWidget->TrySetAimPointFromWorld(MapPixelToWorld(position));
 		}
+		return true;
 	}
 
-	void CueBallAimInputController::OnMouseButtonReleased(const sf::Vector2i& /*position*/, sf::Mouse::Button button) {
-		if (button == sf::Mouse::Button::Left) {
-			_isPointerDown = false;
+	bool CueBallAimInputController::OnMouseButtonReleased(const sf::Vector2i& /*position*/, sf::Mouse::Button button) {
+		if (button != sf::Mouse::Button::Left || !_isPointerDown) {
+			return false;
 		}
+		_isPointerDown = false;
+		return true;
 	}
 
 } // namespace Billiard

@@ -58,13 +58,13 @@ namespace Billiard {
 		return Utils::MapWindowPixelToWorld(*window, pixel);
 	}
 
-	void BallInHandInputController::OnMouseButtonPressed(const sf::Vector2i& position, sf::Mouse::Button /*button*/) {
+	bool BallInHandInputController::OnMouseButtonPressed(const sf::Vector2i& position, sf::Mouse::Button /*button*/) {
 		if (!_inputEnabled || !IsBallInHand()) {
-			return;
+			return false;
 		}
 		auto cueBall = _cueBall.lock();
 		if (!cueBall) {
-			return;
+			return false;
 		}
 
 		const sf::Vector2f worldPos = MapPixelToWorld(position);
@@ -78,9 +78,11 @@ namespace Billiard {
 					}
 					_onGrabSignal.Emit();
 					ApplyDragPosition(worldPos);
+					return true;
 				}
 			}
 		}
+		return false;
 	}
 
 	void BallInHandInputController::ApplyDragPosition(const sf::Vector2f& pointerWorldPos) {
@@ -109,15 +111,20 @@ namespace Billiard {
 		}
 	}
 
-	void BallInHandInputController::OnMouseMoved(const sf::Vector2i& position) {
+	bool BallInHandInputController::OnMouseMoved(const sf::Vector2i& position) {
 		if (!_inputEnabled || !_isDragging) {
-			return;
+			return false;
 		}
 		ApplyDragPosition(MapPixelToWorld(position));
+		return true;
 	}
 
-	void BallInHandInputController::OnMouseButtonReleased(const sf::Vector2i& /*position*/) {
+	bool BallInHandInputController::OnMouseButtonReleased(const sf::Vector2i& /*position*/) {
+		if (!_isDragging) {
+			return false;
+		}
 		TryReleaseBallInHand();
+		return true;
 	}
 
 	void BallInHandInputController::TryReleaseBallInHand() {

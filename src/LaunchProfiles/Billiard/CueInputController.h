@@ -20,10 +20,10 @@ namespace Billiard {
 		void SetTableRect(RefWrapper<RectangleShapeVisual> tableRect);
 		void SetInputEnabled(bool enabled);
 		[[nodiscard]] bool IsInputEnabled() const;
-		void OnMouseButtonPressed(const sf::Vector2i& position, sf::Mouse::Button button);
-		void OnMouseMoved(const sf::Vector2i& position);
-		void OnMouseWheelScrolled(float wheelDelta);
-		void OnMouseButtonReleased(
+		bool OnMouseButtonPressed(const sf::Vector2i& position, sf::Mouse::Button button);
+		bool OnMouseMoved(const sf::Vector2i& position);
+		bool OnMouseWheelScrolled(float wheelDelta);
+		bool OnMouseButtonReleased(
 		    const sf::Vector2i& position, sf::Mouse::Button button, int playerIndex, std::uint32_t turnId);
 		[[nodiscard]] bool HasPendingIntent() const;
 		std::optional<TurnIntent> ConsumePendingIntent();

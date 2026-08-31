@@ -108,39 +108,46 @@ namespace Billiard {
 		cue->SetDistanceFromTarget(_pullBackDistanceAtGrab - Utils::Dot(pointerDelta, cueDir));
 	}
 
-	void CueInputController::OnMouseButtonPressed(const sf::Vector2i& position, sf::Mouse::Button button) {
+	bool CueInputController::OnMouseButtonPressed(const sf::Vector2i& position, sf::Mouse::Button button) {
 		if (!_inputEnabled) {
-			return;
+			return false;
 		}
 		auto cue = _cue.lock();
 		if (!cue || !cue->IsInteractable()) {
-			return;
+			return false;
 		}
 
 		const sf::Vector2f worldPoint = MapPixelToWorld(position);
 		if (button == sf::Mouse::Button::Left) {
+			if (!IsPointOnTable(worldPoint)) {
+				return false;
+			}
 			_isLeftButtonHeldOnTable = true;
 			_leftButtonDragStarted = false;
 			_hasPointerAngle = false;
 			_leftButtonPressPixel = position;
-			return;
+			return true;
 		}
-		else if (button == sf::Mouse::Button::Right) {
+		if (button == sf::Mouse::Button::Right) {
 			_isPullingBack = true;
 			_pullBackGrabWorldPoint = worldPoint;
 			_pullBackDistanceAtGrab = cue->GetDistanceFromTarget();
+			return true;
 		}
+
+		return false;
 	}
 
-	void CueInputController::OnMouseMoved(const sf::Vector2i& position) {
+	bool CueInputController::OnMouseMoved(const sf::Vector2i& position) {
 		if (!_inputEnabled) {
-			return;
+			return false;
 		}
 		auto cue = _cue.lock();
 		if (!cue) {
-			return;
+			return false;
 		}
 
+		bool handled = false;
 		if (_isLeftButtonHeldOnTable) {
 			const sf::Vector2f pixelDelta = sf::Vector2f(position - _leftButtonPressPixel);
 			if (!_leftButtonDragStarted &&
@@ -150,32 +157,43 @@ namespace Billiard {
 			if (_leftButtonDragStarted) {
 				UpdateDragRotation(*cue, MapPixelToWorld(position));
 			}
+			handled = true;
 		}
 
 		if (_isPullingBack) {
 			UpdatePullBack(MapPixelToWorld(position));
+			handled = true;
 		}
+		return handled;
 	}
 
-	void CueInputController::OnMouseWheelScrolled(float wheelDelta) {
-		if (!_inputEnabled) {
-			return;
+	bool CueInputController::OnMouseWheelScrolled(float wheelDelta) {
+		if (!_inputEnabled || wheelDelta == 0.f) {
+			return false;
+		}
+		auto cue = _cue.lock();
+		if (!cue || !cue->IsInteractable()) {
+			return false;
 		}
 		RotateCueBy(wheelDelta * kWheelRotateRadiansPerNotch);
+		return true;
 	}
 
-	void CueInputController::OnMouseButtonReleased(
+	bool CueInputController::OnMouseButtonReleased(
 	    const sf::Vector2i& position, sf::Mouse::Button button, int playerIndex, std::uint32_t turnId) {
 		if (!_inputEnabled) {
-			return;
+			return false;
 		}
 		auto cue = _cue.lock();
 		if (!cue) {
-			return;
+			return false;
 		}
 
 		if (button == sf::Mouse::Button::Left) {
-			if (_isLeftButtonHeldOnTable && !_leftButtonDragStarted && cue->IsInteractable()) {
+			if (!_isLeftButtonHeldOnTable) {
+				return false;
+			}
+			if (!_leftButtonDragStarted && cue->IsInteractable()) {
 				const sf::Vector2f worldPoint = MapPixelToWorld(position);
 				if (IsPointOnTable(worldPoint)) {
 					cue->AimAt(worldPoint);
@@ -184,19 +202,22 @@ namespace Billiard {
 			_isLeftButtonHeldOnTable = false;
 			_leftButtonDragStarted = false;
 			_hasPointerAngle = false;
-			return;
+			return true;
 		}
-		if (button != sf::Mouse::Button::Right) {
-			return;
-		}
+		else if (button == sf::Mouse::Button::Right) {
+			if (!_isPullingBack) {
+				return false;
+			}
 
-		if (_isPullingBack) {
 			if (cue->IsInteractable()) {
 				_pendingIntent = cue->BuildTurnIntent(playerIndex, turnId);
 			}
 			cue->Release();
 			_isPullingBack = false;
+			return true;
 		}
+
+		return false;
 	}
 
 } // namespace Billiard
