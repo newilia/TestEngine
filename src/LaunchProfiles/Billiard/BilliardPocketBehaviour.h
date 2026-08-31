@@ -31,6 +31,8 @@ namespace Billiard {
 	private:
 		/// @property
 		RefWrapper<CircleShapeVisual> _pocketShape;
+		/// @property
+		float _ballPullInAcceleration = 1500.f;
 
 	private:
 		std::vector<RefWrapper<BilliardBallBehaviour>> _balls;

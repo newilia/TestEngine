@@ -10,8 +10,6 @@
 #include <optional>
 
 namespace {
-	constexpr float kPocketPullSpeed = 5000.f;
-
 	struct WorldCircle
 	{
 		sf::Vector2f center;
@@ -135,7 +133,7 @@ namespace Billiard {
 						const float dist = Utils::Length(toPocket);
 						if (dist > 1e-6f) {
 							float sinArg = 3.14 * (pocketGeometry->radius - dist) / (ballRadius);
-							float accelerationMag = sin(sinArg) * kPocketPullSpeed;
+							float accelerationMag = sin(sinArg) * _ballPullInAcceleration;
 							ballBody->AddVelocity(accelerationMag * Utils::Normalize(toPocket) * dt.asSeconds());
 						}
 					}
