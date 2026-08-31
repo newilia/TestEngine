@@ -166,9 +166,7 @@ namespace Billiard {
 	sf::FloatRect BilliardTablePresenter::GetKitchenRect() const {
 		if (auto tableRect = _tableRect.Get()) {
 			auto rect = tableRect->GetGlobalBounds();
-			auto radius = GetBallRadius();
 			rect.size.x *= 0.25f;
-			rect.size.x += radius;
 			return rect;
 		}
 		return sf::FloatRect();
@@ -199,7 +197,7 @@ namespace Billiard {
 		return sf::Vector2f();
 	}
 
-	sf::Vector2f BilliardTablePresenter::GetNearestFreeBallPosition(
+	std::optional<sf::Vector2f> BilliardTablePresenter::GetNearestFreeBallPosition(
 	    sf::Vector2f requestedPosition, int excludeBallNumber) const {
 		const float ballRadius = GetBallRadius();
 		if (ballRadius <= 0.f) {
@@ -300,7 +298,11 @@ namespace Billiard {
 			}
 		}
 
-		return worldToTableLocal.transformPoint(ClampBallCenterToRect(result, tableRect, ballRadius));
+		result = ClampBallCenterToRect(result, tableRect, ballRadius);
+		if (!isFree(result)) {
+			return std::nullopt;
+		}
+		return worldToTableLocal.transformPoint(result);
 	}
 
 	void BilliardTablePresenter::OnBallPocketed(int ballNumber, shared_ptr<BilliardPocketBehaviour> pocket) {
@@ -316,7 +318,9 @@ namespace Billiard {
 	void BilliardTablePresenter::RestoreBall(int ballNumber) {
 		if (auto ball = _ballsBehaviours[ballNumber].Get()) {
 			auto restorePosition = ballNumber == 8 ? GetEightBallRestorePosition() : GetTableCenter();
-			restorePosition = GetNearestFreeBallPosition(restorePosition);
+			if (const auto freePosition = GetNearestFreeBallPosition(restorePosition, ballNumber)) {
+				restorePosition = *freePosition;
+			}
 			ball->GetNode()->SetLocalPosition(restorePosition);
 			ball->RestoreCollisionGroups();
 			ball->Appear();

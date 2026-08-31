@@ -39,7 +39,7 @@ namespace Billiard {
 		std::weak_ptr<BilliardBallBehaviour> _cueBall;
 		std::optional<sf::FloatRect> _allowedMoveArea;
 		bool _inputEnabled = false;
-		std::optional<sf::Vector2f> _lastPointerWorld;
+		bool _isDragging = false;
 		mutable Signal<> _onGrabSignal;
 		mutable Signal<> _onReleaseSignal;
 	};

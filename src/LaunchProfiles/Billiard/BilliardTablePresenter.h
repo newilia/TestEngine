@@ -7,6 +7,7 @@
 #include "Engine/Visual/RectangleShapeVisual.h"
 
 #include <map>
+#include <optional>
 #include <vector>
 
 namespace Billiard {
@@ -24,7 +25,8 @@ namespace Billiard {
 		sf::FloatRect GetBallInHandRect() const;
 		sf::FloatRect GetKitchenRect() const;
 		float GetBallRadius() const;
-		sf::Vector2f GetNearestFreeBallPosition(sf::Vector2f requestedPosition, int excludeBallNumber = -1) const;
+		std::optional<sf::Vector2f> GetNearestFreeBallPosition(
+		    sf::Vector2f requestedPosition, int excludeBallNumber = -1) const;
 		void OnBallPocketed(int ballNumber, shared_ptr<BilliardPocketBehaviour> pocket);
 		void RestoreBall(int ballNumber);
 		bool IsBallOutsideExpandedTable(int ballNumber, float margin) const;

@@ -39,7 +39,7 @@ namespace Billiard {
 	}
 
 	bool BallInHandInputController::IsDragging() const {
-		return _lastPointerWorld.has_value();
+		return _isDragging;
 	}
 
 	Signal<>& BallInHandInputController::GetOnGrabSignal() const {
@@ -71,12 +71,13 @@ namespace Billiard {
 		if (auto node = cueBall->GetNode()) {
 			if (auto visual = node->GetVisual<CircleShapeVisual>()) {
 				if (visual->HitTest(worldPos)) {
-					_lastPointerWorld = worldPos;
+					_isDragging = true;
 					if (auto physicsBody = cueBall->GetPhysicsBody()) {
 						physicsBody->GetOverlapGroups() = {};
 						physicsBody->GetCollisionGroups() = {};
 					}
 					_onGrabSignal.Emit();
+					ApplyDragPosition(worldPos);
 				}
 			}
 		}
@@ -84,7 +85,7 @@ namespace Billiard {
 
 	void BallInHandInputController::ApplyDragPosition(const sf::Vector2f& pointerWorldPos) {
 		auto cueBall = _cueBall.lock();
-		if (!cueBall || !IsBallInHand() || !_lastPointerWorld || !_allowedMoveArea) {
+		if (!cueBall || !IsBallInHand() || !_isDragging || !_allowedMoveArea) {
 			return;
 		}
 
@@ -93,23 +94,23 @@ namespace Billiard {
 			return;
 		}
 
-		auto newPos = node->GetLocalPosition();
-		const sf::Vector2f delta = pointerWorldPos - *_lastPointerWorld;
-		newPos += delta;
+		sf::Vector2f localPointer = pointerWorldPos;
+		if (auto parent = node->GetParent()) {
+			localPointer = parent->GetWorldTransform().getInverse().transformPoint(pointerWorldPos);
+		}
 
-		//const float radius = cueBall->GetRadius();
-		newPos.x =
-		    std::clamp(newPos.x, _allowedMoveArea->position.x, _allowedMoveArea->position.x + _allowedMoveArea->size.x);
-		newPos.y =
-		    std::clamp(newPos.y, _allowedMoveArea->position.y, _allowedMoveArea->position.y + _allowedMoveArea->size.y);
+		localPointer.x = std::clamp(
+		    localPointer.x, _allowedMoveArea->position.x, _allowedMoveArea->position.x + _allowedMoveArea->size.x);
+		localPointer.y = std::clamp(
+		    localPointer.y, _allowedMoveArea->position.y, _allowedMoveArea->position.y + _allowedMoveArea->size.y);
 
-		newPos = _tablePresenter.GetNearestFreeBallPosition(newPos, 0);
-		node->SetLocalPosition(newPos);
-		_lastPointerWorld = pointerWorldPos;
+		if (const auto newPos = _tablePresenter.GetNearestFreeBallPosition(localPointer, 0)) {
+			node->SetLocalPosition(*newPos);
+		}
 	}
 
 	void BallInHandInputController::OnMouseMoved(const sf::Vector2i& position) {
-		if (!_inputEnabled || !_lastPointerWorld) {
+		if (!_inputEnabled || !_isDragging) {
 			return;
 		}
 		ApplyDragPosition(MapPixelToWorld(position));
@@ -120,10 +121,10 @@ namespace Billiard {
 	}
 
 	void BallInHandInputController::TryReleaseBallInHand() {
-		if (!_lastPointerWorld) {
+		if (!_isDragging) {
 			return;
 		}
-		_lastPointerWorld.reset(); // todo check
+		_isDragging = false;
 		if (auto cueBall = _cueBall.lock()) {
 			cueBall->RestoreCollisionGroups();
 		}
