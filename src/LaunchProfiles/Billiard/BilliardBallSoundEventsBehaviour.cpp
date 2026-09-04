@@ -24,13 +24,15 @@ namespace Billiard {
 		constexpr std::string_view kBallBallCollisionEvent = "event:/SFX/ball_ball_collision";
 		constexpr std::string_view kBallRailCollisionEvent = "event:/SFX/ball_rail_collision";
 		constexpr std::string_view kCueBallCollisionEvent = "event:/SFX/cue_ball_collision";
+		constexpr std::string_view kIntensityParameterName = "Intensity";
 
-		void PlaySoundEvent(std::string_view eventPath) {
+		void PlaySoundEvent(std::string_view eventPath, float speed) {
 			auto audio = Engine::MainContext::GetInstance().GetAudioManager();
 			if (!audio || !audio->IsInitialized()) {
 				return;
 			}
-			audio->PlayEvent(eventPath);
+			const Engine::EventParameter parameters[] = {{kIntensityParameterName, speed}};
+			audio->PlayEvent(eventPath, parameters);
 		}
 
 		[[nodiscard]] sf::Vector2f GetSeparationReferencePoint(
@@ -109,12 +111,13 @@ namespace Billiard {
 			return;
 		}
 
-		if (GetApproachSpeed(intersection) < kMinApproachSpeed) {
+		const float approachSpeed = GetApproachSpeed(intersection);
+		if (approachSpeed < kMinApproachSpeed) {
 			return;
 		}
 
 		if (otherNode->FindBehaviour<BilliardCueBehaviour>()) {
-			PlaySoundEvent(kCueBallCollisionEvent);
+			PlaySoundEvent(kCueBallCollisionEvent, approachSpeed);
 			return;
 		}
 
@@ -123,12 +126,12 @@ namespace Billiard {
 		}
 
 		if (otherNode->FindBehaviour<BilliardBallBehaviour>()) {
-			PlaySoundEvent(kBallBallCollisionEvent);
+			PlaySoundEvent(kBallBallCollisionEvent, approachSpeed);
 			return;
 		}
 
 		if (otherNode->GetVisual<RectangleShapeVisual>()) {
-			PlaySoundEvent(kBallRailCollisionEvent);
+			PlaySoundEvent(kBallRailCollisionEvent, approachSpeed);
 		}
 	}
 

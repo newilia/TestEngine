@@ -2,9 +2,16 @@
 
 #include <filesystem>
 #include <memory>
+#include <span>
 #include <string_view>
 
 namespace Engine {
+
+	struct EventParameter
+	{
+		std::string_view name;
+		float value = 0.f;
+	};
 
 	class AudioManager
 	{
@@ -24,6 +31,7 @@ namespace Engine {
 		bool LoadBank(const std::filesystem::path& bankPath);
 		void UnloadAllBanks();
 		bool PlayEvent(std::string_view eventPath);
+		bool PlayEvent(std::string_view eventPath, std::span<const EventParameter> parameters);
 		void StopAllEvents();
 
 		bool IsInitialized() const;

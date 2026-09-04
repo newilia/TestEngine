@@ -174,6 +174,10 @@ namespace Engine {
 	}
 
 	bool AudioManager::PlayEvent(std::string_view eventPath) {
+		return PlayEvent(eventPath, {});
+	}
+
+	bool AudioManager::PlayEvent(std::string_view eventPath, std::span<const EventParameter> parameters) {
 		if (!_impl->system) {
 			return false;
 		}
@@ -191,6 +195,13 @@ namespace Engine {
 		if (result != FMOD_OK) {
 			LogFmodError(fmt::format("createInstance failed ({})", path), result);
 			return false;
+		}
+
+		for (const EventParameter& parameter : parameters) {
+			result = instance->setParameterByName(parameter.name.data(), parameter.value);
+			if (result != FMOD_OK) {
+				LogFmodError(fmt::format("setParameterByName failed ({}, parameter={})", path, parameter.name), result);
+			}
 		}
 
 		result = instance->start();
