@@ -1,13 +1,13 @@
 #include "BilliardGameLaunchProfile.h"
 
+#include "Engine/Audio/AudioManager.h"
 #include "Engine/Core/MainContext.h"
-#include "Engine/Core/SceneNode.h"
 #include "Engine/Core/SfmlWindowUtils.h"
 #include "Engine/Editor/Editor.h"
-#include "Engine/Serialization/SceneDocumentSerializer.h"
-#include "Engine/Visual/RectangleShapeVisual.h"
+#include "LaunchProfiles/Billiard/EightBallPoolController.h"
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Window/Keyboard.hpp>
 
 #include <cstdlib>
 
@@ -26,6 +26,9 @@ namespace Billiard {
 			std::exit(EXIT_FAILURE);
 		}
 		mainContext.Init();
+		if (auto audio = mainContext.GetAudioManager()) {
+			audio->LoadBank("fmod/Billiards/Build/Desktop/Master.bank");
+		}
 		Utils::MaximizeWindow(*mainWindow);
 
 		auto& editor = Engine::Editor::GetInstance();
@@ -39,8 +42,21 @@ namespace Billiard {
 		editor.SetIsOpen(false);
 
 		Engine::Editor::GetInstance().LoadScene(kBilliardSceneRelativePath);
+		mainContext.SetSimPaused(false);
 	}
 
-	void BilliardGameLaunchProfile::OnEvent(const sf::Event& event) {}
+	void BilliardGameLaunchProfile::OnEvent(const sf::Event& event) {
+		if (auto keyPressedEvent = event.getIf<sf::Event::KeyPressed>()) {
+			if (keyPressedEvent->code == sf::Keyboard::Key::H) {
+				if (auto controller = Engine::MainContext::GetInstance()
+				        .GetScene()
+				        ->GetRoot()
+				        ->FindBehaviourRec<EightBallPoolController>()) {
+					controller->StartHotSeatGame();
+				}
+			}
+			return;
+		}
+	}
 
 } // namespace Billiard

@@ -142,6 +142,11 @@
           </Property>
         </Properties>
       </Behaviour>
+      <Behaviour type="Billiard.BilliardBallSoundEventsBehaviour" entityId="2847193650">
+        <Properties>
+          <Property id="billiard_ball_sound_events_behaviour" kind="Object" />
+        </Properties>
+      </Behaviour>
     </Behaviours>
     <Children>
       <Node entityId="2298085435">

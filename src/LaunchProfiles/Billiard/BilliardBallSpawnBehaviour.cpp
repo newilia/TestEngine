@@ -85,7 +85,7 @@ std::vector<shared_ptr<SceneNode>> Billiard::BilliardBallSpawnBehaviour::SpawnBa
 
 	const std::array<int, 15> rackNumbers = BuildRackBallNumbers();
 	for (int slot = 0; slot < 15; ++slot) {
-		const sf::Vector2f worldPos = rightHalfCenter + RackSlotLocalOffset(slot, ballRadius);
+		const sf::Vector2f worldPos = rightHalfCenter + RackSlotLocalOffset(slot, ballRadius + 0.001f);
 		spawnedBalls.push_back(SpawnBall(rackNumbers[static_cast<size_t>(slot)], worldPos));
 	}
 
