@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{3772bc5b-0f5d-4141-96ae-5e4e236792de}">
+		<property name="assetPath">
+			<value>zapsplat_sport_snooker_pool_junior_cue_strike_cue_ball_hit_other_26510.mp3</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>0.40799999999999997</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{bd365d8e-2d15-4cdb-85ec-4b99133c207d}</destination>
+		</relationship>
+	</object>
+</objects>

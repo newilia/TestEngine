@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{c907073a-4e8e-4c3b-bd87-237dc85d194a}">
+		<property name="assetPath">
+			<value>344_audio_antique_clicker_1_clock_ticking_tick_tock_click_rhythm_time_watch_countdown_005.mp3</value>
+		</property>
+		<property name="isStreaming">
+			<value>true</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>60.024000000000001</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{bd365d8e-2d15-4cdb-85ec-4b99133c207d}</destination>
+		</relationship>
+	</object>
+</objects>

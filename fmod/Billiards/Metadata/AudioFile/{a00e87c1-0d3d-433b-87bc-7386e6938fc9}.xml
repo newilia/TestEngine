@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{a00e87c1-0d3d-433b-87bc-7386e6938fc9}">
+		<property name="assetPath">
+			<value>zapsplat_sport_snooker_ball_hit_another_gently_soft_002_31953.mp3</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>1</value>
+		</property>
+		<property name="length">
+			<value>0.16800000000000001</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{bd365d8e-2d15-4cdb-85ec-4b99133c207d}</destination>
+		</relationship>
+	</object>
+</objects>

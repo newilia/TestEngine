@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{28080790-a48b-4cf9-8db8-f14b91ee3c24}">
+		<property name="assetPath">
+			<value>zapsplat_sport_snooker_pool_junior_balls_gather_together_scoop_on_table_26508.mp3</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>0.624</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{bd365d8e-2d15-4cdb-85ec-4b99133c207d}</destination>
+		</relationship>
+	</object>
+</objects>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{bdebc759-f5fc-4f88-82a0-fb38de6c1129}">
+		<property name="assetPath">
+			<value>sport_pool_snooker_cue_ball_hit_strike_other_recorded_from_other_ball.mp3</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>0.59999999999999998</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{bd365d8e-2d15-4cdb-85ec-4b99133c207d}</destination>
+		</relationship>
+	</object>
+</objects>
