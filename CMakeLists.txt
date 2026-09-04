@@ -7,6 +7,8 @@ endif()
 
 project(TestEngine LANGUAGES CXX)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -117,6 +119,7 @@ target_link_libraries(TestEngine PRIVATE fmt)
 set(SFML_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(SFML_BUILD_DOC OFF CACHE BOOL "" FORCE)
 set(SFML_BUILD_TEST_SUITE OFF CACHE BOOL "" FORCE)
+set(SFML_BUILD_AUDIO OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(third-party/SFML EXCLUDE_FROM_ALL)
 
@@ -130,10 +133,20 @@ target_link_libraries(TestEngine PRIVATE
     sfml-graphics
     sfml-window
     sfml-system
-    sfml-audio
     sfml-network
     pugixml::pugixml
     ImGui-SFML::ImGui-SFML
+)
+
+find_package(FMOD REQUIRED)
+target_link_libraries(TestEngine PRIVATE FMOD::Studio)
+add_custom_command(
+	TARGET TestEngine
+	POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different
+		$<TARGET_FILE:FMOD::Core>
+		$<TARGET_FILE:FMOD::Studio>
+		$<TARGET_FILE_DIR:TestEngine>
 )
 
 # protobuf submodule: third-party/protobuf (BilliardSession protocol)

@@ -1,5 +1,6 @@
 #include "MainLoop.h"
 
+#include "Engine/Audio/AudioManager.h"
 #include "Engine/Core/EventsDispatcher.h"
 #include "Engine/Core/MainContext.h"
 #include "Engine/Core/PeriodicTaskExecutor.h"
@@ -170,6 +171,9 @@ namespace Engine {
 
 		mainContext.OnStartPresentFrame();
 		auto dt = mainContext.GetFrameDt();
+		if (auto audio = mainContext.GetAudioManager()) {
+			audio->Update();
+		}
 
 		window->clear();
 		if (mainContext.IsImGuiInitialized()) {

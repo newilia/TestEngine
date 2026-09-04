@@ -1,5 +1,6 @@
 #include "MainContext.h"
 
+#include "Engine/Audio/AudioManager.h"
 #include "Engine/Core/AssetManager.h"
 #include "Engine/Core/EventsDispatcher.h"
 #include "Engine/Core/FontManager.h"
@@ -45,6 +46,7 @@ namespace Engine {
 		_physicsProcessor = make_shared<PhysicsProcessor>();
 		_fontManager = make_shared<FontManager>();
 		_textureManager = make_shared<TextureManager>();
+		_audioManager = make_shared<AudioManager>();
 		_assetManager = std::make_shared<AssetManager>();
 		_gameBackgroundContext = make_shared<GameBackgroundContext>();
 	}
@@ -67,6 +69,10 @@ namespace Engine {
 
 	shared_ptr<TextureManager> MainContext::GetTextureManager() const {
 		return _textureManager;
+	}
+
+	shared_ptr<AudioManager> MainContext::GetAudioManager() const {
+		return _audioManager;
 	}
 
 	std::shared_ptr<AssetManager> MainContext::GetAssetManager() const {
@@ -128,10 +134,17 @@ namespace Engine {
 			}
 			_isImGuiInitialized = true;
 		}
+		if (_audioManager) {
+			_audioManager->Init();
+		}
 	}
 
 	void MainContext::Shutdown() {
 		SetScene(nullptr);
+
+		if (_audioManager) {
+			_audioManager->Shutdown();
+		}
 
 		if (_isImGuiInitialized) {
 			ImGui::SFML::Shutdown();

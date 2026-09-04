@@ -17,7 +17,8 @@ class TextureManager;
 
 namespace Engine {
 	class AssetManager;
-}
+	class AudioManager;
+} // namespace Engine
 
 namespace Engine::Serialization {
 	enum class SceneDocumentKind;
@@ -41,6 +42,7 @@ namespace Engine {
 		shared_ptr<PhysicsProcessor> GetPhysicsProcessor() const;
 		shared_ptr<FontManager> GetFontManager() const;
 		shared_ptr<TextureManager> GetTextureManager() const;
+		shared_ptr<AudioManager> GetAudioManager() const;
 		std::shared_ptr<AssetManager> GetAssetManager() const;
 		shared_ptr<GameBackgroundContext> GetGameBackgroundContext() const;
 
@@ -102,6 +104,7 @@ namespace Engine {
 		shared_ptr<PhysicsProcessor> _physicsProcessor;
 		shared_ptr<FontManager> _fontManager;
 		shared_ptr<TextureManager> _textureManager;
+		shared_ptr<AudioManager> _audioManager;
 		shared_ptr<AssetManager> _assetManager;
 		shared_ptr<GameBackgroundContext> _gameBackgroundContext;
 		sf::Clock _frameClock;

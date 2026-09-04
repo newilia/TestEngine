@@ -1,8 +1,28 @@
 # Сборка TestEngine
 
-**Требования:** Windows, MSVC (Visual Studio или Build Tools с C++), **Python 3** (интерпретатор нужен CMake на этапе `find_package`), CMake 3.28+ (см. `cmake_minimum_required` в `CMakeLists.txt`).
+**Требования:** Windows, MSVC (Visual Studio или Build Tools с C++), **Python 3** (интерпретатор нужен CMake на этапе `find_package`), CMake 3.28+ (см. `cmake_minimum_required` в `CMakeLists.txt`), **FMOD Engine** (Studio API for Windows — не путать с FMOD Studio, авторским редактором). SDK в репозиторий не входит.
 
 Вся работа из **корня репозитория** (рядом с `CMakeLists.txt`). Основной каталог сборки — **`build`** (генератор **Visual Studio**, MSBuild). **Не** запускайте `cmake` прямо в исходниках.
+
+## FMOD Engine
+
+Нужен runtime SDK с [fmod.com/download](https://www.fmod.com/download) (**FMOD Engine**, пакет «FMOD Studio API Windows»). FMOD Studio ставит редактор и умеет экспортировать `.bank`, но не даёт `api/core` / `api/studio` для линковки.
+
+Типичный путь установки (подхватывается автоматически, `_cmake.cmd` без флагов):
+
+```text
+C:\Program Files (x86)\FMOD SoundSystem\FMOD Studio API Windows
+```
+
+Если SDK лежит в другом месте:
+
+```bat
+cmake -S . -B build -A x64 -DFMOD_DIR="D:/SDKs/FMOD Studio API Windows"
+```
+
+или переменная окружения `FMOD_DIR`. Major-версия Engine должна совпадать с FMOD Studio, из которого собираются банки (см. [`docs/fmod.md`](docs/fmod.md)).
+
+После сборки `fmod.dll` / `fmodstudio.dll` (в Debug — `fmodL.dll` / `fmodstudioL.dll`) копируются в `build/bin/<Config>/` рядом с `TestEngine.exe`.
 
 ## Скрипты (рекомендуется)
 
